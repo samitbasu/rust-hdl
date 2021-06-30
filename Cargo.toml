@@ -1,5 +1,6 @@
 [workspace]
 
 members = [
-"rust-hdl-bitvec",
+    "rust-hdl-bitvec",
+    "rust-hdl-core"
 ]
