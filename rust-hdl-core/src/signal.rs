@@ -4,8 +4,6 @@ use crate::atom::Atom;
 use crate::logic::Logic;
 use crate::clock::Clock;
 use crate::block::Block;
-use crate::visitor::Visitor;
-use crate::visitor_mut::VisitorMut;
 use crate::scoped_visitor::ScopedVisitor;
 
 #[derive(Copy, Clone, Debug)]
@@ -13,23 +11,20 @@ pub struct Signal<D: Direction, T: Synth> {
     pub next: T,
     pub val: T,
     prev: T,
-    changed: bool,
+    pub changed: bool,
     claimed: bool,
     dir: std::marker::PhantomData<D>,
 }
 
 impl<D: Direction, T: Synth> Atom for Signal<D, T> {
-    #[inline(always)]
     fn bits(&self) -> usize {
         T::BITS
     }
 
-    #[inline(always)]
     fn connected(&self) -> bool {
         self.claimed
     }
 
-    #[inline(always)]
     fn changed(&self) -> bool {
         self.changed
     }
@@ -43,7 +38,6 @@ impl<D: Direction, T: Synth> Signal<D, T> {
 }
 
 impl<D: Direction, T: Synth> Logic for Signal<D, T> {
-    #[inline(always)]
     fn update(&mut self) {
         self.changed = self.val != self.next;
         if self.changed {
@@ -54,18 +48,14 @@ impl<D: Direction, T: Synth> Logic for Signal<D, T> {
 }
 
 impl<D: Direction, T: Synth> Block for Signal<D, T> {
-
-    #[inline(always)]
-    fn accept(&self, visitor: &mut dyn Visitor) {
-        visitor.visit_atom(self);
+    fn update_all(&mut self) {
+        self.update();
     }
 
-    #[inline(always)]
-    fn accept_mut(&mut self, visitor: &mut dyn VisitorMut) {
-        visitor.visit(self);
+    fn has_changed(&self) -> bool {
+        self.changed
     }
 
-    #[inline(always)]
     fn accept_scoped(&self, name: &str, visitor: &mut dyn ScopedVisitor) {
         visitor.visit_atom(name, self);
     }

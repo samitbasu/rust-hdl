@@ -6,13 +6,9 @@ mod atom;
 mod signal;
 mod logic;
 mod block;
-mod visitor;
-mod visitor_mut;
 mod scoped_visitor;
 mod dff;
 mod simulate;
-mod has_changed;
-mod update_all;
 mod check_connected;
 mod shortbitvec;
 mod bits;
@@ -27,8 +23,6 @@ mod tests {
     use crate::constant::Constant;
     use crate::logic::Logic;
     use crate::block::Block;
-    use crate::visitor::Visitor;
-    use crate::visitor_mut::VisitorMut;
     use crate::scoped_visitor::ScopedVisitor;
     use crate::simulate::simulate;
     use crate::dff::DFF;
@@ -69,22 +63,19 @@ mod tests {
     }
 
     impl<const N: usize> Block for Strobe<N> {
-        #[inline(always)]
-        fn accept(&self, visitor: &mut dyn Visitor) {
-            visitor.visit(self);
-            self.enable.accept(visitor);
-            self.strobe.accept(visitor);
-            self.clock.accept(visitor);
-            self.counter.accept(visitor);
+        fn update_all(&mut self) {
+            self.update();
+            self.enable.update_all();
+            self.strobe.update_all();
+            self.clock.update_all();
+            self.counter.update_all();
         }
 
-        #[inline(always)]
-        fn accept_mut(&mut self, visitor: &mut dyn VisitorMut) {
-            visitor.visit(self);
-            self.enable.accept_mut(visitor);
-            self.strobe.accept_mut(visitor);
-            self.clock.accept_mut(visitor);
-            self.counter.accept_mut(visitor);
+        fn has_changed(&self) -> bool {
+            self.enable.changed ||
+                self.strobe.changed ||
+                self.clock.changed ||
+                self.counter.has_changed()
         }
 
         fn accept_scoped(&self, name: &str, visitor: &mut dyn ScopedVisitor) {

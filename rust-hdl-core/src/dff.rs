@@ -1,6 +1,4 @@
 use crate::scoped_visitor::ScopedVisitor;
-use crate::visitor_mut::VisitorMut;
-use crate::visitor::Visitor;
 use crate::block::Block;
 use crate::synth::Synth;
 use crate::logic::Logic;
@@ -35,18 +33,15 @@ impl<T: Synth> Logic for DFF<T> {
 }
 
 impl<T: Synth> Block for DFF<T> {
-    fn accept(&self, visitor: &mut dyn Visitor) {
-        visitor.visit(self);
-        self.d.accept(visitor);
-        self.q.accept(visitor);
-        self.clk.accept(visitor);
+    fn update_all(&mut self) {
+        self.update();
+        self.d.update_all();
+        self.q.update_all();
+        self.clk.update_all();
     }
 
-    fn accept_mut(&mut self, visitor: &mut dyn VisitorMut) {
-        visitor.visit(self);
-        self.d.accept_mut(visitor);
-        self.q.accept_mut(visitor);
-        self.clk.accept_mut(visitor);
+    fn has_changed(&self) -> bool {
+        self.d.changed || self.q.changed || self.clk.changed
     }
 
     fn accept_scoped(&self, name: &str, visitor: &mut dyn ScopedVisitor) {
