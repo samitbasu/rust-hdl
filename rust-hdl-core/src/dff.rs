@@ -8,7 +8,7 @@ use crate::clock::Clock;
 use crate::direction::{In, Out};
 use crate::signal::Signal;
 
-struct DFF<T: Synth> {
+pub struct DFF<T: Synth> {
     pub d: Signal<In, T>,
     pub q: Signal<Out, T>,
     pub clk: Signal<In, Clock>,

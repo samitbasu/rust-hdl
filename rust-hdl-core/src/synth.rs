@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::clock::Clock;
-use rust_hdl_bitvec::{Bit, Bits};
+use crate::bits::{Bit, Bits};
 
 pub trait Synth: Default + Copy + PartialEq + Debug {
     const BITS: usize;

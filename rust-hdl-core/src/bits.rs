@@ -3,9 +3,6 @@ use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
 use crate::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
 use crate::bitvec::BitVec;
 
-mod bitvec;
-mod shortbitvec;
-
 // This comes with a few invariants that must be maintained for short representation
 // The short value must be less than 2^N
 // N <= SHORT_BITS --> Short repr, otherwise Long repr
@@ -346,7 +343,7 @@ impl<const N: usize> std::cmp::PartialEq<Bits<N>> for Bits<N> {
 mod tests {
     use std::num::Wrapping;
 
-    use crate::{bit_cast, bits, clog2, Bits};
+    use crate::bits::{bit_cast, bits, clog2, Bits};
 
     #[test]
     fn test_short_from_u8() {
