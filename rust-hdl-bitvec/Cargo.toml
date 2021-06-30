@@ -1,0 +1,6 @@
+[package]
+name = "rust-hdl-bitvec"
+version = "0.1.0"
+authors = ["cdsfsbasu"]
+edition = "2018"
+
