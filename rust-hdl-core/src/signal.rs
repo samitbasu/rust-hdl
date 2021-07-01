@@ -4,7 +4,7 @@ use crate::atom::Atom;
 use crate::logic::Logic;
 use crate::clock::Clock;
 use crate::block::Block;
-use crate::scoped_visitor::ScopedVisitor;
+use crate::probe::Probe;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Signal<D: Direction, T: Synth> {
@@ -38,26 +38,24 @@ impl<D: Direction, T: Synth> Signal<D, T> {
 }
 
 impl<D: Direction, T: Synth> Logic for Signal<D, T> {
-    fn update(&mut self) {
+    fn update(&mut self) {}
+}
+
+impl<D: Direction, T: Synth> Block for Signal<D, T> {
+    fn update_all(&mut self) {
         self.changed = self.val != self.next;
         if self.changed {
             self.prev = self.val;
             self.val = self.next;
         }
     }
-}
-
-impl<D: Direction, T: Synth> Block for Signal<D, T> {
-    fn update_all(&mut self) {
-        self.update();
-    }
 
     fn has_changed(&self) -> bool {
         self.changed
     }
 
-    fn accept_scoped(&self, name: &str, visitor: &mut dyn ScopedVisitor) {
-        visitor.visit_atom(name, self);
+    fn accept(&self, name: &str, probe: &mut dyn Probe) {
+        probe.visit_atom(name, self);
     }
 }
 

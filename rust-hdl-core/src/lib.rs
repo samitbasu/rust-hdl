@@ -6,13 +6,14 @@ mod atom;
 mod signal;
 mod logic;
 mod block;
-mod scoped_visitor;
+mod probe;
 mod dff;
 mod simulate;
 mod check_connected;
 mod shortbitvec;
 mod bits;
 mod bitvec;
+mod struct_valued;
 
 #[cfg(test)]
 mod tests {
@@ -23,7 +24,7 @@ mod tests {
     use crate::constant::Constant;
     use crate::logic::Logic;
     use crate::block::Block;
-    use crate::scoped_visitor::ScopedVisitor;
+    use crate::probe::Probe;
     use crate::simulate::simulate;
     use crate::dff::DFF;
     use crate::check_connected::check_connected;
@@ -78,13 +79,13 @@ mod tests {
                 self.counter.has_changed()
         }
 
-        fn accept_scoped(&self, name: &str, visitor: &mut dyn ScopedVisitor) {
-            visitor.visit_start_scope(name, self);
-            self.enable.accept_scoped("enable", visitor);
-            self.strobe.accept_scoped("strobe", visitor);
-            self.clock.accept_scoped("clock", visitor);
-            self.counter.accept_scoped("counter", visitor);
-            visitor.visit_end_scope(name, self);
+        fn accept(&self, name: &str, probe: &mut dyn Probe) {
+            probe.visit_start_scope(name, self);
+            self.enable.accept("enable", probe);
+            self.strobe.accept("strobe", probe);
+            self.clock.accept("clock", probe);
+            self.counter.accept("counter", probe);
+            probe.visit_end_scope(name, self);
         }
     }
 
@@ -98,8 +99,6 @@ mod tests {
         uut.clock.connect();
         uut.enable.connect();
         check_connected(&uut);
-//        let scopes = list_atoms(&uut);
-//        println!("{:#?}", scopes);
         let mut strobe_count = 0;
         for clock in 0..100_000_000 {
             uut.clock.next = Clock(clock % 2 == 0);
@@ -112,5 +111,4 @@ mod tests {
         }
         assert_eq!(strobe_count, 6_250_000);
     }
-
 }

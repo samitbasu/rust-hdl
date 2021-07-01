@@ -1,6 +1,6 @@
 use crate::block::Block;
 use crate::atom::Atom;
-use crate::scoped_visitor::ScopedVisitor;
+use crate::probe::Probe;
 use std::path::PathBuf;
 
 struct CheckConnected {
@@ -15,7 +15,7 @@ impl CheckConnected {
     }
 }
 
-impl ScopedVisitor for CheckConnected {
+impl Probe for CheckConnected {
     fn visit_start_scope(&mut self, name: &str, _node: &dyn Block) {
         self.path.push(name);
     }
@@ -38,5 +38,5 @@ impl ScopedVisitor for CheckConnected {
 
 pub fn check_connected(uut: &dyn Block) {
     let mut visitor = CheckConnected::new();
-    uut.accept_scoped("uut", &mut visitor);
+    uut.accept("uut", &mut visitor);
 }

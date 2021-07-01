@@ -1,4 +1,4 @@
-use crate::scoped_visitor::ScopedVisitor;
+use crate::probe::Probe;
 use crate::block::Block;
 use crate::synth::Synth;
 use crate::logic::Logic;
@@ -44,11 +44,11 @@ impl<T: Synth> Block for DFF<T> {
         self.d.changed || self.q.changed || self.clk.changed
     }
 
-    fn accept_scoped(&self, name: &str, visitor: &mut dyn ScopedVisitor) {
-        visitor.visit_start_scope(name, self);
-        self.d.accept_scoped("d", visitor);
-        self.q.accept_scoped("q", visitor);
-        self.clk.accept_scoped("clk", visitor);
-        visitor.visit_end_scope(name, self);
+    fn accept(&self, name: &str, probe: &mut dyn Probe) {
+        probe.visit_start_scope(name, self);
+        self.d.accept("d", probe);
+        self.q.accept("q", probe);
+        self.clk.accept("clk", probe);
+        probe.visit_end_scope(name, self);
     }
 }
