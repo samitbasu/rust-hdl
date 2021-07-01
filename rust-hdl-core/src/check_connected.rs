@@ -1,18 +1,11 @@
 use crate::block::Block;
 use crate::atom::Atom;
 use crate::probe::Probe;
-use std::path::PathBuf;
+use crate::named_path::NamedPath;
 
+#[derive(Default)]
 struct CheckConnected {
-    path: PathBuf,
-}
-
-impl CheckConnected {
-    fn new() -> Self {
-        Self {
-            path: PathBuf::new(),
-        }
-    }
+    path: NamedPath,
 }
 
 impl Probe for CheckConnected {
@@ -24,11 +17,11 @@ impl Probe for CheckConnected {
         if !signal.connected() {
             panic!(
                 "Signal {}::{} has no driver!",
-                self.path.to_str().unwrap(),
+                self.path.to_string(),
                 name
             )
         }
-        println!("Signal {}::{} is driven", self.path.to_str().unwrap(), name);
+        println!("Signal {}::{} is driven", self.path.to_string(), name);
     }
 
     fn visit_end_scope(&mut self, _name: &str, _node: &dyn Block) {
@@ -37,6 +30,6 @@ impl Probe for CheckConnected {
 }
 
 pub fn check_connected(uut: &dyn Block) {
-    let mut visitor = CheckConnected::new();
+    let mut visitor = CheckConnected::default();
     uut.accept("uut", &mut visitor);
 }

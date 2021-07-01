@@ -1,6 +1,6 @@
 use crate::synth::Synth;
 use crate::direction::{Direction, In, Out};
-use crate::atom::Atom;
+use crate::atom::{Atom, AtomKind};
 use crate::logic::Logic;
 use crate::clock::Clock;
 use crate::block::Block;
@@ -28,7 +28,12 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
     fn changed(&self) -> bool {
         self.changed
     }
+
+    fn kind(&self) -> AtomKind {
+        D::KIND
+    }
 }
+
 
 impl<D: Direction, T: Synth> Signal<D, T> {
     pub fn connect(&mut self) {
@@ -39,6 +44,7 @@ impl<D: Direction, T: Synth> Signal<D, T> {
 
 impl<D: Direction, T: Synth> Logic for Signal<D, T> {
     fn update(&mut self) {}
+    fn connect(&mut self) {}
 }
 
 impl<D: Direction, T: Synth> Block for Signal<D, T> {

@@ -14,13 +14,13 @@ pub struct DFF<T: Synth> {
 
 impl<T: Synth> DFF<T> {
     pub fn new(init: T) -> DFF<T> {
-        let mut dff = Self {
+        let mut x = Self {
             d: Signal::new(),
             q: Signal::new_with_default(init), // This should be marked as a register, since we write to it on a clock edge
             clk: Signal::<In, Clock>::new(),
         };
-        dff.q.connect();
-        dff
+        x.connect();
+        x
     }
 }
 
@@ -29,6 +29,9 @@ impl<T: Synth> Logic for DFF<T> {
         if self.clk.pos_edge() {
             self.q.next = self.d.val
         }
+    }
+    fn connect(&mut self) {
+        self.q.connect();
     }
 }
 
