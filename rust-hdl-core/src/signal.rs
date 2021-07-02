@@ -63,6 +63,8 @@ impl<D: Direction, T: Synth> Block for Signal<D, T> {
     fn accept(&self, name: &str, probe: &mut dyn Probe) {
         probe.visit_atom(name, self);
     }
+
+    fn connect_all(&mut self) {}
 }
 
 
@@ -91,8 +93,8 @@ impl<T: Synth> Signal<Out, T> {
     }
 }
 
-impl<T: Synth> Signal<In, T> {
-    pub fn new() -> Signal<In, T> {
+impl<D: Direction, T: Synth> Default for Signal<D, T> {
+    fn default() -> Self {
         Self {
             next: T::default(),
             val: T::default(),
@@ -103,4 +105,3 @@ impl<T: Synth> Signal<In, T> {
         }
     }
 }
-

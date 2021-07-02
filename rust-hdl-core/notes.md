@@ -40,4 +40,3 @@ fn update(mut w: Widget) -> Widget {
     }
 }
 ```
-

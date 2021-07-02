@@ -1,13 +1,16 @@
 use crate::atom::AtomKind;
 
-pub trait Direction {
+pub trait Direction : Clone {
     const NAME: &'static str;
     const KIND: AtomKind;
 }
 
+#[derive(Default, Clone, Debug)]
 pub struct In {}
 
+#[derive(Default, Clone, Debug)]
 pub struct Out {}
+
 
 impl Direction for In {
     const NAME: &'static str = "in";

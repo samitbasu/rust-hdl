@@ -6,6 +6,7 @@ use crate::clock::Clock;
 use crate::direction::{In, Out};
 use crate::signal::Signal;
 
+#[derive(Clone, Debug)]
 pub struct DFF<T: Synth> {
     pub d: Signal<In, T>,
     pub q: Signal<Out, T>,
@@ -14,13 +15,11 @@ pub struct DFF<T: Synth> {
 
 impl<T: Synth> DFF<T> {
     pub fn new(init: T) -> DFF<T> {
-        let mut x = Self {
-            d: Signal::new(),
+        Self {
+            d: Signal::default(),
             q: Signal::new_with_default(init), // This should be marked as a register, since we write to it on a clock edge
-            clk: Signal::<In, Clock>::new(),
-        };
-        x.connect();
-        x
+            clk: Signal::default()
+        }
     }
 }
 
@@ -36,6 +35,13 @@ impl<T: Synth> Logic for DFF<T> {
 }
 
 impl<T: Synth> Block for DFF<T> {
+    fn connect_all(&mut self) {
+        self.connect();
+        self.d.connect_all();
+        self.q.connect_all();
+        self.clk.connect_all();
+    }
+
     fn update_all(&mut self) {
         self.update();
         self.d.update_all();
