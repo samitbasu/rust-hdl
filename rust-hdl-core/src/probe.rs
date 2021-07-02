@@ -1,5 +1,5 @@
-use crate::block::Block;
 use crate::atom::Atom;
+use crate::block::Block;
 
 pub trait Probe {
     fn visit_start_scope(&mut self, name: &str, node: &dyn Block);

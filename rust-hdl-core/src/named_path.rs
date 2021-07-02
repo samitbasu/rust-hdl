@@ -14,7 +14,8 @@ impl NamedPath {
     }
 
     pub fn parent(&self) -> String {
-        self.path[0..self.path.len()-1].iter()
+        self.path[0..self.path.len() - 1]
+            .iter()
             .map(|x| x.to_string())
             .collect::<Vec<_>>()
             .join("::")

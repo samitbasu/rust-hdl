@@ -1,7 +1,7 @@
-use crate::block::Block;
 use crate::atom::Atom;
-use crate::probe::Probe;
+use crate::block::Block;
 use crate::named_path::NamedPath;
+use crate::probe::Probe;
 
 #[derive(Default)]
 struct CheckConnected {
@@ -23,11 +23,7 @@ impl Probe for CheckConnected {
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
         if !signal.connected() {
-            panic!(
-                "Signal {}::{} has no driver!",
-                self.path.to_string(),
-                name
-            )
+            panic!("Signal {}::{} has no driver!", self.path.to_string(), name)
         }
         println!("Signal {}::{} is driven", self.path.to_string(), name);
     }

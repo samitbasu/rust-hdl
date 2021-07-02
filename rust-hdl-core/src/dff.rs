@@ -1,10 +1,10 @@
-use crate::probe::Probe;
 use crate::block::Block;
-use crate::synth::Synth;
-use crate::logic::Logic;
 use crate::clock::Clock;
 use crate::direction::{In, Out};
+use crate::logic::Logic;
+use crate::probe::Probe;
 use crate::signal::Signal;
+use crate::synth::Synth;
 
 #[derive(Clone, Debug)]
 pub struct DFF<T: Synth> {
@@ -18,7 +18,7 @@ impl<T: Synth> DFF<T> {
         Self {
             d: Signal::default(),
             q: Signal::new_with_default(init), // This should be marked as a register, since we write to it on a clock edge
-            clk: Signal::default()
+            clk: Signal::default(),
         }
     }
 }

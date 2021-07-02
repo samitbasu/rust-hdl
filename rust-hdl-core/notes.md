@@ -40,3 +40,7 @@ fn update(mut w: Widget) -> Widget {
     }
 }
 ```
+
+Next steps...
+
+- Need to add constants, state enums, and local signal support.

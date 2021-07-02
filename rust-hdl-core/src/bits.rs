@@ -1,7 +1,7 @@
+use crate::bitvec::BitVec;
+use crate::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
-use crate::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
-use crate::bitvec::BitVec;
 
 // This comes with a few invariants that must be maintained for short representation
 // The short value must be less than 2^N
@@ -156,7 +156,6 @@ impl<const N: usize> Bits<N> {
         N
     }
 }
-
 
 impl From<bool> for Bits<1> {
     #[inline(always)]

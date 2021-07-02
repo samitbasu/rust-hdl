@@ -1,10 +1,9 @@
 use quote::quote;
-use syn::{Data, Result};
 use syn::spanned::Spanned;
+use syn::{Data, Result};
 
 use crate::common;
 use crate::common::TS;
-
 
 pub(crate) fn get_impl_for_logic_block(input: &syn::DeriveInput) -> Result<TS> {
     let fields = common::get_field_names(input)?;
@@ -34,4 +33,3 @@ fn get_accept(fields: Vec<TS>) -> Result<TS> {
         }
     })
 }
-

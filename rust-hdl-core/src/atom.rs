@@ -4,19 +4,21 @@ pub enum AtomKind {
     OutputParameter,
     StubInputSignal,
     StubOutputSignal,
+    Constant,
+    LocalSignal,
 }
 
 impl AtomKind {
     pub fn is_parameter(&self) -> bool {
         match self {
             AtomKind::InputParameter | AtomKind::OutputParameter => true,
-            _ => false
+            _ => false,
         }
     }
     pub fn is_stub(&self) -> bool {
         match self {
             AtomKind::StubInputSignal | AtomKind::StubOutputSignal => true,
-            _ => false
+            _ => false,
         }
     }
 }

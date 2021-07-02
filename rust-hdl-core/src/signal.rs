@@ -1,10 +1,10 @@
-use crate::synth::Synth;
-use crate::direction::{Direction, In, Out};
 use crate::atom::{Atom, AtomKind};
-use crate::logic::Logic;
-use crate::clock::Clock;
 use crate::block::Block;
+use crate::clock::Clock;
+use crate::direction::{Direction, In, Out};
+use crate::logic::Logic;
 use crate::probe::Probe;
+use crate::synth::Synth;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Signal<D: Direction, T: Synth> {
@@ -34,7 +34,6 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
     }
 }
 
-
 impl<D: Direction, T: Synth> Signal<D, T> {
     pub fn connect(&mut self) {
         assert!(!self.claimed);
@@ -48,6 +47,8 @@ impl<D: Direction, T: Synth> Logic for Signal<D, T> {
 }
 
 impl<D: Direction, T: Synth> Block for Signal<D, T> {
+    fn connect_all(&mut self) {}
+
     fn update_all(&mut self) {
         self.changed = self.val != self.next;
         if self.changed {
@@ -63,11 +64,7 @@ impl<D: Direction, T: Synth> Block for Signal<D, T> {
     fn accept(&self, name: &str, probe: &mut dyn Probe) {
         probe.visit_atom(name, self);
     }
-
-    fn connect_all(&mut self) {}
 }
-
-
 
 impl Signal<In, Clock> {
     #[inline(always)]

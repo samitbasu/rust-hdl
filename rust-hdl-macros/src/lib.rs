@@ -1,13 +1,13 @@
+mod common;
 mod logic_block;
 mod logic_interface;
-mod common;
 
 use syn::parse_macro_input;
 use syn::DeriveInput;
 
-use proc_macro::TokenStream;
 use crate::logic_block::get_impl_for_logic_block;
 use crate::logic_interface::get_impl_for_logic_interface;
+use proc_macro::TokenStream;
 
 #[proc_macro_derive(LogicBlock)]
 pub fn logic_block(input: TokenStream) -> TokenStream {

@@ -1,9 +1,9 @@
+use crate::atom::AtomKind::{StubInputSignal, StubOutputSignal};
+use crate::atom::{Atom, AtomKind};
+use crate::block::Block;
 use crate::named_path::NamedPath;
 use crate::probe::Probe;
-use crate::block::Block;
-use crate::atom::{Atom, AtomKind};
 use std::collections::HashMap;
-use crate::atom::AtomKind::{StubInputSignal, StubOutputSignal};
 
 #[derive(Clone, Debug, Default)]
 struct ModuleDetails {
@@ -18,20 +18,22 @@ struct AtomDetails {
     width: usize,
 }
 
-fn verilog_param(x: &AtomKind) -> &str {
+fn verilog_atom_name(x: &AtomKind) -> &str {
     match x {
         AtomKind::InputParameter => "in",
         AtomKind::OutputParameter => "out",
         AtomKind::StubInputSignal => "reg",
         AtomKind::StubOutputSignal => "wire",
+        AtomKind::Constant => "localparam",
+        AtomKind::LocalSignal => "wire",
     }
 }
 
 fn decl(x: &AtomDetails) -> String {
     if x.width == 1 {
-        format!("{} {}", verilog_param(&x.kind), x.name)
+        format!("{} {}", verilog_atom_name(&x.kind), x.name)
     } else {
-        format!("{} [{}:0] {}", verilog_param(&x.kind), x.width-1, x.name)
+        format!("{} [{}:0] {}", verilog_atom_name(&x.kind), x.width - 1, x.name)
     }
 }
 
@@ -66,7 +68,12 @@ impl Probe for ModuleDefines {
     }
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
-        println!("Atom: name {} path {} namespace {}", name, self.path.to_string(), self.namespace.flat("_"));
+        println!(
+            "Atom: name {} path {} namespace {}",
+            name,
+            self.path.to_string(),
+            self.namespace.flat("_")
+        );
         let module_path = self.path.to_string();
         let module_name = self.path.last();
         let namespace = self.namespace.flat("_");
@@ -78,7 +85,7 @@ impl Probe for ModuleDefines {
         let param = AtomDetails {
             name: name.clone(),
             kind: signal.kind(),
-            width: signal.bits()
+            width: signal.bits(),
         };
         if param.kind.is_parameter() {
             let kind = if param.kind == AtomKind::InputParameter {
@@ -89,7 +96,7 @@ impl Probe for ModuleDefines {
             let parent_param = AtomDetails {
                 name: format!("{}_{}", module_name, name.to_owned()),
                 kind,
-                width: signal.bits()
+                width: signal.bits(),
             };
             let parent_name = self.path.parent();
             self.add_atom(&parent_name, parent_param);
@@ -112,35 +119,41 @@ impl ModuleDefines {
             let module_name = k.0;
             let module_details = k.1;
             println!("\n\nmodule {}", module_name);
-            let atoms= &module_details.atoms;
+            let atoms = &module_details.atoms;
             let args = atoms
                 .iter()
                 .filter(|x| x.kind.is_parameter())
                 .collect::<Vec<_>>();
-            let locals = atoms
+            let stubs = atoms
                 .iter()
                 .filter(|x| x.kind.is_stub())
                 .collect::<Vec<_>>();
-            let arg_names = args
+            let consts = atoms
+                .iter()
+                .filter(|x| x.kind == AtomKind::Constant)
+                .collect::<Vec<_>>();
+            let locals = atoms
+                .iter()
+                .filter(|x| x.kind == AtomKind::LocalSignal)
+                .collect::<Vec<_>>();
+            let arg_names = stubs
                 .iter()
                 .map(|x| x.name.to_owned())
                 .collect::<Vec<_>>()
                 .join(",");
             println!("({})", arg_names);
             println!("\n// Module arguments");
-            args.iter()
-                .for_each(|x| println!("{}", decl(x)));
+            args.iter().for_each(|x| println!("{}", decl(x)));
             let submodules = &module_details.sub_modules;
+            println!("\n// Constant declarations");
+            consts.iter().for_each(|x| println!("{}", decl(x)));
             println!("\n// Stub signals");
-            locals.iter()
-                .for_each(|x| println!("{}", decl(x)));
+            stubs.iter().for_each(|x| println!("{}", decl(x)));
+            println!("\n// Local signals");
+            locals.iter().for_each(|x| println!("{}", decl(x)));
             println!("\n// Sub module instances");
-            submodules.iter()
-                .for_each(|x| println!("sub module {}", x));
+            submodules.iter().for_each(|x| println!("sub module {}", x));
             println!("end module {}", module_name);
         }
     }
 }
-
-
-

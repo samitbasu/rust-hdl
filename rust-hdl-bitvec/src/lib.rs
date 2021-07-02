@@ -1,7 +1,7 @@
+use crate::bitvec::BitVec;
+use crate::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
-use crate::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
-use crate::bitvec::BitVec;
 
 mod bitvec;
 mod shortbitvec;
@@ -159,7 +159,6 @@ impl<const N: usize> Bits<N> {
         N
     }
 }
-
 
 impl From<bool> for Bits<1> {
     #[inline(always)]

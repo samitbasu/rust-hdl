@@ -1,7 +1,7 @@
-use crate::common::{TS, get_update_all, get_has_changed, get_connect_all};
 use crate::common::get_field_names;
-use syn::Result;
+use crate::common::{get_connect_all, get_has_changed, get_update_all, TS};
 use quote::quote;
+use syn::Result;
 
 pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<TS> {
     let fields = get_field_names(input)?;
@@ -36,4 +36,3 @@ fn get_accept(fields: Vec<TS>) -> Result<TS> {
         }
     })
 }
-

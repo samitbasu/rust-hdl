@@ -1,5 +1,5 @@
+use crate::bits::{bit_cast, clog2, Bits};
 use crate::synth::Synth;
-use crate::bits::{clog2, Bits, bit_cast};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum CmdType {
@@ -38,12 +38,12 @@ impl From<CmdType> for Bits<2> {
 // Auto generated
 impl From<Bits<2>> for CmdType {
     fn from(x: Bits<2>) -> Self {
-        let xval : usize = x.into();
+        let xval: usize = x.into();
         match xval {
             0 => CmdType::Noop,
             1 => CmdType::Read,
             2 => CmdType::Write,
-            _ => panic!("Illegal conversion")
+            _ => panic!("Illegal conversion"),
         }
     }
 }
@@ -72,34 +72,30 @@ struct MIGCmd {
 }
 
 impl Synth for MIGCmd {
-    const BITS : usize = CmdType::BITS + bool::BITS + Bits::<6>::BITS;
+    const BITS: usize = CmdType::BITS + bool::BITS + Bits::<6>::BITS;
 }
 
 // Auto generated
-impl From<MIGCmd> for Bits<{MIGCmd::BITS}> {
+impl From<MIGCmd> for Bits<{ MIGCmd::BITS }> {
     fn from(x: MIGCmd) -> Self {
-        let x2 = bit_cast::<{MIGCmd::BITS}, {Bits::<6>::BITS}>(x.len.into());
-        let x1 = bit_cast::<{MIGCmd::BITS}, {bool::BITS}>(x.active.into()) |
-            x2 << {bool::BITS};
-        let x0 = bit_cast::<{MIGCmd::BITS}, {CmdType::BITS}>(x.cmd.into()) |
-            x1 << {CmdType::BITS};
+        let x2 = bit_cast::<{ MIGCmd::BITS }, { Bits::<6>::BITS }>(x.len.into());
+        let x1 =
+            bit_cast::<{ MIGCmd::BITS }, { bool::BITS }>(x.active.into()) | x2 << { bool::BITS };
+        let x0 =
+            bit_cast::<{ MIGCmd::BITS }, { CmdType::BITS }>(x.cmd.into()) | x1 << { CmdType::BITS };
         x0
     }
 }
 
 // Auto generated
-impl From<Bits<{MIGCmd::BITS}>> for MIGCmd {
-    fn from(x: Bits<{MIGCmd::BITS}>) -> Self {
-        let cmd: CmdType = x.get_bits::<{CmdType::BITS}>(0).into();
-        let x = x >> {CmdType::BITS};
-        let active: bool = x.get_bits::<{bool::BITS}>(0).into();
-        let x = x >> {bool::BITS};
-        let len: Bits<6> = x.get_bits::<{Bits::<6>::BITS}>(0).into();
-        MIGCmd {
-            cmd,
-            active,
-            len,
-        }
+impl From<Bits<{ MIGCmd::BITS }>> for MIGCmd {
+    fn from(x: Bits<{ MIGCmd::BITS }>) -> Self {
+        let cmd: CmdType = x.get_bits::<{ CmdType::BITS }>(0).into();
+        let x = x >> { CmdType::BITS };
+        let active: bool = x.get_bits::<{ bool::BITS }>(0).into();
+        let x = x >> { bool::BITS };
+        let len: Bits<6> = x.get_bits::<{ Bits::<6>::BITS }>(0).into();
+        MIGCmd { cmd, active, len }
     }
 }
 
@@ -109,7 +105,7 @@ fn test_composite() {
     let x = MIGCmd {
         cmd: CmdType::Read,
         active: true,
-        len: 35_usize.into()
+        len: 35_usize.into(),
     };
 
     let y: Bits<9> = x.into();
@@ -117,9 +113,9 @@ fn test_composite() {
     assert_eq!(y.get_bits::<{ bool::BITS }>(2), true.into());
     assert_eq!(y.get_bits::<6>(3), 35_u32.into());
 
-    let z0: Bits::<9> = 2_usize.into();
-    let z1: Bits::<9> = 0_usize.into();
-    let z2: Bits::<9> = 42_usize.into();
+    let z0: Bits<9> = 2_usize.into();
+    let z1: Bits<9> = 0_usize.into();
+    let z2: Bits<9> = 42_usize.into();
     let z = z0 | z1 << 2 | z2 << 3;
     let x: MIGCmd = z.into();
     assert_eq!(x.active, false);

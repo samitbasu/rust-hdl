@@ -1,37 +1,36 @@
-mod direction;
-mod synth;
-mod clock;
-mod constant;
 mod atom;
-mod signal;
-mod logic;
-mod block;
-mod probe;
-mod dff;
-mod simulate;
-mod check_connected;
-mod shortbitvec;
 mod bits;
 mod bitvec;
-mod struct_valued;
+mod block;
+mod check_connected;
+mod clock;
+mod constant;
+mod dff;
+mod direction;
+mod logic;
 mod module_defines;
 mod named_path;
-
+mod probe;
+mod shortbitvec;
+mod signal;
+mod simulate;
+mod struct_valued;
+mod synth;
 
 #[cfg(test)]
 mod tests {
-    use crate::signal::Signal;
-    use crate::direction::{In, Out};
     use crate::bits::{Bit, Bits};
+    use crate::block::Block;
+    use crate::check_connected::check_connected;
     use crate::clock::Clock;
     use crate::constant::Constant;
-    use crate::logic::Logic;
-    use crate::block::Block;
-    use crate::probe::Probe;
-    use crate::simulate::simulate;
     use crate::dff::DFF;
-    use crate::check_connected::check_connected;
+    use crate::direction::{In, Out, Local};
+    use crate::logic::Logic;
     use crate::module_defines::ModuleDefines;
+    use crate::probe::Probe;
+    use crate::signal::Signal;
+    use crate::simulate::simulate;
     use rust_hdl_macros::LogicBlock;
     use rust_hdl_macros::LogicInterface;
 
@@ -40,7 +39,7 @@ mod tests {
         pub enable: Signal<In, Bit>,
         pub strobe: Signal<Out, Bit>,
         pub clock: Signal<In, Clock>,
-//        pub strobe_incr: Constant<Bits<N>>,
+        pub strobe_incr: Constant<Bits<N>>,
         counter: DFF<Bits<N>>,
     }
 
@@ -50,7 +49,7 @@ mod tests {
                 enable: Signal::default(),
                 strobe: Signal::<Out, Bit>::new_with_default(false),
                 clock: Signal::default(),
-//                strobe_incr: Constant::new(1_usize.into()),
+                strobe_incr: Constant::new(1_usize.into()),
                 counter: DFF::new(0_usize.into()),
             }
         }
@@ -60,7 +59,7 @@ mod tests {
         fn update(&mut self) {
             self.counter.clk.next = self.clock.val;
             if self.enable.val {
-                self.counter.d.next = self.counter.q.val + 1; //self.strobe_incr.val;
+                self.counter.d.next = self.counter.q.val + self.strobe_incr.val;
             }
             self.strobe.next = self.enable.val & !self.counter.q.val.any();
         }
@@ -96,7 +95,6 @@ mod tests {
 
     #[test]
     fn test_write_modules_nested_ports() {
-
         #[derive(Clone, Debug, Default, LogicInterface)]
         struct MyBus {
             pub data: FIFORead<8>,
@@ -159,7 +157,6 @@ mod tests {
                     self.bus.data.empty.next = self.widget_a.bus.data.empty.val;
                     self.bus.data.output.next = self.widget_a.bus.data.output.val;
                     self.widget_a.bus.data.read.next = self.bus.data.read.val;
-
                 } else {
                     self.bus.cmd.underflow.next = self.widget_b.bus.cmd.underflow.val;
                     self.bus.cmd.almost_empty.next = self.widget_b.bus.cmd.almost_empty.val;
@@ -195,22 +192,35 @@ mod tests {
         uut.bus.data.read.connect();
         uut.select.connect();
         uut.connect_all();
-//        check_connected(&uut);
+        //        check_connected(&uut);
         let mut defines = ModuleDefines::default();
         uut.accept("uut", &mut defines);
         defines.defines();
-
     }
-
 
     #[test]
     fn test_write_modules() {
-        #[derive(Clone, Default, Debug, LogicBlock)]
+        #[derive(Clone, Debug, LogicBlock)]
         struct StrobePair {
             pub a_strobe: Strobe<4>,
             pub b_strobe: Strobe<6>,
             pub clock: Signal<In, Clock>,
             pub enable: Signal<In, Bit>,
+            pub increment: Constant<Bits<6>>,
+            pub local: Signal<Local, Bit>,
+        }
+
+        impl StrobePair {
+            pub fn new() -> StrobePair {
+                Self {
+                    a_strobe: Strobe::default(),
+                    b_strobe: Strobe::default(),
+                    clock: Signal::default(),
+                    enable: Signal::default(),
+                    increment: Constant::new(32_usize.into()),
+                    local: Signal::default(),
+                }
+            }
         }
 
         impl Logic for StrobePair {
@@ -220,10 +230,11 @@ mod tests {
                 self.b_strobe.enable.connect();
                 self.a_strobe.clock.connect();
                 self.b_strobe.clock.connect();
+                self.local.connect();
             }
         }
 
-        let mut uut = StrobePair::default();
+        let mut uut = StrobePair::new();
         // Simulate 100 clock cycles
         //uut.enable.next = true;
         println!("Starting");

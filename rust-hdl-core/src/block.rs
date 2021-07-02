@@ -1,7 +1,7 @@
 use crate::logic::Logic;
 use crate::probe::Probe;
 
-pub trait Block : Logic {
+pub trait Block: Logic {
     fn connect_all(&mut self);
     fn update_all(&mut self);
     fn has_changed(&self) -> bool;
