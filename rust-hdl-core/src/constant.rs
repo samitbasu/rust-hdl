@@ -39,6 +39,18 @@ impl<T: Synth> Atom for Constant<T> {
     fn kind(&self) -> AtomKind {
         AtomKind::Constant
     }
+
+    fn is_enum(&self) -> bool {
+        T::ENUM_TYPE
+    }
+
+    fn name(&self, ndx: usize) -> &'static str {
+        T::name(ndx)
+    }
+
+    fn type_name(&self) -> &'static str {
+        T::TYPE_NAME
+    }
 }
 
 impl<T: Synth> Block for Constant<T> {

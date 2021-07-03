@@ -19,7 +19,7 @@ mod synth;
 
 #[cfg(test)]
 mod tests {
-    use crate::bits::{Bit, Bits};
+    use crate::bits::{Bit, Bits, clog2};
     use crate::block::Block;
     use crate::check_connected::check_connected;
     use crate::clock::Clock;
@@ -33,6 +33,7 @@ mod tests {
     use crate::simulate::simulate;
     use rust_hdl_macros::LogicBlock;
     use rust_hdl_macros::LogicInterface;
+    use crate::synth::Synth;
 
     #[derive(Clone, Debug, LogicBlock)]
     struct Strobe<const N: usize> {
@@ -199,15 +200,115 @@ mod tests {
     }
 
     #[test]
+    fn test_enum_state() {
+        #[derive(Copy, Clone, Debug, PartialEq)]
+        enum MyState {
+            Init,
+            Start,
+            Running,
+            Paused,
+            Stopped
+        }
+
+        impl Default for MyState {
+            fn default() -> Self {
+                Self::Init
+            }
+        }
+
+        impl Synth for MyState {
+            const BITS: usize = clog2(5);
+            const ENUM_TYPE: bool = true;
+            const TYPE_NAME: &'static str = "MyState";
+            fn name(ndx: usize) -> &'static str {
+                match ndx {
+                    0 => "Init",
+                    1 => "Start",
+                    2 => "Running",
+                    3 => "Paused",
+                    4 => "Stopped",
+                    _ => ""
+                }
+            }
+        }
+
+        #[derive(Clone, Debug, LogicBlock)]
+        struct StateMachine {
+            pub clock: Signal<In, Clock>,
+            pub advance: Signal<In, Bit>,
+            state: DFF<MyState>
+        }
+
+        impl StateMachine {
+            pub fn new() -> StateMachine {
+                StateMachine {
+                    clock: Signal::default(),
+                    advance: Signal::default(),
+                    state: DFF::new(MyState::Init),
+                }
+            }
+        }
+
+        impl Logic for StateMachine {
+            fn update(&mut self) {
+                self.state.clk.next = self.clock.val;
+
+                if self.advance.val {
+                    match self.state.q.val {
+                        MyState::Init => {
+                            self.state.d.next = MyState::Start
+                        }
+                        MyState::Start => {
+                            self.state.d.next = MyState::Running
+                        }
+                        MyState::Running => {
+                            self.state.d.next = MyState::Paused
+                        }
+                        MyState::Paused => {
+                            self.state.d.next = MyState::Stopped
+                        }
+                        MyState::Stopped => {
+                            self.state.d.next = MyState::Init
+                        }
+                    }
+                }
+            }
+
+            fn connect(&mut self) {
+                self.state.d.connect();
+                self.state.clk.connect();
+            }
+        }
+
+        let mut uut = StateMachine::new();
+        println!("Starting");
+        uut.clock.connect();
+        uut.advance.connect();
+        uut.connect_all();
+        check_connected(&uut);
+        for clock in 0..10 {
+            uut.clock.next = Clock(clock % 2 == 0);
+            uut.advance.next = true;
+            if !simulate(&mut uut, 10) {
+                panic!("Logic did not converge");
+            }
+            println!("State {:?}", uut.state.q.val);
+        }
+        let mut defines = ModuleDefines::default();
+        uut.accept("uut", &mut defines);
+        defines.defines();
+    }
+
+    #[test]
     fn test_write_modules() {
         #[derive(Clone, Debug, LogicBlock)]
         struct StrobePair {
-            pub a_strobe: Strobe<4>,
-            pub b_strobe: Strobe<6>,
             pub clock: Signal<In, Clock>,
             pub enable: Signal<In, Bit>,
-            pub increment: Constant<Bits<6>>,
-            pub local: Signal<Local, Bit>,
+            a_strobe: Strobe<4>,
+            b_strobe: Strobe<6>,
+            increment: Constant<Bits<6>>,
+            local: Signal<Local, Bit>,
         }
 
         impl StrobePair {

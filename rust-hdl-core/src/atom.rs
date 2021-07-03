@@ -28,4 +28,7 @@ pub trait Atom {
     fn connected(&self) -> bool;
     fn changed(&self) -> bool;
     fn kind(&self) -> AtomKind;
+    fn is_enum(&self) -> bool;
+    fn name(&self, ndx: usize) -> &'static str;
+    fn type_name(&self) -> &'static str;
 }

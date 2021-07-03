@@ -32,6 +32,18 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
     fn kind(&self) -> AtomKind {
         D::KIND
     }
+
+    fn is_enum(&self) -> bool {
+        T::ENUM_TYPE
+    }
+
+    fn name(&self, ndx: usize) -> &'static str {
+        T::name(ndx)
+    }
+
+    fn type_name(&self) -> &'static str {
+        T::TYPE_NAME
+    }
 }
 
 impl<D: Direction, T: Synth> Signal<D, T> {

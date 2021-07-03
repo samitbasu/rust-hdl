@@ -9,6 +9,14 @@ use std::collections::HashMap;
 struct ModuleDetails {
     atoms: Vec<AtomDetails>,
     sub_modules: Vec<String>,
+    enums: Vec<EnumDefinition>
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct EnumDefinition {
+    pub type_name: String,
+    pub discriminant: String,
+    pub value: usize
 }
 
 #[derive(Clone, Debug)]
@@ -53,6 +61,20 @@ impl ModuleDefines {
         let entry = self.details.entry(module.into()).or_default();
         entry.sub_modules.push(submodule.into())
     }
+    fn add_enum(&mut self, module: &str, signal: &dyn Atom) {
+        let entry = self.details.entry(module.into()).or_default();
+        let enum_name = signal.type_name();
+        let enum_values = (0..(1 << signal.bits()))
+            .map(|x|
+                EnumDefinition {
+                    type_name: enum_name.into(),
+                    discriminant: signal.name(x).into(),
+                    value: x
+                })
+            .filter(|x| x.discriminant.len() != 0)
+            .collect::<Vec<_>>();
+        entry.enums.extend(enum_values.into_iter())
+    }
 }
 
 impl Probe for ModuleDefines {
@@ -69,10 +91,12 @@ impl Probe for ModuleDefines {
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
         println!(
-            "Atom: name {} path {} namespace {}",
+            "Atom: name {} path {} namespace {} enum {} type {}",
             name,
             self.path.to_string(),
-            self.namespace.flat("_")
+            self.namespace.flat("_"),
+            signal.is_enum(),
+            signal.type_name()
         );
         let module_path = self.path.to_string();
         let module_name = self.path.last();
@@ -100,6 +124,9 @@ impl Probe for ModuleDefines {
             };
             let parent_name = self.path.parent();
             self.add_atom(&parent_name, parent_param);
+        }
+        if signal.is_enum() {
+            self.add_enum(&module_path, signal);
         }
         self.add_atom(&module_path, param);
     }
@@ -147,6 +174,9 @@ impl ModuleDefines {
             let submodules = &module_details.sub_modules;
             println!("\n// Constant declarations");
             consts.iter().for_each(|x| println!("{}", decl(x)));
+            println!("\n// Enums");
+            module_details.enums.iter().for_each(|x |
+              println!("localparam {}_{} = {}", x.type_name, x.discriminant, x.value));
             println!("\n// Stub signals");
             stubs.iter().for_each(|x| println!("{}", decl(x)));
             println!("\n// Local signals");
