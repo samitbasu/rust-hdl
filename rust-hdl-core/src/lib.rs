@@ -512,7 +512,26 @@ pub async fn fifo_vector_feeder<T: Synthesizable>(
 }
  */
 
-    use crossbeam::channel::{Sender, Receiver, bounded};
+    use crossbeam::channel::{Sender, Receiver, bounded, RecvError, SendError};
+
+    #[derive(Copy, Clone, Debug, PartialEq)]
+    enum SimError {
+        SimTerminated
+    }
+
+    impl From<RecvError> for SimError {
+        fn from(x: RecvError) -> Self {
+            SimError::SimTerminated
+        }
+    }
+
+    impl<T> From<SendError<T>> for SimError {
+        fn from(x: SendError<T>) -> Self {
+            SimError:: SimTerminated
+        }
+    }
+
+    type Result<T> = std::result::Result<T, SimError>;
 
     struct Circuit {
         x: i32,
@@ -578,7 +597,7 @@ pub async fn fifo_vector_feeder<T: Synthesizable>(
                 time: 0
             }
         }
-        fn dispatch(&mut self, idx: usize, x: T) -> T {
+        fn dispatch(&mut self, idx: usize, x: T) -> Result<T> {
             let worker = &mut self.workers[idx];
             println!("Sending circuit to worker {}", worker.id);
             worker.channel_to_worker.send(Message {
@@ -587,7 +606,7 @@ pub async fn fifo_vector_feeder<T: Synthesizable>(
                 circuit: x
             });
             println!("Waiting for circuit to return");
-            let x = self.recv.recv().unwrap();
+            let x = self.recv.recv()?;
             println!("Received circuit from worker {}", x.id);
             match &x.kind {
                 TriggerType::Never => {
@@ -601,12 +620,12 @@ pub async fn fifo_vector_feeder<T: Synthesizable>(
                 }
             }
             worker.kind = x.kind;
-            x.circuit
+            Ok(x.circuit)
         }
-        pub fn run(&mut self, mut x: T, max_time: u64) {
+        pub fn run(&mut self, mut x: T, max_time: u64) -> Result<()> {
             // First initialize the workers.
             for id in 0..self.workers.len() {
-                x = self.dispatch(id, x);
+                x = self.dispatch(id, x)?;
             }
             // Next run until we have no one else waiting
             while self.time < max_time {
@@ -635,85 +654,84 @@ pub async fn fifo_vector_feeder<T: Synthesizable>(
                 }
                 println!("Updating time to {}", min_time);
                 self.time = min_time;
-                x = self.dispatch(min_idx, x);
+                x = self.dispatch(min_idx, x)?;
             }
             println!("No more work to do... ending simulation");
             self.workers.clear();
+            Ok(())
         }
     }
 
     impl<T> Endpoint<T> {
-        pub fn init(&self) -> T {
-            self.from_sim.recv().unwrap().circuit
+        pub fn init(&self) -> Result<T> {
+            Ok(self.from_sim.recv()?.circuit)
         }
-        pub fn watch<S>(&mut self, check: S, x: T) -> Option<T>
+        pub fn watch<S>(&mut self, check: S, x: T) -> Result<T>
             where S: Fn(&T) -> bool + Send + 'static {
             self.to_sim.send(Message {
                 id: self.idx,
                 kind: TriggerType::Function(Box::new(check)),
                 circuit: x,
-            }).unwrap();
-            if let Ok(t) = self.from_sim.recv() {
-                Some(t.circuit)
-            } else {
-                None
-            }
+            })?;
+            let t = self.from_sim.recv()?;
+            Ok(t.circuit)
         }
-        pub fn wait(&mut self, delta: u64, x: T) -> Option<T> {
+        pub fn wait(&mut self, delta: u64, x: T) -> Result<T> {
             self.to_sim.send(Message {
                 id: self.idx,
                 kind: TriggerType::Time(delta + self.time),
                 circuit: x,
-            }).unwrap();
-            if let Ok(t) = self.from_sim.recv() {
-                if let TriggerType::Time(t0) = t.kind {
-                    self.time = t0;
-                }
-                return Some(t.circuit);
+            })?;
+            let t = self.from_sim.recv()?;
+            if let TriggerType::Time(t0) = t.kind {
+                self.time = t0;
             }
-            None
+            Ok(t.circuit)
         }
-        pub fn done(&self, x: T) {
+        pub fn done(&self, x: T) -> Result<()> {
             self.to_sim.send(Message {
                 id: self.idx,
                 kind: TriggerType::Never,
                 circuit: x,
-            }).unwrap();
+            })?;
+            Ok(())
         }
         pub fn time(&self) -> u64 {
             self.time
         }
     }
 
-    fn sample_func(mut ep: Endpoint<Circuit>) {
+    fn sample_func(mut ep: Endpoint<Circuit>) -> Result<()> {
         // Need an initialization stage...
         // Get the initial circuit - this must be serviced first.
         println!("Initialize TB 1");
-        let x = ep.init();
+        let x = ep.init()?;
         println!("Hello from TB 1");
-        let mut x = ep.wait(0, x);
+        let mut x = ep.wait(0, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
         x.x = 42;
-        let mut x = ep.wait(100, x);
+        let mut x = ep.wait(100, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
         x.x = 100;
-        let mut x = ep.watch(|m| m.x == 89, x);
+        let mut x = ep.watch(|m| m.x == 89, x)?;
         println!("Hello from TB1 where x value is {}", x.x);
-        let mut x = ep.wait(250, x);
+        let mut x = ep.wait(250, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
         // This is called last
-        ep.done(x);
+        ep.done(x)?;
         println!("TB 1 done");
+        Ok(())
     }
 
-    fn sample_func2(mut ep: Endpoint<Circuit>) {
-        let x = ep.init();
+    fn sample_func2(mut ep: Endpoint<Circuit>) -> Result<()> {
+        let x = ep.init()?;
         println!("Hello from TB 2");
-        let mut x = ep.wait(125, x);
+        let mut x = ep.wait(125, x)?;
         println!("Hello from TB 2 at time {}", ep.time());
         x.x = 88;
-        ep.done(x);
+        ep.done(x)?;
         println!("TB 2 done");
+        Ok(())
     }
 
     #[test]
