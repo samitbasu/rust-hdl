@@ -3,5 +3,6 @@
 members = [
     "rust-hdl-bitvec",
     "rust-hdl-core",
-    "rust-hdl-macros"
+    "rust-hdl-macros",
+    "rust-hdl-test"
 ]
