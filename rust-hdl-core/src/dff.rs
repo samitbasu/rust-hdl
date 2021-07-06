@@ -13,6 +13,12 @@ pub struct DFF<T: Synth> {
     pub clk: Signal<In, Clock>,
 }
 
+impl<T: Synth> Default for DFF<T> {
+    fn default() -> DFF<T> {
+        Self::new(T::default())
+    }
+}
+
 impl<T: Synth> DFF<T> {
     pub fn new(init: T) -> DFF<T> {
         Self {
