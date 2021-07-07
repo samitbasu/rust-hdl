@@ -3,7 +3,7 @@ use crate::ast::{
     VerilogIndexAssignment, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogStatement,
 };
 
-pub trait Visitor {
+pub trait VerilogVisitor {
     fn visit_block(&mut self, b: &VerilogBlock) {
         walk_block(self, b);
     }
@@ -93,56 +93,39 @@ pub trait Visitor {
     fn visit_index_replace(&mut self, a: &str, b: &VerilogExpression, c: &VerilogExpression) {
         walk_index_replacement(self, a, b, c);
     }
-
-    fn visit_pop_bit(&mut self, a: &str) {
-        walk_pop_bit(self, a);
-    }
-
-    fn visit_push_bit(&mut self, a: &str, b: &VerilogExpression) {
-        walk_push_bit(self, a, b);
-    }
 }
 
-pub fn walk_pop_bit<V: Visitor + ?Sized>(visitor: &mut V, a: &str) {
-    visitor.visit_signal(a);
-}
-
-pub fn walk_push_bit<V: Visitor + ?Sized>(visitor: &mut V, a: &str, b: &VerilogExpression) {
-    visitor.visit_signal(a);
-    visitor.visit_expression(b);
-}
-
-pub fn walk_index_replacement<V: Visitor + ?Sized>(visitor: &mut V, a: &str, b: &VerilogExpression, c: &VerilogExpression) {
+pub fn walk_index_replacement<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &str, b: &VerilogExpression, c: &VerilogExpression) {
     visitor.visit_signal(a);
     visitor.visit_expression(b);
     visitor.visit_expression(c);
 }
 
-pub fn walk_slice<V: Visitor + ?Sized>(visitor: &mut V, a: &str, b: &usize, c: &VerilogExpression) {
+pub fn walk_slice<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &str, b: &usize, c: &VerilogExpression) {
     visitor.visit_signal(a);
     visitor.visit_expression(c);
 }
 
-pub fn walk_index<V: Visitor + ?Sized>(visitor: &mut V, a: &str, b: &VerilogExpression) {
+pub fn walk_index<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &str, b: &VerilogExpression) {
     visitor.visit_signal(a);
     visitor.visit_expression(b);
 }
 
-pub fn walk_cast<V: Visitor + ?Sized>(visitor: &mut V, a: &VerilogExpression, b: &usize) {
+pub fn walk_cast<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &VerilogExpression, b: &usize) {
     visitor.visit_expression(a)
 }
 
-pub fn walk_paren<V: Visitor + ?Sized>(visitor: &mut V, p: &VerilogExpression) {
+pub fn walk_paren<V: VerilogVisitor + ?Sized>(visitor: &mut V, p: &VerilogExpression) {
     visitor.visit_expression(p);
 }
 
-pub fn walk_block<V: Visitor + ?Sized>(visitor: &mut V, b: &VerilogBlock) {
+pub fn walk_block<V: VerilogVisitor + ?Sized>(visitor: &mut V, b: &VerilogBlock) {
     for s in b {
         visitor.visit_statement(s)
     }
 }
 
-pub fn walk_slice_assignment<V: Visitor + ?Sized>(
+pub fn walk_slice_assignment<V: VerilogVisitor + ?Sized>(
     visitor: &mut V,
     base: &str,
     _width: &usize,
@@ -154,7 +137,7 @@ pub fn walk_slice_assignment<V: Visitor + ?Sized>(
     visitor.visit_expression(replacement);
 }
 
-pub fn walk_assignment<V: Visitor + ?Sized>(
+pub fn walk_assignment<V: VerilogVisitor + ?Sized>(
     visitor: &mut V,
     l: &VerilogExpression,
     r: &VerilogExpression,
@@ -163,7 +146,7 @@ pub fn walk_assignment<V: Visitor + ?Sized>(
     visitor.visit_expression(r);
 }
 
-pub fn walk_statement<V: Visitor + ?Sized>(visitor: &mut V, s: &VerilogStatement) {
+pub fn walk_statement<V: VerilogVisitor + ?Sized>(visitor: &mut V, s: &VerilogStatement) {
     match s {
         VerilogStatement::Assignment(l, r) => {
             visitor.visit_assignment(l, r);
@@ -188,19 +171,19 @@ pub fn walk_statement<V: Visitor + ?Sized>(visitor: &mut V, s: &VerilogStatement
     }
 }
 
-pub fn walk_index_assignment<V: Visitor + ?Sized>(visitor: &mut V, a: &VerilogIndexAssignment) {
+pub fn walk_index_assignment<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &VerilogIndexAssignment) {
     visitor.visit_expression(&a.value);
     visitor.visit_expression(&a.index);
     visitor.visit_expression(&a.target);
 }
 
-pub fn walk_conditional<V: Visitor + ?Sized>(visitor: &mut V, c: &VerilogConditional) {
+pub fn walk_conditional<V: VerilogVisitor + ?Sized>(visitor: &mut V, c: &VerilogConditional) {
     visitor.visit_expression(&c.test);
     visitor.visit_block(&c.then);
     visitor.visit_block_or_conditional(&c.otherwise);
 }
 
-pub fn walk_block_or_conditional<V: Visitor + ?Sized>(
+pub fn walk_block_or_conditional<V: VerilogVisitor + ?Sized>(
     visitor: &mut V,
     o: &VerilogBlockOrConditional,
 ) {
@@ -217,22 +200,22 @@ pub fn walk_block_or_conditional<V: Visitor + ?Sized>(
     }
 }
 
-pub fn walk_match<V: Visitor + ?Sized>(visitor: &mut V, m: &VerilogMatch) {
+pub fn walk_match<V: VerilogVisitor + ?Sized>(visitor: &mut V, m: &VerilogMatch) {
     visitor.visit_expression(&m.test);
     for case in &m.cases {
         visitor.visit_case(case)
     }
 }
 
-pub fn walk_case<V: Visitor + ?Sized>(visitor: &mut V, c: &VerilogCase) {
+pub fn walk_case<V: VerilogVisitor + ?Sized>(visitor: &mut V, c: &VerilogCase) {
     visitor.visit_block(&c.block)
 }
 
-pub fn walk_lhs_expression<V: Visitor + ?Sized>(visitor: &mut V, e: &VerilogExpression) {
+pub fn walk_lhs_expression<V: VerilogVisitor + ?Sized>(visitor: &mut V, e: &VerilogExpression) {
     visitor.visit_expression(e)
 }
 
-pub fn walk_binop<V: Visitor + ?Sized>(
+pub fn walk_binop<V: VerilogVisitor + ?Sized>(
     visitor: &mut V,
     l: &VerilogExpression,
     _op: &VerilogOp,
@@ -242,7 +225,7 @@ pub fn walk_binop<V: Visitor + ?Sized>(
     visitor.visit_expression(r);
 }
 
-pub fn walk_unop<V: Visitor + ?Sized>(
+pub fn walk_unop<V: VerilogVisitor + ?Sized>(
     visitor: &mut V,
     _op: &VerilogOpUnary,
     e: &VerilogExpression,
@@ -250,7 +233,7 @@ pub fn walk_unop<V: Visitor + ?Sized>(
     visitor.visit_expression(e);
 }
 
-pub fn walk_expression<V: Visitor + ?Sized>(visitor: &mut V, e: &VerilogExpression) {
+pub fn walk_expression<V: VerilogVisitor + ?Sized>(visitor: &mut V, e: &VerilogExpression) {
     match e {
         VerilogExpression::Signal(s) => {
             visitor.visit_signal(s);
@@ -278,12 +261,6 @@ pub fn walk_expression<V: Visitor + ?Sized>(visitor: &mut V, e: &VerilogExpressi
         }
         VerilogExpression::IndexReplace(a, b, c) => {
             visitor.visit_index_replace(a, b, c);
-        }
-        VerilogExpression::PopBit(a) => {
-            visitor.visit_pop_bit(a);
-        }
-        VerilogExpression::PushBit(a, b) => {
-            visitor.visit_push_bit(a, b);
         }
     }
 }

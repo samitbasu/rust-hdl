@@ -6,11 +6,12 @@ use rust_hdl_core::logic::Logic;
 use rust_hdl_core::module_defines::ModuleDefines;
 use rust_hdl_core::signal::Signal;
 use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface};
-use rust_hdl_core::verilog_visitor::Visitor;
+use rust_hdl_core::verilog_visitor::VerilogVisitor;
+use rust_hdl_core::verilog_gen::VerilogCodeGenerator;
 
 struct SignalLister {}
 
-impl Visitor for SignalLister {
+impl VerilogVisitor for SignalLister {
     fn visit_signal(&mut self, s: &str) {
         println!("Signal: {}", s);
     }
@@ -122,7 +123,11 @@ fn test_write_modules_nested_ports() {
     defines.defines();
     let code = uut.hdl();
     let mut sig = SignalLister {};
+    let mut gen = VerilogCodeGenerator::new();
     if let rust_hdl_core::ast::Verilog::Combinatorial(q) = code {
         sig.visit_block(&q);
+        gen.visit_block(&q);
     }
+    println!("Code");
+    println!("{}", gen.to_string());
 }

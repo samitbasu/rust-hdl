@@ -43,6 +43,8 @@ impl CodeWriter {
         self.buffer += val.as_ref()
     }
 
+    pub fn writeln<S: AsRef<str>>(&mut self, val: S) {self.write(val); self.flush();}
+
     pub fn flush(&mut self) {
         let line = self.buffer.clone();
         self.add(&line);

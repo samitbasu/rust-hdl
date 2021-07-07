@@ -351,24 +351,6 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                rust_hdl_core::ast::VerilogExpression::Index(#signal.to_string(), Box::new(#index))
             }))
         }
-        "pop_bit" => {
-            let receiver = method.receiver.as_ref();
-            let signal = fixup_ident(quote!(#receiver).to_string());
-            Ok(quote!({
-               rust_hdl_core::ast::VerilogExpression::PopBit(#signal.to_string())
-            }))
-        }
-        "push_bit" => {
-            let receiver = method.receiver.as_ref();
-            let signal = fixup_ident(quote!(#receiver).to_string());
-            if method.args.len() != 1 {
-                return Err(syn::Error::new(method.span(), "push_bit needs an argument"));
-            }
-            let value = hdl_compute(method.args.index(0))?;
-            Ok(quote!({
-                rust_hdl_core::ast::VerilogExpression::PushBit(#signal.to_string(), Box::new(#value))
-            }))
-        }
         "set_bit" => {
             let receiver = method.receiver.as_ref();
             let signal = fixup_ident(quote!(#receiver).to_string());
