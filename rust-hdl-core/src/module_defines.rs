@@ -1,3 +1,4 @@
+use crate::ast::Verilog;
 use crate::atom::AtomKind::{StubInputSignal, StubOutputSignal};
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
@@ -9,14 +10,15 @@ use std::collections::HashMap;
 struct ModuleDetails {
     atoms: Vec<AtomDetails>,
     sub_modules: Vec<String>,
-    enums: Vec<EnumDefinition>
+    enums: Vec<EnumDefinition>,
+    code: Verilog,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 struct EnumDefinition {
     pub type_name: String,
     pub discriminant: String,
-    pub value: usize
+    pub value: usize,
 }
 
 #[derive(Clone, Debug)]
@@ -41,7 +43,12 @@ fn decl(x: &AtomDetails) -> String {
     if x.width == 1 {
         format!("{} {}", verilog_atom_name(&x.kind), x.name)
     } else {
-        format!("{} [{}:0] {}", verilog_atom_name(&x.kind), x.width - 1, x.name)
+        format!(
+            "{} [{}:0] {}",
+            verilog_atom_name(&x.kind),
+            x.width - 1,
+            x.name
+        )
     }
 }
 
@@ -65,24 +72,28 @@ impl ModuleDefines {
         let entry = self.details.entry(module.into()).or_default();
         let enum_name = signal.type_name();
         let enum_values = (0..(1 << signal.bits()))
-            .map(|x|
-                EnumDefinition {
-                    type_name: enum_name.into(),
-                    discriminant: signal.name(x).into(),
-                    value: x
-                })
+            .map(|x| EnumDefinition {
+                type_name: enum_name.into(),
+                discriminant: signal.name(x).into(),
+                value: x,
+            })
             .filter(|x| x.discriminant.len() != 0)
             .collect::<Vec<_>>();
         entry.enums.extend(enum_values.into_iter())
     }
+    fn add_code(&mut self, module: &str, code: Verilog) {
+        let entry = self.details.entry(module.into()).or_default();
+        entry.code = code;
+    }
 }
 
 impl Probe for ModuleDefines {
-    fn visit_start_scope(&mut self, name: &str, _node: &dyn Block) {
+    fn visit_start_scope(&mut self, name: &str, node: &dyn Block) {
         let top_level = self.path.to_string();
         self.path.push(name);
         self.namespace.reset();
         self.add_submodule(&top_level, &self.path.to_string());
+        self.add_code(&top_level, node.hdl());
     }
 
     fn visit_start_namespace(&mut self, name: &str, _node: &dyn Block) {
@@ -175,8 +186,12 @@ impl ModuleDefines {
             println!("\n// Constant declarations");
             consts.iter().for_each(|x| println!("{}", decl(x)));
             println!("\n// Enums");
-            module_details.enums.iter().for_each(|x |
-              println!("localparam {}_{} = {}", x.type_name, x.discriminant, x.value));
+            module_details.enums.iter().for_each(|x| {
+                println!(
+                    "localparam {}_{} = {}",
+                    x.type_name, x.discriminant, x.value
+                )
+            });
             println!("\n// Stub signals");
             stubs.iter().for_each(|x| println!("{}", decl(x)));
             println!("\n// Local signals");

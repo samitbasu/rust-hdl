@@ -1,17 +1,17 @@
 mod common;
+mod hdl_gen;
 mod logic_block;
 mod logic_interface;
-mod hdl_gen;
 
 use syn::parse_macro_input;
 use syn::DeriveInput;
 
-use proc_macro::TokenStream;
+use crate::common::TS;
+use crate::hdl_gen::hdl_gen_process;
 use crate::logic_block::get_impl_for_logic_block;
 use crate::logic_interface::get_impl_for_logic_interface;
-use crate::hdl_gen::hdl_gen_process;
+use proc_macro::TokenStream;
 use quote::quote;
-use crate::common::TS;
 
 #[proc_macro_derive(LogicBlock)]
 pub fn logic_block(input: TokenStream) -> TokenStream {
@@ -19,7 +19,7 @@ pub fn logic_block(input: TokenStream) -> TokenStream {
 
     match get_impl_for_logic_block(&input) {
         Err(e) => e.to_compile_error().into(),
-        Ok(x) => x.into()
+        Ok(x) => x.into(),
     }
 }
 
@@ -29,7 +29,7 @@ pub fn logic_interface(input: TokenStream) -> TokenStream {
 
     match get_impl_for_logic_interface(&input) {
         Err(e) => e.to_compile_error().into(),
-        Ok(x) => x.into()
+        Ok(x) => x.into(),
     }
 }
 
@@ -40,13 +40,10 @@ pub fn hdl_gen(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     match hdl_gen_process(parse) {
         Err(e) => e.to_compile_error().into(),
-        Ok(hdl_code) => {
-            TokenStream::from(quote! {
-                #orig
+        Ok(hdl_code) => TokenStream::from(quote! {
+            #orig
 
-                #hdl_code
-            })
-        }
+            #hdl_code
+        }),
     }
 }
-

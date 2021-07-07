@@ -1,9 +1,11 @@
+pub mod ast;
 mod atom;
 pub mod bits;
 pub mod bitvec;
 pub mod block;
 pub mod check_connected;
 pub mod clock;
+pub mod code_writer;
 pub mod constant;
 pub mod dff;
 pub mod direction;
@@ -16,15 +18,16 @@ pub mod signal;
 pub mod simulate;
 pub mod struct_valued;
 pub mod synth;
-pub mod ast;
+pub mod verilog_gen;
+pub mod verilog_visitor;
 
 #[cfg(test)]
 mod tests {
-
+    use rust_hdl_macros::hdl_gen;
     use rust_hdl_macros::LogicBlock;
     use rust_hdl_macros::LogicInterface;
 
-    use crate::bits::{Bit, Bits, clog2};
+    use crate::bits::{clog2, Bit, Bits};
     use crate::block::Block;
     use crate::check_connected::check_connected;
     use crate::clock::Clock;
@@ -35,10 +38,9 @@ mod tests {
     use crate::module_defines::ModuleDefines;
     use crate::probe::Probe;
     use crate::signal::Signal;
-    use crate::simulate::{Endpoint, simulate, Simulation};
     use crate::simulate;
+    use crate::simulate::{simulate, Endpoint, Simulation};
     use crate::synth::Synth;
-    use rust_hdl_macros::hdl_gen;
 
     #[derive(Clone, Debug, LogicBlock)]
     struct Strobe<const N: usize> {
@@ -83,7 +85,7 @@ mod tests {
         Start,
         Running,
         Paused,
-        Stopped
+        Stopped,
     }
 
     impl Default for MyState {
@@ -103,7 +105,7 @@ mod tests {
                 2 => "Running",
                 3 => "Paused",
                 4 => "Stopped",
-                _ => ""
+                _ => "",
             }
         }
     }
@@ -112,7 +114,7 @@ mod tests {
     struct StateMachine {
         pub clock: Signal<In, Clock>,
         pub advance: Signal<In, Bit>,
-        state: DFF<MyState>
+        state: DFF<MyState>,
     }
 
     impl StateMachine {
@@ -131,21 +133,11 @@ mod tests {
 
             if self.advance.val {
                 match self.state.q.val {
-                    MyState::Init => {
-                        self.state.d.next = MyState::Start
-                    }
-                    MyState::Start => {
-                        self.state.d.next = MyState::Running
-                    }
-                    MyState::Running => {
-                        self.state.d.next = MyState::Paused
-                    }
-                    MyState::Paused => {
-                        self.state.d.next = MyState::Stopped
-                    }
-                    MyState::Stopped => {
-                        self.state.d.next = MyState::Init
-                    }
+                    MyState::Init => self.state.d.next = MyState::Start,
+                    MyState::Start => self.state.d.next = MyState::Running,
+                    MyState::Running => self.state.d.next = MyState::Paused,
+                    MyState::Paused => self.state.d.next = MyState::Stopped,
+                    MyState::Stopped => self.state.d.next = MyState::Init,
                 }
             }
         }
@@ -155,7 +147,6 @@ mod tests {
             self.state.clk.connect();
         }
     }
-
 
     #[test]
     fn test_visit_version() {
@@ -181,111 +172,6 @@ mod tests {
     }
 
     #[test]
-    fn test_write_modules_nested_ports() {
-        #[derive(Clone, Debug, Default, LogicInterface)]
-        struct MyBus {
-            pub data: FIFORead<8>,
-            pub cmd: FIFORead<3>,
-        }
-
-        #[derive(Clone, Debug, Default, LogicInterface)]
-        struct FIFORead<const D: usize> {
-            pub read: Signal<In, Bit>,
-            pub output: Signal<Out, Bits<D>>,
-            pub empty: Signal<Out, Bit>,
-            pub almost_empty: Signal<Out, Bit>,
-            pub underflow: Signal<Out, Bit>,
-        }
-
-        #[derive(Clone, Debug, Default, LogicBlock)]
-        struct Widget {
-            pub clock: Signal<In, Clock>,
-            pub bus: MyBus,
-        }
-
-        impl Logic for Widget {
-            fn update(&mut self) {}
-
-            fn connect(&mut self) {
-                self.bus.data.almost_empty.connect();
-                self.bus.data.empty.connect();
-                self.bus.data.underflow.connect();
-                self.bus.data.output.connect();
-                self.bus.cmd.almost_empty.connect();
-                self.bus.cmd.empty.connect();
-                self.bus.cmd.underflow.connect();
-                self.bus.cmd.output.connect();
-            }
-        }
-
-        #[derive(Clone, Debug, Default, LogicBlock)]
-        struct UUT {
-            pub bus: MyBus,
-            widget_a: Widget,
-            widget_b: Widget,
-            pub clock: Signal<In, Clock>,
-            pub select: Signal<In, Bit>,
-        }
-
-        impl Logic for UUT {
-            fn update(&mut self) {
-                self.widget_a.clock.next = self.clock.val;
-                self.widget_b.clock.next = self.clock.val;
-
-                if self.select.val {
-                    self.bus.cmd.underflow.next = self.widget_a.bus.cmd.underflow.val;
-                    self.bus.cmd.almost_empty.next = self.widget_a.bus.cmd.almost_empty.val;
-                    self.bus.cmd.empty.next = self.widget_a.bus.cmd.empty.val;
-                    self.bus.cmd.output.next = self.widget_a.bus.cmd.output.val;
-                    self.widget_a.bus.cmd.read.next = self.bus.cmd.read.val;
-
-                    self.bus.data.underflow.next = self.widget_a.bus.data.underflow.val;
-                    self.bus.data.almost_empty.next = self.widget_a.bus.data.almost_empty.val;
-                    self.bus.data.empty.next = self.widget_a.bus.data.empty.val;
-                    self.bus.data.output.next = self.widget_a.bus.data.output.val;
-                    self.widget_a.bus.data.read.next = self.bus.data.read.val;
-                } else {
-                    self.bus.cmd.underflow.next = self.widget_b.bus.cmd.underflow.val;
-                    self.bus.cmd.almost_empty.next = self.widget_b.bus.cmd.almost_empty.val;
-                    self.bus.cmd.empty.next = self.widget_b.bus.cmd.empty.val;
-                    self.bus.cmd.output.next = self.widget_b.bus.cmd.output.val;
-                    self.widget_b.bus.cmd.read.next = self.bus.cmd.read.val;
-
-                    self.bus.data.underflow.next = self.widget_b.bus.data.underflow.val;
-                    self.bus.data.almost_empty.next = self.widget_b.bus.data.almost_empty.val;
-                    self.bus.data.empty.next = self.widget_b.bus.data.empty.val;
-                    self.bus.data.output.next = self.widget_b.bus.data.output.val;
-                    self.widget_b.bus.data.read.next = self.bus.data.read.val;
-                }
-            }
-
-            fn connect(&mut self) {
-                self.bus.cmd.underflow.connect();
-                self.bus.cmd.almost_empty.connect();
-                self.bus.cmd.empty.connect();
-                self.bus.cmd.output.connect();
-                self.widget_a.bus.cmd.read.connect();
-                self.widget_a.bus.data.read.connect();
-                self.widget_b.bus.cmd.read.connect();
-                self.widget_b.bus.data.read.connect();
-                self.widget_a.clock.connect();
-                self.widget_b.clock.connect();
-            }
-        }
-
-        let mut uut = UUT::default();
-        uut.clock.connect();
-        uut.bus.cmd.read.connect();
-        uut.bus.data.read.connect();
-        uut.select.connect();
-        uut.connect_all();
-        //        check_connected(&uut);
-        let mut defines = ModuleDefines::default();
-        uut.accept("uut", &mut defines);
-        defines.defines();
-    }
-
-    #[test]
     fn test_enum_state() {
         #[derive(Copy, Clone, Debug, PartialEq)]
         enum MyState {
@@ -293,7 +179,7 @@ mod tests {
             Start,
             Running,
             Paused,
-            Stopped
+            Stopped,
         }
 
         impl Default for MyState {
@@ -313,7 +199,7 @@ mod tests {
                     2 => "Running",
                     3 => "Paused",
                     4 => "Stopped",
-                    _ => ""
+                    _ => "",
                 }
             }
         }
@@ -322,7 +208,7 @@ mod tests {
         struct StateMachine {
             pub clock: Signal<In, Clock>,
             pub advance: Signal<In, Bit>,
-            state: DFF<MyState>
+            state: DFF<MyState>,
         }
 
         impl StateMachine {
@@ -341,21 +227,11 @@ mod tests {
 
                 if self.advance.val {
                     match self.state.q.val {
-                        MyState::Init => {
-                            self.state.d.next = MyState::Start
-                        }
-                        MyState::Start => {
-                            self.state.d.next = MyState::Running
-                        }
-                        MyState::Running => {
-                            self.state.d.next = MyState::Paused
-                        }
-                        MyState::Paused => {
-                            self.state.d.next = MyState::Stopped
-                        }
-                        MyState::Stopped => {
-                            self.state.d.next = MyState::Init
-                        }
+                        MyState::Init => self.state.d.next = MyState::Start,
+                        MyState::Start => self.state.d.next = MyState::Running,
+                        MyState::Running => self.state.d.next = MyState::Paused,
+                        MyState::Paused => self.state.d.next = MyState::Stopped,
+                        MyState::Stopped => self.state.d.next = MyState::Init,
                     }
                 }
             }
@@ -434,7 +310,6 @@ mod tests {
         defines.defines();
     }
 
-
     #[test]
     fn test_async() {
         #[derive(LogicBlock, Clone, Default)]
@@ -445,8 +320,8 @@ mod tests {
             pub empty: Signal<Out, Bit>,
             pub full: Signal<Out, Bit>,
             will_read: Signal<Local, Bit>,
-            will_write: Signal<Local ,Bit>,
-            count: DFF<Bits<4>>
+            will_write: Signal<Local, Bit>,
+            count: DFF<Bits<4>>,
         }
 
         impl Logic for Semaphore {
@@ -487,36 +362,36 @@ mod tests {
     }
 
     /*
-pub async fn fifo_vector_feeder<T: Synthesizable>(
-    clock: Clock,
-    mut writer: FIFOWriterClient<T>,
-    data: Vec<T>,
-    prob_pause: f64,
-    pause_len: u64,
-) -> Result<(), HDLError> {
-    writer.write.set(false);
-    clock.next_negedge().await;
-    for datum in data {
-        while writer.full.get() {
-            writer.write.set(false);
+    pub async fn fifo_vector_feeder<T: Synthesizable>(
+        clock: Clock,
+        mut writer: FIFOWriterClient<T>,
+        data: Vec<T>,
+        prob_pause: f64,
+        pause_len: u64,
+    ) -> Result<(), HDLError> {
+        writer.write.set(false);
+        clock.next_negedge().await;
+        for datum in data {
+            while writer.full.get() {
+                writer.write.set(false);
+                clock.next_negedge().await;
+            }
+            if rand::thread_rng().gen::<f64>() < prob_pause {
+                writer.write.set(false);
+                clock.delay_negedge(pause_len).await;
+            }
+            writer.input.set(datum);
+            writer.write.set(true);
             clock.next_negedge().await;
         }
-        if rand::thread_rng().gen::<f64>() < prob_pause {
-            writer.write.set(false);
-            clock.delay_negedge(pause_len).await;
+        writer.write.set(false);
+        if writer.overflow.get() {
+            Err(HDLError::TestBenchFailed("FIFO overflowed".to_string()))
+        } else {
+            Ok(())
         }
-        writer.input.set(datum);
-        writer.write.set(true);
-        clock.next_negedge().await;
     }
-    writer.write.set(false);
-    if writer.overflow.get() {
-        Err(HDLError::TestBenchFailed("FIFO overflowed".to_string()))
-    } else {
-        Ok(())
-    }
-}
- */
+     */
 
     struct Circuit {
         x: i32,
@@ -563,10 +438,12 @@ pub async fn fifo_vector_feeder<T: Synthesizable>(
         let sf1 = std::thread::spawn(move || sample_func(ep1));
         let ep2 = sim.endpoint();
         let sf2 = std::thread::spawn(move || sample_func2(ep2));
-        let x = Circuit{ x: 0 , strobe: Strobe::default()};
+        let x = Circuit {
+            x: 0,
+            strobe: Strobe::default(),
+        };
         sim.run(x, 1000).unwrap();
         sf1.join().unwrap();
         sf2.join().unwrap();
     }
-
 }

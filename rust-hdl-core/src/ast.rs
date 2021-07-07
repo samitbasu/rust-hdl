@@ -5,6 +5,12 @@ pub enum Verilog {
     Custom(String),
 }
 
+impl Default for Verilog {
+    fn default() -> Self {
+        Self::Empty
+    }
+}
+
 pub type VerilogBlock = Vec<VerilogStatement>;
 
 #[derive(Debug, Clone)]

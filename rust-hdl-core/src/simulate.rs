@@ -15,7 +15,7 @@ pub fn simulate<B: Block>(uut: &mut B, max_iters: usize) -> bool {
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SimError {
-    SimTerminated
+    SimTerminated,
 }
 
 impl From<RecvError> for SimError {
@@ -26,7 +26,7 @@ impl From<RecvError> for SimError {
 
 impl<T> From<SendError<T>> for SimError {
     fn from(_x: SendError<T>) -> Self {
-        SimError:: SimTerminated
+        SimError::SimTerminated
     }
 }
 
@@ -35,7 +35,7 @@ pub type Result<T> = std::result::Result<T, SimError>;
 enum TriggerType<T> {
     Never,
     Time(u64),
-    Function(Box<dyn Fn(&T) -> bool + Send>)
+    Function(Box<dyn Fn(&T) -> bool + Send>),
 }
 
 struct Message<T> {
@@ -61,7 +61,7 @@ pub struct Endpoint<T> {
     idx: usize,
     time: u64,
     to_sim: Sender<Message<T>>,
-    from_sim: Receiver<Message<T>>
+    from_sim: Receiver<Message<T>>,
 }
 
 impl<T> Simulation<T> {
@@ -75,20 +75,19 @@ impl<T> Simulation<T> {
         }
     }
     pub fn endpoint(&mut self) -> Endpoint<T> {
-        let (send_to_worker,
-            recv_from_sim_to_worker) = bounded(0);
+        let (send_to_worker, recv_from_sim_to_worker) = bounded(0);
         let id = self.workers.len();
         let worker = Worker {
             id,
             channel_to_worker: send_to_worker,
-            kind: TriggerType::Never
+            kind: TriggerType::Never,
         };
         self.workers.push(worker);
         Endpoint {
             idx: id,
             to_sim: self.channel_to_sim.clone(),
             from_sim: recv_from_sim_to_worker,
-            time: 0
+            time: 0,
         }
     }
     fn dispatch(&mut self, idx: usize, x: T) -> Result<T> {
@@ -97,7 +96,7 @@ impl<T> Simulation<T> {
         worker.channel_to_worker.send(Message {
             id: worker.id,
             kind: TriggerType::Time(self.time),
-            circuit: x
+            circuit: x,
         })?;
         println!("Waiting for circuit to return");
         let x = self.recv.recv()?;
@@ -161,7 +160,9 @@ impl<T> Endpoint<T> {
         Ok(self.from_sim.recv()?.circuit)
     }
     pub fn watch<S>(&mut self, check: S, x: T) -> Result<T>
-        where S: Fn(&T) -> bool + Send + 'static {
+    where
+        S: Fn(&T) -> bool + Send + 'static,
+    {
         self.to_sim.send(Message {
             id: self.idx,
             kind: TriggerType::Function(Box::new(check)),

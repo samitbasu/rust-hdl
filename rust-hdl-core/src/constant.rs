@@ -1,8 +1,8 @@
-use crate::synth::Synth;
-use crate::logic::Logic;
-use crate::block::Block;
-use crate::probe::Probe;
 use crate::atom::{Atom, AtomKind};
+use crate::block::Block;
+use crate::logic::Logic;
+use crate::probe::Probe;
+use crate::synth::Synth;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Constant<T: Synth> {
@@ -16,11 +16,9 @@ impl<T: Synth> Constant<T> {
 }
 
 impl<T: Synth> Logic for Constant<T> {
-    fn update(&mut self) {
-    }
+    fn update(&mut self) {}
 
-    fn connect(&mut self) {
-    }
+    fn connect(&mut self) {}
 }
 
 impl<T: Synth> Atom for Constant<T> {
@@ -54,11 +52,9 @@ impl<T: Synth> Atom for Constant<T> {
 }
 
 impl<T: Synth> Block for Constant<T> {
-    fn connect_all(&mut self) {
-    }
+    fn connect_all(&mut self) {}
 
-    fn update_all(&mut self) {
-    }
+    fn update_all(&mut self) {}
 
     fn has_changed(&self) -> bool {
         false

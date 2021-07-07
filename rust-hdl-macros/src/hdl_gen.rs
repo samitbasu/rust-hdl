@@ -1,9 +1,9 @@
 use crate::common::TS;
-use syn::spanned::Spanned;
 use quote::format_ident;
 use quote::quote;
-use syn::{Result, Stmt, Expr, UnOp, BinOp, Pat};
 use std::ops::Index;
+use syn::spanned::Spanned;
+use syn::{BinOp, Expr, Pat, Result, Stmt, UnOp};
 
 pub(crate) fn hdl_gen_process(item: syn::ItemFn) -> Result<TS> {
     let signature = &item.sig;
@@ -127,8 +127,7 @@ fn hdl_conditional(conditions: &syn::ExprIf) -> Result<TS> {
             }
             Expr::If(cond) => {
                 let else_branch_block = hdl_conditional(cond)?;
-                else_branch =
-                    quote!({rust_hdl_core::ast::VerilogBlockOrConditional::Conditional(Box::new(#else_branch_block))});
+                else_branch = quote!({rust_hdl_core::ast::VerilogBlockOrConditional::Conditional(Box::new(#else_branch_block))});
             }
             _ => {
                 return Err(syn::Error::new(
@@ -396,9 +395,9 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
             let receiver = method.receiver.as_ref();
             let signal = fixup_ident(quote!(#receiver).to_string());
             Ok(quote!({
-                rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::Any,
-                    Box::new(rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())))
-                }))
+            rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::Any,
+                Box::new(rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())))
+            }))
         }
         _ => Err(syn::Error::new(
             method.span(),
@@ -453,19 +452,25 @@ fn hdl_macro(x: &syn::ExprMacro) -> Result<TS> {
             let invocation_as_string = invocation_as_string
                 .replace("println ! (\"", "")
                 .replace("\")", "");
-            Ok(quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())))
+            Ok(
+                quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())),
+            )
         }
         "comment" => {
             let invocation_as_string = invocation_as_string
                 .replace("comment ! (\"", "")
                 .replace("\")", "");
-            Ok(quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())))
+            Ok(
+                quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())),
+            )
         }
         "assert" => {
             let invocation_as_string = invocation_as_string
                 .replace("assert ! (\"", "")
                 .replace("\")", "");
-            Ok(quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())))
+            Ok(
+                quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())),
+            )
         }
         _ => Err(syn::Error::new(
             x.span(),
@@ -473,4 +478,3 @@ fn hdl_macro(x: &syn::ExprMacro) -> Result<TS> {
         )),
     }
 }
-
