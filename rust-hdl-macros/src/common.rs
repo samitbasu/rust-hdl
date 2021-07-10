@@ -1,6 +1,6 @@
 use quote::quote;
-use syn::spanned::Spanned;
 use syn::Data;
+use syn::spanned::Spanned;
 
 pub(crate) type TS = proc_macro2::TokenStream;
 
@@ -63,4 +63,16 @@ pub fn get_has_changed(fields: Vec<TS>) -> syn::Result<TS> {
             #(self.#fields.has_changed())||*
         }
     })
+}
+
+pub fn fixup_ident(x: String) -> String {
+    let y = x
+        .replace(" ", "")
+        .replace("self.", "")
+        .replace(".", "_")
+        .replace("::", "_");
+    assert_ne!(y, "config");
+    assert_ne!(y, "input");
+    assert_ne!(y, "output");
+    y
 }

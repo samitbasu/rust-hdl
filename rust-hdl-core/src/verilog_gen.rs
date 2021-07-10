@@ -1,6 +1,9 @@
 use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{VerilogVisitor, walk_block};
-use crate::ast::{VerilogStatement, VerilogExpression, VerilogConditional, VerilogBlockOrConditional, VerilogMatch, VerilogCase, VerilogOp, VerilogOpUnary, VerilogBlock};
+use crate::ast::{VerilogStatement, VerilogExpression, VerilogConditional,
+                 VerilogBlockOrConditional, VerilogMatch, VerilogCase, VerilogOp,
+                 VerilogOpUnary, VerilogBlock};
+use num_bigint::BigUint;
 
 pub struct VerilogCodeGenerator {
     io: CodeWriter,
@@ -29,8 +32,9 @@ fn ident_fixup(a: &str) -> String {
 }
 
 
-fn verilog_literal(v: &u128, w: &usize) -> String {
-    if w % 4 != 0 && *w < 20 {
+fn verilog_literal(v: &BigUint) -> String {
+    let w = v.bits();
+    if w % 4 != 0 && w < 20 {
         format!("{}'b{:b}", w, v)
     } else {
         format!("{}'h{:x}", w, v)
@@ -38,34 +42,22 @@ fn verilog_literal(v: &u128, w: &usize) -> String {
 }
 
 impl VerilogVisitor for VerilogCodeGenerator {
-    fn visit_signal(&mut self, sig: &str) {
-        self.io.write(ident_fixup(sig));
-    }
-
-    fn visit_literal(&mut self, v: &u128, w: &usize) {
-        self.io.write(verilog_literal(v, w));
-    }
-
-    fn visit_paren(&mut self, e: &VerilogExpression) {
-        self.io.write("(");
-        self.visit_expression(e);
-        self.io.write(")");
-    }
-
-    fn visit_slice_assignment(&mut self, base: &str, width: &usize, offset: &VerilogExpression, replacement: &VerilogExpression) {
-        self.io.write(format!("{}[(", base));
-        self.visit_expression(offset);
-        self.io.write(format!(")+:({})] = ", width));
-        self.visit_expression(replacement);
-        self.io.writeln(";");
-    }
-
     fn visit_block(&mut self, b: &VerilogBlock) {
         self.io.writeln("begin");
         self.io.push();
         walk_block(self, b);
         self.io.pop();
         self.io.add_line("end");
+    }
+
+    fn visit_slice_assignment(&mut self, base: &str, width: &usize,
+                              offset: &VerilogExpression,
+                              replacement: &VerilogExpression) {
+        self.io.write(format!("{}[(", base));
+        self.visit_expression(offset);
+        self.io.write(format!(")+:({})] = ", width));
+        self.visit_expression(replacement);
+        self.io.writeln(";");
     }
 
     fn visit_conditional(&mut self, c: &VerilogConditional) {
@@ -102,6 +94,14 @@ impl VerilogVisitor for VerilogCodeGenerator {
 
     fn visit_comment(&mut self, x: &str) {
         self.io.add(format!("// {}", x));
+    }
+
+    fn visit_signal(&mut self, sig: &str) {
+        self.io.write(ident_fixup(sig));
+    }
+
+    fn visit_literal(&mut self, v: &BigUint) {
+        self.io.write(verilog_literal(v));
     }
 
     fn visit_case(&mut self, c: &VerilogCase) {
@@ -145,11 +145,49 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.visit_expression(r);
     }
 
-
     fn visit_assignment(&mut self, l: &VerilogExpression, r: &VerilogExpression) {
         self.visit_expression(l);
         self.io.write(" = ");
         self.visit_expression(r);
         self.io.writeln(";");
+    }
+
+    fn visit_paren(&mut self, e: &VerilogExpression) {
+        self.io.write("(");
+        self.visit_expression(e);
+        self.io.write(")");
+    }
+
+    fn visit_cast(&mut self, e: &VerilogExpression, bits: &usize) {
+        self.io.write("(");
+        self.visit_expression(e);
+        let mask = (BigUint::from(1_u32) << bits) - 1_u32;
+        self.io.write(format!(") & {}'h{:x}", bits, mask))
+    }
+
+    fn visit_index(&mut self, a: &str, b: &VerilogExpression) {
+        self.visit_signal(a);
+        self.io.write("[");
+        self.visit_expression(b);
+        self.io.write("]");
+    }
+
+    fn visit_slice(&mut self, sig: &str, width: &usize, offset: &VerilogExpression) {
+        self.visit_signal(sig);
+        self.io.write("[(");
+        self.visit_expression(offset);
+        self.io.write(format!(")+:({})]", width));
+    }
+
+    fn visit_index_replace(&mut self, sig: &str, ndx: &VerilogExpression, val: &VerilogExpression) {
+        self.io.write("(");
+        self.visit_signal(sig);
+        self.io.write(" & ~(1 << (");
+        self.visit_expression(ndx);
+        self.io.write(")) | ((");
+        self.visit_expression(val);
+        self.io.write(") << (");
+        self.visit_expression(ndx);
+        self.io.write(")))");
     }
 }

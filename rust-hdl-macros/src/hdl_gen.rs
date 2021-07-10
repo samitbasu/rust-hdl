@@ -1,9 +1,12 @@
-use crate::common::TS;
+use std::ops::Index;
+
 use quote::format_ident;
 use quote::quote;
-use std::ops::Index;
-use syn::spanned::Spanned;
 use syn::{BinOp, Expr, Pat, Result, Stmt, UnOp};
+use syn::spanned::Spanned;
+
+use crate::common;
+use crate::common::TS;
 
 pub(crate) fn hdl_gen_process(item: syn::ItemFn) -> Result<TS> {
     let signature = &item.sig;
@@ -88,7 +91,7 @@ fn hdl_non_indexed_assignment(expr: &syn::ExprAssign) -> Result<TS> {
 }
 
 fn hdl_map_field_assign(expr: &syn::ExprField) -> Result<TS> {
-    let expr_expanded = fixup_ident(quote!(#expr).to_string());
+    let expr_expanded = common::fixup_ident(quote!(#expr).to_string());
     println!("Map Field Assign {:?} -> {}", expr, expr_expanded);
     if expr_expanded.ends_with("_val") {
         return Err(syn::Error::new(
@@ -100,7 +103,7 @@ fn hdl_map_field_assign(expr: &syn::ExprField) -> Result<TS> {
 }
 
 fn hdl_map_field(expr: &syn::ExprField) -> Result<TS> {
-    let expr_expanded = fixup_ident(quote!(#expr).to_string());
+    let expr_expanded = common::fixup_ident(quote!(#expr).to_string());
     if expr_expanded.ends_with("_next") {
         return Err(syn::Error::new(
             expr.span(),
@@ -111,7 +114,7 @@ fn hdl_map_field(expr: &syn::ExprField) -> Result<TS> {
 }
 
 fn hdl_map_path(expr: &syn::ExprPath) -> Result<TS> {
-    let expr_expanded = fixup_ident(quote!(#expr).to_string());
+    let expr_expanded = common::fixup_ident(quote!(#expr).to_string());
     Ok(quote!(rust_hdl_core::ast::VerilogExpression::Signal(#expr_expanded.to_string())))
 }
 
@@ -231,7 +234,7 @@ fn hdl_binop(binop: &syn::ExprBinary) -> Result<TS> {
 
 fn hdl_literal(lit: &syn::ExprLit) -> Result<TS> {
     Ok(quote!({
-       rust_hdl_core::ast::VerilogExpression::Literal(#lit.to_u128(), #lit.my_bits())
+       rust_hdl_core::ast::VerilogExpression::Literal(#lit.into())
     }))
 }
 
@@ -254,7 +257,7 @@ fn hdl_call(call: &syn::ExprCall) -> Result<TS> {
         }))
     } else {
         Ok(quote!({
-        rust_hdl_core::ast::VerilogExpression::Literal(#call.to_u128(), #call.my_bits())
+        rust_hdl_core::ast::VerilogExpression::Literal(#call.into())
         }))
     }
 }
@@ -264,7 +267,7 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
     let field_set_match = regex::Regex::new(r"set_value_([a-zA-Z][a-zA-Z0-9_]*)").unwrap();
     if field_set_match.is_match(method_name.as_ref()) {
         let expr = method.receiver.as_ref();
-        let signal = fixup_ident(quote!(#expr).to_string());
+        let signal = common::fixup_ident(quote!(#expr).to_string());
         let field = field_set_match
             .captures(method_name.as_ref())
             .unwrap()
@@ -280,7 +283,7 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
            rust_hdl_core::ast::VerilogStatement::SliceAssignment{
                base: #signal.to_string(),
                width: #width,
-               offset: rust_hdl_core::ast::VerilogExpression::Literal(#offset as u128, 32),
+               offset: rust_hdl_core::ast::VerilogExpression::Literal(#offset.into()),
                replacement: #value,
            }
         }));
@@ -299,7 +302,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
     let field_get_match = regex::Regex::new(r"get_value_([a-zA-Z][a-zA-Z0-9_]*)").unwrap();
     if field_get_match.is_match(method_name.as_ref()) {
         let expr = method.receiver.as_ref();
-        let signal = fixup_ident(quote!(#expr).to_string());
+        let signal = common::fixup_ident(quote!(#expr).to_string());
         let field = field_get_match
             .captures(method_name.as_ref())
             .unwrap()
@@ -311,13 +314,13 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
         let width = quote!(#expr.#get_width_name());
         let offset = quote!(#expr.#get_offset_name());
         return Ok(quote!({
-           rust_hdl_core::ast::VerilogExpression::Slice(#signal.to_string(), #width, Box::new(rust_hdl_core::ast::VerilogExpression::Literal(#offset as u128, 32)))
+           rust_hdl_core::ast::VerilogExpression::Slice(#signal.to_string(), #width, Box::new(rust_hdl_core::ast::VerilogExpression::Literal(#offset.into())))
         }));
     }
     match method_name.as_ref() {
         "get_bits" => {
             let expr = method.receiver.as_ref();
-            let signal = fixup_ident(quote!(#expr).to_string());
+            let signal = common::fixup_ident(quote!(#expr).to_string());
             if method.turbofish.is_none() {
                 return Err(syn::Error::new(method.span(), "get_bits needs a type argument to indicate the width of the slice (e.g., x.get_bits::<Bits4>(ndx))"));
             }
@@ -339,7 +342,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
         }
         "get_bit" => {
             let expr = method.receiver.as_ref();
-            let signal = fixup_ident(quote!(#expr).to_string());
+            let signal = common::fixup_ident(quote!(#expr).to_string());
             if method.args.is_empty() {
                 return Err(syn::Error::new(
                     method.span(),
@@ -353,7 +356,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
         }
         "set_bit" => {
             let receiver = method.receiver.as_ref();
-            let signal = fixup_ident(quote!(#receiver).to_string());
+            let signal = common::fixup_ident(quote!(#receiver).to_string());
             if method.args.len() != 2 {
                 return Err(syn::Error::new(
                     method.span(),
@@ -368,14 +371,14 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
         }
         "to_u128" => {
             let receiver = method.receiver.as_ref();
-            let signal = fixup_ident(quote!(#receiver).to_string());
+            let signal = common::fixup_ident(quote!(#receiver).to_string());
             Ok(quote!({
                rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())
             }))
         }
         "any" => {
             let receiver = method.receiver.as_ref();
-            let signal = fixup_ident(quote!(#receiver).to_string());
+            let signal = common::fixup_ident(quote!(#receiver).to_string());
             Ok(quote!({
             rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::Any,
                 Box::new(rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())))
@@ -401,7 +404,7 @@ fn hdl_pattern(pat: &Pat) -> Result<String> {
     match pat {
         Pat::Ident(ident) => Ok(ident.ident.to_string()),
         Pat::Lit(lit) => Ok(quote!(#lit).to_string()),
-        Pat::Path(pat) => Ok(fixup_ident(quote!(#pat).to_string())),
+        Pat::Path(pat) => Ok(common::fixup_ident(quote!(#pat).to_string())),
         Pat::Wild(_pat) => Ok("default".to_string()),
         _ => Err(syn::Error::new(
             pat.span(),
@@ -411,18 +414,6 @@ fn hdl_pattern(pat: &Pat) -> Result<String> {
             ),
         )),
     }
-}
-
-fn fixup_ident(x: String) -> String {
-    let y = x
-        .replace(" ", "")
-        .replace("self.", "")
-        .replace(".", "_")
-        .replace("::", "_");
-    assert_ne!(y, "config");
-    assert_ne!(y, "input");
-    assert_ne!(y, "output");
-    y
 }
 
 fn hdl_macro(x: &syn::ExprMacro) -> Result<TS> {

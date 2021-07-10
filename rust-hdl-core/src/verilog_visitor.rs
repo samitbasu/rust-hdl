@@ -2,6 +2,7 @@ use crate::ast::{
     VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
     VerilogIndexAssignment, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogStatement,
 };
+use num_bigint::BigUint;
 
 pub trait VerilogVisitor {
     fn visit_block(&mut self, b: &VerilogBlock) {
@@ -46,7 +47,7 @@ pub trait VerilogVisitor {
         // Terminal
     }
 
-    fn visit_literal(&mut self, a: &u128, b: &usize) {
+    fn visit_literal(&mut self, a: &BigUint) {
         // Terminal
     }
 
@@ -238,8 +239,8 @@ pub fn walk_expression<V: VerilogVisitor + ?Sized>(visitor: &mut V, e: &VerilogE
         VerilogExpression::Signal(s) => {
             visitor.visit_signal(s);
         }
-        VerilogExpression::Literal(a, b) => {
-            visitor.visit_literal(a, b);
+        VerilogExpression::Literal(a) => {
+            visitor.visit_literal(a);
         }
         VerilogExpression::Cast(a, b) => {
             visitor.visit_cast(a, b);

@@ -11,6 +11,7 @@ use strobe::Strobe;
 
 mod nested_ports;
 mod strobe;
+mod base_tests;
 
 fn main() {
     let x = crate::strobe::Strobe::<4>::default();

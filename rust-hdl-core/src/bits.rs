@@ -268,6 +268,15 @@ macro_rules! op {
             }
         }
 
+        impl<const N: usize> std::ops::$method<u32> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: u32) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
         impl<const N: usize> std::ops::$method<Bits<N>> for usize {
             type Output = Bits<N>;
 
@@ -335,6 +344,13 @@ impl<const N: usize> std::cmp::PartialEq<Bits<N>> for Bits<N> {
                 _ => panic!("Long Short case"),
             },
         }
+    }
+}
+
+impl<const N: usize> std::cmp::PartialEq<u32> for Bits<N> {
+    #[inline(always)]
+    fn eq(&self, other: &u32) -> bool {
+        self.eq(other.into())
     }
 }
 

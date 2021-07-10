@@ -1,3 +1,5 @@
+use num_bigint::BigUint;
+
 #[derive(Debug, Clone)]
 pub enum Verilog {
     Empty,
@@ -63,7 +65,7 @@ pub struct VerilogCase {
 #[derive(Debug, Clone)]
 pub enum VerilogExpression {
     Signal(String),
-    Literal(u128, usize),
+    Literal(BigUint),
     Cast(Box<VerilogExpression>, usize),
     Paren(Box<VerilogExpression>),
     Binary(Box<VerilogExpression>, VerilogOp, Box<VerilogExpression>),

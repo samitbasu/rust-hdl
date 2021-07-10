@@ -8,6 +8,7 @@ use rust_hdl_core::signal::Signal;
 use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface};
 use rust_hdl_core::verilog_visitor::VerilogVisitor;
 use rust_hdl_core::verilog_gen::VerilogCodeGenerator;
+use rust_hdl_core::check_connected::check_connected;
 
 struct SignalLister {}
 
@@ -74,7 +75,7 @@ fn test_write_modules_nested_ports() {
                 self.bus.cmd.underflow.next = self.widget_a.bus.cmd.underflow.val;
                 self.bus.cmd.almost_empty.next = self.widget_a.bus.cmd.almost_empty.val;
                 self.bus.cmd.empty.next = self.widget_a.bus.cmd.empty.val;
-                self.bus.cmd.output.next = self.widget_a.bus.cmd.output.val;
+                self.bus.cmd.output.next = self.widget_a.bus.cmd.output.val + 1_usize;
                 self.widget_a.bus.cmd.read.next = self.bus.cmd.read.val;
 
                 self.bus.data.underflow.next = self.widget_a.bus.data.underflow.val;
@@ -96,19 +97,6 @@ fn test_write_modules_nested_ports() {
                 self.widget_b.bus.data.read.next = self.bus.data.read.val;
             }
         }
-
-        fn connect(&mut self) {
-            self.bus.cmd.underflow.connect();
-            self.bus.cmd.almost_empty.connect();
-            self.bus.cmd.empty.connect();
-            self.bus.cmd.output.connect();
-            self.widget_a.bus.cmd.read.connect();
-            self.widget_a.bus.data.read.connect();
-            self.widget_b.bus.cmd.read.connect();
-            self.widget_b.bus.data.read.connect();
-            self.widget_a.clock.connect();
-            self.widget_b.clock.connect();
-        }
     }
 
     let mut uut = UUT::default();
@@ -117,7 +105,7 @@ fn test_write_modules_nested_ports() {
     uut.bus.data.read.connect();
     uut.select.connect();
     uut.connect_all();
-    //        check_connected(&uut);
+    check_connected(&uut);
     let mut defines = ModuleDefines::default();
     uut.accept("uut", &mut defines);
     defines.defines();
