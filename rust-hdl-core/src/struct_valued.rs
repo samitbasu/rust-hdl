@@ -1,5 +1,6 @@
-use crate::bits::{bit_cast, clog2, Bits};
+use crate::bits::{bit_cast, clog2, Bits, Bit};
 use crate::synth::Synth;
+use num_bigint::BigUint;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum CmdType {
@@ -22,6 +23,10 @@ impl Default for CmdType {
 // Auto generated
 impl Synth for CmdType {
     const BITS: usize = clog2(3);
+    fn big_uint(self) -> BigUint {
+        let p: Bits<{CmdType::BITS}> = self.into();
+        p.into()
+    }
 }
 
 // Auto generated
@@ -67,12 +72,17 @@ fn test_struct_value() {
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 struct MIGCmd {
     pub cmd: CmdType,
-    pub active: bool,
+    pub active: Bit,
     pub len: Bits<6>,
 }
 
 impl Synth for MIGCmd {
-    const BITS: usize = CmdType::BITS + bool::BITS + Bits::<6>::BITS;
+    const BITS: usize = CmdType::BITS + Bit::BITS + Bits::<6>::BITS;
+
+    fn big_uint(self) -> BigUint {
+        let t: Bits<{MIGCmd::BITS}> = self.into();
+        t.into()
+    }
 }
 
 // Auto generated

@@ -1,8 +1,9 @@
+use crate::ast::{
+    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
+    VerilogMatch, VerilogOp, VerilogOpUnary, VerilogStatement,
+};
 use crate::code_writer::CodeWriter;
-use crate::verilog_visitor::{VerilogVisitor, walk_block};
-use crate::ast::{VerilogStatement, VerilogExpression, VerilogConditional,
-                 VerilogBlockOrConditional, VerilogMatch, VerilogCase, VerilogOp,
-                 VerilogOpUnary, VerilogBlock};
+use crate::verilog_visitor::{walk_block, VerilogVisitor};
 use num_bigint::BigUint;
 
 pub struct VerilogCodeGenerator {
@@ -28,9 +29,8 @@ fn ident_fixup(a: &str) -> String {
     if x.starts_with(".") {
         x.remove(0);
     }
-    x.replace(".","_").replace("::", "_")
+    x.replace(".", "_").replace("::", "_")
 }
-
 
 fn verilog_literal(v: &BigUint) -> String {
     let w = v.bits();
@@ -50,9 +50,13 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.add_line("end");
     }
 
-    fn visit_slice_assignment(&mut self, base: &str, width: &usize,
-                              offset: &VerilogExpression,
-                              replacement: &VerilogExpression) {
+    fn visit_slice_assignment(
+        &mut self,
+        base: &str,
+        width: &usize,
+        offset: &VerilogExpression,
+        replacement: &VerilogExpression,
+    ) {
         self.io.write(format!("{}[(", base));
         self.visit_expression(offset);
         self.io.write(format!(")+:({})] = ", width));
@@ -75,7 +79,7 @@ impl VerilogVisitor for VerilogCodeGenerator {
                 self.visit_block(&b);
             }
             VerilogBlockOrConditional::Conditional(c) => {
-                self.io.write("else " );
+                self.io.write("else ");
                 self.visit_statement(c);
             }
             VerilogBlockOrConditional::None => {}

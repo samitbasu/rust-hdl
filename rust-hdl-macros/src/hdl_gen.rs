@@ -2,8 +2,8 @@ use std::ops::Index;
 
 use quote::format_ident;
 use quote::quote;
-use syn::{BinOp, Expr, Pat, Result, Stmt, UnOp};
 use syn::spanned::Spanned;
+use syn::{BinOp, Expr, Pat, Result, Stmt, UnOp};
 
 use crate::common;
 use crate::common::TS;

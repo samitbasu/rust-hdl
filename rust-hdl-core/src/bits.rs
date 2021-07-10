@@ -2,6 +2,7 @@ use crate::bitvec::BitVec;
 use crate::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
+use num_bigint::BigUint;
 
 // This comes with a few invariants that must be maintained for short representation
 // The short value must be less than 2^N
@@ -84,6 +85,16 @@ pub fn bit_cast<const M: usize, const N: usize>(x: Bits<N>) -> Bits<M> {
                 Bits::Short(k.into())
             }
         }
+    }
+}
+
+impl<const N: usize> Into<BigUint> for Bits<N> {
+    fn into(self) -> BigUint {
+        let mut x = BigUint::default();
+        for i in 0..N {
+            x.set_bit(i as u64, self.get_bit(i));
+        }
+        x
     }
 }
 

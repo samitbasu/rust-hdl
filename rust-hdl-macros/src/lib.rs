@@ -1,17 +1,17 @@
 mod common;
+mod connect_gen;
 mod hdl_gen;
 mod logic_block;
 mod logic_interface;
-mod connect_gen;
 
 use syn::parse_macro_input;
 use syn::DeriveInput;
 
 use crate::common::TS;
+use crate::connect_gen::connect_gen;
 use crate::hdl_gen::hdl_gen_process;
 use crate::logic_block::get_impl_for_logic_block;
 use crate::logic_interface::get_impl_for_logic_interface;
-use crate::connect_gen::connect_gen;
 use proc_macro::TokenStream;
 use quote::quote;
 
@@ -42,7 +42,7 @@ pub fn hdl_gen(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let connects = connect_gen(&parse);
     let connects = match connect_gen(&parse) {
         Err(e) => return e.to_compile_error().into(),
-        Ok(t) => t
+        Ok(t) => t,
     };
     match hdl_gen_process(parse) {
         Err(e) => e.to_compile_error().into(),

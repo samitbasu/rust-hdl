@@ -3,6 +3,7 @@ use crate::block::Block;
 use crate::logic::Logic;
 use crate::probe::Probe;
 use crate::synth::Synth;
+use num_bigint::BigUint;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Constant<T: Synth> {
@@ -49,6 +50,8 @@ impl<T: Synth> Atom for Constant<T> {
     fn type_name(&self) -> &'static str {
         T::TYPE_NAME
     }
+
+    fn value(&self) -> BigUint {self.val.big_uint()}
 }
 
 impl<T: Synth> Block for Constant<T> {

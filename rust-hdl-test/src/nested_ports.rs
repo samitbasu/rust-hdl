@@ -1,14 +1,14 @@
 use rust_hdl_core::bits::{Bit, Bits};
 use rust_hdl_core::block::Block;
+use rust_hdl_core::check_connected::check_connected;
 use rust_hdl_core::clock::Clock;
 use rust_hdl_core::direction::{In, Out};
 use rust_hdl_core::logic::Logic;
 use rust_hdl_core::module_defines::ModuleDefines;
 use rust_hdl_core::signal::Signal;
-use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface};
-use rust_hdl_core::verilog_visitor::VerilogVisitor;
 use rust_hdl_core::verilog_gen::VerilogCodeGenerator;
-use rust_hdl_core::check_connected::check_connected;
+use rust_hdl_core::verilog_visitor::VerilogVisitor;
+use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface};
 
 struct SignalLister {}
 

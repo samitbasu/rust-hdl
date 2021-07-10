@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 rust_hdl_core = {path="../rust-hdl-core"}
 rust_hdl_macros = {path="../rust-hdl-macros"}
+num-bigint = "0.4.0"

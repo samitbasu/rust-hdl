@@ -9,9 +9,10 @@ use rust_hdl_macros::hdl_gen;
 use rust_hdl_macros::LogicBlock;
 use strobe::Strobe;
 
+mod base_tests;
+mod fifo;
 mod nested_ports;
 mod strobe;
-mod base_tests;
 
 fn main() {
     let x = crate::strobe::Strobe::<4>::default();

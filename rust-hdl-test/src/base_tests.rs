@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use rust_hdl_core::bits::{Bit, Bits, clog2};
+    use crate::strobe::Strobe;
+    use rust_hdl_core::bits::{clog2, Bit, Bits};
     use rust_hdl_core::block::Block;
     use rust_hdl_core::check_connected::check_connected;
     use rust_hdl_core::clock::Clock;
@@ -12,12 +13,12 @@ mod tests {
     use rust_hdl_core::probe::Probe;
     use rust_hdl_core::signal::Signal;
     use rust_hdl_core::simulate;
-    use rust_hdl_core::simulate::{Endpoint, simulate, Simulation};
+    use rust_hdl_core::simulate::{simulate, Endpoint, Simulation};
     use rust_hdl_core::synth::Synth;
     use rust_hdl_macros::hdl_gen;
     use rust_hdl_macros::LogicBlock;
     use rust_hdl_macros::LogicInterface;
-    use crate::strobe::Strobe;
+    use num_bigint::BigUint;
 
     #[derive(Copy, Clone, Debug, PartialEq)]
     enum MyState {
@@ -46,6 +47,15 @@ mod tests {
                 3 => "Paused",
                 4 => "Stopped",
                 _ => "",
+            }
+        }
+        fn big_uint(self) -> BigUint {
+            match self {
+                MyState::Init => {0_u32.into()}
+                MyState::Start => {1_u32.into()}
+                MyState::Running => {2_u32.into()}
+                MyState::Paused => {3_u32.into()}
+                MyState::Stopped => {4_u32.into()}
             }
         }
     }
@@ -135,6 +145,15 @@ mod tests {
                     3 => "Paused",
                     4 => "Stopped",
                     _ => "",
+                }
+            }
+            fn big_uint(self) -> BigUint {
+                match self {
+                    MyState::Init => 0_u32.into(),
+                    MyState::Start => 1_u32.into(),
+                    MyState::Running => 2_u32.into(),
+                    MyState::Paused => 3_u32.into(),
+                    MyState::Stopped => 4_u32.into()
                 }
             }
         }

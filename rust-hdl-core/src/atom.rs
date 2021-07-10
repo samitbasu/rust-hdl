@@ -1,3 +1,5 @@
+use num_bigint::BigUint;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AtomKind {
     InputParameter,
@@ -31,4 +33,5 @@ pub trait Atom {
     fn is_enum(&self) -> bool;
     fn name(&self, ndx: usize) -> &'static str;
     fn type_name(&self) -> &'static str;
+    fn value(&self) -> BigUint;
 }

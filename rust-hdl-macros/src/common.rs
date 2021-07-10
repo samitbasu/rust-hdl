@@ -1,6 +1,6 @@
 use quote::quote;
-use syn::Data;
 use syn::spanned::Spanned;
+use syn::Data;
 
 pub(crate) type TS = proc_macro2::TokenStream;
 

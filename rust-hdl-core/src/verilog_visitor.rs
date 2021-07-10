@@ -96,13 +96,23 @@ pub trait VerilogVisitor {
     }
 }
 
-pub fn walk_index_replacement<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &str, b: &VerilogExpression, c: &VerilogExpression) {
+pub fn walk_index_replacement<V: VerilogVisitor + ?Sized>(
+    visitor: &mut V,
+    a: &str,
+    b: &VerilogExpression,
+    c: &VerilogExpression,
+) {
     visitor.visit_signal(a);
     visitor.visit_expression(b);
     visitor.visit_expression(c);
 }
 
-pub fn walk_slice<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &str, b: &usize, c: &VerilogExpression) {
+pub fn walk_slice<V: VerilogVisitor + ?Sized>(
+    visitor: &mut V,
+    a: &str,
+    b: &usize,
+    c: &VerilogExpression,
+) {
     visitor.visit_signal(a);
     visitor.visit_expression(c);
 }
@@ -172,7 +182,10 @@ pub fn walk_statement<V: VerilogVisitor + ?Sized>(visitor: &mut V, s: &VerilogSt
     }
 }
 
-pub fn walk_index_assignment<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &VerilogIndexAssignment) {
+pub fn walk_index_assignment<V: VerilogVisitor + ?Sized>(
+    visitor: &mut V,
+    a: &VerilogIndexAssignment,
+) {
     visitor.visit_expression(&a.value);
     visitor.visit_expression(&a.index);
     visitor.visit_expression(&a.target);

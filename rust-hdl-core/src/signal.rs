@@ -5,6 +5,7 @@ use crate::direction::{Direction, In, Out};
 use crate::logic::Logic;
 use crate::probe::Probe;
 use crate::synth::Synth;
+use num_bigint::BigUint;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Signal<D: Direction, T: Synth> {
@@ -43,6 +44,10 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
 
     fn type_name(&self) -> &'static str {
         T::TYPE_NAME
+    }
+
+    fn value(&self) -> BigUint {
+        self.val.big_uint()
     }
 }
 

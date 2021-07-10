@@ -143,3 +143,7 @@ fn my_rust_testbench(sim: &Sim<T>) {
 
 Done.  Need to add an error type and insert `Result` return types.
 
+## TODO
+
+- Add auto enum handling/code generation to the macro
+- Finish VCD probe

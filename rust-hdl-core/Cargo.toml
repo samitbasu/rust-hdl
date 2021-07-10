@@ -9,4 +9,5 @@ edition = "2018"
 rust_hdl_macros = {path="../rust-hdl-macros"}
 crossbeam = "0.8.1"
 num-bigint = "0.4.0"
+vcd = "0.6.1"
 
