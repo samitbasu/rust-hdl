@@ -1,8 +1,8 @@
 use crate::bitvec::BitVec;
 use crate::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
+use crate::synth::VCDValue;
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
-use num_bigint::BigUint;
 
 // This comes with a few invariants that must be maintained for short representation
 // The short value must be less than 2^N
@@ -88,13 +88,25 @@ pub fn bit_cast<const M: usize, const N: usize>(x: Bits<N>) -> Bits<M> {
     }
 }
 
-impl<const N: usize> Into<BigUint> for Bits<N> {
-    fn into(self) -> BigUint {
-        let mut x = BigUint::default();
-        for i in 0..N {
-            x.set_bit(i as u64, self.get_bit(i));
+impl<const N: usize> Into<VCDValue> for Bits<N> {
+    fn into(self) -> VCDValue {
+        if N == 1 {
+            if self.get_bit(0) {
+                VCDValue::Single(vcd::Value::V1)
+            } else {
+                VCDValue::Single(vcd::Value::V0)
+            }
+        } else {
+            let mut x = vec![];
+            for i in 0..N {
+                if self.get_bit(i) {
+                    x.push(vcd::Value::V1)
+                } else {
+                    x.push(vcd::Value::V0)
+                }
+            }
+            VCDValue::Vector(x)
         }
-        x
     }
 }
 
@@ -361,7 +373,15 @@ impl<const N: usize> std::cmp::PartialEq<Bits<N>> for Bits<N> {
 impl<const N: usize> std::cmp::PartialEq<u32> for Bits<N> {
     #[inline(always)]
     fn eq(&self, other: &u32) -> bool {
-        self.eq(other.into())
+        let other_as_bits: Bits<N> = (*other).into();
+        self.eq(&other_as_bits)
+    }
+}
+
+impl std::cmp::PartialEq<bool> for Bits<1> {
+    #[inline(always)]
+    fn eq(&self, other: &bool) -> bool {
+        self.get_bit(0) == *other
     }
 }
 
@@ -426,7 +446,7 @@ mod tests {
     #[test]
     fn shr_test() {
         let a: Bits<32> = 10395_u32.into();
-        let c = a >> 4;
+        let c: Bits<32> = a >> 4_u32;
         let c_u32: u32 = c.into();
         assert_eq!(c_u32, 10395_u32 >> 4);
     }
@@ -441,7 +461,7 @@ mod tests {
     #[test]
     fn shl_test() {
         let a: Bits<32> = 10395_u32.into();
-        let c = a << 24;
+        let c = a << 24_u32;
         let c_u32: u32 = c.into();
         assert_eq!(c_u32, 10395_u32 << 24);
     }
@@ -564,8 +584,8 @@ mod tests {
     #[test]
     fn test_constants_and_bits() {
         let a = bits::<16>(0xdead);
-        let b = a + 1;
-        let c = 1 + a;
+        let b = a + 1_u32;
+        let c = 1_usize + a;
         println!("{:x}", b);
         assert_eq!(b, bits::<16>(0xdeae));
         assert_eq!(b, c);

@@ -10,15 +10,12 @@ mod tests {
     use rust_hdl_core::direction::{In, Local, Out};
     use rust_hdl_core::logic::Logic;
     use rust_hdl_core::module_defines::ModuleDefines;
-    use rust_hdl_core::probe::Probe;
     use rust_hdl_core::signal::Signal;
     use rust_hdl_core::simulate;
     use rust_hdl_core::simulate::{simulate, Endpoint, Simulation};
-    use rust_hdl_core::synth::Synth;
+    use rust_hdl_core::synth::{Synth, VCDValue};
     use rust_hdl_macros::hdl_gen;
     use rust_hdl_macros::LogicBlock;
-    use rust_hdl_macros::LogicInterface;
-    use num_bigint::BigUint;
 
     #[derive(Copy, Clone, Debug, PartialEq)]
     enum MyState {
@@ -49,46 +46,13 @@ mod tests {
                 _ => "",
             }
         }
-        fn big_uint(self) -> BigUint {
+        fn vcd(self) -> VCDValue {
             match self {
-                MyState::Init => {0_u32.into()}
-                MyState::Start => {1_u32.into()}
-                MyState::Running => {2_u32.into()}
-                MyState::Paused => {3_u32.into()}
-                MyState::Stopped => {4_u32.into()}
-            }
-        }
-    }
-
-    #[derive(Clone, Debug, LogicBlock)]
-    struct StateMachine {
-        pub clock: Signal<In, Clock>,
-        pub advance: Signal<In, Bit>,
-        state: DFF<MyState>,
-    }
-
-    impl StateMachine {
-        pub fn new() -> StateMachine {
-            StateMachine {
-                clock: Signal::default(),
-                advance: Signal::default(),
-                state: DFF::new(MyState::Init),
-            }
-        }
-    }
-
-    impl Logic for StateMachine {
-        fn update(&mut self) {
-            self.state.clk.next = self.clock.val;
-
-            if self.advance.val {
-                match self.state.q.val {
-                    MyState::Init => self.state.d.next = MyState::Start,
-                    MyState::Start => self.state.d.next = MyState::Running,
-                    MyState::Running => self.state.d.next = MyState::Paused,
-                    MyState::Paused => self.state.d.next = MyState::Stopped,
-                    MyState::Stopped => self.state.d.next = MyState::Init,
-                }
+                MyState::Init => VCDValue::String("Init".into()),
+                MyState::Start => VCDValue::String("Start".into()),
+                MyState::Running => VCDValue::String("Running".into()),
+                MyState::Paused => VCDValue::String("Paused".into()),
+                MyState::Stopped => VCDValue::String("Stopped".into()),
             }
         }
     }
@@ -147,13 +111,13 @@ mod tests {
                     _ => "",
                 }
             }
-            fn big_uint(self) -> BigUint {
+            fn vcd(self) -> VCDValue {
                 match self {
-                    MyState::Init => 0_u32.into(),
-                    MyState::Start => 1_u32.into(),
-                    MyState::Running => 2_u32.into(),
-                    MyState::Paused => 3_u32.into(),
-                    MyState::Stopped => 4_u32.into()
+                    MyState::Init => VCDValue::String("Init".into()),
+                    MyState::Start => VCDValue::String("Start".into()),
+                    MyState::Running => VCDValue::String("Running".into()),
+                    MyState::Paused => VCDValue::String("Paused".into()),
+                    MyState::Stopped => VCDValue::String("Stopped".into()),
                 }
             }
         }
@@ -337,7 +301,7 @@ mod tests {
 
     struct Circuit {
         x: i32,
-        strobe: Strobe<4>,
+        pub strobe: Strobe<4>,
     }
 
     fn sample_func(mut ep: Endpoint<Circuit>) -> simulate::Result<()> {
@@ -376,16 +340,19 @@ mod tests {
     #[test]
     fn test_tb() {
         let mut sim = Simulation::new();
-        let ep1 = sim.endpoint();
-        let sf1 = std::thread::spawn(move || sample_func(ep1));
-        let ep2 = sim.endpoint();
-        let sf2 = std::thread::spawn(move || sample_func2(ep2));
+        sim.add_testbench(|mut ep: Endpoint<Circuit>| {
+            let mut x = ep.init()?;
+            loop {
+                x = ep.wait(5, x)?;
+                x.strobe.clock.next = !x.strobe.clock.val;
+            }
+        });
+        sim.add_testbench(sample_func);
+        sim.add_testbench(sample_func2);
         let x = Circuit {
             x: 0,
             strobe: Strobe::default(),
         };
         sim.run(x, 1000).unwrap();
-        sf1.join().unwrap();
-        sf2.join().unwrap();
     }
 }

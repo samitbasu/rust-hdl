@@ -6,9 +6,11 @@ use rust_hdl_core::direction::{In, Out};
 use rust_hdl_core::logic::Logic;
 use rust_hdl_core::module_defines::ModuleDefines;
 use rust_hdl_core::signal::Signal;
+use rust_hdl_core::vcd_probe::{write_vcd_dump, write_vcd_header};
 use rust_hdl_core::verilog_gen::VerilogCodeGenerator;
 use rust_hdl_core::verilog_visitor::VerilogVisitor;
 use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface};
+use std::fs::File;
 
 struct SignalLister {}
 
@@ -118,4 +120,7 @@ fn test_write_modules_nested_ports() {
     }
     println!("Code");
     println!("{}", gen.to_string());
+    let mut jnk = File::create("test.vcd").unwrap();
+    let dev = write_vcd_header(&mut jnk, &uut);
+    let _dev = write_vcd_dump(dev, &uut);
 }

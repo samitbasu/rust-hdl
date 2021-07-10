@@ -2,8 +2,7 @@ use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
 use crate::logic::Logic;
 use crate::probe::Probe;
-use crate::synth::Synth;
-use num_bigint::BigUint;
+use crate::synth::{Synth, VCDValue};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Constant<T: Synth> {
@@ -51,7 +50,13 @@ impl<T: Synth> Atom for Constant<T> {
         T::TYPE_NAME
     }
 
-    fn value(&self) -> BigUint {self.val.big_uint()}
+    fn vcd(&self) -> VCDValue {
+        self.val.vcd()
+    }
+
+    fn id(&self) -> usize {
+        0_usize
+    }
 }
 
 impl<T: Synth> Block for Constant<T> {

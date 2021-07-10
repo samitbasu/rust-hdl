@@ -2,3 +2,11 @@
 #[repr(transparent)]
 #[derive(Clone, Copy, Default, PartialEq, Debug)]
 pub struct Clock(pub bool);
+
+impl std::ops::Not for Clock {
+    type Output = Clock;
+
+    fn not(self) -> Self::Output {
+        Clock(!self.0)
+    }
+}

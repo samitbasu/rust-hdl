@@ -2,6 +2,8 @@ use crossbeam::channel::{bounded, Receiver, Sender};
 use crossbeam::channel::{RecvError, SendError};
 
 use crate::block::Block;
+use crate::check_connected::check_connected;
+use std::thread::JoinHandle;
 
 pub fn simulate<B: Block>(uut: &mut B, max_iters: usize) -> bool {
     for _ in 0..max_iters {
@@ -55,6 +57,7 @@ pub struct Simulation<T> {
     recv: Receiver<Message<T>>,
     channel_to_sim: Sender<Message<T>>,
     time: u64,
+    testbenches: Vec<JoinHandle<Result<()>>>,
 }
 
 pub struct Endpoint<T> {
@@ -64,7 +67,7 @@ pub struct Endpoint<T> {
     from_sim: Receiver<Message<T>>,
 }
 
-impl<T> Simulation<T> {
+impl<T: Send + 'static + Block> Simulation<T> {
     pub fn new() -> Simulation<T> {
         let (send, recv) = bounded(0);
         Self {
@@ -72,7 +75,16 @@ impl<T> Simulation<T> {
             recv,
             channel_to_sim: send,
             time: 0,
+            testbenches: vec![],
         }
+    }
+    pub fn add_testbench<F>(&mut self, testbench: F)
+    where
+        F: Fn(Endpoint<T>) -> Result<()> + Send + 'static,
+    {
+        let ep = self.endpoint();
+        self.testbenches
+            .push(std::thread::spawn(move || testbench(ep)));
     }
     pub fn endpoint(&mut self) -> Endpoint<T> {
         let (send_to_worker, recv_from_sim_to_worker) = bounded(0);
@@ -116,6 +128,7 @@ impl<T> Simulation<T> {
         Ok(x.circuit)
     }
     pub fn run(&mut self, mut x: T, max_time: u64) -> Result<()> {
+        check_connected(&mut x);
         // First initialize the workers.
         for id in 0..self.workers.len() {
             x = self.dispatch(id, x)?;
@@ -151,6 +164,10 @@ impl<T> Simulation<T> {
         }
         println!("No more work to do... ending simulation");
         self.workers.clear();
+        let tbs = std::mem::take(&mut self.testbenches);
+        for handle in tbs {
+            let _ = handle.join().unwrap();
+        }
         Ok(())
     }
 }

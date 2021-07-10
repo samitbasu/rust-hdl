@@ -39,15 +39,15 @@ pub trait VerilogVisitor {
         walk_match(self, m);
     }
 
-    fn visit_comment(&mut self, c: &str) {
+    fn visit_comment(&mut self, _c: &str) {
         // Terminal
     }
 
-    fn visit_signal(&mut self, c: &str) {
+    fn visit_signal(&mut self, _c: &str) {
         // Terminal
     }
 
-    fn visit_literal(&mut self, a: &BigUint) {
+    fn visit_literal(&mut self, _a: &BigUint) {
         // Terminal
     }
 
@@ -110,7 +110,7 @@ pub fn walk_index_replacement<V: VerilogVisitor + ?Sized>(
 pub fn walk_slice<V: VerilogVisitor + ?Sized>(
     visitor: &mut V,
     a: &str,
-    b: &usize,
+    _b: &usize,
     c: &VerilogExpression,
 ) {
     visitor.visit_signal(a);
@@ -122,7 +122,7 @@ pub fn walk_index<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &str, b: &Veri
     visitor.visit_expression(b);
 }
 
-pub fn walk_cast<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &VerilogExpression, b: &usize) {
+pub fn walk_cast<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &VerilogExpression, _b: &usize) {
     visitor.visit_expression(a)
 }
 

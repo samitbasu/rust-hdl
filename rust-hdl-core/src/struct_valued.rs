@@ -1,6 +1,5 @@
-use crate::bits::{bit_cast, clog2, Bits, Bit};
-use crate::synth::Synth;
-use num_bigint::BigUint;
+use crate::bits::{bit_cast, clog2, Bit, Bits};
+use crate::synth::{Synth, VCDValue};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum CmdType {
@@ -23,9 +22,12 @@ impl Default for CmdType {
 // Auto generated
 impl Synth for CmdType {
     const BITS: usize = clog2(3);
-    fn big_uint(self) -> BigUint {
-        let p: Bits<{CmdType::BITS}> = self.into();
-        p.into()
+    fn vcd(self) -> VCDValue {
+        match self {
+            CmdType::Noop => VCDValue::String("Noop".into()),
+            CmdType::Read => VCDValue::String("Read".into()),
+            CmdType::Write => VCDValue::String("Write".into()),
+        }
     }
 }
 
@@ -79,8 +81,8 @@ struct MIGCmd {
 impl Synth for MIGCmd {
     const BITS: usize = CmdType::BITS + Bit::BITS + Bits::<6>::BITS;
 
-    fn big_uint(self) -> BigUint {
-        let t: Bits<{MIGCmd::BITS}> = self.into();
+    fn vcd(self) -> VCDValue {
+        let t: Bits<{ MIGCmd::BITS }> = self.into();
         t.into()
     }
 }
@@ -119,16 +121,16 @@ fn test_composite() {
     };
 
     let y: Bits<9> = x.into();
-    assert_eq!(y.get_bits::<{ CmdType::BITS }>(0), 1u32.into());
-    assert_eq!(y.get_bits::<{ bool::BITS }>(2), true.into());
-    assert_eq!(y.get_bits::<6>(3), 35_u32.into());
+    assert_eq!(y.get_bits::<{ CmdType::BITS }>(0), 1u32);
+    assert_eq!(y.get_bits::<{ bool::BITS }>(2), true);
+    assert_eq!(y.get_bits::<6>(3), 35_u32);
 
     let z0: Bits<9> = 2_usize.into();
     let z1: Bits<9> = 0_usize.into();
     let z2: Bits<9> = 42_usize.into();
-    let z = z0 | z1 << 2 | z2 << 3;
+    let z: Bits<9> = z0 | z1 << 2_usize | z2 << 3_usize;
     let x: MIGCmd = z.into();
     assert_eq!(x.active, false);
     assert_eq!(x.cmd, CmdType::Write);
-    assert_eq!(x.len, 42_usize.into());
+    assert_eq!(x.len, 42_u32);
 }

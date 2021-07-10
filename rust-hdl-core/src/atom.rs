@@ -1,4 +1,4 @@
-use num_bigint::BigUint;
+use crate::synth::VCDValue;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AtomKind {
@@ -33,5 +33,6 @@ pub trait Atom {
     fn is_enum(&self) -> bool;
     fn name(&self, ndx: usize) -> &'static str;
     fn type_name(&self) -> &'static str;
-    fn value(&self) -> BigUint;
+    fn vcd(&self) -> VCDValue;
+    fn id(&self) -> usize;
 }

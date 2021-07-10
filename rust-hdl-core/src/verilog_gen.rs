@@ -1,6 +1,6 @@
 use crate::ast::{
     VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
-    VerilogMatch, VerilogOp, VerilogOpUnary, VerilogStatement,
+    VerilogMatch, VerilogOp, VerilogOpUnary,
 };
 use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{walk_block, VerilogVisitor};

@@ -4,8 +4,14 @@ use crate::clock::Clock;
 use crate::direction::{Direction, In, Out};
 use crate::logic::Logic;
 use crate::probe::Probe;
-use crate::synth::Synth;
-use num_bigint::BigUint;
+use crate::synth::{Synth, VCDValue};
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+static GLOBAL_THREAD_COUNT: AtomicUsize = AtomicUsize::new(1);
+
+fn get_signal_id() -> usize {
+    GLOBAL_THREAD_COUNT.fetch_add(1, Ordering::SeqCst)
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct Signal<D: Direction, T: Synth> {
@@ -14,6 +20,7 @@ pub struct Signal<D: Direction, T: Synth> {
     prev: T,
     pub changed: bool,
     claimed: bool,
+    id: usize,
     dir: std::marker::PhantomData<D>,
 }
 
@@ -46,8 +53,12 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
         T::TYPE_NAME
     }
 
-    fn value(&self) -> BigUint {
-        self.val.big_uint()
+    fn vcd(&self) -> VCDValue {
+        self.val.vcd()
+    }
+
+    fn id(&self) -> usize {
+        self.id
     }
 }
 
@@ -102,6 +113,7 @@ impl<T: Synth> Signal<Out, T> {
             prev: init,
             changed: true,
             claimed: false,
+            id: get_signal_id(),
             dir: std::marker::PhantomData,
         }
     }
@@ -115,6 +127,7 @@ impl<D: Direction, T: Synth> Default for Signal<D, T> {
             prev: T::default(),
             changed: false,
             claimed: false,
+            id: get_signal_id(),
             dir: std::marker::PhantomData,
         }
     }
