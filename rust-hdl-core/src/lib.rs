@@ -7,7 +7,6 @@ pub mod check_connected;
 pub mod clock;
 pub mod code_writer;
 pub mod constant;
-pub mod dff;
 pub mod direction;
 pub mod logic;
 pub mod module_defines;

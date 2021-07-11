@@ -6,7 +6,7 @@ mod tests {
     use rust_hdl_core::check_connected::check_connected;
     use rust_hdl_core::clock::Clock;
     use rust_hdl_core::constant::Constant;
-    use rust_hdl_core::dff::DFF;
+    use rust_hdl_widgets::dff::DFF;
     use rust_hdl_core::direction::{In, Local, Out};
     use rust_hdl_core::logic::Logic;
     use rust_hdl_core::module_defines::ModuleDefines;
