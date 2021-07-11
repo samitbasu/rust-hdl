@@ -38,3 +38,10 @@ impl<const N: usize> Logic for Strobe<N> {
         self.strobe.next = self.enable.val & !self.counter.q.val.any();
     }
 }
+/*
+    fn connect(&mut self) {
+        self.counter.clk.connect();
+        self.strobe.connect();
+        self.counter.d.connect();
+    }
+*/

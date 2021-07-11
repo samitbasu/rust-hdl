@@ -299,9 +299,16 @@ mod tests {
     }
      */
 
+    #[derive(LogicBlock)]
     struct Circuit {
-        x: i32,
+        x: Signal<In, Bits<32>>,
         pub strobe: Strobe<4>,
+    }
+
+    impl Logic for Circuit {
+        #[hdl_gen]
+        fn update(&mut self) {
+        }
     }
 
     fn sample_func(mut ep: Endpoint<Circuit>) -> simulate::Result<()> {
@@ -312,12 +319,12 @@ mod tests {
         println!("Hello from TB 1");
         let mut x = ep.wait(0, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
-        x.x = 42;
+        x.x.next = 42_u32.into();
         let mut x = ep.wait(100, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
-        x.x = 100;
-        let x = ep.watch(|m| m.x == 89, x)?;
-        println!("Hello from TB1 where x value is {}", x.x);
+        x.x.next = 100_u32.into();
+        let x = ep.watch(|m| m.x.val == 89, x)?;
+        println!("Hello from TB1 where x value is {:?}", x.x.next);
         let x = ep.wait(250, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
         // This is called last
@@ -331,7 +338,7 @@ mod tests {
         println!("Hello from TB 2");
         let mut x = ep.wait(125, x)?;
         println!("Hello from TB 2 at time {}", ep.time());
-        x.x = 88;
+        x.x.next = 89_u32.into();
         ep.done(x)?;
         println!("TB 2 done");
         Ok(())
@@ -340,19 +347,19 @@ mod tests {
     #[test]
     fn test_tb() {
         let mut sim = Simulation::new();
-        sim.add_testbench(|mut ep: Endpoint<Circuit>| {
-            let mut x = ep.init()?;
-            loop {
-                x = ep.wait(5, x)?;
-                x.strobe.clock.next = !x.strobe.clock.val;
-            }
+        sim.add_clock(5, |x: &mut Circuit| {
+            x.strobe.clock.next = !x.strobe.clock.val
         });
         sim.add_testbench(sample_func);
         sim.add_testbench(sample_func2);
-        let x = Circuit {
-            x: 0,
+        let mut x = Circuit {
+            x: Signal::default(),
             strobe: Strobe::default(),
         };
-        sim.run(x, 1000).unwrap();
+        x.x.connect();
+        x.strobe.clock.connect();
+        x.strobe.enable.connect();
+        x.connect_all();
+        sim.run(x, 400).unwrap();
     }
 }

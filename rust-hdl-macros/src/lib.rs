@@ -39,7 +39,6 @@ pub fn logic_interface(input: TokenStream) -> TokenStream {
 pub fn hdl_gen(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let orig = TS::from(item.clone());
     let parse = parse_macro_input!(item as syn::ItemFn);
-    let connects = connect_gen(&parse);
     let connects = match connect_gen(&parse) {
         Err(e) => return e.to_compile_error().into(),
         Ok(t) => t,
@@ -49,9 +48,9 @@ pub fn hdl_gen(_attr: TokenStream, item: TokenStream) -> TokenStream {
         Ok(hdl_code) => TokenStream::from(quote! {
             #orig
 
-            #hdl_code
-
             #connects
+
+            #hdl_code
         }),
     }
 }

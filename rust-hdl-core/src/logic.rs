@@ -7,3 +7,7 @@ pub trait Logic {
         Verilog::Empty
     }
 }
+
+pub fn logic_connect_fn<L: Logic>(x: &mut L) {
+    x.connect();
+}

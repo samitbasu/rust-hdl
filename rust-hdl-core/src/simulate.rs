@@ -38,6 +38,7 @@ enum TriggerType<T> {
     Never,
     Time(u64),
     Function(Box<dyn Fn(&T) -> bool + Send>),
+    Clock(u64),
 }
 
 struct Message<T> {
@@ -78,6 +79,18 @@ impl<T: Send + 'static + Block> Simulation<T> {
             testbenches: vec![],
         }
     }
+    pub fn add_clock<F>(&mut self, interval: u64, clock_fn: F)
+    where
+        F: Fn(&mut T) -> () + Send + 'static,
+    {
+        self.add_testbench(move |mut ep: Endpoint<T>| {
+            let mut x = ep.init()?;
+            loop {
+                x = ep.clock(interval, x)?;
+                clock_fn(&mut x);
+            }
+        });
+    }
     pub fn add_testbench<F>(&mut self, testbench: F)
     where
         F: Fn(Endpoint<T>) -> Result<()> + Send + 'static,
@@ -111,7 +124,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
             circuit: x,
         })?;
         println!("Waiting for circuit to return");
-        let x = self.recv.recv()?;
+        let mut x = self.recv.recv()?;
         println!("Received circuit from worker {}", x.id);
         match &x.kind {
             TriggerType::Never => {
@@ -123,8 +136,18 @@ impl<T: Send + 'static + Block> Simulation<T> {
             TriggerType::Function(_) => {
                 println!("Worker would like to be notified when function returns true");
             }
+            TriggerType::Clock(_) => {
+                println!("Worker implements clock")
+            }
         }
         worker.kind = x.kind;
+        // Update the circuit
+        for _ in 0..10 {
+            x.circuit.update_all();
+            if !x.circuit.has_changed() {
+                break;
+            }
+        }
         Ok(x.circuit)
     }
     pub fn run(&mut self, mut x: T, max_time: u64) -> Result<()> {
@@ -137,25 +160,34 @@ impl<T: Send + 'static + Block> Simulation<T> {
         while self.time < max_time {
             let mut min_time = !0_u64;
             let mut min_idx = 0;
+            let mut only_clock_waiters = true;
             for worker in self.workers.iter() {
                 match &worker.kind {
                     TriggerType::Never => {}
                     TriggerType::Time(t) => {
+                        only_clock_waiters = false;
                         if *t < min_time {
                             min_time = *t;
                             min_idx = worker.id;
                         }
                     }
                     TriggerType::Function(watch) => {
+                        only_clock_waiters = false;
                         if watch(&x) {
                             min_idx = worker.id;
                             min_time = self.time;
                             break;
                         }
                     }
+                    TriggerType::Clock(t) => {
+                        if *t < min_time {
+                            min_time = *t;
+                            min_idx = worker.id;
+                        }
+                    }
                 }
             }
-            if min_time == !0 {
+            if min_time == !0 || only_clock_waiters {
                 break;
             }
             println!("Updating time to {}", min_time);
@@ -186,6 +218,18 @@ impl<T> Endpoint<T> {
             circuit: x,
         })?;
         let t = self.from_sim.recv()?;
+        Ok(t.circuit)
+    }
+    pub fn clock(&mut self, delta: u64, x: T) -> Result<T> {
+        self.to_sim.send(Message {
+            id: self.idx,
+            kind: TriggerType::Clock(delta + self.time),
+            circuit: x,
+        })?;
+        let t = self.from_sim.recv()?;
+        if let TriggerType::Time(t0) = t.kind {
+            self.time = t0;
+        }
         Ok(t.circuit)
     }
     pub fn wait(&mut self, delta: u64, x: T) -> Result<T> {
