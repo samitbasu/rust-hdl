@@ -16,12 +16,18 @@ fn get_signal_id() -> usize {
 #[derive(Copy, Clone, Debug)]
 pub struct Signal<D: Direction, T: Synth> {
     pub next: T,
-    pub val: T,
+    val: T,
     prev: T,
     pub changed: bool,
     claimed: bool,
     id: usize,
     dir: std::marker::PhantomData<D>,
+}
+
+impl<D: Direction, T: Synth> Signal<D, T> {
+    pub fn val(&self) -> T {
+        self.val
+    }
 }
 
 impl<D: Direction, T: Synth> Atom for Signal<D, T> {

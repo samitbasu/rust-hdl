@@ -32,7 +32,7 @@ impl<T: Synth> DFF<T> {
 impl<T: Synth> Logic for DFF<T> {
     fn update(&mut self) {
         if self.clk.pos_edge() {
-            self.q.next = self.d.val
+            self.q.next = self.d.val()
         }
     }
     fn connect(&mut self) {

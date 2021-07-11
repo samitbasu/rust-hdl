@@ -70,33 +70,33 @@ fn test_write_modules_nested_ports() {
     impl Logic for UUT {
         #[hdl_gen]
         fn update(&mut self) {
-            self.widget_a.clock.next = self.clock.val;
-            self.widget_b.clock.next = self.clock.val;
+            self.widget_a.clock.next = self.clock.val();
+            self.widget_b.clock.next = self.clock.val();
 
-            if self.select.val {
-                self.bus.cmd.underflow.next = self.widget_a.bus.cmd.underflow.val;
-                self.bus.cmd.almost_empty.next = self.widget_a.bus.cmd.almost_empty.val;
-                self.bus.cmd.empty.next = self.widget_a.bus.cmd.empty.val;
-                self.bus.cmd.output.next = self.widget_a.bus.cmd.output.val + 1_usize;
-                self.widget_a.bus.cmd.read.next = self.bus.cmd.read.val;
+            if self.select.val() {
+                self.bus.cmd.underflow.next = self.widget_a.bus.cmd.underflow.val();
+                self.bus.cmd.almost_empty.next = self.widget_a.bus.cmd.almost_empty.val();
+                self.bus.cmd.empty.next = self.widget_a.bus.cmd.empty.val();
+                self.bus.cmd.output.next = self.widget_a.bus.cmd.output.val() + 1_usize;
+                self.widget_a.bus.cmd.read.next = self.bus.cmd.read.val();
 
-                self.bus.data.underflow.next = self.widget_a.bus.data.underflow.val;
-                self.bus.data.almost_empty.next = self.widget_a.bus.data.almost_empty.val;
-                self.bus.data.empty.next = self.widget_a.bus.data.empty.val;
-                self.bus.data.output.next = self.widget_a.bus.data.output.val;
-                self.widget_a.bus.data.read.next = self.bus.data.read.val;
+                self.bus.data.underflow.next = self.widget_a.bus.data.underflow.val();
+                self.bus.data.almost_empty.next = self.widget_a.bus.data.almost_empty.val();
+                self.bus.data.empty.next = self.widget_a.bus.data.empty.val();
+                self.bus.data.output.next = self.widget_a.bus.data.output.val();
+                self.widget_a.bus.data.read.next = self.bus.data.read.val();
             } else {
-                self.bus.cmd.underflow.next = self.widget_b.bus.cmd.underflow.val;
-                self.bus.cmd.almost_empty.next = self.widget_b.bus.cmd.almost_empty.val;
-                self.bus.cmd.empty.next = self.widget_b.bus.cmd.empty.val;
-                self.bus.cmd.output.next = self.widget_b.bus.cmd.output.val;
-                self.widget_b.bus.cmd.read.next = self.bus.cmd.read.val;
+                self.bus.cmd.underflow.next = self.widget_b.bus.cmd.underflow.val();
+                self.bus.cmd.almost_empty.next = self.widget_b.bus.cmd.almost_empty.val();
+                self.bus.cmd.empty.next = self.widget_b.bus.cmd.empty.val();
+                self.bus.cmd.output.next = self.widget_b.bus.cmd.output.val();
+                self.widget_b.bus.cmd.read.next = self.bus.cmd.read.val();
 
-                self.bus.data.underflow.next = self.widget_b.bus.data.underflow.val;
-                self.bus.data.almost_empty.next = self.widget_b.bus.data.almost_empty.val;
-                self.bus.data.empty.next = self.widget_b.bus.data.empty.val;
-                self.bus.data.output.next = self.widget_b.bus.data.output.val;
-                self.widget_b.bus.data.read.next = self.bus.data.read.val;
+                self.bus.data.underflow.next = self.widget_b.bus.data.underflow.val();
+                self.bus.data.almost_empty.next = self.widget_b.bus.data.almost_empty.val();
+                self.bus.data.empty.next = self.widget_b.bus.data.empty.val();
+                self.bus.data.output.next = self.widget_b.bus.data.output.val();
+                self.widget_b.bus.data.read.next = self.bus.data.read.val();
             }
         }
     }

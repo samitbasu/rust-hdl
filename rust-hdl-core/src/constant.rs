@@ -6,12 +6,15 @@ use crate::synth::{Synth, VCDValue};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Constant<T: Synth> {
-    pub val: T,
+    val: T,
 }
 
 impl<T: Synth> Constant<T> {
     pub fn new(val: T) -> Constant<T> {
         Constant { val }
+    }
+    pub fn val(&self) -> T {
+        self.val
     }
 }
 

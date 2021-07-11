@@ -73,7 +73,7 @@ mod tests {
             if !simulate(&mut uut, 10) {
                 panic!("Logic did not converge");
             }
-            if uut.strobe.val {
+            if uut.strobe.val() {
                 strobe_count += 1;
             }
         }
@@ -142,10 +142,10 @@ mod tests {
         impl Logic for StateMachine {
             #[hdl_gen]
             fn update(&mut self) {
-                self.state.clk.next = self.clock.val;
+                self.state.clk.next = self.clock.val();
 
-                if self.advance.val {
-                    match self.state.q.val {
+                if self.advance.val() {
+                    match self.state.q.val() {
                         MyState::Init => self.state.d.next = MyState::Start,
                         MyState::Start => self.state.d.next = MyState::Running,
                         MyState::Running => self.state.d.next = MyState::Paused,
@@ -168,7 +168,7 @@ mod tests {
             if !simulate(&mut uut, 10) {
                 panic!("Logic did not converge");
             }
-            println!("State {:?}", uut.state.q.val);
+            println!("State {:?}", uut.state.q.val());
         }
         let mut defines = ModuleDefines::default();
         uut.accept("uut", &mut defines);
@@ -241,20 +241,20 @@ mod tests {
         impl Logic for Semaphore {
             #[hdl_gen]
             fn update(&mut self) {
-                self.count.clk.next = self.clk.val;
-                self.count.d.next = self.count.q.val;
+                self.count.clk.next = self.clk.val();
+                self.count.d.next = self.count.q.val();
 
-                self.will_read.next = !self.empty.val && self.pop.val;
-                self.will_write.next = !self.full.val && self.push.val;
+                self.will_read.next = !self.empty.val() && self.pop.val();
+                self.will_write.next = !self.full.val() && self.push.val();
 
-                if self.will_read.val && !self.will_write.val {
-                    self.count.d.next = self.count.q.val - 1_u32;
-                } else if self.will_write.val && !self.will_read.val {
-                    self.count.d.next = self.count.q.val + 1_u32;
+                if self.will_read.val() && !self.will_write.val() {
+                    self.count.d.next = self.count.q.val() - 1_u32;
+                } else if self.will_write.val() && !self.will_read.val() {
+                    self.count.d.next = self.count.q.val() + 1_u32;
                 }
 
-                self.full.next = self.count.q.val == 15_u32;
-                self.empty.next = self.count.q.val == 0_u32;
+                self.full.next = self.count.q.val() == 15_u32;
+                self.empty.next = self.count.q.val() == 0_u32;
             }
         }
 
@@ -323,7 +323,7 @@ mod tests {
         let mut x = ep.wait(100, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
         x.x.next = 100_u32.into();
-        let x = ep.watch(|m| m.x.val == 89, x)?;
+        let x = ep.watch(|m| m.x.val() == 89, x)?;
         println!("Hello from TB1 where x value is {:?}", x.x.next);
         let x = ep.wait(250, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
@@ -348,7 +348,7 @@ mod tests {
     fn test_tb() {
         let mut sim = Simulation::new();
         sim.add_clock(5, |x: &mut Circuit| {
-            x.strobe.clock.next = !x.strobe.clock.val
+            x.strobe.clock.next = !x.strobe.clock.val()
         });
         sim.add_testbench(sample_func);
         sim.add_testbench(sample_func2);

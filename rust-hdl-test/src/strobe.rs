@@ -31,11 +31,11 @@ impl<const N: usize> Default for Strobe<N> {
 impl<const N: usize> Logic for Strobe<N> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.counter.clk.next = self.clock.val;
-        if self.enable.val {
-            self.counter.d.next = self.counter.q.val + self.strobe_incr.val;
+        self.counter.clk.next = self.clock.val();
+        if self.enable.val() {
+            self.counter.d.next = self.counter.q.val() + self.strobe_incr.val();
         }
-        self.strobe.next = self.enable.val & !self.counter.q.val.any();
+        self.strobe.next = self.enable.val() & !self.counter.q.val().any();
     }
 }
 /*

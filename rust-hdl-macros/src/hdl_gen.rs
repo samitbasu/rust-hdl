@@ -384,6 +384,13 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                 Box::new(rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())))
             }))
         }
+        "val" => {
+            let receiver = method.receiver.as_ref();
+            let signal = common::fixup_ident(quote!(#receiver).to_string());
+            Ok(quote!({
+                rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())
+            }))
+        }
         _ => Err(syn::Error::new(
             method.span(),
             "Unsupported method call for hardware conversion",
