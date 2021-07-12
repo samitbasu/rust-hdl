@@ -3,6 +3,7 @@ use crate::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
 use crate::synth::VCDValue;
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
+use std::num::Wrapping;
 
 // This comes with a few invariants that must be maintained for short representation
 // The short value must be less than 2^N
@@ -205,6 +206,12 @@ impl Into<bool> for Bits<1> {
 
 macro_rules! define_from_uint {
     ($name:ident, $width:expr) => {
+        impl<const N: usize> From<Wrapping<$name>> for Bits<N> {
+            fn from(x: Wrapping<$name>) -> Self {
+                x.0.into()
+            }
+        }
+
         impl<const N: usize> From<$name> for Bits<N> {
             #[inline(always)]
             fn from(x: $name) -> Self {

@@ -1,28 +1,30 @@
 use rust_hdl_core::bits::{Bit, Bits};
 use rust_hdl_core::clock::Clock;
 use rust_hdl_core::constant::Constant;
-use rust_hdl_widgets::dff::DFF;
+use crate::dff::DFF;
 use rust_hdl_core::direction::{In, Out};
 use rust_hdl_core::logic::Logic;
 use rust_hdl_core::signal::Signal;
 use rust_hdl_macros::{hdl_gen, LogicBlock};
+use std::num::Wrapping;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Strobe<const N: usize> {
     pub enable: Signal<In, Bit>,
     pub strobe: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub strobe_incr: Constant<Bits<N>>,
+    pub threshold: Constant<Bits<N>>,
     counter: DFF<Bits<N>>,
 }
 
-impl<const N: usize> Default for Strobe<N> {
-    fn default() -> Self {
+impl<const N: usize> Strobe<N> {
+    pub fn new(clock_freq: u64, strobe_freq: u64) -> Self {
+        let incr = Wrapping(((strobe_freq << 32) / clock_freq) as u32);
         Self {
             enable: Signal::default(),
-            strobe: Signal::<Out, Bit>::new_with_default(false),
+            strobe: Signal::default(),
             clock: Signal::default(),
-            strobe_incr: Constant::new(1_usize.into()),
+            threshold: Constant::new(incr.into()),
             counter: DFF::new(0_usize.into()),
         }
     }
@@ -33,15 +35,8 @@ impl<const N: usize> Logic for Strobe<N> {
     fn update(&mut self) {
         self.counter.clk.next = self.clock.val();
         if self.enable.val() {
-            self.counter.d.next = self.counter.q.val() + self.strobe_incr.val();
+            self.counter.d.next = self.counter.q.val() + self.threshold.val();
         }
-        self.strobe.next = self.enable.val() & !self.counter.q.val().any();
+        self.strobe.next = self.enable.val() & (self.counter.q.val() < self.threshold.val());
     }
 }
-/*
-    fn connect(&mut self) {
-        self.counter.clk.connect();
-        self.strobe.connect();
-        self.counter.d.connect();
-    }
-*/

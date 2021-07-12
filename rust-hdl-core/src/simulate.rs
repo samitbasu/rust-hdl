@@ -4,6 +4,9 @@ use crossbeam::channel::{RecvError, SendError};
 use crate::block::Block;
 use crate::check_connected::check_connected;
 use std::thread::JoinHandle;
+use std::fs::File;
+use crate::vcd_probe::{write_vcd_header, write_vcd_dump, write_vcd_change};
+use std::io::Write;
 
 pub fn simulate<B: Block>(uut: &mut B, max_iters: usize) -> bool {
     for _ in 0..max_iters {
@@ -68,6 +71,12 @@ pub struct Endpoint<T> {
     from_sim: Receiver<Message<T>>,
 }
 
+struct NextTime {
+    time: u64,
+    idx: usize,
+    clocks_only: bool
+}
+
 impl<T: Send + 'static + Block> Simulation<T> {
     pub fn new() -> Simulation<T> {
         let (send, recv) = bounded(0);
@@ -117,29 +126,12 @@ impl<T: Send + 'static + Block> Simulation<T> {
     }
     fn dispatch(&mut self, idx: usize, x: T) -> Result<T> {
         let worker = &mut self.workers[idx];
-        println!("Sending circuit to worker {}", worker.id);
         worker.channel_to_worker.send(Message {
             id: worker.id,
             kind: TriggerType::Time(self.time),
             circuit: x,
         })?;
-        println!("Waiting for circuit to return");
         let mut x = self.recv.recv()?;
-        println!("Received circuit from worker {}", x.id);
-        match &x.kind {
-            TriggerType::Never => {
-                println!("Worker does not want to be re-awoken")
-            }
-            TriggerType::Time(t) => {
-                println!("Worker would like to be notified at time {}", t);
-            }
-            TriggerType::Function(_) => {
-                println!("Worker would like to be notified when function returns true");
-            }
-            TriggerType::Clock(_) => {
-                println!("Worker implements clock")
-            }
-        }
         worker.kind = x.kind;
         // Update the circuit
         for _ in 0..10 {
@@ -150,6 +142,48 @@ impl<T: Send + 'static + Block> Simulation<T> {
         }
         Ok(x.circuit)
     }
+    fn scan_workers(&self, x: &T) -> NextTime {
+        let mut min_time = !0_u64;
+        let mut min_idx = 0;
+        let mut only_clock_waiters = true;
+        for worker in self.workers.iter() {
+            match &worker.kind {
+                TriggerType::Never => {}
+                TriggerType::Time(t) => {
+                    only_clock_waiters = false;
+                    if *t < min_time {
+                        min_time = *t;
+                        min_idx = worker.id;
+                    }
+                }
+                TriggerType::Function(watch) => {
+                    only_clock_waiters = false;
+                    if watch(&x) {
+                        min_idx = worker.id;
+                        min_time = self.time;
+                        break;
+                    }
+                }
+                TriggerType::Clock(t) => {
+                    if *t < min_time {
+                        min_time = *t;
+                        min_idx = worker.id;
+                    }
+                }
+            }
+        }
+        NextTime {
+            time: min_time,
+            idx: min_idx,
+            clocks_only: only_clock_waiters
+        }
+    }
+    fn terminate(&mut self) {
+        self.workers.clear();
+        for handle in std::mem::take(&mut self.testbenches) {
+            let _ = handle.join().unwrap();
+        }
+    }
     pub fn run(&mut self, mut x: T, max_time: u64) -> Result<()> {
         check_connected(&mut x);
         // First initialize the workers.
@@ -158,48 +192,36 @@ impl<T: Send + 'static + Block> Simulation<T> {
         }
         // Next run until we have no one else waiting
         while self.time < max_time {
-            let mut min_time = !0_u64;
-            let mut min_idx = 0;
-            let mut only_clock_waiters = true;
-            for worker in self.workers.iter() {
-                match &worker.kind {
-                    TriggerType::Never => {}
-                    TriggerType::Time(t) => {
-                        only_clock_waiters = false;
-                        if *t < min_time {
-                            min_time = *t;
-                            min_idx = worker.id;
-                        }
-                    }
-                    TriggerType::Function(watch) => {
-                        only_clock_waiters = false;
-                        if watch(&x) {
-                            min_idx = worker.id;
-                            min_time = self.time;
-                            break;
-                        }
-                    }
-                    TriggerType::Clock(t) => {
-                        if *t < min_time {
-                            min_time = *t;
-                            min_idx = worker.id;
-                        }
-                    }
-                }
-            }
-            if min_time == !0 || only_clock_waiters {
+            let next = self.scan_workers(&x);
+            if next.time == !0 || next.clocks_only {
                 break;
             }
-            println!("Updating time to {}", min_time);
-            self.time = min_time;
-            x = self.dispatch(min_idx, x)?;
+            self.time = next.time;
+            x = self.dispatch(next.idx, x)?;
         }
-        println!("No more work to do... ending simulation");
-        self.workers.clear();
-        let tbs = std::mem::take(&mut self.testbenches);
-        for handle in tbs {
-            let _ = handle.join().unwrap();
+        self.terminate();
+        Ok(())
+    }
+    pub fn run_traced<W: Write>(&mut self, mut x: T, max_time: u64, trace: W) -> Result<()> {
+        check_connected(&mut x);
+        let mut vcd = write_vcd_header(trace, &x);
+        // First initialize the workers.
+        for id in 0..self.workers.len() {
+            x = self.dispatch(id, x)?;
         }
+        vcd = write_vcd_dump(vcd, &x);
+        // Next run until we have no one else waiting
+        while self.time < max_time {
+            let next = self.scan_workers(&x);
+            if next.time == !0 || next.clocks_only {
+                break;
+            }
+            self.time = next.time;
+            x = self.dispatch(next.idx, x)?;
+            vcd.timestamp(next.time);
+            vcd = write_vcd_change(vcd, &x);
+        }
+        self.terminate();
         Ok(())
     }
 }

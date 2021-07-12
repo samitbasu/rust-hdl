@@ -58,6 +58,39 @@ pub fn write_vcd_header<W: Write>(writer: W, uut: &dyn Block) -> VCDProbe<W> {
     visitor.0
 }
 
+struct VCDChange<W: Write>(VCDProbe<W>);
+
+impl<W: Write> Probe for VCDChange<W> {
+    fn visit_atom(&mut self, _name: &str, signal: &dyn Atom) {
+        if let Some(idc) = self.0.id_map.get(&signal.id()) {
+            let val = signal.vcd();
+            if let Some(old_val) = self.0.val_map.get(idc) {
+                if val == *old_val {
+                    return;
+                }
+            }
+            self.0.val_map.insert(*idc, val.clone());
+            match val {
+                VCDValue::Single(s) => {
+                    self.0.vcd.change_scalar(*idc, s).unwrap();
+                }
+                VCDValue::Vector(v) => {
+                    self.0.vcd.change_vector(*idc, &v).unwrap();
+                }
+                VCDValue::String(t) => {
+                    self.0.vcd.change_string(*idc, &t).unwrap();
+                }
+            }
+        }
+    }
+}
+
+pub fn write_vcd_change<W: Write>(vcd: VCDProbe<W>, uut: &dyn Block) -> VCDProbe<W> {
+    let mut visitor = VCDChange(vcd);
+    uut.accept("uut", &mut visitor);
+    visitor.0
+}
+
 struct VCDDump<W: Write>(VCDProbe<W>);
 
 impl<W: Write> Probe for VCDDump<W> {

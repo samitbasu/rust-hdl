@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::strobe::Strobe;
+    use rust_hdl_widgets::strobe::Strobe;
     use rust_hdl_core::bits::{clog2, Bit, Bits};
     use rust_hdl_core::block::Block;
     use rust_hdl_core::check_connected::check_connected;
@@ -59,7 +59,7 @@ mod tests {
 
     #[test]
     fn test_visit_version() {
-        let mut uut: Strobe<4> = Strobe::default();
+        let mut uut: Strobe<4> = Strobe::new(100, 10);
         // Simulate 100 clock cycles
         uut.enable.next = true;
         println!("Starting");
@@ -190,8 +190,8 @@ mod tests {
         impl StrobePair {
             pub fn new() -> StrobePair {
                 Self {
-                    a_strobe: Strobe::default(),
-                    b_strobe: Strobe::default(),
+                    a_strobe: Strobe::new(100, 10),
+                    b_strobe: Strobe::new(100, 10),
                     clock: Signal::default(),
                     enable: Signal::default(),
                     increment: Constant::new(32_usize.into()),
@@ -354,7 +354,7 @@ mod tests {
         sim.add_testbench(sample_func2);
         let mut x = Circuit {
             x: Signal::default(),
-            strobe: Strobe::default(),
+            strobe: Strobe::new(100, 10),
         };
         x.x.connect();
         x.strobe.clock.connect();
