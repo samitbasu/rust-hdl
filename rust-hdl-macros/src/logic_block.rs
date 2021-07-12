@@ -1,6 +1,5 @@
 use quote::quote;
-use syn::spanned::Spanned;
-use syn::{Data, Result};
+use syn::Result;
 
 use crate::common;
 use crate::common::TS;

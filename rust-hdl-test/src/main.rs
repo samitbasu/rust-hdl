@@ -1,9 +1,8 @@
-use rust_hdl_core::logic::Logic;
-use rust_hdl_widgets::strobe::Strobe;
-use rust_hdl_core::simulate::{Simulation, Endpoint};
-use rust_hdl_core::simulate;
-use rust_hdl_macros::LogicBlock;
 use rust_hdl_core::block::Block;
+use rust_hdl_core::logic::Logic;
+use rust_hdl_core::simulate::{Endpoint, Simulation};
+use rust_hdl_macros::LogicBlock;
+use rust_hdl_widgets::strobe::Strobe;
 use std::fs::File;
 
 mod base_tests;
@@ -12,7 +11,7 @@ mod nested_ports;
 
 #[derive(LogicBlock)]
 struct UUT {
-    strobe: Strobe<32>
+    strobe: Strobe<32>,
 }
 
 impl Logic for UUT {
@@ -25,25 +24,21 @@ impl Logic for UUT {
 
 #[test]
 fn test_strobe() {
-    fn test_bench(mut ep: Endpoint<UUT>) -> simulate::Result<()> {
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut UUT| x.strobe.clock.next = !x.strobe.clock.val());
+    sim.add_testbench(|mut ep: Endpoint<UUT>| {
         let mut x = ep.init()?;
         x.strobe.enable.next = true;
-        let mut x = ep.wait(10_000_000, x)?;
+        x = ep.wait(10_000_000, x)?;
         ep.done(x)?;
         Ok(())
-    }
-
-    let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut UUT| {
-        x.strobe.clock.next = !x.strobe.clock.val()
     });
-    sim.add_testbench(test_bench);
     let mut uut = UUT {
-        strobe: Strobe::new(1_000, 10)
+        strobe: Strobe::new(1_000, 10),
     };
     uut.connect_all();
-    sim.run_traced(uut, 100_000,
-                   File::create("strobe.vcd").unwrap()).unwrap();
+    sim.run_traced(uut, 100_000, File::create("strobe.vcd").unwrap())
+        .unwrap();
 }
 
 fn main() {

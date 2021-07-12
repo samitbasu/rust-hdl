@@ -1,12 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use rust_hdl_widgets::strobe::Strobe;
     use rust_hdl_core::bits::{clog2, Bit, Bits};
     use rust_hdl_core::block::Block;
     use rust_hdl_core::check_connected::check_connected;
     use rust_hdl_core::clock::Clock;
     use rust_hdl_core::constant::Constant;
-    use rust_hdl_widgets::dff::DFF;
     use rust_hdl_core::direction::{In, Local, Out};
     use rust_hdl_core::logic::Logic;
     use rust_hdl_core::module_defines::ModuleDefines;
@@ -16,6 +14,8 @@ mod tests {
     use rust_hdl_core::synth::{Synth, VCDValue};
     use rust_hdl_macros::hdl_gen;
     use rust_hdl_macros::LogicBlock;
+    use rust_hdl_widgets::dff::DFF;
+    use rust_hdl_widgets::strobe::Strobe;
 
     #[derive(Copy, Clone, Debug, PartialEq)]
     enum MyState {
@@ -307,8 +307,7 @@ mod tests {
 
     impl Logic for Circuit {
         #[hdl_gen]
-        fn update(&mut self) {
-        }
+        fn update(&mut self) {}
     }
 
     fn sample_func(mut ep: Endpoint<Circuit>) -> simulate::Result<()> {

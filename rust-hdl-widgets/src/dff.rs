@@ -1,8 +1,6 @@
-use rust_hdl_core::block::Block;
 use rust_hdl_core::clock::Clock;
 use rust_hdl_core::direction::{In, Out};
 use rust_hdl_core::logic::Logic;
-use rust_hdl_core::probe::Probe;
 use rust_hdl_core::signal::Signal;
 use rust_hdl_core::synth::Synth;
 use rust_hdl_macros::LogicBlock;

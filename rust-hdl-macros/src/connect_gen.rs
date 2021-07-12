@@ -1,9 +1,8 @@
-use crate::common::{fixup_ident, TS};
-use quote::format_ident;
+use crate::common::TS;
 use quote::quote;
 use std::collections::HashSet;
 use syn::visit::Visit;
-use syn::{visit, Expr, ExprAssign, Result, ExprMethodCall, ExprField, Member};
+use syn::{Expr, ExprAssign, Member, Result};
 
 struct AssignVisitor<'ast> {
     targets: HashSet<&'ast Expr>,
@@ -27,7 +26,6 @@ pub(crate) fn connect_gen(item: &syn::ItemFn) -> Result<TS> {
     };
     t.visit_item_fn(item);
     let connects = t.targets.iter().collect::<Vec<_>>();
-    let my_name = &item.sig.ident.to_string();
     Ok(quote!(
         fn connect(&mut self) {
             #(

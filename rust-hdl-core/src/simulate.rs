@@ -3,10 +3,9 @@ use crossbeam::channel::{RecvError, SendError};
 
 use crate::block::Block;
 use crate::check_connected::check_connected;
-use std::thread::JoinHandle;
-use std::fs::File;
-use crate::vcd_probe::{write_vcd_header, write_vcd_dump, write_vcd_change};
+use crate::vcd_probe::{write_vcd_change, write_vcd_dump, write_vcd_header};
 use std::io::Write;
+use std::thread::JoinHandle;
 
 pub fn simulate<B: Block>(uut: &mut B, max_iters: usize) -> bool {
     for _ in 0..max_iters {
@@ -45,7 +44,6 @@ enum TriggerType<T> {
 }
 
 struct Message<T> {
-    id: usize,
     kind: TriggerType<T>,
     circuit: T,
 }
@@ -65,7 +63,6 @@ pub struct Simulation<T> {
 }
 
 pub struct Endpoint<T> {
-    idx: usize,
     time: u64,
     to_sim: Sender<Message<T>>,
     from_sim: Receiver<Message<T>>,
@@ -74,7 +71,7 @@ pub struct Endpoint<T> {
 struct NextTime {
     time: u64,
     idx: usize,
-    clocks_only: bool
+    clocks_only: bool,
 }
 
 impl<T: Send + 'static + Block> Simulation<T> {
@@ -118,7 +115,6 @@ impl<T: Send + 'static + Block> Simulation<T> {
         };
         self.workers.push(worker);
         Endpoint {
-            idx: id,
             to_sim: self.channel_to_sim.clone(),
             from_sim: recv_from_sim_to_worker,
             time: 0,
@@ -127,7 +123,6 @@ impl<T: Send + 'static + Block> Simulation<T> {
     fn dispatch(&mut self, idx: usize, x: T) -> Result<T> {
         let worker = &mut self.workers[idx];
         worker.channel_to_worker.send(Message {
-            id: worker.id,
             kind: TriggerType::Time(self.time),
             circuit: x,
         })?;
@@ -175,7 +170,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
         NextTime {
             time: min_time,
             idx: min_idx,
-            clocks_only: only_clock_waiters
+            clocks_only: only_clock_waiters,
         }
     }
     fn terminate(&mut self) {
@@ -218,7 +213,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
             }
             self.time = next.time;
             x = self.dispatch(next.idx, x)?;
-            vcd.timestamp(next.time);
+            vcd.timestamp(next.time).unwrap();
             vcd = write_vcd_change(vcd, &x);
         }
         self.terminate();
@@ -235,7 +230,6 @@ impl<T> Endpoint<T> {
         S: Fn(&T) -> bool + Send + 'static,
     {
         self.to_sim.send(Message {
-            id: self.idx,
             kind: TriggerType::Function(Box::new(check)),
             circuit: x,
         })?;
@@ -244,7 +238,6 @@ impl<T> Endpoint<T> {
     }
     pub fn clock(&mut self, delta: u64, x: T) -> Result<T> {
         self.to_sim.send(Message {
-            id: self.idx,
             kind: TriggerType::Clock(delta + self.time),
             circuit: x,
         })?;
@@ -256,7 +249,6 @@ impl<T> Endpoint<T> {
     }
     pub fn wait(&mut self, delta: u64, x: T) -> Result<T> {
         self.to_sim.send(Message {
-            id: self.idx,
             kind: TriggerType::Time(delta + self.time),
             circuit: x,
         })?;
@@ -268,7 +260,6 @@ impl<T> Endpoint<T> {
     }
     pub fn done(&self, x: T) -> Result<()> {
         self.to_sim.send(Message {
-            id: self.idx,
             kind: TriggerType::Never,
             circuit: x,
         })?;
