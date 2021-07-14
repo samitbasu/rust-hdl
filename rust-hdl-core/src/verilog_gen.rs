@@ -1,4 +1,7 @@
-use crate::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogLiteral};
+use crate::ast::{
+    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
+    VerilogLiteral, VerilogMatch, VerilogOp, VerilogOpUnary,
+};
 use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{walk_block, VerilogVisitor};
 use num_bigint::BigUint;
@@ -13,7 +16,6 @@ impl VerilogCodeGenerator {
             io: CodeWriter::new(),
         }
     }
-
 }
 
 impl ToString for VerilogCodeGenerator {
@@ -33,17 +35,10 @@ fn ident_fixup(a: &str) -> String {
     if x.starts_with(".") {
         x.remove(0);
     }
-    x.replace(".", "_").replace("::", "_").trim_end_matches("_next").to_owned()
-}
-
-fn verilog_literal(v: &VerilogLiteral) -> String {
-    let v = &v.0;
-    let w = v.bits();
-    if w % 4 != 0 && w < 20 {
-        format!("{}'b{:b}", w, v)
-    } else {
-        format!("{}'h{:x}", w, v)
-    }
+    x.replace(".", "_")
+        .replace("::", "_")
+        .trim_end_matches("_next")
+        .to_owned()
 }
 
 impl VerilogVisitor for VerilogCodeGenerator {
@@ -110,7 +105,7 @@ impl VerilogVisitor for VerilogCodeGenerator {
     }
 
     fn visit_literal(&mut self, v: &VerilogLiteral) {
-        self.io.write(verilog_literal(v));
+        self.io.write(v.to_string());
     }
 
     fn visit_case(&mut self, c: &VerilogCase) {

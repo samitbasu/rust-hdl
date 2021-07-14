@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use rust_hdl_core::ast::VerilogLiteral;
     use rust_hdl_core::bits::{clog2, Bit, Bits};
     use rust_hdl_core::block::Block;
     use rust_hdl_core::check_connected::check_connected;
@@ -7,7 +8,7 @@ mod tests {
     use rust_hdl_core::constant::Constant;
     use rust_hdl_core::direction::{In, Local, Out};
     use rust_hdl_core::logic::Logic;
-    use rust_hdl_core::module_defines::{ModuleDefines, generate_verilog};
+    use rust_hdl_core::module_defines::{generate_verilog, ModuleDefines};
     use rust_hdl_core::signal::Signal;
     use rust_hdl_core::simulate;
     use rust_hdl_core::simulate::{simulate, Sim, Simulation};
@@ -16,7 +17,6 @@ mod tests {
     use rust_hdl_macros::LogicBlock;
     use rust_hdl_widgets::dff::DFF;
     use rust_hdl_widgets::strobe::Strobe;
-    use rust_hdl_core::ast::VerilogLiteral;
 
     #[derive(Copy, Clone, Debug, PartialEq)]
     enum MyState {

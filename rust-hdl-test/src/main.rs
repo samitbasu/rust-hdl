@@ -1,10 +1,10 @@
 use rust_hdl_core::block::Block;
 use rust_hdl_core::logic::Logic;
+use rust_hdl_core::module_defines::generate_verilog;
 use rust_hdl_core::simulate::{Sim, Simulation};
 use rust_hdl_macros::LogicBlock;
 use rust_hdl_widgets::strobe::Strobe;
 use std::fs::File;
-use rust_hdl_core::module_defines::generate_verilog;
 
 mod base_tests;
 mod fifo;

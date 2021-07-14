@@ -2,16 +2,22 @@ use crate::ast::{Verilog, VerilogLiteral};
 use crate::atom::AtomKind::{StubInputSignal, StubOutputSignal};
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
+use crate::code_writer::CodeWriter;
 use crate::named_path::NamedPath;
 use crate::probe::Probe;
-use std::collections::BTreeMap;
-use crate::code_writer::CodeWriter;
 use crate::verilog_gen::verilog_combinatorial;
+use std::collections::BTreeMap;
+
+#[derive(Clone, Debug, Default)]
+struct SubModuleInvocation {
+    kind: String,
+    name: String,
+}
 
 #[derive(Clone, Debug, Default)]
 struct ModuleDetails {
     atoms: Vec<AtomDetails>,
-    sub_modules: Vec<String>,
+    sub_modules: Vec<SubModuleInvocation>,
     enums: Vec<EnumDefinition>,
     code: Verilog,
 }
@@ -44,7 +50,12 @@ fn verilog_atom_name(x: &AtomKind) -> &str {
 
 fn decl(x: &AtomDetails) -> String {
     if x.kind == AtomKind::Constant {
-        format!("{} {} = {};", verilog_atom_name(&x.kind), x.name, x.const_val.0)
+        format!(
+            "{} {} = {};",
+            verilog_atom_name(&x.kind),
+            x.name,
+            x.const_val
+        )
     } else {
         if x.width == 1 {
             format!("{} {};", verilog_atom_name(&x.kind), x.name)
@@ -71,9 +82,12 @@ impl ModuleDefines {
         let entry = self.details.entry(module.into()).or_default();
         entry.atoms.push(atom)
     }
-    fn add_submodule(&mut self, module: &str, submodule: &str) {
+    fn add_submodule(&mut self, module: &str, name: &str, kind: &str) {
         let entry = self.details.entry(module.into()).or_default();
-        entry.sub_modules.push(submodule.into())
+        entry.sub_modules.push(SubModuleInvocation {
+            kind: kind.to_owned(),
+            name: name.to_owned(),
+        });
     }
     fn add_enum(&mut self, module: &str, signal: &dyn Atom) {
         let entry = self.details.entry(module.into()).or_default();
@@ -99,7 +113,7 @@ impl Probe for ModuleDefines {
         let top_level = self.path.to_string();
         self.path.push(name);
         self.namespace.reset();
-        self.add_submodule(&top_level, &self.path.to_string());
+        self.add_submodule(&top_level, name, &self.path.to_string());
         self.add_code(&self.path.to_string(), node.hdl());
     }
 
@@ -218,18 +232,19 @@ impl ModuleDefines {
             }
             if !submodules.is_empty() {
                 io.add("\n// Sub module instances");
-                submodules.iter().for_each(|x|
-                    io.add(format!("sub module {}", x)));
                 for child in submodules {
-                    let entry = self.details.get(child).unwrap();
-                    let child_args = entry.atoms.iter()
-                        .filter(|x|
-                            x.kind == AtomKind::InputParameter ||
-                                x.kind == AtomKind::OutputParameter)
-                        .map(|x| format!(".{}({})", x.name, x.name))
+                    let entry = self.details.get(&child.kind).unwrap();
+                    let child_args = entry
+                        .atoms
+                        .iter()
+                        .filter(|x| {
+                            x.kind == AtomKind::InputParameter
+                                || x.kind == AtomKind::OutputParameter
+                        })
+                        .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
                         .collect::<Vec<_>>()
                         .join(",");
-                    io.add(format!("{}({});", child, child_args))
+                    io.add(format!("{} {}({});", child.kind, child.name, child_args))
                 }
             }
             match &module_details.code {

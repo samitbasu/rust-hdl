@@ -1,3 +1,3 @@
 pub mod dff;
-pub mod strobe;
 pub mod shot;
+pub mod strobe;

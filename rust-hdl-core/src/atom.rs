@@ -1,5 +1,5 @@
-use crate::synth::VCDValue;
 use crate::ast::VerilogLiteral;
+use crate::synth::VCDValue;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AtomKind {

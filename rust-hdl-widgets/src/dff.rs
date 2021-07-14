@@ -1,10 +1,11 @@
+use rust_hdl_core::ast::Verilog;
+use rust_hdl_core::atom::Atom;
 use rust_hdl_core::clock::Clock;
 use rust_hdl_core::direction::{In, Out};
 use rust_hdl_core::logic::Logic;
 use rust_hdl_core::signal::Signal;
 use rust_hdl_core::synth::Synth;
 use rust_hdl_macros::LogicBlock;
-use rust_hdl_core::ast::Verilog;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct DFF<T: Synth> {
@@ -36,7 +37,15 @@ impl<T: Synth> Logic for DFF<T> {
         }
     }
     fn hdl(&self) -> Verilog {
-        Verilog::Custom("always @(posedge clk) q <= d;".to_owned())
+        Verilog::Custom(format!(
+            "\
+initial begin
+   q = {:x};
+end
+
+always @(posedge clk) q <= d;",
+            self.q.verilog()
+        ))
     }
     fn connect(&mut self) {
         self.q.connect();

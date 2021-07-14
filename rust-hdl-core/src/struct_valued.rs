@@ -1,6 +1,6 @@
+use crate::ast::VerilogLiteral;
 use crate::bits::{bit_cast, clog2, Bit, Bits};
 use crate::synth::{Synth, VCDValue};
-use crate::ast::VerilogLiteral;
 use num_bigint::BigUint;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -33,9 +33,9 @@ impl Synth for CmdType {
     }
     fn verilog(self) -> VerilogLiteral {
         match self {
-            CmdType::Noop => VerilogLiteral(BigUint::from(0_u32)),
-            CmdType::Read => VerilogLiteral(BigUint::from(1_u32)),
-            CmdType::Write => VerilogLiteral(BigUint::from(2_u32)),
+            CmdType::Noop => 0_u32.into(),
+            CmdType::Read => 1_u32.into(),
+            CmdType::Write => 2_u32.into(),
         }
     }
 }

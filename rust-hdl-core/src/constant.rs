@@ -1,9 +1,9 @@
+use crate::ast::VerilogLiteral;
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
 use crate::logic::Logic;
 use crate::probe::Probe;
 use crate::synth::{Synth, VCDValue};
-use crate::ast::VerilogLiteral;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Constant<T: Synth> {
@@ -58,7 +58,9 @@ impl<T: Synth> Atom for Constant<T> {
         self.val.vcd()
     }
 
-    fn verilog(&self) -> VerilogLiteral {self.val.verilog()}
+    fn verilog(&self) -> VerilogLiteral {
+        self.val.verilog()
+    }
 
     fn id(&self) -> usize {
         0_usize

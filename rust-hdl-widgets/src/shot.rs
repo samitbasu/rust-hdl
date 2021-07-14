@@ -1,11 +1,11 @@
-use rust_hdl_core::signal::Signal;
-use rust_hdl_core::direction::{In, Out};
+use crate::dff::DFF;
 use rust_hdl_core::bits::{Bit, Bits};
 use rust_hdl_core::clock::Clock;
 use rust_hdl_core::constant::Constant;
-use crate::dff::DFF;
+use rust_hdl_core::direction::{In, Out};
 use rust_hdl_core::logic::Logic;
-use rust_hdl_macros::{LogicBlock, hdl_gen};
+use rust_hdl_core::signal::Signal;
+use rust_hdl_macros::{hdl_gen, LogicBlock};
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Shot<const N: usize> {

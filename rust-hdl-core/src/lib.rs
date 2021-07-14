@@ -1,5 +1,5 @@
 pub mod ast;
-mod atom;
+pub mod atom;
 pub mod bits;
 pub mod bitvec;
 pub mod block;

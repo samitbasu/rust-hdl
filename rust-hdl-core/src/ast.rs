@@ -1,5 +1,6 @@
-use num_bigint::BigUint;
 use crate::bits::Bits;
+use num_bigint::BigUint;
+use std::fmt::{Display, Formatter, LowerHex};
 
 #[derive(Debug, Clone)]
 pub enum Verilog {
@@ -63,32 +64,33 @@ pub struct VerilogCase {
     pub block: VerilogBlock,
 }
 
-
 #[derive(Debug, Clone)]
-pub struct VerilogLiteral(pub(crate) BigUint);
+pub struct VerilogLiteral {
+    val: BigUint,
+    bits: usize,
+}
 
 impl From<bool> for VerilogLiteral {
     fn from(x: bool) -> Self {
-        let bi: BigUint = if x {
-            1_u32
-        } else {
-            0_u32
-        }.into();
-        VerilogLiteral(bi)
+        let bi: BigUint = if x { 1_u32 } else { 0_u32 }.into();
+        VerilogLiteral { val: bi, bits: 1 }
     }
 }
 
 impl From<u32> for VerilogLiteral {
     fn from(x: u32) -> Self {
         let bi: BigUint = x.into();
-        Self(bi)
+        VerilogLiteral { val: bi, bits: 32 }
     }
 }
 
 impl From<usize> for VerilogLiteral {
     fn from(x: usize) -> Self {
         let bi: BigUint = x.into();
-        Self(bi)
+        VerilogLiteral {
+            val: bi,
+            bits: 64, // TODO - check this
+        }
     }
 }
 
@@ -98,10 +100,33 @@ impl<const N: usize> From<Bits<N>> for VerilogLiteral {
         for i in 0..N {
             z.set_bit(i as u64, x.get_bit(i));
         }
-        VerilogLiteral(z)
+        VerilogLiteral { val: z, bits: N }
     }
 }
 
+impl Display for VerilogLiteral {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let bits = self.bits;
+        Display::fmt(&bits, f)?;
+        Display::fmt("'", f)?;
+        if bits % 4 != 0 && self.bits < 20 {
+            Display::fmt("b", f)?;
+            std::fmt::Binary::fmt(&self.val, f)
+        } else {
+            Display::fmt("h", f)?;
+            std::fmt::LowerHex::fmt(&self.val, f)
+        }
+    }
+}
+
+impl LowerHex for VerilogLiteral {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let bits = self.bits;
+        Display::fmt(&bits, f)?;
+        Display::fmt("'h", f)?;
+        LowerHex::fmt(&self.val, f)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum VerilogExpression {
