@@ -1,5 +1,7 @@
 use crate::bits::{bit_cast, clog2, Bit, Bits};
 use crate::synth::{Synth, VCDValue};
+use crate::ast::VerilogLiteral;
+use num_bigint::BigUint;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum CmdType {
@@ -27,6 +29,13 @@ impl Synth for CmdType {
             CmdType::Noop => VCDValue::String("Noop".into()),
             CmdType::Read => VCDValue::String("Read".into()),
             CmdType::Write => VCDValue::String("Write".into()),
+        }
+    }
+    fn verilog(self) -> VerilogLiteral {
+        match self {
+            CmdType::Noop => VerilogLiteral(BigUint::from(0_u32)),
+            CmdType::Read => VerilogLiteral(BigUint::from(1_u32)),
+            CmdType::Write => VerilogLiteral(BigUint::from(2_u32)),
         }
     }
 }
@@ -82,6 +91,11 @@ impl Synth for MIGCmd {
     const BITS: usize = CmdType::BITS + Bit::BITS + Bits::<6>::BITS;
 
     fn vcd(self) -> VCDValue {
+        let t: Bits<{ MIGCmd::BITS }> = self.into();
+        t.into()
+    }
+
+    fn verilog(self) -> VerilogLiteral {
         let t: Bits<{ MIGCmd::BITS }> = self.into();
         t.into()
     }

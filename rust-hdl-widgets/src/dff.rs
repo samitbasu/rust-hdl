@@ -4,6 +4,7 @@ use rust_hdl_core::logic::Logic;
 use rust_hdl_core::signal::Signal;
 use rust_hdl_core::synth::Synth;
 use rust_hdl_macros::LogicBlock;
+use rust_hdl_core::ast::Verilog;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct DFF<T: Synth> {
@@ -33,6 +34,9 @@ impl<T: Synth> Logic for DFF<T> {
         if self.clk.pos_edge() {
             self.q.next = self.d.val()
         }
+    }
+    fn hdl(&self) -> Verilog {
+        Verilog::Custom("always @(posedge clk) q <= d;".to_owned())
     }
     fn connect(&mut self) {
         self.q.connect();

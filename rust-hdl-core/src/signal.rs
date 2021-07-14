@@ -6,6 +6,7 @@ use crate::logic::Logic;
 use crate::probe::Probe;
 use crate::synth::{Synth, VCDValue};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use crate::ast::VerilogLiteral;
 
 static GLOBAL_THREAD_COUNT: AtomicUsize = AtomicUsize::new(1);
 
@@ -62,6 +63,8 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
     fn vcd(&self) -> VCDValue {
         self.val.vcd()
     }
+
+    fn verilog(&self) -> VerilogLiteral { self.val.verilog() }
 
     fn id(&self) -> usize {
         self.id

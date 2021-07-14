@@ -62,7 +62,7 @@ pub struct Simulation<T> {
     testbenches: Vec<JoinHandle<Result<()>>>,
 }
 
-pub struct Endpoint<T> {
+pub struct Sim<T> {
     time: u64,
     to_sim: Sender<Message<T>>,
     from_sim: Receiver<Message<T>>,
@@ -89,7 +89,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
     where
         F: Fn(&mut T) -> () + Send + 'static,
     {
-        self.add_testbench(move |mut ep: Endpoint<T>| {
+        self.add_testbench(move |mut ep: Sim<T>| {
             let mut x = ep.init()?;
             loop {
                 x = ep.clock(interval, x)?;
@@ -99,13 +99,13 @@ impl<T: Send + 'static + Block> Simulation<T> {
     }
     pub fn add_testbench<F>(&mut self, testbench: F)
     where
-        F: Fn(Endpoint<T>) -> Result<()> + Send + 'static,
+        F: Fn(Sim<T>) -> Result<()> + Send + 'static,
     {
         let ep = self.endpoint();
         self.testbenches
             .push(std::thread::spawn(move || testbench(ep)));
     }
-    pub fn endpoint(&mut self) -> Endpoint<T> {
+    pub fn endpoint(&mut self) -> Sim<T> {
         let (send_to_worker, recv_from_sim_to_worker) = bounded(0);
         let id = self.workers.len();
         let worker = Worker {
@@ -114,7 +114,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
             kind: TriggerType::Never,
         };
         self.workers.push(worker);
-        Endpoint {
+        Sim {
             to_sim: self.channel_to_sim.clone(),
             from_sim: recv_from_sim_to_worker,
             time: 0,
@@ -221,7 +221,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
     }
 }
 
-impl<T> Endpoint<T> {
+impl<T> Sim<T> {
     pub fn init(&self) -> Result<T> {
         Ok(self.from_sim.recv()?.circuit)
     }

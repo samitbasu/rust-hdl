@@ -1,7 +1,4 @@
-use crate::ast::{
-    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
-    VerilogMatch, VerilogOp, VerilogOpUnary,
-};
+use crate::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogLiteral};
 use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{walk_block, VerilogVisitor};
 use num_bigint::BigUint;
@@ -16,6 +13,7 @@ impl VerilogCodeGenerator {
             io: CodeWriter::new(),
         }
     }
+
 }
 
 impl ToString for VerilogCodeGenerator {
@@ -24,15 +22,22 @@ impl ToString for VerilogCodeGenerator {
     }
 }
 
+pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
+    let mut gen = VerilogCodeGenerator::new();
+    gen.visit_block(code);
+    format!("always @(*) {}", gen.to_string())
+}
+
 fn ident_fixup(a: &str) -> String {
     let mut x = a.to_owned();
     if x.starts_with(".") {
         x.remove(0);
     }
-    x.replace(".", "_").replace("::", "_")
+    x.replace(".", "_").replace("::", "_").trim_end_matches("_next").to_owned()
 }
 
-fn verilog_literal(v: &BigUint) -> String {
+fn verilog_literal(v: &VerilogLiteral) -> String {
+    let v = &v.0;
     let w = v.bits();
     if w % 4 != 0 && w < 20 {
         format!("{}'b{:b}", w, v)
@@ -104,7 +109,7 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.write(ident_fixup(sig));
     }
 
-    fn visit_literal(&mut self, v: &BigUint) {
+    fn visit_literal(&mut self, v: &VerilogLiteral) {
         self.io.write(verilog_literal(v));
     }
 
@@ -118,6 +123,7 @@ impl VerilogVisitor for VerilogCodeGenerator {
 
     fn visit_binop(&mut self, l: &VerilogExpression, o: &VerilogOp, r: &VerilogExpression) {
         self.visit_expression(l);
+        self.io.write(" ");
         self.io.write(match o {
             VerilogOp::Add => "+",
             VerilogOp::Sub => "-",
@@ -136,6 +142,7 @@ impl VerilogVisitor for VerilogCodeGenerator {
             VerilogOp::Ge => ">=",
             VerilogOp::Gt => ">",
         });
+        self.io.write(" ");
         self.visit_expression(r);
     }
 

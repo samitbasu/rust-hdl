@@ -7,15 +7,16 @@ mod tests {
     use rust_hdl_core::constant::Constant;
     use rust_hdl_core::direction::{In, Local, Out};
     use rust_hdl_core::logic::Logic;
-    use rust_hdl_core::module_defines::ModuleDefines;
+    use rust_hdl_core::module_defines::{ModuleDefines, generate_verilog};
     use rust_hdl_core::signal::Signal;
     use rust_hdl_core::simulate;
-    use rust_hdl_core::simulate::{simulate, Endpoint, Simulation};
+    use rust_hdl_core::simulate::{simulate, Sim, Simulation};
     use rust_hdl_core::synth::{Synth, VCDValue};
     use rust_hdl_macros::hdl_gen;
     use rust_hdl_macros::LogicBlock;
     use rust_hdl_widgets::dff::DFF;
     use rust_hdl_widgets::strobe::Strobe;
+    use rust_hdl_core::ast::VerilogLiteral;
 
     #[derive(Copy, Clone, Debug, PartialEq)]
     enum MyState {
@@ -53,6 +54,15 @@ mod tests {
                 MyState::Running => VCDValue::String("Running".into()),
                 MyState::Paused => VCDValue::String("Paused".into()),
                 MyState::Stopped => VCDValue::String("Stopped".into()),
+            }
+        }
+        fn verilog(self) -> VerilogLiteral {
+            match self {
+                MyState::Init => 0_u32.into(),
+                MyState::Start => 1_u32.into(),
+                MyState::Running => 2_u32.into(),
+                MyState::Paused => 3_u32.into(),
+                MyState::Stopped => 4_u32.into(),
             }
         }
     }
@@ -120,6 +130,15 @@ mod tests {
                     MyState::Stopped => VCDValue::String("Stopped".into()),
                 }
             }
+            fn verilog(self) -> VerilogLiteral {
+                match self {
+                    MyState::Init => 0_u32.into(),
+                    MyState::Start => 1_u32.into(),
+                    MyState::Running => 2_u32.into(),
+                    MyState::Paused => 3_u32.into(),
+                    MyState::Stopped => 4_u32.into(),
+                }
+            }
         }
 
         #[derive(Clone, Debug, LogicBlock)]
@@ -170,9 +189,7 @@ mod tests {
             }
             println!("State {:?}", uut.state.q.val());
         }
-        let mut defines = ModuleDefines::default();
-        uut.accept("uut", &mut defines);
-        defines.defines();
+        println!("{}", generate_verilog(&uut));
     }
 
     #[test]
@@ -219,9 +236,7 @@ mod tests {
         uut.enable.connect();
         uut.connect_all();
         check_connected(&uut);
-        let mut defines = ModuleDefines::default();
-        uut.accept("uut", &mut defines);
-        defines.defines();
+        println!("{}", generate_verilog(&uut));
     }
 
     #[test]
@@ -310,7 +325,7 @@ mod tests {
         fn update(&mut self) {}
     }
 
-    fn sample_func(mut ep: Endpoint<Circuit>) -> simulate::Result<()> {
+    fn sample_func(mut ep: Sim<Circuit>) -> simulate::Result<()> {
         // Need an initialization stage...
         // Get the initial circuit - this must be serviced first.
         println!("Initialize TB 1");
@@ -332,7 +347,7 @@ mod tests {
         Ok(())
     }
 
-    fn sample_func2(mut ep: Endpoint<Circuit>) -> simulate::Result<()> {
+    fn sample_func2(mut ep: Sim<Circuit>) -> simulate::Result<()> {
         let x = ep.init()?;
         println!("Hello from TB 2");
         let mut x = ep.wait(125, x)?;

@@ -1,4 +1,5 @@
 use crate::synth::VCDValue;
+use crate::ast::VerilogLiteral;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AtomKind {
@@ -35,4 +36,5 @@ pub trait Atom {
     fn type_name(&self) -> &'static str;
     fn vcd(&self) -> VCDValue;
     fn id(&self) -> usize;
+    fn verilog(&self) -> VerilogLiteral;
 }

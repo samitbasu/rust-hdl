@@ -92,7 +92,6 @@ fn hdl_non_indexed_assignment(expr: &syn::ExprAssign) -> Result<TS> {
 
 fn hdl_map_field_assign(expr: &syn::ExprField) -> Result<TS> {
     let expr_expanded = common::fixup_ident(quote!(#expr).to_string());
-    println!("Map Field Assign {:?} -> {}", expr, expr_expanded);
     if expr_expanded.ends_with("_val") {
         return Err(syn::Error::new(
             expr.span(),
@@ -369,13 +368,6 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                rust_hdl_core::ast::VerilogExpression::IndexReplace(#signal.to_string(), Box::new(#index), Box::new(#value))
             }))
         }
-        "to_u128" => {
-            let receiver = method.receiver.as_ref();
-            let signal = common::fixup_ident(quote!(#receiver).to_string());
-            Ok(quote!({
-               rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())
-            }))
-        }
         "any" => {
             let receiver = method.receiver.as_ref();
             let signal = common::fixup_ident(quote!(#receiver).to_string());
@@ -384,7 +376,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                 Box::new(rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())))
             }))
         }
-        "val" => {
+        "val" | "into" => {
             let receiver = method.receiver.as_ref();
             let signal = common::fixup_ident(quote!(#receiver).to_string());
             Ok(quote!({

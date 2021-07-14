@@ -1,8 +1,4 @@
-use crate::ast::{
-    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
-    VerilogIndexAssignment, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogStatement,
-};
-use num_bigint::BigUint;
+use crate::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression, VerilogIndexAssignment, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogStatement, VerilogLiteral};
 
 pub trait VerilogVisitor {
     fn visit_block(&mut self, b: &VerilogBlock) {
@@ -47,7 +43,7 @@ pub trait VerilogVisitor {
         // Terminal
     }
 
-    fn visit_literal(&mut self, _a: &BigUint) {
+    fn visit_literal(&mut self, _a: &VerilogLiteral) {
         // Terminal
     }
 

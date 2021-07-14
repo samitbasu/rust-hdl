@@ -1,9 +1,10 @@
 use rust_hdl_core::block::Block;
 use rust_hdl_core::logic::Logic;
-use rust_hdl_core::simulate::{Endpoint, Simulation};
+use rust_hdl_core::simulate::{Sim, Simulation};
 use rust_hdl_macros::LogicBlock;
 use rust_hdl_widgets::strobe::Strobe;
 use std::fs::File;
+use rust_hdl_core::module_defines::generate_verilog;
 
 mod base_tests;
 mod fifo;
@@ -23,14 +24,20 @@ impl Logic for UUT {
 }
 
 #[test]
+fn test_strobe_as_verilog() {
+    let uut = Strobe::<32>::new(1000, 10);
+    println!("{}", generate_verilog(&uut));
+}
+
+#[test]
 fn test_strobe() {
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut UUT| x.strobe.clock.next = !x.strobe.clock.val());
-    sim.add_testbench(|mut ep: Endpoint<UUT>| {
-        let mut x = ep.init()?;
+    sim.add_testbench(|mut sim: Sim<UUT>| {
+        let mut x = sim.init()?;
         x.strobe.enable.next = true;
-        x = ep.wait(10_000_000, x)?;
-        ep.done(x)?;
+        x = sim.wait(10_000_000, x)?;
+        sim.done(x)?;
         Ok(())
     });
     let mut uut = UUT {

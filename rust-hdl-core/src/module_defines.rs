@@ -1,10 +1,12 @@
-use crate::ast::Verilog;
+use crate::ast::{Verilog, VerilogLiteral};
 use crate::atom::AtomKind::{StubInputSignal, StubOutputSignal};
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
 use crate::named_path::NamedPath;
 use crate::probe::Probe;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
+use crate::code_writer::CodeWriter;
+use crate::verilog_gen::verilog_combinatorial;
 
 #[derive(Clone, Debug, Default)]
 struct ModuleDetails {
@@ -26,12 +28,13 @@ struct AtomDetails {
     name: String,
     kind: AtomKind,
     width: usize,
+    const_val: VerilogLiteral,
 }
 
 fn verilog_atom_name(x: &AtomKind) -> &str {
     match x {
-        AtomKind::InputParameter => "in",
-        AtomKind::OutputParameter => "out",
+        AtomKind::InputParameter => "input",
+        AtomKind::OutputParameter => "output reg",
         AtomKind::StubInputSignal => "reg",
         AtomKind::StubOutputSignal => "wire",
         AtomKind::Constant => "localparam",
@@ -40,15 +43,19 @@ fn verilog_atom_name(x: &AtomKind) -> &str {
 }
 
 fn decl(x: &AtomDetails) -> String {
-    if x.width == 1 {
-        format!("{} {}", verilog_atom_name(&x.kind), x.name)
+    if x.kind == AtomKind::Constant {
+        format!("{} {} = {};", verilog_atom_name(&x.kind), x.name, x.const_val.0)
     } else {
-        format!(
-            "{} [{}:0] {}",
-            verilog_atom_name(&x.kind),
-            x.width - 1,
-            x.name
-        )
+        if x.width == 1 {
+            format!("{} {};", verilog_atom_name(&x.kind), x.name)
+        } else {
+            format!(
+                "{} [{}:0] {};",
+                verilog_atom_name(&x.kind),
+                x.width - 1,
+                x.name
+            )
+        }
     }
 }
 
@@ -56,7 +63,7 @@ fn decl(x: &AtomDetails) -> String {
 pub struct ModuleDefines {
     path: NamedPath,
     namespace: NamedPath,
-    details: HashMap<String, ModuleDetails>,
+    details: BTreeMap<String, ModuleDetails>,
 }
 
 impl ModuleDefines {
@@ -93,7 +100,7 @@ impl Probe for ModuleDefines {
         self.path.push(name);
         self.namespace.reset();
         self.add_submodule(&top_level, &self.path.to_string());
-        self.add_code(&top_level, node.hdl());
+        self.add_code(&self.path.to_string(), node.hdl());
     }
 
     fn visit_start_namespace(&mut self, name: &str, _node: &dyn Block) {
@@ -121,6 +128,7 @@ impl Probe for ModuleDefines {
             name: name.clone(),
             kind: signal.kind(),
             width: signal.bits(),
+            const_val: signal.verilog(),
         };
         if param.kind.is_parameter() {
             let kind = if param.kind == AtomKind::InputParameter {
@@ -132,6 +140,7 @@ impl Probe for ModuleDefines {
                 name: format!("{}_{}", module_name, name.to_owned()),
                 kind,
                 width: signal.bits(),
+                const_val: signal.verilog(),
             };
             let parent_name = self.path.parent();
             self.add_atom(&parent_name, parent_param);
@@ -152,11 +161,11 @@ impl Probe for ModuleDefines {
 }
 
 impl ModuleDefines {
-    pub fn defines(&self) {
+    pub fn defines(&self) -> String {
+        let mut io = CodeWriter::new();
         for k in self.details.iter() {
             let module_name = k.0;
             let module_details = k.1;
-            println!("\n\nmodule {}", module_name);
             let atoms = &module_details.atoms;
             let args = atoms
                 .iter()
@@ -174,31 +183,75 @@ impl ModuleDefines {
                 .iter()
                 .filter(|x| x.kind == AtomKind::LocalSignal)
                 .collect::<Vec<_>>();
-            let arg_names = stubs
+            let module_args = args
                 .iter()
                 .map(|x| x.name.to_owned())
                 .collect::<Vec<_>>()
                 .join(",");
-            println!("({})", arg_names);
-            println!("\n// Module arguments");
-            args.iter().for_each(|x| println!("{}", decl(x)));
+            io.add(format!("\n\nmodule {}({});", module_name, module_args));
+            io.push();
+            if !args.is_empty() {
+                io.add("\n// Module arguments");
+                args.iter().for_each(|x| io.add(decl(x)));
+            }
             let submodules = &module_details.sub_modules;
-            println!("\n// Constant declarations");
-            consts.iter().for_each(|x| println!("{}", decl(x)));
-            println!("\n// Enums");
-            module_details.enums.iter().for_each(|x| {
-                println!(
-                    "localparam {}_{} = {}",
-                    x.type_name, x.discriminant, x.value
-                )
-            });
-            println!("\n// Stub signals");
-            stubs.iter().for_each(|x| println!("{}", decl(x)));
-            println!("\n// Local signals");
-            locals.iter().for_each(|x| println!("{}", decl(x)));
-            println!("\n// Sub module instances");
-            submodules.iter().for_each(|x| println!("sub module {}", x));
-            println!("end module {}", module_name);
+            if !consts.is_empty() {
+                io.add("\n// Constant declarations");
+                consts.iter().for_each(|x| io.add(decl(x)));
+            }
+            if !module_details.enums.is_empty() {
+                io.add("\n// Enums");
+                module_details.enums.iter().for_each(|x| {
+                    io.add(format!(
+                        "localparam {}_{} = {}",
+                        x.type_name, x.discriminant, x.value
+                    ))
+                });
+            }
+            if !stubs.is_empty() {
+                io.add("\n// Stub signals");
+                stubs.iter().for_each(|x| io.add(decl(x)));
+            }
+            if !locals.is_empty() {
+                io.add("\n// Local signals");
+                locals.iter().for_each(|x| io.add(decl(x)));
+            }
+            if !submodules.is_empty() {
+                io.add("\n// Sub module instances");
+                submodules.iter().for_each(|x|
+                    io.add(format!("sub module {}", x)));
+                for child in submodules {
+                    let entry = self.details.get(child).unwrap();
+                    let child_args = entry.atoms.iter()
+                        .filter(|x|
+                            x.kind == AtomKind::InputParameter ||
+                                x.kind == AtomKind::OutputParameter)
+                        .map(|x| format!(".{}({})", x.name, x.name))
+                        .collect::<Vec<_>>()
+                        .join(",");
+                    io.add(format!("{}({});", child, child_args))
+                }
+            }
+            match &module_details.code {
+                Verilog::Combinatorial(code) => {
+                    io.add("\n// Update code");
+                    io.add(verilog_combinatorial(code));
+                }
+                Verilog::Custom(code) => {
+                    io.add("\n// Update code (custom)");
+                    io.add(code);
+                }
+                Verilog::Empty => {}
+            }
+            io.pop();
+            io.add(format!("endmodule // {}", module_name));
         }
+        io.to_string()
     }
+}
+
+pub fn generate_verilog<U: Block>(uut: &U) -> String {
+    let mut defines = ModuleDefines::default();
+    uut.accept("uut", &mut defines);
+    defines.defines()
 }

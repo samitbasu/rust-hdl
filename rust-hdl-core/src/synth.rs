@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use crate::bits::{Bit, Bits};
 use crate::clock::Clock;
+use crate::ast::VerilogLiteral;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum VCDValue {
@@ -28,6 +29,7 @@ pub trait Synth: Default + Copy + PartialEq + Debug {
         ""
     }
     fn vcd(self) -> VCDValue;
+    fn verilog(self) -> VerilogLiteral;
 }
 
 impl<const N: usize> Synth for Bits<N> {
@@ -36,6 +38,8 @@ impl<const N: usize> Synth for Bits<N> {
     fn vcd(self) -> VCDValue {
         self.into()
     }
+
+    fn verilog(self) -> VerilogLiteral { self.into() }
 }
 
 impl Synth for Bit {
@@ -48,6 +52,8 @@ impl Synth for Bit {
             VCDValue::Single(vcd::Value::V0)
         }
     }
+
+    fn verilog(self) -> VerilogLiteral { self.into() }
 }
 
 impl Synth for Clock {
@@ -56,4 +62,6 @@ impl Synth for Clock {
     fn vcd(self) -> VCDValue {
         self.0.into()
     }
+
+    fn verilog(self) -> VerilogLiteral {self.0.into()}
 }

@@ -1,4 +1,5 @@
 use num_bigint::BigUint;
+use crate::bits::Bits;
 
 #[derive(Debug, Clone)]
 pub enum Verilog {
@@ -62,10 +63,50 @@ pub struct VerilogCase {
     pub block: VerilogBlock,
 }
 
+
+#[derive(Debug, Clone)]
+pub struct VerilogLiteral(pub(crate) BigUint);
+
+impl From<bool> for VerilogLiteral {
+    fn from(x: bool) -> Self {
+        let bi: BigUint = if x {
+            1_u32
+        } else {
+            0_u32
+        }.into();
+        VerilogLiteral(bi)
+    }
+}
+
+impl From<u32> for VerilogLiteral {
+    fn from(x: u32) -> Self {
+        let bi: BigUint = x.into();
+        Self(bi)
+    }
+}
+
+impl From<usize> for VerilogLiteral {
+    fn from(x: usize) -> Self {
+        let bi: BigUint = x.into();
+        Self(bi)
+    }
+}
+
+impl<const N: usize> From<Bits<N>> for VerilogLiteral {
+    fn from(x: Bits<N>) -> Self {
+        let mut z = BigUint::default();
+        for i in 0..N {
+            z.set_bit(i as u64, x.get_bit(i));
+        }
+        VerilogLiteral(z)
+    }
+}
+
+
 #[derive(Debug, Clone)]
 pub enum VerilogExpression {
     Signal(String),
-    Literal(BigUint),
+    Literal(VerilogLiteral),
     Cast(Box<VerilogExpression>, usize),
     Paren(Box<VerilogExpression>),
     Binary(Box<VerilogExpression>, VerilogOp, Box<VerilogExpression>),
