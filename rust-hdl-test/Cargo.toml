@@ -1,5 +1,5 @@
 [package]
-name = "rust-hdl-test"
+name = "rust_hdl_test"
 version = "0.1.0"
 edition = "2018"
 
@@ -9,4 +9,5 @@ edition = "2018"
 rust_hdl_core = {path="../rust-hdl-core"}
 rust_hdl_macros = {path="../rust-hdl-macros"}
 rust_hdl_widgets = {path="../rust-hdl-widgets"}
+rust_hdl_synth = {path="../rust-hdl-synth"}
 num-bigint = "0.4.0"

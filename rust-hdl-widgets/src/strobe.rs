@@ -34,9 +34,12 @@ impl<const N: usize> Logic for Strobe<N> {
     #[hdl_gen]
     fn update(&mut self) {
         self.counter.clk.next = self.clock.val();
+        self.counter.d.next = self.counter.q.val();
+
         if self.enable.val() {
             self.counter.d.next = self.counter.q.val() + self.threshold.val();
         }
+
         self.strobe.next = self.enable.val() & (self.counter.q.val() < self.threshold.val());
     }
 }

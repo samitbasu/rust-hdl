@@ -5,6 +5,7 @@ use rust_hdl_core::simulate::{Sim, Simulation};
 use rust_hdl_macros::LogicBlock;
 use rust_hdl_widgets::strobe::Strobe;
 use std::fs::File;
+use rust_hdl_synth::yosys_synthesis;
 
 mod base_tests;
 mod fifo;
@@ -27,7 +28,10 @@ impl Logic for UUT {
 fn test_strobe_as_verilog() {
     let uut = Strobe::<32>::new(1000, 10);
     println!("{}", generate_verilog(&uut));
+    let vlog = generate_verilog(&uut);
+    yosys_synthesis("strobe", &vlog).unwrap();
 }
+
 
 #[test]
 fn test_strobe() {
