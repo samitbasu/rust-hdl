@@ -378,10 +378,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
         }
         "val" | "into" => {
             let receiver = method.receiver.as_ref();
-            let signal = common::fixup_ident(quote!(#receiver).to_string());
-            Ok(quote!({
-                rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())
-            }))
+            hdl_compute(receiver)
         }
         _ => Err(syn::Error::new(
             method.span(),

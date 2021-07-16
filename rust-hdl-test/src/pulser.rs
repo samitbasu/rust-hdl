@@ -1,18 +1,9 @@
-use rust_hdl_macros::LogicBlock;
-use rust_hdl_widgets::strobe::Strobe;
+use rust_hdl_core::prelude::*;
+use rust_hdl_synth::{yosys_validate};
 use rust_hdl_widgets::shot::Shot;
-use rust_hdl_core::logic::Logic;
-use rust_hdl_core::signal::Signal;
-use rust_hdl_core::direction::{In, Out};
-use rust_hdl_core::clock::Clock;
-use rust_hdl_core::bits::Bit;
-use rust_hdl_macros::hdl_gen;
-use rust_hdl_core::simulate::{Simulation, Sim};
+use rust_hdl_widgets::strobe::Strobe;
 use std::fs::File;
-use rust_hdl_core::block::Block;
-use rust_hdl_core::module_defines::generate_verilog;
-use rust_hdl_synth::yosys_synthesis;
-use std::io::Write;
+use rust_hdl_core::check_connected::check_connected;
 
 #[derive(LogicBlock)]
 struct Pulser {
@@ -32,7 +23,7 @@ impl Pulser {
             enable: Signal::default(),
             pulse: Signal::new_with_default(false),
             strobe,
-            shot
+            shot,
         }
     }
 }
@@ -49,11 +40,19 @@ impl Logic for Pulser {
 }
 
 #[test]
+fn test_pulser_synthesis() {
+    let mut uut = Pulser::new(100_000_000, 1, 10_000_000);
+    uut.clock.connect();
+    uut.enable.connect();
+    uut.connect_all();
+    let vlog = generate_verilog(&uut);
+    yosys_validate("pulser", &vlog).unwrap();
+}
+
+#[test]
 fn test_pulser() {
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Pulser|
-        x.clock.next = !x.clock.val()
-    );
+    sim.add_clock(5, |x: &mut Pulser| x.clock.next = !x.clock.val());
     sim.add_testbench(|mut sim: Sim<Pulser>| {
         let mut x = sim.init()?;
         x.enable.next = true;
@@ -65,11 +64,44 @@ fn test_pulser() {
     uut.clock.connect();
     uut.enable.connect();
     uut.connect_all();
-    //sim.run_traced(uut, 100_000, File::create("pulser.vcd").unwrap());
-    println!("{}", generate_verilog(&uut));
-    let mut file = File::create("pulser.v").unwrap();
+    sim.run_traced(uut, 100_000, File::create("pulser.vcd").unwrap()).unwrap();
+}
+
+#[derive(LogicBlock)]
+pub struct AlchitryCuPulser {
+    pulser: Pulser,
+    clock: Signal<In, Clock>,
+    leds: Signal<Out, Bits<8>>,
+}
+
+impl Logic for AlchitryCuPulser {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.pulser.enable.next = true;
+        self.pulser.clock.next = self.clock.val();
+        self.leds.next = 0x00_u8.into();
+        if self.pulser.pulse.val() {
+            self.leds.next = 0xAA_u8.into();
+        }
+    }
+}
+
+impl Default for AlchitryCuPulser {
+    fn default() -> Self {
+        let pulser = Pulser::new(100_000_000, 1, 25_000_000);
+        Self {
+            pulser,
+            clock: rust_hdl_alchitry_cu::clock(),
+            leds: rust_hdl_alchitry_cu::leds(),
+        }
+    }
+}
+
+#[test]
+fn synthesize_alchitry_cu_pulser() {
+    let mut uut = AlchitryCuPulser::default();
+    uut.connect_all();
+    check_connected(&uut);
     let vlog = generate_verilog(&uut);
-    write!(file, "{}", vlog);
-    yosys_synthesis("pulser", &vlog).unwrap();
-    //sim.run(uut, 1_000_000);
+    yosys_validate("pulser", &vlog).unwrap();
 }

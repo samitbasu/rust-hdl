@@ -8,7 +8,7 @@ mod tests {
     use rust_hdl_core::constant::Constant;
     use rust_hdl_core::direction::{In, Local, Out};
     use rust_hdl_core::logic::Logic;
-    use rust_hdl_core::module_defines::{generate_verilog, ModuleDefines};
+    use rust_hdl_core::module_defines::{generate_verilog};
     use rust_hdl_core::signal::Signal;
     use rust_hdl_core::simulate;
     use rust_hdl_core::simulate::{simulate, Sim, Simulation};
@@ -78,7 +78,7 @@ mod tests {
         uut.connect_all();
         check_connected(&uut);
         let mut strobe_count = 0;
-        for clock in 0..100_000_000 {
+        for clock in 0..10_000_000 {
             uut.clock.next = Clock(clock % 2 == 0);
             if !simulate(&mut uut, 10) {
                 panic!("Logic did not converge");
@@ -87,7 +87,7 @@ mod tests {
                 strobe_count += 1;
             }
         }
-        assert_eq!(strobe_count, 6_250_000);
+        assert_eq!(strobe_count, 5_625_000);
     }
 
     #[test]

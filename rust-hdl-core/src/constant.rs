@@ -4,6 +4,7 @@ use crate::block::Block;
 use crate::logic::Logic;
 use crate::probe::Probe;
 use crate::synth::{Synth, VCDValue};
+use crate::constraint::PinConstraint;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Constant<T: Synth> {
@@ -65,6 +66,8 @@ impl<T: Synth> Atom for Constant<T> {
     fn id(&self) -> usize {
         0_usize
     }
+
+    fn constraints(&self) -> Vec<PinConstraint> {vec![]}
 }
 
 impl<T: Synth> Block for Constant<T> {

@@ -1,13 +1,13 @@
 use std::env::temp_dir;
-use std::fs::{remove_dir_all, create_dir, File};
+use std::fs::{create_dir, remove_dir_all, File};
+use std::io::{Error, Write};
 use std::process::Command;
-use std::io::{Write, Error};
 
 #[derive(Debug)]
 pub enum SynthError {
-    SynthesisFailed{stdout: String, stderr: String},
+    SynthesisFailed { stdout: String, stderr: String },
     LatchingWriteToSignal(Vec<String>),
-    IOError(std::io::Error)
+    IOError(std::io::Error),
 }
 
 impl From<std::io::Error> for SynthError {
@@ -16,7 +16,7 @@ impl From<std::io::Error> for SynthError {
     }
 }
 
-pub fn yosys_synthesis(prefix: &str, translation: &str) -> Result<(), SynthError> {
+pub fn yosys_validate(prefix: &str, translation: &str) -> Result<(), SynthError> {
     let dir = temp_dir().as_path().join(prefix);
     let _ = remove_dir_all(&dir);
     let _ = create_dir(&dir);

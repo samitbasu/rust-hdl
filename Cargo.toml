@@ -1,10 +1,10 @@
 [workspace]
 
 members = [
-    "rust-hdl-bitvec",
     "rust-hdl-core",
     "rust-hdl-macros",
     "rust-hdl-test",
     "rust-hdl-widgets",
-    "rust-hdl-synth"
+    "rust-hdl-synth",
+    "rust-hdl-alchitry-cu"
 ]

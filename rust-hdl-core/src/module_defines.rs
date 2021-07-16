@@ -177,7 +177,8 @@ impl Probe for ModuleDefines {
 impl ModuleDefines {
     pub fn defines(&self) -> String {
         let mut io = CodeWriter::new();
-        self.details.iter()
+        self.details
+            .iter()
             .filter(|x| x.0.len() != 0)
             .for_each(|k| {
                 let module_name = k.0;

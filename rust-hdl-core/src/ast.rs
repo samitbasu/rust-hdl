@@ -77,22 +77,26 @@ impl From<bool> for VerilogLiteral {
     }
 }
 
-impl From<u32> for VerilogLiteral {
-    fn from(x: u32) -> Self {
-        let bi: BigUint = x.into();
-        VerilogLiteral { val: bi, bits: 32 }
-    }
-}
-
-impl From<usize> for VerilogLiteral {
-    fn from(x: usize) -> Self {
-        let bi: BigUint = x.into();
-        VerilogLiteral {
-            val: bi,
-            bits: 64, // TODO - check this
+macro_rules! define_literal_from_uint {
+    ($name: ident, $width: expr) => {
+        impl From<$name> for VerilogLiteral {
+            fn from(x: $name) -> Self {
+                let bi: BigUint = x.into();
+                VerilogLiteral {val: bi, bits: $width}
+            }
         }
     }
 }
+
+define_literal_from_uint!(u128, 128);
+define_literal_from_uint!(u64, 64);
+define_literal_from_uint!(u32, 32);
+define_literal_from_uint!(u16, 16);
+define_literal_from_uint!(u8, 8);
+#[cfg(target_pointer_width = "64")]
+define_literal_from_uint!(usize, 64);
+#[cfg(target_pointer_width = "32")]
+define_literal_from_uint!(usize, 32);
 
 impl<const N: usize> From<Bits<N>> for VerilogLiteral {
     fn from(x: Bits<N>) -> Self {

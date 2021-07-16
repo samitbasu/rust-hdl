@@ -2,6 +2,7 @@ use crate::ast::VerilogLiteral;
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
 use crate::clock::Clock;
+use crate::constraint::{Constraint, PinConstraint};
 use crate::direction::{Direction, In, Out};
 use crate::logic::Logic;
 use crate::probe::Probe;
@@ -14,7 +15,7 @@ fn get_signal_id() -> usize {
     GLOBAL_THREAD_COUNT.fetch_add(1, Ordering::SeqCst)
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Signal<D: Direction, T: Synth> {
     pub next: T,
     val: T,
@@ -22,12 +23,24 @@ pub struct Signal<D: Direction, T: Synth> {
     pub changed: bool,
     claimed: bool,
     id: usize,
+    constraints: Vec<PinConstraint>,
     dir: std::marker::PhantomData<D>,
 }
 
 impl<D: Direction, T: Synth> Signal<D, T> {
     pub fn val(&self) -> T {
         self.val
+    }
+
+    pub fn add_constraint(&mut self, constraint: PinConstraint) {
+        self.constraints.push(constraint);
+    }
+
+    pub fn add_location(&mut self, index: usize, location: &str) {
+        self.constraints.push(PinConstraint {
+            index,
+            constraint: Constraint::Location(location.to_owned()),
+        });
     }
 }
 
@@ -64,13 +77,15 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
         self.val.vcd()
     }
 
+    fn id(&self) -> usize {
+        self.id
+    }
+
     fn verilog(&self) -> VerilogLiteral {
         self.val.verilog()
     }
 
-    fn id(&self) -> usize {
-        self.id
-    }
+    fn constraints(&self) -> Vec<PinConstraint> {self.constraints.clone()}
 }
 
 impl<D: Direction, T: Synth> Logic for Signal<D, T> {
@@ -122,6 +137,7 @@ impl<T: Synth> Signal<Out, T> {
             changed: true,
             claimed: false,
             id: get_signal_id(),
+            constraints: vec![],
             dir: std::marker::PhantomData,
         }
     }
@@ -136,6 +152,7 @@ impl<D: Direction, T: Synth> Default for Signal<D, T> {
             changed: false,
             claimed: false,
             id: get_signal_id(),
+            constraints: vec![],
             dir: std::marker::PhantomData,
         }
     }

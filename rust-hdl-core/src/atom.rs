@@ -1,5 +1,6 @@
 use crate::ast::VerilogLiteral;
 use crate::synth::VCDValue;
+use crate::constraint::PinConstraint;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AtomKind {
@@ -37,4 +38,5 @@ pub trait Atom {
     fn vcd(&self) -> VCDValue;
     fn id(&self) -> usize;
     fn verilog(&self) -> VerilogLiteral;
+    fn constraints(&self) -> Vec<PinConstraint>;
 }

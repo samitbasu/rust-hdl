@@ -1,7 +1,6 @@
 use crate::ast::VerilogLiteral;
 use crate::bits::{bit_cast, clog2, Bit, Bits};
 use crate::synth::{Synth, VCDValue};
-use num_bigint::BigUint;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum CmdType {
