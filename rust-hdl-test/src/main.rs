@@ -6,10 +6,12 @@ use rust_hdl_macros::LogicBlock;
 use rust_hdl_widgets::strobe::Strobe;
 use std::fs::File;
 use rust_hdl_synth::yosys_synthesis;
+use rust_hdl_core::check_connected::check_connected;
 
 mod base_tests;
 mod fifo;
 mod nested_ports;
+mod pulser;
 
 #[derive(LogicBlock)]
 struct UUT {
@@ -26,7 +28,11 @@ impl Logic for UUT {
 
 #[test]
 fn test_strobe_as_verilog() {
-    let uut = Strobe::<32>::new(1000, 10);
+    let mut uut = Strobe::<32>::new(1000, 10);
+    uut.enable.connect();
+    uut.clock.connect();
+    uut.connect_all();
+    check_connected(&uut);
     println!("{}", generate_verilog(&uut));
     let vlog = generate_verilog(&uut);
     yosys_synthesis("strobe", &vlog).unwrap();

@@ -100,7 +100,7 @@ impl<const N: usize> Into<VCDValue> for Bits<N> {
         } else {
             let mut x = vec![];
             for i in 0..N {
-                if self.get_bit(i) {
+                if self.get_bit(N-1-i) {
                     x.push(vcd::Value::V1)
                 } else {
                     x.push(vcd::Value::V0)
