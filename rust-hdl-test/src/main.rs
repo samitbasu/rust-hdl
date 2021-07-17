@@ -12,6 +12,7 @@ mod base_tests;
 mod fifo;
 mod nested_ports;
 mod pulser;
+mod rom;
 
 #[derive(LogicBlock)]
 struct UUT {

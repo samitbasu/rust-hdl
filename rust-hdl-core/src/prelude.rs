@@ -11,4 +11,5 @@ pub use rust_hdl_macros::{hdl_gen, LogicBlock};
 pub use crate::atom::{AtomKind, Atom};
 pub use crate::constraint::{PinConstraint, Timing, PeriodicTiming, SignalType, Constraint};
 pub use crate::named_path::NamedPath;
-
+pub use crate::synth::Synth;
+pub use crate::ast::Verilog;

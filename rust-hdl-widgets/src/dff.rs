@@ -1,11 +1,4 @@
-use rust_hdl_core::ast::Verilog;
-use rust_hdl_core::atom::Atom;
-use rust_hdl_core::clock::Clock;
-use rust_hdl_core::direction::{In, Out};
-use rust_hdl_core::logic::Logic;
-use rust_hdl_core::signal::Signal;
-use rust_hdl_core::synth::Synth;
-use rust_hdl_macros::LogicBlock;
+use rust_hdl_core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct DFF<T: Synth> {
