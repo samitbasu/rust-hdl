@@ -32,6 +32,8 @@ impl NamedPath {
     pub fn flat(&self, sep: &str) -> String {
         self.path.join(sep)
     }
+
+    pub fn len(&self) -> usize {self.path.len()}
 }
 
 impl ToString for NamedPath {

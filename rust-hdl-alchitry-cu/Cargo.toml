@@ -7,3 +7,5 @@ edition = "2018"
 
 [dependencies]
 rust_hdl_core = {path="../rust-hdl-core"}
+rust_hdl_synth = {path="../rust-hdl-synth"}
+

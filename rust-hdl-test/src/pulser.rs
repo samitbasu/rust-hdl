@@ -4,6 +4,8 @@ use rust_hdl_widgets::shot::Shot;
 use rust_hdl_widgets::strobe::Strobe;
 use std::fs::File;
 use rust_hdl_core::check_connected::check_connected;
+use rust_hdl_alchitry_cu::pcf_gen::generate_pcf;
+use rust_hdl_alchitry_cu::synth::generate_bitstream;
 
 #[derive(LogicBlock)]
 struct Pulser {
@@ -91,8 +93,8 @@ impl Default for AlchitryCuPulser {
         let pulser = Pulser::new(100_000_000, 1, 25_000_000);
         Self {
             pulser,
-            clock: rust_hdl_alchitry_cu::clock(),
-            leds: rust_hdl_alchitry_cu::leds(),
+            clock: rust_hdl_alchitry_cu::pins::clock(),
+            leds: rust_hdl_alchitry_cu::pins::leds(),
         }
     }
 }
@@ -100,8 +102,5 @@ impl Default for AlchitryCuPulser {
 #[test]
 fn synthesize_alchitry_cu_pulser() {
     let mut uut = AlchitryCuPulser::default();
-    uut.connect_all();
-    check_connected(&uut);
-    let vlog = generate_verilog(&uut);
-    yosys_validate("pulser", &vlog).unwrap();
+    generate_bitstream(uut, "pulser");
 }
