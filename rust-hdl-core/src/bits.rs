@@ -4,6 +4,7 @@ use crate::synth::VCDValue;
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
 use std::num::Wrapping;
+use std::hash::Hasher;
 
 // This comes with a few invariants that must be maintained for short representation
 // The short value must be less than 2^N
@@ -343,6 +344,13 @@ impl<const N: usize> std::ops::Not for Bits<N> {
     }
 }
 
+
+impl<const N: usize> std::cmp::Ord for Bits<N> {
+    fn cmp(&self, other: &Bits<N>) -> Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
 // TODO - add the usize variants to this
 impl<const N: usize> std::cmp::PartialOrd<Bits<N>> for Bits<N> {
     #[inline(always)]
@@ -389,6 +397,17 @@ impl std::cmp::PartialEq<bool> for Bits<1> {
     #[inline(always)]
     fn eq(&self, other: &bool) -> bool {
         self.get_bit(0) == *other
+    }
+}
+
+impl<const N: usize> std::cmp::Eq for Bits<N> {}
+
+impl<const N: usize> std::hash::Hash for Bits<N> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Bits::Short(t) => t.hash(state),
+            Bits::Long(t) => t.hash(state),
+        }
     }
 }
 

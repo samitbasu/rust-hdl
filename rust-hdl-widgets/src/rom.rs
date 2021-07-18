@@ -1,36 +1,37 @@
 use rust_hdl_core::prelude::*;
+use std::collections::BTreeMap;
 
 #[derive(LogicBlock)]
-pub struct ROM<T: Synth, const N: usize> {
-    pub address: Signal<In, Bits<N>>,
-    pub data: Signal<Out, T>,
-    _sim: Vec<T>,
+pub struct ROM<A: Synth + Ord, D: Synth> {
+    pub address: Signal<In, A>,
+    pub data: Signal<Out, D>,
+    _sim: BTreeMap<A, D>,
 }
 
-impl<T: Synth, const N: usize> ROM<T, N> {
-    pub fn new(values: Vec<T>) -> Self {
+impl<A: Synth + Ord, D: Synth> ROM<A, D> {
+    pub fn new(values: BTreeMap<A, D>) -> Self {
         Self {
             address: Signal::default(),
-            data: Signal::new_with_default(T::default()),
+            data: Signal::new_with_default(D::default()),
             _sim: values,
         }
     }
 }
 
-impl<T: Synth, const N: usize> Logic for ROM<T, N> {
+impl<A: Synth + Ord, D: Synth> Logic for ROM<A, D> {
     fn update(&mut self) {
-        self.data.next = T::default();
-        let ndx: usize = self.address.val().into();
-        if ndx < self._sim.len() {
-            self.data.next = self._sim[ndx]
-        }
+        self.data.next =  *self._sim.get(&self.address.val()).unwrap_or(&D::default());
+    }
+
+    fn connect(&mut self) {
+        self.data.connect();
     }
 
     fn hdl(&self) -> Verilog {
         let cases = self._sim.iter()
-            .enumerate()
             .map(|x|
-                format!("  {}: data = {}", x.0, x.1.verilog().to_string()))
+                format!("  {}: data = {}", x.0.verilog().to_string(),
+                        x.1.verilog().to_string()))
             .collect::<Vec<_>>()
             .join("\n");
         Verilog::Custom(format!("\
@@ -39,6 +40,6 @@ case (address)
   {cases}
   default: data = {default}
 endcase
-        ", cases = cases, default = T::default().verilog().to_string()))
+        ", cases = cases, default = D::default().verilog().to_string()))
     }
 }

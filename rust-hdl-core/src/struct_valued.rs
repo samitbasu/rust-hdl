@@ -2,7 +2,7 @@ use crate::ast::VerilogLiteral;
 use crate::bits::{bit_cast, clog2, Bit, Bits};
 use crate::synth::{Synth, VCDValue};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum CmdType {
     Noop,
     Read,
@@ -79,7 +79,7 @@ fn test_struct_value() {
     }
 }
 
-#[derive(Copy, Clone, Default, Debug, PartialEq)]
+#[derive(Copy, Clone, Default, Debug, PartialEq, Eq)]
 struct MIGCmd {
     pub cmd: CmdType,
     pub active: Bit,

@@ -5,7 +5,7 @@ pub type ShortType = u32;
 
 pub const SHORT_BITS: usize = 32;
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, Hash)]
 pub struct ShortBitVec<const N: usize>(ShortType);
 
 impl<const N: usize> ShortBitVec<N> {
