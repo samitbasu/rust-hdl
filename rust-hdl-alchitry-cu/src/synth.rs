@@ -19,7 +19,6 @@ fn save_stdout(output: Output, dir: &PathBuf, basename: &str) -> Result<(), std:
 }
 
 pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
-    uut.connect_all();
     check_connected(&uut);
     let verilog_text = generate_verilog(&uut);
     yosys_validate(prefix, &verilog_text).unwrap();

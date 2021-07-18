@@ -30,7 +30,7 @@ impl<A: Synth + Ord, D: Synth> Logic for ROM<A, D> {
     fn hdl(&self) -> Verilog {
         let cases = self._sim.iter()
             .map(|x|
-                format!("  {}: data = {}", x.0.verilog().to_string(),
+                format!("  {}: data = {};", x.0.verilog().to_string(),
                         x.1.verilog().to_string()))
             .collect::<Vec<_>>()
             .join("\n");
@@ -38,7 +38,7 @@ impl<A: Synth + Ord, D: Synth> Logic for ROM<A, D> {
 always @*
 case (address)
   {cases}
-  default: data = {default}
+  default: data = {default};
 endcase
         ", cases = cases, default = D::default().verilog().to_string()))
     }

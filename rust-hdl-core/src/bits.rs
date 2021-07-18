@@ -411,6 +411,18 @@ impl<const N: usize> std::hash::Hash for Bits<N> {
     }
 }
 
+impl<const N: usize> std::ops::Add<bool> for Bits<N> {
+    type Output = Bits<N>;
+
+    fn add(self, rhs: bool) -> Self::Output {
+        if rhs {
+            self + Bits::<N>::from(1_u8)
+        } else {
+            self
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::num::Wrapping;

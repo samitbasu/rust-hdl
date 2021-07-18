@@ -53,5 +53,5 @@ impl Probe for PCFGenerator {
 pub fn generate_pcf<U: Block>(uut: &U) -> String {
     let mut pcf = PCFGenerator::default();
     uut.accept("top", &mut pcf);
-    pcf.pcf.join("\n")
+    pcf.pcf.join("\n") + "\n"
 }

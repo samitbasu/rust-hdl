@@ -13,6 +13,9 @@ mod fifo;
 mod nested_ports;
 mod pulser;
 mod rom;
+mod pwm;
+mod alchitry_cu_pulser;
+mod alchitry_cu_pwm;
 
 #[derive(LogicBlock)]
 struct UUT {

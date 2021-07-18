@@ -29,6 +29,9 @@ impl<T: Synth> Logic for DFF<T> {
             self.q.next = self.d.val()
         }
     }
+    fn connect(&mut self) {
+        self.q.connect();
+    }
     fn hdl(&self) -> Verilog {
         Verilog::Custom(format!(
             "\
@@ -39,8 +42,5 @@ end
 always @(posedge clk) q <= d;",
             self.q.verilog()
         ))
-    }
-    fn connect(&mut self) {
-        self.q.connect();
     }
 }
