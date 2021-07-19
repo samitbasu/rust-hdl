@@ -28,6 +28,7 @@ pub enum VerilogStatement {
     },
     If(VerilogConditional),
     Match(VerilogMatch),
+    Loop(VerilogLoop),
     Comment(String),
 }
 
@@ -43,6 +44,14 @@ pub struct VerilogConditional {
     pub test: VerilogExpression,
     pub then: VerilogBlock,
     pub otherwise: VerilogBlockOrConditional,
+}
+
+#[derive(Debug, Clone)]
+pub struct VerilogLoop {
+    pub index: String,
+    pub from: VerilogLiteral,
+    pub to: VerilogLiteral,
+    pub block: VerilogBlock
 }
 
 #[derive(Debug, Clone)]
@@ -68,6 +77,17 @@ pub struct VerilogCase {
 pub struct VerilogLiteral {
     val: BigUint,
     bits: usize,
+}
+
+impl VerilogLiteral {
+    pub fn as_usize(&self) -> usize {
+        let m = self.val.to_u32_digits();
+        match m.len() {
+            0 => 0,
+            1 => m[0] as usize,
+            _ => panic!("Loop index is too large!")
+        }
+    }
 }
 
 impl From<bool> for VerilogLiteral {

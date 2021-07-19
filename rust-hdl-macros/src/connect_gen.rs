@@ -1,36 +1,101 @@
 use crate::common::TS;
 use quote::quote;
-use std::collections::HashSet;
-use syn::visit::Visit;
-use syn::{Expr, ExprAssign, Member, Result};
+use syn::{Expr, Member, Result};
+use syn::spanned::Spanned;
 
-struct AssignVisitor<'ast> {
-    targets: HashSet<&'ast Expr>,
+pub fn connect_gen(item: &syn::ItemFn) -> Result<TS> {
+    let body = connect_block(&item.block)?;
+    Ok(quote! {
+        fn connect(&mut self) {
+            #body
+        }
+    })
 }
 
-impl<'ast> Visit<'ast> for AssignVisitor<'ast> {
-    fn visit_expr_assign(&mut self, node: &'ast ExprAssign) {
-        if let Expr::Field(field) = node.left.as_ref() {
-            if let Member::Named(nxt) = &field.member {
-                if nxt.eq("next") {
-                    self.targets.insert(&field.base);
-                }
-            }
-        }
+pub fn connect_block(block: &syn::Block) -> Result<TS> {
+    let mut stmt = vec![];
+    for x in &block.stmts {
+        stmt.push(connect_statement(x)?);
+    }
+    Ok(quote! {#(#stmt);*;})
+}
+
+fn connect_statement(statement: &syn::Stmt) -> Result<TS> {
+    match statement {
+        syn::Stmt::Expr(e) => connect_inner_statement(e),
+        syn::Stmt::Semi(e, _) => connect_inner_statement(e),
+        _ => Err(syn::Error::new(
+            statement.span(),
+            "Local definitions and items are not allowed in HDL kernels",
+        ))
     }
 }
 
-pub(crate) fn connect_gen(item: &syn::ItemFn) -> Result<TS> {
-    let mut t = AssignVisitor {
-        targets: HashSet::new(),
-    };
-    t.visit_item_fn(item);
-    let connects = t.targets.iter().collect::<Vec<_>>();
-    Ok(quote!(
-        fn connect(&mut self) {
-            #(
-                rust_hdl_core::logic::logic_connect_fn(&mut #connects)
-            );*;
-        }
-    ))
+fn connect_inner_statement(expr: &syn::Expr) -> Result<TS> {
+    match expr {
+        Expr::Assign(x) => connect_assignment(x),
+        Expr::If(x) => connect_conditional(x),
+        Expr::Match(x) => connect_match(x),
+        Expr::ForLoop(x) => connect_for_loop(x),
+        _ => Ok(TS::new())
+    }
 }
+
+fn connect_for_loop(node: &syn::ExprForLoop) -> Result<TS> {
+    let body = connect_block(&node.body)?;
+    let ndx = &node.pat;
+    let range = &node.expr;
+    Ok(quote!(for #ndx in #range {
+        #body
+    }))
+}
+
+fn connect_assignment(node: &syn::ExprAssign) -> Result<TS> {
+    if let Expr::Field(field) = node.left.as_ref() {
+        if let Member::Named(nxt) = &field.member {
+            if nxt.eq("next") {
+                let lhs = &field.base;
+                return Ok(quote!(
+                    rust_hdl_core::logic::logic_connect_fn(&mut #lhs)
+                ));
+            }
+        }
+    }
+    Ok(TS::new())
+}
+
+fn connect_conditional(conditions: &syn::ExprIf) -> Result<TS> {
+    let br1 = connect_block(&conditions.then_branch)?;
+    let mut br2 = TS::new();
+    if let Some((_, e_branch)) = &conditions.else_branch {
+        match e_branch.as_ref() {
+            Expr::Block(block) => {
+                br2 = connect_block(&block.block)?;
+            }
+            Expr::If(cond) => {
+                br2 = connect_conditional(cond)?;
+            }
+            _ => {
+                return Err(syn::Error::new(conditions.span(), "Unsupported if/else structure"))
+            }
+        }
+    }
+    Ok(quote!(#br1 #br2))
+}
+
+fn connect_match(m: &syn::ExprMatch) -> Result<TS> {
+    let mut branches = vec![];
+    for arm in &m.arms {
+        branches.push(connect_body(&arm.body)?);
+    }
+    Ok(quote!{#(#branches);*;})
+}
+
+fn connect_body(body: &syn::Expr) -> Result<TS> {
+    if let Expr::Block(b) = body {
+        connect_block(&b.block)
+    } else {
+        connect_inner_statement(body)
+    }
+}
+

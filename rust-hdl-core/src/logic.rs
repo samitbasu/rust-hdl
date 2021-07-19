@@ -11,3 +11,7 @@ pub trait Logic {
 pub fn logic_connect_fn<L: Logic>(x: &mut L) {
     x.connect();
 }
+
+impl<L: Logic, const P: usize> Logic for [L; P] {
+    fn update(&mut self) {}
+}

@@ -1,21 +1,42 @@
-use crate::ast::{
-    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
-    VerilogLiteral, VerilogMatch, VerilogOp, VerilogOpUnary,
-};
+use crate::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression, VerilogLiteral, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogLoop};
 use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{walk_block, VerilogVisitor};
 use num_bigint::BigUint;
 
+struct LoopVariable {
+    variable: String,
+    value: usize,
+}
+
 pub struct VerilogCodeGenerator {
     io: CodeWriter,
+    loops: Vec<LoopVariable>
 }
 
 impl VerilogCodeGenerator {
     pub fn new() -> VerilogCodeGenerator {
         Self {
             io: CodeWriter::new(),
+            loops: vec![],
         }
     }
+
+    fn ident_fixup(&self, a: &str) -> String {
+        let mut x = a.to_owned();
+        if x.starts_with(".") {
+            x.remove(0);
+        }
+        x = x.replace(".", "_")
+            .replace("::", "_")
+            .trim_end_matches("_next")
+            .to_owned();
+        for index in &self.loops {
+            x = x.replace(&format!("${}", index.variable), &format!("_{}", index.value));
+        }
+        x = x.replace("$", "_");
+        x
+    }
+
 }
 
 impl ToString for VerilogCodeGenerator {
@@ -30,16 +51,6 @@ pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
     format!("always @(*) {}", gen.to_string())
 }
 
-fn ident_fixup(a: &str) -> String {
-    let mut x = a.to_owned();
-    if x.starts_with(".") {
-        x.remove(0);
-    }
-    x.replace(".", "_")
-        .replace("::", "_")
-        .trim_end_matches("_next")
-        .to_owned()
-}
 
 impl VerilogVisitor for VerilogCodeGenerator {
     fn visit_block(&mut self, b: &VerilogBlock) {
@@ -48,6 +59,19 @@ impl VerilogVisitor for VerilogCodeGenerator {
         walk_block(self, b);
         self.io.pop();
         self.io.add_line("end");
+    }
+
+    fn visit_loop(&mut self, a: &VerilogLoop) {
+        let start = a.from.as_usize();
+        let end = a.to.as_usize();
+        for i in start..end {
+            self.loops.push(LoopVariable {
+                variable: a.index.clone(),
+                value: i
+            });
+            walk_block(self, &a.block);
+            self.loops.pop();
+        }
     }
 
     fn visit_slice_assignment(
@@ -101,7 +125,7 @@ impl VerilogVisitor for VerilogCodeGenerator {
     }
 
     fn visit_signal(&mut self, sig: &str) {
-        self.io.write(ident_fixup(sig));
+        self.io.write(self.ident_fixup(sig));
     }
 
     fn visit_literal(&mut self, v: &VerilogLiteral) {
@@ -109,7 +133,7 @@ impl VerilogVisitor for VerilogCodeGenerator {
     }
 
     fn visit_case(&mut self, c: &VerilogCase) {
-        self.io.write(ident_fixup(&c.condition));
+        self.io.write(self.ident_fixup(&c.condition));
         self.io.writeln(":");
         self.io.push();
         self.visit_block(&c.block);

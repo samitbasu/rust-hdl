@@ -19,6 +19,7 @@ fn save_stdout(output: Output, dir: &PathBuf, basename: &str) -> Result<(), std:
 }
 
 pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
+    uut.connect_all();
     check_connected(&uut);
     let verilog_text = generate_verilog(&uut);
     yosys_validate(prefix, &verilog_text).unwrap();
@@ -43,10 +44,10 @@ pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
             "-r", "-d", "8k", "-P", "cb132", "-p", "top.pcf", "-o", "top.txt", "top.blif",
         ])
         .output().unwrap();
-    save_stdout(output, &dir, "arachne");
+    save_stdout(output, &dir, "arachne").unwrap();
     let output = Command::new("icepack")
         .current_dir(dir.clone())
         .args(&["top.txt", "top.bin"])
         .output().unwrap();
-    save_stdout(output, &dir, "icepack");
+    save_stdout(output, &dir, "icepack").unwrap();
 }

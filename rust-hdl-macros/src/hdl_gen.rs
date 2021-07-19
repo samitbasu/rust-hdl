@@ -49,6 +49,32 @@ fn hdl_statement(statement: &syn::Stmt) -> Result<TS> {
     }
 }
 
+fn hdl_for_loop(expr: &syn::ExprForLoop) -> Result<TS> {
+    if let Pat::Ident(loop_index) = &expr.pat {
+        if let Expr::Range(range) = &expr.expr.as_ref() {
+            if let Some(from) = range.from.as_ref() {
+                if let Some(to) = range.to.as_ref() {
+                    let block = hdl_block(&expr.body)?;
+                    let loop_index = quote!(#loop_index).to_string();
+                    return Ok(quote!(
+                        rust_hdl_core::ast::VerilogStatement::Loop(
+                            rust_hdl_core::ast::VerilogLoop {
+                                index: #loop_index.into(),
+                                from: #from.into(),
+                                to: #to.into(),
+                                block: #block,
+                            }
+                        )))
+                }
+            }
+        }
+    }
+    Err(syn::Error::new(
+        expr.span(),
+        "For loops must be simple (e.g. for <ident> in <const>..<const>"
+    ))
+}
+
 fn hdl_inner_statement(expr: &syn::Expr) -> Result<TS> {
     match expr {
         Expr::Assign(x) => hdl_assignment(x),
@@ -56,6 +82,7 @@ fn hdl_inner_statement(expr: &syn::Expr) -> Result<TS> {
         Expr::Match(x) => hdl_match(x),
         Expr::MethodCall(x) => hdl_method_set(x),
         Expr::Macro(x) => hdl_macro(x),
+        Expr::ForLoop(x) => hdl_for_loop(x),
         _ => Err(syn::Error::new(
             expr.span(),
             format!("Expression does not translate {:?}", expr),

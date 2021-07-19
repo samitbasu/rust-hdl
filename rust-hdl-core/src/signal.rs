@@ -91,8 +91,6 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
 impl<D: Direction, T: Synth> Logic for Signal<D, T> {
     fn update(&mut self) {}
     fn connect(&mut self) {
-        println!("Connect called on signal {}", self.id);
-        assert!(!self.claimed);
         self.claimed = true;
     }
 }
