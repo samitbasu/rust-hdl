@@ -6,37 +6,69 @@ use std::collections::BTreeMap;
 use std::f64::consts::PI;
 
 #[derive(LogicBlock)]
-pub struct AlchitryCuPWMVec<const P: usize> {
-    pwm: PulseWidthModulator<P>,
-    clock: Signal<In, Clock>,
+pub struct Fader {
+    pub clock: Signal<In, Clock>,
+    pub active: Signal<Out, Bit>,
+    pub enable: Signal<In, Bit>,
     strobe: Strobe<32>,
+    pwm: PulseWidthModulator<6>,
+    rom: ROM<Bits<8>, Bits<6>>,
+    counter: DFF<Bits<8>>
+}
+
+impl Fader {
+    pub fn new(phase: u32) -> Self {
+        let rom = (0..256_u32)
+            .map(|x| (Bits::<8>::from(x), snore(x + phase)))
+            .collect::<BTreeMap<_, _>>();
+        Self {
+            clock: Signal::default(),
+            active: Signal::new_with_default(false),
+            enable: Signal::default(),
+            strobe: Strobe::new(100_000_000, 120),
+            pwm: PulseWidthModulator::default(),
+            rom: ROM::new(rom),
+            counter: DFF::new(Bits::<8>::default())
+        }
+    }
+}
+
+impl Logic for Fader {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.strobe.clock.next = self.clock.val();
+        self.pwm.clock.next = self.clock.val();
+        self.counter.clk.next = self.clock.val();
+        self.rom.address.next = self.counter.q.val();
+        self.counter.d.next = self.counter.q.val() + self.strobe.strobe.val();
+        self.strobe.enable.next = self.enable.val();
+        self.pwm.enable.next = self.enable.val();
+        self.active.next = self.pwm.active.val();
+        self.pwm.threshold.next = self.rom.data.val();
+    }
+}
+
+#[derive(LogicBlock)]
+pub struct AlchitryCuPWMVec<const P: usize> {
+    clock: Signal<In, Clock>,
     leds: Signal<Out, Bits<8>>,
-    rom: ROM<Bits<8>, Bits<P>>,
-    counter: [DFF<Bits<8>>; 8]
+    faders: [Fader; 8],
 }
 
 impl<const P: usize> Logic for AlchitryCuPWMVec<P> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.pwm.clock.next = self.clock.val();
-        self.pwm.enable.next = true;
-
-        self.rom.address.next = self.counter[5].q.val();
-
-        self.pwm.threshold.next = self.rom.data.val();
-
-        self.strobe.enable.next = true;
-        self.strobe.clock.next = self.clock.val();
-
-        self.leds.next = 0x00_u8.into();
-        if self.pwm.active.val() {
-            self.leds.next = 0xFF_u8.into();
-        }
-
         for i in 0_usize..8_usize {
-            self.counter[i].clk.next = self.clock.val();
-            self.counter[i].d.next = self.counter[i].q.val() + self.strobe.strobe.val();
+            self.faders[i].clock.next = self.clock.val();
+            self.faders[i].enable.next = true;
         }
+        self.leds.next = 0x00_u8.into();
+        for i in 0_usize..8_usize {
+            self.leds.next.set_bit(i, self.faders[i].active.val());
+        }
+        /*for i in 0_usize..8_usize {
+            self.leds.next.set_bit(i, self.faders[i].active.val());
+        }*/
     }
 }
 
@@ -48,16 +80,21 @@ fn snore<const P: usize>(x: u32) -> Bits::<P> {
 
 impl<const P: usize> Default for AlchitryCuPWMVec<P> {
     fn default() -> Self {
-        let rom = (0..256_u32)
-            .map(|x| (Bits::<8>::from(x), snore(x)))
-            .collect::<BTreeMap<_, _>>();
+        let faders : [Fader; 8] =
+        [
+            Fader::new(0),
+            Fader::new(18),
+            Fader::new(36),
+            Fader::new(54),
+            Fader::new(72),
+            Fader::new(90),
+            Fader::new(108),
+            Fader::new(128),
+        ];
         Self {
-            pwm: PulseWidthModulator::default(),
             clock: rust_hdl_alchitry_cu::pins::clock(),
-            strobe: Strobe::new(100_000_000, 60),
             leds: rust_hdl_alchitry_cu::pins::leds(),
-            rom: ROM::new(rom),
-            counter: Default::default(),
+            faders: faders
         }
     }
 }
