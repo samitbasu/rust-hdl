@@ -17,6 +17,7 @@ mod pwm;
 mod alchitry_cu_pulser;
 mod alchitry_cu_pwm;
 mod alchitry_cu_pwm_vec;
+mod snore;
 
 #[derive(LogicBlock)]
 struct UUT {

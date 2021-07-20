@@ -2,6 +2,8 @@ use crate::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogCo
 use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{walk_block, VerilogVisitor};
 use num_bigint::BigUint;
+use regex::Regex;
+use evalexpr::{ContextWithMutableVariables, eval};
 
 struct LoopVariable {
     variable: String,
@@ -21,8 +23,31 @@ impl VerilogCodeGenerator {
         }
     }
 
+    fn array_index_simplification(&self, a: &str) -> String {
+        let re = Regex::new(r"\[([^\]]*)\]").unwrap();
+        let mut context = evalexpr::HashMapContext::new();
+        for lvar in &self.loops {
+            context.set_value(lvar.variable.clone(), (lvar.value as i64).into());
+        }
+        for x in re.captures(a) {
+            if x.len() == 2 {
+                if let Some(txt) = x.get(1) {
+                    let arg = evalexpr::eval_with_context(txt.as_str(), &context).unwrap();
+                    return re.replace(a, format!("_{}", arg)).to_string();
+                }
+            }
+        }
+        a.to_string()
+    }
+
+
     fn ident_fixup(&self, a: &str) -> String {
         let mut x = a.to_owned();
+        for index in &self.loops {
+            if x == index.variable {
+                x = format!("{}", index.value);
+            }
+        }
         if x.starts_with(".") {
             x.remove(0);
         }
@@ -30,10 +55,9 @@ impl VerilogCodeGenerator {
             .replace("::", "_")
             .trim_end_matches("_next")
             .to_owned();
-        for index in &self.loops {
-            x = x.replace(&format!("${}", index.variable), &format!("_{}", index.value));
+        if x.contains('[') {
+            x = self.array_index_simplification(&x);
         }
-        x = x.replace("$", "_");
         x
     }
 
@@ -209,9 +233,9 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.write(format!(")+:({})]", width));
     }
 
-    fn visit_index_replace(&mut self, sig: &str, ndx: &VerilogExpression, val: &VerilogExpression) {
+    fn visit_index_replace(&mut self, sig: &VerilogExpression, ndx: &VerilogExpression, val: &VerilogExpression) {
         self.io.write("(");
-        self.visit_signal(sig);
+        self.visit_expression(sig);
         self.io.write(" & ~(1 << (");
         self.visit_expression(ndx);
         self.io.write(")) | ((");
@@ -220,4 +244,24 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.visit_expression(ndx);
         self.io.write(")))");
     }
+}
+
+#[test]
+fn test_array_replacement() {
+    let re = Regex::new(r"\[([^\]]*)\]").unwrap();
+    let test = "a[((i+1))]";
+    let captures = re.captures(test);
+    let mut context = evalexpr::HashMapContext::new();
+    context.set_value("i".to_string(), 5.into());
+    for x in re.captures(test) {
+        println!("Match {:?}", x);
+        if x.len() == 2 {
+            if let Some(txt) = x.get(1) {
+                let arg = evalexpr::eval_with_context(txt.as_str(), &context).unwrap();
+                println!("Replace {} -> {}", txt.as_str(), arg);
+                println!("Update {}", re.replace(test, format!("_{}", arg)))
+            }
+        }
+    }
+    assert!(captures.is_some());
 }

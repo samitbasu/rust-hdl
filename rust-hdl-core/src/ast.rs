@@ -162,7 +162,7 @@ pub enum VerilogExpression {
     Unary(VerilogOpUnary, Box<VerilogExpression>),
     Index(String, Box<VerilogExpression>),
     Slice(String, usize, Box<VerilogExpression>),
-    IndexReplace(String, Box<VerilogExpression>, Box<VerilogExpression>),
+    IndexReplace(Box<VerilogExpression>, Box<VerilogExpression>, Box<VerilogExpression>),
 }
 
 #[derive(Debug, Clone)]

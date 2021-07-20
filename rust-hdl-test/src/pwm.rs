@@ -32,13 +32,13 @@ fn test_pwm_circuit() {
     let mut uut = PWMTest::default();
     uut.clock.connect();
     uut.connect_all();
-    yosys_validate("pwm", &generate_verilog(&uut));
+    yosys_validate("pwm", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut PWMTest| x.clock.next = !x.clock.val());
     sim.add_testbench(|mut sim: Sim<PWMTest>| {
         let mut x = sim.init()?;
         let mut accum = 0;
-        for ndx in 0..256 {
+        for _ndx in 0..256 {
             x = sim.wait(10, x)?;
             if x.pwm.active.val() {
                 accum += 1;

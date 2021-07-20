@@ -68,8 +68,6 @@ pub fn get_has_changed(fields: Vec<TS>) -> syn::Result<TS> {
 pub fn fixup_ident(x: String) -> String {
     let y = x
         .replace(" ", "")
-        .replace("]", "")
-        .replace("[", "$")
         .replace("self.", "")
         .replace(".", "_")
         .replace("::", "_");

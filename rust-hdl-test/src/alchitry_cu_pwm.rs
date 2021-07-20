@@ -3,7 +3,7 @@ use rust_hdl_widgets::prelude::*;
 use rust_hdl_core::check_connected::check_connected;
 use rust_hdl_synth::yosys_validate;
 use std::collections::BTreeMap;
-use std::f64::consts::PI;
+use crate::snore::snore;
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPWM<const P: usize> {
@@ -38,12 +38,6 @@ impl<const P: usize> Logic for AlchitryCuPWM<P> {
     }
 }
 
-fn snore<const P: usize>(x: u32) -> Bits::<P> {
-    let amp = (f64::exp(f64::sin(((x as f64) - 128.0/2.)*PI/128.0))-0.36787944)*108.0;
-    let amp = (amp.max(0.0).min(255.0).floor()/255.0 * (1 << P) as f64) as u8;
-    amp.into()
-}
-
 impl<const P: usize> Default for AlchitryCuPWM<P> {
     fn default() -> Self {
         let rom = (0..256_u32)
@@ -67,7 +61,7 @@ fn test_pwm_synthesizes() {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
-    yosys_validate("pwm_cu", &vlog);
+    yosys_validate("pwm_cu", &vlog).unwrap();
     rust_hdl_alchitry_cu::synth::generate_bitstream(uut, "pwm_cu");
 }
 

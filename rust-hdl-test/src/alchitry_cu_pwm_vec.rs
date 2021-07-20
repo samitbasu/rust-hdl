@@ -1,9 +1,12 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
-use rust_hdl_core::check_connected::check_connected;
-use rust_hdl_synth::yosys_validate;
 use std::collections::BTreeMap;
-use std::f64::consts::PI;
+
+use rust_hdl_core::check_connected::check_connected;
+use rust_hdl_core::prelude::*;
+use rust_hdl_synth::yosys_validate;
+use rust_hdl_widgets::prelude::*;
+
+use crate::snore;
+use rust_hdl_core::bits::bit_cast;
 
 #[derive(LogicBlock)]
 pub struct Fader {
@@ -19,7 +22,7 @@ pub struct Fader {
 impl Fader {
     pub fn new(phase: u32) -> Self {
         let rom = (0..256_u32)
-            .map(|x| (Bits::<8>::from(x), snore(x + phase)))
+            .map(|x| (Bits::<8>::from(x), snore::snore(x + phase)))
             .collect::<BTreeMap<_, _>>();
         Self {
             clock: Signal::default(),
@@ -52,6 +55,7 @@ impl Logic for Fader {
 pub struct AlchitryCuPWMVec<const P: usize> {
     clock: Signal<In, Clock>,
     leds: Signal<Out, Bits<8>>,
+    local: Signal<Local, Bits<8>>,
     faders: [Fader; 8],
 }
 
@@ -59,23 +63,15 @@ impl<const P: usize> Logic for AlchitryCuPWMVec<P> {
     #[hdl_gen]
     fn update(&mut self) {
         for i in 0_usize..8_usize {
-            self.faders[i].clock.next = self.clock.val();
-            self.faders[i].enable.next = true;
+            self.faders[((i+5) % 8)].clock.next = self.clock.val();
+            self.faders[(i)].enable.next = true;
         }
-        self.leds.next = 0x00_u8.into();
+        self.local.next = 0x00_u8.into();
         for i in 0_usize..8_usize {
-            self.leds.next.set_bit(i, self.faders[i].active.val());
+            self.local.next = self.local.val().replace_bit((i), self.faders[((i))].active.val());
         }
-        /*for i in 0_usize..8_usize {
-            self.leds.next.set_bit(i, self.faders[i].active.val());
-        }*/
+        self.leds.next = self.local.val();
     }
-}
-
-fn snore<const P: usize>(x: u32) -> Bits::<P> {
-    let amp = (f64::exp(f64::sin(((x as f64) - 128.0/2.)*PI/128.0))-0.36787944)*108.0;
-    let amp = (amp.max(0.0).min(255.0).floor()/255.0 * (1 << P) as f64) as u8;
-    amp.into()
 }
 
 impl<const P: usize> Default for AlchitryCuPWMVec<P> {
@@ -94,7 +90,8 @@ impl<const P: usize> Default for AlchitryCuPWMVec<P> {
         Self {
             clock: rust_hdl_alchitry_cu::pins::clock(),
             leds: rust_hdl_alchitry_cu::pins::leds(),
-            faders: faders
+            local: Signal::default(),
+            faders
         }
     }
 }
@@ -106,6 +103,6 @@ fn test_pwm_vec_synthesizes() {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
-    yosys_validate("pwm_cu", &vlog);
+    yosys_validate("pwm_cu", &vlog).unwrap();
     rust_hdl_alchitry_cu::synth::generate_bitstream(uut, "pwm_cu");
 }

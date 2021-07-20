@@ -1,9 +1,4 @@
-use std::fs::File;
-
-use rust_hdl_alchitry_cu::pcf_gen::generate_pcf;
-use rust_hdl_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::shot::Shot;
 use rust_hdl_widgets::strobe::Strobe;
 
@@ -43,6 +38,7 @@ impl Logic for Pulser {
 
 #[test]
 fn test_pulser_synthesis() {
+    use rust_hdl_synth::yosys_validate;
     let mut uut = Pulser::new(100_000_000, 1, 10_000_000);
     uut.clock.connect();
     uut.enable.connect();
@@ -66,5 +62,5 @@ fn test_pulser() {
     uut.clock.connect();
     uut.enable.connect();
     uut.connect_all();
-    sim.run_traced(uut, 100_000, File::create("pulser.vcd").unwrap()).unwrap();
+    sim.run_traced(uut, 100_000, std::fs::File::create("pulser.vcd").unwrap()).unwrap();
 }

@@ -33,7 +33,7 @@ fn test_synthesis_rom() {
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
-    yosys_validate("rom", &vlog);
+    yosys_validate("rom", &vlog).unwrap();
 }
 
 #[test]
@@ -52,5 +52,5 @@ fn test_rom_works() {
     let mut uut = ROMTest::new();
     uut.rom.address.connect();
     uut.connect_all();
-    sim.run_traced(uut, 100, File::create("ROM.vcd").unwrap());
+    sim.run_traced(uut, 100, File::create("ROM.vcd").unwrap()).unwrap();
 }

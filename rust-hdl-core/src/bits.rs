@@ -143,12 +143,11 @@ impl<const N: usize> Bits<N> {
         }
     }
 
-    #[inline(always)]
-    pub fn set_bit(&self, index: usize, val: bool) -> Bits<N> {
+    pub fn replace_bit(&self, index: usize, val: bool) -> Self{
         assert!(index < N);
         match self {
-            Bits::Short(x) => Bits::Short(x.set_bit(index, val)),
-            Bits::Long(x) => Bits::Long(x.set_bit(index, val)),
+            Bits::Short(x) => Bits::Short(x.replace_bit(index, val)),
+            Bits::Long(x) => Bits::Long(x.replace_bit(index, val)),
         }
     }
 
@@ -159,13 +158,13 @@ impl<const N: usize> Bits<N> {
     }
 
     #[inline(always)]
-    pub fn set_bits<const M: usize>(&self, index: usize, rhs: Bits<M>) -> Bits<N> {
+    pub fn set_bits<const M: usize>(&mut self, index: usize, rhs: Bits<M>) {
         assert!(index <= N);
         assert!(index + M <= N);
         let mask = !(bit_cast::<N, M>(Bits::<M>::mask()) << index);
         let masked = *self & mask;
         let replace = bit_cast::<N, M>(rhs) << index;
-        masked | replace
+        *self = masked | replace
     }
 
     #[inline(always)]
@@ -604,7 +603,7 @@ mod tests {
         let a = bits::<48>(0xabcd_dead_cafe_babe);
         let mut b = a;
         for i in 4..8 {
-            b = b.set_bit(i, false)
+            b = b.replace_bit(i, false)
         }
         assert_eq!(b, bits::<48>(0xabcd_dead_cafe_ba0e));
     }
@@ -612,11 +611,11 @@ mod tests {
     fn test_set_bits() {
         let a = bits::<16>(0xdead);
         let b = bits::<4>(0xf);
-        let c = a.set_bits(4, b);
+        let mut c = a.clone(); c.set_bits(4, b);
         assert_eq!(c, bits::<16>(0xdefd));
         let a = bits::<48>(0xabcd_dead_cafe_babe);
         let b = bits::<8>(0xde);
-        let c = a.set_bits(16, b);
+        let mut c = a.clone(); c.set_bits(16, b);
         assert_eq!(c, bits::<48>(0xabcd_dead_cade_babe));
     }
     #[test]

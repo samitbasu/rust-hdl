@@ -33,7 +33,7 @@ impl<const N: usize> BitVec<N> {
         self.bits[ndx]
     }
 
-    pub fn set_bit(&self, ndx: usize, val: bool) -> BitVec<N> {
+    pub fn replace_bit(&self, ndx: usize, val: bool) -> BitVec<N> {
         let mut t = self.bits.clone();
         t[ndx] = val;
         BitVec { bits: t }

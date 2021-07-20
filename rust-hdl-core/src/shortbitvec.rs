@@ -10,7 +10,7 @@ pub struct ShortBitVec<const N: usize>(ShortType);
 
 impl<const N: usize> ShortBitVec<N> {
     #[inline(always)]
-    pub fn set_bit(&self, index: usize, val: bool) -> Self {
+    pub fn replace_bit(&self, index: usize, val: bool) -> Self {
         assert!(index < N);
         let m: ShortType = 1 << index;
         Self(if val { self.0 | m } else { self.0 & !m })

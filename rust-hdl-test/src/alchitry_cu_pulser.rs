@@ -1,9 +1,5 @@
-use std::fs::File;
-
 use rust_hdl_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
-
 use crate::pulser::Pulser;
 
 #[derive(LogicBlock)]
@@ -38,6 +34,6 @@ impl Default for AlchitryCuPulser {
 
 #[test]
 fn synthesize_alchitry_cu_pulser() {
-    let mut uut = AlchitryCuPulser::default();
+    let uut = AlchitryCuPulser::default();
     generate_bitstream(uut, "pulser");
 }
