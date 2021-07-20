@@ -3,7 +3,7 @@ use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{walk_block, VerilogVisitor};
 use num_bigint::BigUint;
 use regex::Regex;
-use evalexpr::{ContextWithMutableVariables, eval};
+use evalexpr::ContextWithMutableVariables;
 
 struct LoopVariable {
     variable: String,
@@ -27,7 +27,7 @@ impl VerilogCodeGenerator {
         let re = Regex::new(r"\[([^\]]*)\]").unwrap();
         let mut context = evalexpr::HashMapContext::new();
         for lvar in &self.loops {
-            context.set_value(lvar.variable.clone(), (lvar.value as i64).into());
+            let _ = context.set_value(lvar.variable.clone(), (lvar.value as i64).into());
         }
         for x in re.captures(a) {
             if x.len() == 2 {

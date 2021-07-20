@@ -48,8 +48,14 @@ pub fn hdl_gen(_attr: TokenStream, item: TokenStream) -> TokenStream {
         Ok(hdl_code) => TokenStream::from(quote! {
             #orig
 
+        #[allow(dead_code)]
+        #[allow(unused_variables)]
+        #[automatically_derived]
             #connects
 
+        #[allow(dead_code)]
+        #[allow(unused_variables)]
+        #[automatically_derived]
             #hdl_code
         }),
     }

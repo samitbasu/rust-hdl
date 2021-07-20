@@ -4,3 +4,4 @@ pub mod strobe;
 pub mod rom;
 pub mod pwm;
 pub mod prelude;
+pub mod sync_rom;
