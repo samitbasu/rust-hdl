@@ -107,7 +107,6 @@ fn test_pwm_vec_sync_rom_synthesizes() {
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("pwm_cu_srom", &vlog).unwrap();
     rust_hdl_alchitry_cu::synth::generate_bitstream(uut, "pwm_cu_srom");
 }

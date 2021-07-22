@@ -25,7 +25,7 @@ mod alchitry_cu_pulser_pll;
 
 #[derive(LogicBlock)]
 struct UUT {
-    strobe: Strobe<32, {1_000_000}>,
+    strobe: Strobe<32, 1_000_000>,
 }
 
 impl Logic for UUT {

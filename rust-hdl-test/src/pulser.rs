@@ -14,7 +14,6 @@ pub struct Pulser<const F: u64> {
 
 impl<const F: u64> Pulser<F> {
     pub fn new(pulse_rate_hz: f64, pulse_duration: Duration) -> Self {
-        let clock_freq_hz = F;
         let strobe = Strobe::new(pulse_rate_hz);
         let shot = Shot::new(pulse_duration);
         Self {

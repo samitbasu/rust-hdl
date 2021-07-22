@@ -1,6 +1,5 @@
 use rust_hdl_core::prelude::{Block, generate_verilog};
 use rust_hdl_core::check_connected::check_connected;
-use rust_hdl_synth::yosys_validate;
 use crate::pcf_gen::generate_pcf;
 use std::path::PathBuf;
 use std::str::FromStr;

@@ -73,7 +73,7 @@ impl<const P: usize, const F: u64> Logic for AlchitryCuPWMVec<P, F> {
     }
 }
 
-impl<const P: usize> Default for AlchitryCuPWMVec<P, {100_000_000}> {
+impl<const P: usize> Default for AlchitryCuPWMVec<P, 100_000_000> {
     fn default() -> Self {
         let faders : [Fader<100_000_000>; 8] =
         [

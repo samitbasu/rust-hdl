@@ -117,36 +117,36 @@ fn test_pll_gen() {
 }
 
 #[derive(LogicBlock)]
-pub struct ICE40PLLBlock<const Fin: u64, const Fout: u64> {
-    pub clock_in: Signal<In, Clock<Fin>>,
-    pub clock_out: Signal<Out, Clock<Fout>>,
+pub struct ICE40PLLBlock<const FIN: u64, const FOUT: u64> {
+    pub clock_in: Signal<In, Clock<FIN>>,
+    pub clock_out: Signal<Out, Clock<FOUT>>,
     pub locked: Signal<Out, Bit>,
-    core: SB_PLL40_CORE,
+    core: ICEPLL40Core,
     _settings: ICE40PLLSettings,
 }
 
-impl<const Fin: u64, const Fout: u64> ICE40PLLBlock<Fin, Fout> {
+impl<const FIN: u64, const FOUT: u64> ICE40PLLBlock<FIN, FOUT> {
     pub fn new() -> Self {
-        let freq_in_mhz = (Fin as f64) / (1_000_000.0);
-        let freq_out_mhz = (Fout as f64) / (1_000_000.0);
+        let freq_in_mhz = (FIN as f64) / (1_000_000.0);
+        let freq_out_mhz = (FOUT as f64) / (1_000_000.0);
         Self {
             clock_in: Signal::default(),
             clock_out: Signal::new_with_default(Clock(false)),
             locked: Signal::new_with_default(false),
-            core: SB_PLL40_CORE::new(),
+            core: ICEPLL40Core::new(),
             _settings: analyze(true, freq_in_mhz, freq_out_mhz).unwrap()
         }
     }
 }
 
-impl<const Fin: u64, const Fout: u64> Default for ICE40PLLBlock<Fin, Fout> {
+impl<const FIN: u64, const FOUT: u64> Default for ICE40PLLBlock<FIN, FOUT> {
     fn default() -> Self {
         Self::new()
     }
 }
 
 
-impl<const Fin: u64, const Fout: u64> Logic for ICE40PLLBlock<Fin, Fout> {
+impl<const FIN: u64, const FOUT: u64> Logic for ICE40PLLBlock<FIN, FOUT> {
     fn update(&mut self) {
     }
 
@@ -181,16 +181,16 @@ SB_PLL40_CORE #(
 
 
 #[derive(LogicBlock)]
-pub struct SB_PLL40_CORE {
+pub struct ICEPLL40Core {
 }
 
-impl SB_PLL40_CORE {
-    pub fn new() -> SB_PLL40_CORE {
+impl ICEPLL40Core {
+    pub fn new() -> ICEPLL40Core {
         Self {}
     }
 }
 
-impl Logic for SB_PLL40_CORE {
+impl Logic for ICEPLL40Core {
     fn update(&mut self) {}
 
     fn hdl(&self) -> Verilog {

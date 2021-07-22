@@ -38,7 +38,7 @@ impl<const P: usize, const F: u64> Logic for AlchitryCuPWM<P, F> {
     }
 }
 
-impl<const P: usize> Default for AlchitryCuPWM<P, {100_000_000}> {
+impl<const P: usize> Default for AlchitryCuPWM<P, 100_000_000> {
     fn default() -> Self {
         let rom = (0..256_u32)
             .map(|x| (Bits::<8>::from(x), snore(x)))

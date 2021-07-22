@@ -1,6 +1,5 @@
 use crate::dff::DFF;
 use rust_hdl_core::prelude::*;
-use rust_hdl_core::bits::bit_cast;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Strobe<const N: usize, const F: u64> {
