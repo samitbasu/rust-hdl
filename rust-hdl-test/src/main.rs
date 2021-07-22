@@ -20,6 +20,8 @@ mod alchitry_cu_pwm_vec;
 mod snore;
 mod sync_rom;
 mod alchitry_cu_pwm_vec_srom;
+mod alchitry_cu_icepll;
+mod alchitry_cu_pulser_pll;
 
 #[derive(LogicBlock)]
 struct UUT {

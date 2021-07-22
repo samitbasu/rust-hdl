@@ -180,6 +180,7 @@ impl ModuleDefines {
         self.details
             .iter()
             .filter(|x| x.0.len() != 0)
+            .filter(|x| !matches!(x.1.code, Verilog::Blackbox(_)))
             .for_each(|k| {
                 let module_name = k.0;
                 let module_details = k.1;
@@ -237,17 +238,19 @@ impl ModuleDefines {
                     io.add("\n// Sub module instances");
                     for child in submodules {
                         let entry = self.details.get(&child.kind).unwrap();
-                        let child_args = entry
-                            .atoms
-                            .iter()
-                            .filter(|x| {
-                                x.kind == AtomKind::InputParameter
-                                    || x.kind == AtomKind::OutputParameter
-                            })
-                            .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
-                            .collect::<Vec<_>>()
-                            .join(",");
-                        io.add(format!("{} {}({});", child.kind, child.name, child_args))
+                        if !matches!(entry.code, Verilog::Blackbox(_)) {
+                            let child_args = entry
+                                .atoms
+                                .iter()
+                                .filter(|x| {
+                                    x.kind == AtomKind::InputParameter
+                                        || x.kind == AtomKind::OutputParameter
+                                })
+                                .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
+                                .collect::<Vec<_>>()
+                                .join(",");
+                            io.add(format!("{} {}({});", child.kind, child.name, child_args))
+                        }
                     }
                 }
                 match &module_details.code {
@@ -259,10 +262,19 @@ impl ModuleDefines {
                         io.add("\n// Update code (custom)");
                         io.add(code);
                     }
+                    Verilog::Blackbox(_) => {}
                     Verilog::Empty => {}
                 }
                 io.pop();
                 io.add(format!("endmodule // {}", module_name));
+            });
+        self.details
+            .iter()
+            .filter(|x| matches!(x.1.code, Verilog::Blackbox(_)))
+            .for_each(|k| {
+                if let Verilog::Blackbox(b) = &k.1.code {
+                    io.add(b)
+                }
             });
         io.to_string()
     }

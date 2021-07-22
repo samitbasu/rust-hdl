@@ -7,6 +7,7 @@ use rust_hdl_widgets::prelude::*;
 
 use crate::snore;
 use rust_hdl_widgets::sync_rom::SyncROM;
+use rust_hdl_alchitry_cu::ice_pll::ICE40PLLBlock;
 
 #[derive(LogicBlock)]
 pub struct FaderWithSyncROM {
@@ -16,7 +17,7 @@ pub struct FaderWithSyncROM {
     strobe: Strobe<32>,
     pwm: PulseWidthModulator<6>,
     rom: SyncROM<Bits<8>, Bits<6>>,
-    counter: DFF<Bits<8>>
+    counter: DFF<Bits<8>>,
 }
 
 impl FaderWithSyncROM {
@@ -28,10 +29,10 @@ impl FaderWithSyncROM {
             clock: Signal::default(),
             active: Signal::new_with_default(false),
             enable: Signal::default(),
-            strobe: Strobe::new(100_000_000, 120),
+            strobe: Strobe::new(25_000_000, 120),
             pwm: PulseWidthModulator::default(),
             rom: SyncROM::new(rom),
-            counter: DFF::new(Bits::<8>::default())
+            counter: DFF::new(Bits::<8>::default()),
         }
     }
 }
@@ -58,13 +59,15 @@ pub struct AlchitryCuPWMVecSyncROM<const P: usize> {
     leds: Signal<Out, Bits<8>>,
     local: Signal<Local, Bits<8>>,
     faders: [FaderWithSyncROM; 8],
+    pll: ICE40PLLBlock,
 }
 
 impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
     #[hdl_gen]
     fn update(&mut self) {
+        self.pll.clock_in.next = self.clock.val();
         for i in 0_usize..8_usize {
-            self.faders[i].clock.next = self.clock.val();
+            self.faders[i].clock.next = self.pll.clock_out.val();
             self.faders[i].enable.next = true;
         }
         self.local.next = 0x00_u8.into();
@@ -92,7 +95,8 @@ impl<const P: usize> Default for AlchitryCuPWMVecSyncROM<P> {
             clock: rust_hdl_alchitry_cu::pins::clock(),
             leds: rust_hdl_alchitry_cu::pins::leds(),
             local: Signal::default(),
-            faders
+            faders,
+            pll: ICE40PLLBlock::new(100.0, 25.0),
         }
     }
 }

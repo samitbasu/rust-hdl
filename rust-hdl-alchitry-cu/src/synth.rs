@@ -22,7 +22,6 @@ pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
     uut.connect_all();
     check_connected(&uut);
     let verilog_text = generate_verilog(&uut);
-    yosys_validate(prefix, &verilog_text).unwrap();
     let pcf_text = generate_pcf(&uut);
     let dir = PathBuf::from_str(prefix).unwrap();
     let _ = remove_dir_all(&dir);

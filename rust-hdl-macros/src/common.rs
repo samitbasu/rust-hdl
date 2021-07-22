@@ -58,11 +58,19 @@ pub fn get_update_all(fields: Vec<TS>) -> syn::Result<TS> {
 }
 
 pub fn get_has_changed(fields: Vec<TS>) -> syn::Result<TS> {
-    Ok(quote! {
-        fn has_changed(&self) -> bool {
-            #(self.#fields.has_changed())||*
-        }
-    })
+    if fields.is_empty() {
+        Ok(quote! {
+            fn has_changed(&self) -> bool {
+                false
+            }
+        })
+    } else {
+        Ok(quote! {
+            fn has_changed(&self) -> bool {
+                #(self.#fields.has_changed())||*
+            }
+        })
+    }
 }
 
 pub fn fixup_ident(x: String) -> String {

@@ -7,6 +7,7 @@ pub enum Verilog {
     Empty,
     Combinatorial(VerilogBlock),
     Custom(String),
+    Blackbox(String),
 }
 
 impl Default for Verilog {
