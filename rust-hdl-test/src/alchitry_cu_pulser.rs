@@ -1,11 +1,12 @@
 use rust_hdl_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_core::prelude::*;
 use crate::pulser::Pulser;
+use std::time::Duration;
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPulser {
-    pulser: Pulser,
-    clock: Signal<In, Clock>,
+    pulser: Pulser<100_000_000>,
+    clock: Signal<In, Clock<100_000_000>>,
     leds: Signal<Out, Bits<8>>,
 }
 
@@ -23,7 +24,7 @@ impl Logic for AlchitryCuPulser {
 
 impl Default for AlchitryCuPulser {
     fn default() -> Self {
-        let pulser = Pulser::new(100_000_000, 1, 25_000_000);
+        let pulser = Pulser::new(1.0, Duration::from_millis(250));
         Self {
             pulser,
             clock: rust_hdl_alchitry_cu::pins::clock(),

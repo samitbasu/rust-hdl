@@ -5,7 +5,7 @@ use rust_hdl_synth::yosys_validate;
 
 #[test]
 fn test_pll_synthesizable() {
-    let mut uut = ICE40PLLBlock::new(100.0, 25.0);
+    let mut uut : ICE40PLLBlock<100_000_000, 25_000_000> = ICE40PLLBlock::new();
     uut.clock_in.add_location(0, "P7");
     uut.clock_in.connect();
     uut.connect_all();

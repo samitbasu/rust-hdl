@@ -5,8 +5,8 @@ use rust_hdl_synth::yosys_validate;
 
 #[derive(LogicBlock)]
 struct PWMTest {
-    pub clock: Signal<In, Clock>,
-    pub pwm: PulseWidthModulator<8>,
+    pub clock: Signal<In, Clock<1_000_000>>,
+    pub pwm: PulseWidthModulator<8, 1_000_000>,
 }
 
 impl Default for PWMTest {

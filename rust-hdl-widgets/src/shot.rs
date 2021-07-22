@@ -1,36 +1,41 @@
 use crate::dff::DFF;
 use rust_hdl_core::bits::{bit_cast, Bit, Bits};
-use rust_hdl_core::clock::Clock;
+use rust_hdl_core::clock::{Clock, NANOS_PER_FEMTO, freq_hz_to_period_femto};
 use rust_hdl_core::constant::Constant;
 use rust_hdl_core::direction::{In, Out};
 use rust_hdl_core::logic::Logic;
 use rust_hdl_core::signal::Signal;
 use rust_hdl_macros::{hdl_gen, LogicBlock};
+use std::time::Duration;
 
 #[derive(Clone, Debug, LogicBlock)]
-pub struct Shot<const N: usize> {
+pub struct Shot<const N: usize, const F: u64> {
     pub trigger: Signal<In, Bit>,
     pub active: Signal<Out, Bit>,
-    pub clock: Signal<In, Clock>,
+    pub clock: Signal<In, Clock<F>>,
     duration: Constant<Bits<N>>,
-    counter: DFF<Bits<N>>,
-    state: DFF<Bit>,
+    counter: DFF<Bits<N>, F>,
+    state: DFF<Bit, F>,
 }
 
-impl<const N: usize> Shot<N> {
-    pub fn new(duration: u64) -> Self {
+impl<const N: usize, const F: u64> Shot<N, F> {
+    pub fn new(duration: Duration) -> Self {
+        let duration_nanos = duration.as_nanos() as f64 * NANOS_PER_FEMTO; // duration in femtos
+        let clock_period_nanos = freq_hz_to_period_femto(F as f64);
+        let clocks = (duration_nanos / clock_period_nanos).floor() as u64;
+        assert!(clocks < (1_u64 << N));
         Self {
             trigger: Signal::default(),
             active: Signal::new_with_default(false),
             clock: Signal::default(),
-            duration: Constant::new(duration.into()),
+            duration: Constant::new(clocks.into()),
             counter: DFF::new(0_u32.into()),
             state: DFF::new(false),
         }
     }
 }
 
-impl<const N: usize> Logic for Shot<N> {
+impl<const N: usize, const F: u64> Logic for Shot<N, F> {
     #[hdl_gen]
     fn update(&mut self) {
         self.counter.clk.next = self.clock.val();

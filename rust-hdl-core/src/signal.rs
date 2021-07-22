@@ -115,7 +115,7 @@ impl<D: Direction, T: Synth> Block for Signal<D, T> {
     }
 }
 
-impl Signal<In, Clock> {
+impl<const F: u64> Signal<In, Clock<F>> {
     #[inline(always)]
     pub fn pos_edge(&self) -> bool {
         self.changed && self.val.0 && !self.prev.0

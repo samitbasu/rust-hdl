@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 #[derive(LogicBlock)]
 struct SyncROMTest {
-    rom: SyncROM<Bits<4>, Bits<4>>
+    rom: SyncROM<Bits<4>, Bits<4>, 1_000_000>
 }
 
 impl SyncROMTest {

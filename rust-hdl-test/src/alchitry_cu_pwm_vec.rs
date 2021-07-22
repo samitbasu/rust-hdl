@@ -8,17 +8,17 @@ use rust_hdl_widgets::prelude::*;
 use crate::snore;
 
 #[derive(LogicBlock)]
-pub struct Fader {
-    pub clock: Signal<In, Clock>,
+pub struct Fader<const F: u64> {
+    pub clock: Signal<In, Clock<F>>,
     pub active: Signal<Out, Bit>,
     pub enable: Signal<In, Bit>,
-    strobe: Strobe<32>,
-    pwm: PulseWidthModulator<6>,
+    strobe: Strobe<32, F>,
+    pwm: PulseWidthModulator<6, F>,
     rom: ROM<Bits<8>, Bits<6>>,
-    counter: DFF<Bits<8>>
+    counter: DFF<Bits<8>, F>
 }
 
-impl Fader {
+impl<const F: u64> Fader<F> {
     pub fn new(phase: u32) -> Self {
         let rom = (0..256_u32)
             .map(|x| (Bits::<8>::from(x), snore::snore(x + phase)))
@@ -27,7 +27,7 @@ impl Fader {
             clock: Signal::default(),
             active: Signal::new_with_default(false),
             enable: Signal::default(),
-            strobe: Strobe::new(100_000_000, 120),
+            strobe: Strobe::new(120.0),
             pwm: PulseWidthModulator::default(),
             rom: ROM::new(rom),
             counter: DFF::new(Bits::<8>::default())
@@ -35,7 +35,7 @@ impl Fader {
     }
 }
 
-impl Logic for Fader {
+impl<const F: u64> Logic for Fader<F> {
     #[hdl_gen]
     fn update(&mut self) {
         self.strobe.clock.next = self.clock.val();
@@ -51,14 +51,14 @@ impl Logic for Fader {
 }
 
 #[derive(LogicBlock)]
-pub struct AlchitryCuPWMVec<const P: usize> {
-    clock: Signal<In, Clock>,
+pub struct AlchitryCuPWMVec<const P: usize, const F: u64> {
+    clock: Signal<In, Clock<F>>,
     leds: Signal<Out, Bits<8>>,
     local: Signal<Local, Bits<8>>,
-    faders: [Fader; 8],
+    faders: [Fader<F>; 8],
 }
 
-impl<const P: usize> Logic for AlchitryCuPWMVec<P> {
+impl<const P: usize, const F: u64> Logic for AlchitryCuPWMVec<P, F> {
     #[hdl_gen]
     fn update(&mut self) {
         for i in 0_usize..8_usize {
@@ -73,9 +73,9 @@ impl<const P: usize> Logic for AlchitryCuPWMVec<P> {
     }
 }
 
-impl<const P: usize> Default for AlchitryCuPWMVec<P> {
+impl<const P: usize> Default for AlchitryCuPWMVec<P, {100_000_000}> {
     fn default() -> Self {
-        let faders : [Fader; 8] =
+        let faders : [Fader<100_000_000>; 8] =
         [
             Fader::new(0),
             Fader::new(18),
@@ -97,7 +97,7 @@ impl<const P: usize> Default for AlchitryCuPWMVec<P> {
 
 #[test]
 fn test_pwm_vec_synthesizes() {
-    let mut uut : AlchitryCuPWMVec<6> = AlchitryCuPWMVec::default();
+    let mut uut : AlchitryCuPWMVec<6, 100_000_000> = AlchitryCuPWMVec::default();
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);

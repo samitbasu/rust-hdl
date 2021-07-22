@@ -14,3 +14,5 @@ pub use crate::named_path::NamedPath;
 pub use crate::synth::Synth;
 pub use crate::ast::Verilog;
 pub use crate::constant::Constant;
+pub use crate::clock::freq_hz_to_period_femto;
+pub use crate::clock::NANOS_PER_FEMTO;

@@ -25,7 +25,7 @@ mod alchitry_cu_pulser_pll;
 
 #[derive(LogicBlock)]
 struct UUT {
-    strobe: Strobe<32>,
+    strobe: Strobe<32, {1_000_000}>,
 }
 
 impl Logic for UUT {
@@ -38,7 +38,7 @@ impl Logic for UUT {
 
 #[test]
 fn test_strobe_as_verilog() {
-    let mut uut = Strobe::<32>::new(1000, 10);
+    let mut uut = Strobe::<32, 1_000_000>::new(10.0);
     uut.enable.connect();
     uut.clock.connect();
     uut.connect_all();
@@ -60,7 +60,7 @@ fn test_strobe() {
         Ok(())
     });
     let mut uut = UUT {
-        strobe: Strobe::new(1_000, 10),
+        strobe: Strobe::new( 10.0),
     };
     uut.connect_all();
     sim.run_traced(uut, 100_000, File::create("strobe.vcd").unwrap())
@@ -68,7 +68,7 @@ fn test_strobe() {
 }
 
 fn main() {
-    let x = rust_hdl_widgets::strobe::Strobe::<16>::new(100, 1);
+    let x = rust_hdl_widgets::strobe::Strobe::<16, 1_000_000>::new(1.0);
     let y = x.hdl();
     println!("{:?}", y);
 }

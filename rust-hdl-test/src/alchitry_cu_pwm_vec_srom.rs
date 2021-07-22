@@ -10,17 +10,17 @@ use rust_hdl_widgets::sync_rom::SyncROM;
 use rust_hdl_alchitry_cu::ice_pll::ICE40PLLBlock;
 
 #[derive(LogicBlock)]
-pub struct FaderWithSyncROM {
-    pub clock: Signal<In, Clock>,
+pub struct FaderWithSyncROM<const F: u64> {
+    pub clock: Signal<In, Clock<F>>,
     pub active: Signal<Out, Bit>,
     pub enable: Signal<In, Bit>,
-    strobe: Strobe<32>,
-    pwm: PulseWidthModulator<6>,
-    rom: SyncROM<Bits<8>, Bits<6>>,
-    counter: DFF<Bits<8>>,
+    strobe: Strobe<32, {F}>,
+    pwm: PulseWidthModulator<6, {F}>,
+    rom: SyncROM<Bits<8>, Bits<6>, {F}>,
+    counter: DFF<Bits<8>, {F}>,
 }
 
-impl FaderWithSyncROM {
+impl<const F: u64> FaderWithSyncROM<F> {
     pub fn new(phase: u32) -> Self {
         let rom = (0..256_u32)
             .map(|x| (Bits::<8>::from(x), snore::snore(x + phase)))
@@ -29,7 +29,7 @@ impl FaderWithSyncROM {
             clock: Signal::default(),
             active: Signal::new_with_default(false),
             enable: Signal::default(),
-            strobe: Strobe::new(25_000_000, 120),
+            strobe: Strobe::new(120.0),
             pwm: PulseWidthModulator::default(),
             rom: SyncROM::new(rom),
             counter: DFF::new(Bits::<8>::default()),
@@ -37,7 +37,7 @@ impl FaderWithSyncROM {
     }
 }
 
-impl Logic for FaderWithSyncROM {
+impl<const F: u64> Logic for FaderWithSyncROM<F> {
     #[hdl_gen]
     fn update(&mut self) {
         self.strobe.clock.next = self.clock.val();
@@ -55,11 +55,11 @@ impl Logic for FaderWithSyncROM {
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPWMVecSyncROM<const P: usize> {
-    clock: Signal<In, Clock>,
+    clock: Signal<In, Clock<100_000_000>>,
     leds: Signal<Out, Bits<8>>,
     local: Signal<Local, Bits<8>>,
-    faders: [FaderWithSyncROM; 8],
-    pll: ICE40PLLBlock,
+    faders: [FaderWithSyncROM<25_000_000>; 8],
+    pll: ICE40PLLBlock<100_000_000, 25_000_000>,
 }
 
 impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
@@ -80,7 +80,7 @@ impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
 
 impl<const P: usize> Default for AlchitryCuPWMVecSyncROM<P> {
     fn default() -> Self {
-        let faders : [FaderWithSyncROM; 8] =
+        let faders : [FaderWithSyncROM<25_000_000>; 8] =
             [
                 FaderWithSyncROM::new(0),
                 FaderWithSyncROM::new(18),
@@ -96,7 +96,7 @@ impl<const P: usize> Default for AlchitryCuPWMVecSyncROM<P> {
             leds: rust_hdl_alchitry_cu::pins::leds(),
             local: Signal::default(),
             faders,
-            pll: ICE40PLLBlock::new(100.0, 25.0),
+            pll: ICE40PLLBlock::default(),
         }
     }
 }

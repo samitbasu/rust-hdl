@@ -60,7 +60,7 @@ impl Synth for Bit {
     }
 }
 
-impl Synth for Clock {
+impl<const F: u64> Synth for Clock<F> {
     const BITS: usize = 1;
 
     fn vcd(self) -> VCDValue {

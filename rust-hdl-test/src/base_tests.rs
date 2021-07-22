@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     fn test_visit_version() {
-        let mut uut: Strobe<4> = Strobe::new(100, 10);
+        let mut uut: Strobe<32, 100> = Strobe::new(10.0);
         // Simulate 100 clock cycles
         uut.enable.next = true;
         println!("Starting");
@@ -87,7 +87,7 @@ mod tests {
                 strobe_count += 1;
             }
         }
-        assert_eq!(strobe_count, 5_625_000);
+        assert_eq!(strobe_count, 1_000_000);
     }
 
     #[test]
@@ -143,9 +143,9 @@ mod tests {
 
         #[derive(Clone, Debug, LogicBlock)]
         struct StateMachine {
-            pub clock: Signal<In, Clock>,
+            pub clock: Signal<In, Clock<0>>,
             pub advance: Signal<In, Bit>,
-            state: DFF<MyState>,
+            state: DFF<MyState, 0>,
         }
 
         impl StateMachine {
@@ -196,10 +196,10 @@ mod tests {
     fn test_write_modules() {
         #[derive(Clone, Debug, LogicBlock)]
         struct StrobePair {
-            pub clock: Signal<In, Clock>,
+            pub clock: Signal<In, Clock<100_000_000>>,
             pub enable: Signal<In, Bit>,
-            a_strobe: Strobe<4>,
-            b_strobe: Strobe<6>,
+            a_strobe: Strobe<32, 100_000_000>,
+            b_strobe: Strobe<32, 100_000_000>,
             increment: Constant<Bits<6>>,
             local: Signal<Local, Bit>,
         }
@@ -207,8 +207,8 @@ mod tests {
         impl StrobePair {
             pub fn new() -> StrobePair {
                 Self {
-                    a_strobe: Strobe::new(100, 10),
-                    b_strobe: Strobe::new(100, 10),
+                    a_strobe: Strobe::new(10.0),
+                    b_strobe: Strobe::new(10.0),
                     clock: Signal::default(),
                     enable: Signal::default(),
                     increment: Constant::new(32_usize.into()),
@@ -245,12 +245,12 @@ mod tests {
         struct Semaphore {
             pub push: Signal<In, Bit>,
             pub pop: Signal<In, Bit>,
-            pub clk: Signal<In, Clock>,
+            pub clk: Signal<In, Clock<100_000_000>>,
             pub empty: Signal<Out, Bit>,
             pub full: Signal<Out, Bit>,
             will_read: Signal<Local, Bit>,
             will_write: Signal<Local, Bit>,
-            count: DFF<Bits<4>>,
+            count: DFF<Bits<4>, 100_000_000>,
         }
 
         impl Logic for Semaphore {
@@ -317,7 +317,7 @@ mod tests {
     #[derive(LogicBlock)]
     struct Circuit {
         x: Signal<In, Bits<32>>,
-        pub strobe: Strobe<4>,
+        pub strobe: Strobe<32, 100_000_000>,
     }
 
     impl Logic for Circuit {
@@ -368,7 +368,7 @@ mod tests {
         sim.add_testbench(sample_func2);
         let mut x = Circuit {
             x: Signal::default(),
-            strobe: Strobe::new(100, 10),
+            strobe: Strobe::new(10.0),
         };
         x.x.connect();
         x.strobe.clock.connect();

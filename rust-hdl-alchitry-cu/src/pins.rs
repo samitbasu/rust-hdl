@@ -4,7 +4,7 @@ use rust_hdl_core::direction::{In, Out};
 use rust_hdl_core::logic::Logic;
 use rust_hdl_core::prelude::Signal;
 
-pub fn clock() -> Signal<In, Clock> {
+pub fn clock() -> Signal<In, Clock<100_000_000>> {
     let mut x = Signal::default();
     x.add_location(0, "P7");
     x.connect();
