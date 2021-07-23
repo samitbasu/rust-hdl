@@ -2,9 +2,9 @@ use rust_hdl_core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct DFF<T: Synth, F: Domain> {
-    pub d: Signal<In, T>,
-    pub q: Signal<Out, T>,
-    pub clk: Signal<In, Clock<F>>,
+    pub d: Signal<In, T, F>,
+    pub q: Signal<Out, T, F>,
+    pub clk: Signal<In, Clock, F>,
 }
 
 impl<T: Synth, F: Domain> Default for DFF<T, F> {

@@ -7,18 +7,18 @@ use rust_hdl_alchitry_cu::pins::Mhz100;
 #[derive(LogicBlock)]
 pub struct AlchitryCuPulser {
     pulser: Pulser<Mhz100>,
-    clock: Signal<In, Clock<Mhz100>>,
-    leds: Signal<Out, Bits<8>>,
+    clock: Signal<In, Clock, Mhz100>,
+    leds: Signal<Out, Bits<8>, Async>,
 }
 
 impl Logic for AlchitryCuPulser {
     #[hdl_gen]
     fn update(&mut self) {
-        self.pulser.enable.next = true;
+        self.pulser.enable.next = true.into();
         self.pulser.clock.next = self.clock.val();
-        self.leds.next = 0x00_u8.into();
-        if self.pulser.pulse.val() {
-            self.leds.next = 0xAA_u8.into();
+        self.leds.next = 0x00_u32.into();
+        if self.pulser.pulse.val().raw() {
+            self.leds.next = 0xAA_u32.into();
         }
     }
 }

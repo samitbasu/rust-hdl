@@ -52,7 +52,7 @@ fn test_strobe() {
     sim.add_clock(5, |x: &mut UUT| x.strobe.clock.next = !x.strobe.clock.val());
     sim.add_testbench(|mut sim: Sim<UUT>| {
         let mut x = sim.init()?;
-        x.strobe.enable.next = true;
+        x.strobe.enable.next = true.into();
         x = sim.wait(10_000_000, x)?;
         sim.done(x)?;
         Ok(())

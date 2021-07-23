@@ -6,7 +6,7 @@ use std::fs::File;
 
 #[derive(LogicBlock)]
 struct ROMTest {
-    rom: ROM<Bits<4>, Bits<4>>
+    rom: ROM<Bits<4>, Bits<4>, Async>
 }
 
 impl ROMTest {
@@ -42,7 +42,7 @@ fn test_rom_works() {
     sim.add_testbench(|mut sim: Sim<ROMTest>| {
         let mut x = sim.init()?;
         for i in 0_u32..16 {
-            x.rom.address.next = Bits::<4>::from(i);
+            x.rom.address.next = Bits::<4>::from(i).into();
             x = sim.wait(1, x)?;
             assert_eq!(x.rom.data.val(), Bits::<4>::from(15-i));
         }

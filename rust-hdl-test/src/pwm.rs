@@ -7,7 +7,7 @@ make_domain!(Mhz1, 1_000_000);
 
 #[derive(LogicBlock)]
 struct PWMTest {
-    pub clock: Signal<In, Clock<Mhz1>>,
+    pub clock: Signal<In, Clock, Mhz1>,
     pub pwm: PulseWidthModulator<Mhz1, 8>,
 }
 
@@ -24,8 +24,8 @@ impl Logic for PWMTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.pwm.clock.next = self.clock.val();
-        self.pwm.enable.next = true;
-        self.pwm.threshold.next = 32_u8.into();
+        self.pwm.enable.next = true.into();
+        self.pwm.threshold.next = 32_u32.into();
     }
 }
 
@@ -42,7 +42,7 @@ fn test_pwm_circuit() {
         let mut accum = 0;
         for _ndx in 0..256 {
             x = sim.wait(10, x)?;
-            if x.pwm.active.val() {
+            if x.pwm.active.val().raw() {
                 accum += 1;
             }
         }

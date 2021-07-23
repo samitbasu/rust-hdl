@@ -60,7 +60,7 @@ impl Synth for Bit {
     }
 }
 
-impl<D: Domain> Synth for Clock<D> {
+impl Synth for Clock {
     const BITS: usize = 1;
 
     fn vcd(self) -> VCDValue {

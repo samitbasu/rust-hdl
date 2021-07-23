@@ -415,7 +415,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                 Box::new(rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())))
             }))
         }
-        "val" | "into" => {
+        "val" | "into" | "raw" => {
             let receiver = method.receiver.as_ref();
             hdl_compute(receiver)
         }

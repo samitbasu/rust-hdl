@@ -1,3 +1,6 @@
+use std::marker::PhantomData;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
 use crate::ast::VerilogLiteral;
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
@@ -7,7 +10,7 @@ use crate::direction::{Direction, In, Out};
 use crate::logic::Logic;
 use crate::probe::Probe;
 use crate::synth::{Synth, VCDValue};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use crate::tagged::Tagged;
 
 static GLOBAL_THREAD_COUNT: AtomicUsize = AtomicUsize::new(1);
 
@@ -16,8 +19,8 @@ fn get_signal_id() -> usize {
 }
 
 #[derive(Clone, Debug)]
-pub struct Signal<D: Direction, T: Synth> {
-    pub next: T,
+pub struct Signal<D: Direction, T: Synth, F: Domain> {
+    pub next: Tagged<T, F>,
     val: T,
     prev: T,
     pub changed: bool,
@@ -25,11 +28,12 @@ pub struct Signal<D: Direction, T: Synth> {
     id: usize,
     constraints: Vec<PinConstraint>,
     dir: std::marker::PhantomData<D>,
+    domain: std::marker::PhantomData<F>,
 }
 
-impl<D: Direction, T: Synth> Signal<D, T> {
-    pub fn val(&self) -> T {
-        self.val
+impl<D: Direction, T: Synth, F: Domain> Signal<D, T, F> {
+    pub fn val(&self) -> Tagged<T, F> {
+        Tagged(self.val, Default::default())
     }
 
     pub fn add_constraint(&mut self, constraint: PinConstraint) {
@@ -44,7 +48,7 @@ impl<D: Direction, T: Synth> Signal<D, T> {
     }
 }
 
-impl<D: Direction, T: Synth> Atom for Signal<D, T> {
+impl<D: Direction, T: Synth, F: Domain> Atom for Signal<D, T, F> {
     fn bits(&self) -> usize {
         T::BITS
     }
@@ -88,21 +92,21 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
     fn constraints(&self) -> Vec<PinConstraint> {self.constraints.clone()}
 }
 
-impl<D: Direction, T: Synth> Logic for Signal<D, T> {
+impl<D: Direction, T: Synth, F: Domain> Logic for Signal<D, T, F> {
     fn update(&mut self) {}
     fn connect(&mut self) {
         self.claimed = true;
     }
 }
 
-impl<D: Direction, T: Synth> Block for Signal<D, T> {
+impl<D: Direction, T: Synth, F: Domain> Block for Signal<D, T, F> {
     fn connect_all(&mut self) {}
 
     fn update_all(&mut self) {
-        self.changed = self.val != self.next;
+        self.changed = self.val != self.next.0;
         if self.changed {
             self.prev = self.val;
-            self.val = self.next;
+            self.val = self.next.0;
         }
     }
 
@@ -115,7 +119,7 @@ impl<D: Direction, T: Synth> Block for Signal<D, T> {
     }
 }
 
-impl<D: Domain> Signal<In, Clock<D>> {
+impl<D: Domain> Signal<In, Clock, D> {
     #[inline(always)]
     pub fn pos_edge(&self) -> bool {
         self.changed && self.val.0 && !self.prev.0
@@ -126,32 +130,34 @@ impl<D: Domain> Signal<In, Clock<D>> {
     }
 }
 
-impl<T: Synth> Signal<Out, T> {
-    pub fn new_with_default(init: T) -> Signal<Out, T> {
+impl<T: Synth, F: Domain> Signal<Out, T, F> {
+    pub fn new_with_default(init: T) -> Signal<Out, T, F> {
         Self {
-            next: T::default(),
+            next: Tagged::default(),
             val: init,
             prev: init,
             changed: true,
             claimed: false,
             id: get_signal_id(),
             constraints: vec![],
-            dir: std::marker::PhantomData,
+            dir: PhantomData,
+            domain: PhantomData,
         }
     }
 }
 
-impl<D: Direction, T: Synth> Default for Signal<D, T> {
+impl<D: Direction, T: Synth, F: Domain> Default for Signal<D, T, F> {
     fn default() -> Self {
         Self {
-            next: T::default(),
+            next: Tagged::default(),
             val: T::default(),
             prev: T::default(),
             changed: false,
             claimed: false,
             id: get_signal_id(),
             constraints: vec![],
-            dir: std::marker::PhantomData,
+            dir: PhantomData,
+            domain: PhantomData,
         }
     }
 }

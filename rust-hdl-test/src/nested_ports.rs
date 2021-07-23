@@ -1,14 +1,4 @@
-use rust_hdl_core::bits::{Bit, Bits};
-use rust_hdl_core::block::Block;
-use rust_hdl_core::check_connected::check_connected;
-use rust_hdl_core::clock::Clock;
-use rust_hdl_core::direction::{In, Out};
-use rust_hdl_core::logic::Logic;
-use rust_hdl_core::module_defines::ModuleDefines;
-use rust_hdl_core::signal::Signal;
-use rust_hdl_core::vcd_probe::{write_vcd_dump, write_vcd_header};
-use rust_hdl_core::verilog_gen::VerilogCodeGenerator;
-use rust_hdl_core::verilog_visitor::VerilogVisitor;
+use rust_hdl_core::prelude::*;
 use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface};
 use std::fs::File;
 use rust_hdl_alchitry_cu::pins::Mhz100;
@@ -24,24 +14,24 @@ impl VerilogVisitor for SignalLister {
 #[test]
 fn test_write_modules_nested_ports() {
     #[derive(Clone, Debug, Default, LogicInterface)]
-    struct MyBus {
-        pub data: FIFORead<8>,
-        pub cmd: FIFORead<3>,
+    struct MyBus<F: Domain> {
+        pub data: FIFORead<F, 8>,
+        pub cmd: FIFORead<F, 3>,
     }
 
     #[derive(Clone, Debug, Default, LogicInterface)]
-    struct FIFORead<const D: usize> {
-        pub read: Signal<In, Bit>,
-        pub output: Signal<Out, Bits<D>>,
-        pub empty: Signal<Out, Bit>,
-        pub almost_empty: Signal<Out, Bit>,
-        pub underflow: Signal<Out, Bit>,
+    struct FIFORead<F: Domain, const D: usize> {
+        pub read: Signal<In, Bit, F>,
+        pub output: Signal<Out, Bits<D>, F>,
+        pub empty: Signal<Out, Bit, F>,
+        pub almost_empty: Signal<Out, Bit, F>,
+        pub underflow: Signal<Out, Bit, F>,
     }
 
     #[derive(Clone, Debug, Default, LogicBlock)]
     struct Widget {
-        pub clock: Signal<In, Clock<Mhz100>>,
-        pub bus: MyBus,
+        pub clock: Signal<In, Clock, Mhz100>,
+        pub bus: MyBus<Mhz100>,
     }
 
     impl Logic for Widget {
@@ -61,11 +51,11 @@ fn test_write_modules_nested_ports() {
 
     #[derive(Clone, Debug, Default, LogicBlock)]
     struct UUT {
-        pub bus: MyBus,
+        pub bus: MyBus<Mhz100>,
         widget_a: Widget,
         widget_b: Widget,
-        pub clock: Signal<In, Clock<Mhz100>>,
-        pub select: Signal<In, Bit>,
+        pub clock: Signal<In, Clock, Mhz100>,
+        pub select: Signal<In, Bit, Mhz100>,
     }
 
     impl Logic for UUT {
@@ -74,11 +64,11 @@ fn test_write_modules_nested_ports() {
             self.widget_a.clock.next = self.clock.val();
             self.widget_b.clock.next = self.clock.val();
 
-            if self.select.val() {
+            if self.select.val().raw() {
                 self.bus.cmd.underflow.next = self.widget_a.bus.cmd.underflow.val();
                 self.bus.cmd.almost_empty.next = self.widget_a.bus.cmd.almost_empty.val();
                 self.bus.cmd.empty.next = self.widget_a.bus.cmd.empty.val();
-                self.bus.cmd.output.next = self.widget_a.bus.cmd.output.val() + 1_usize;
+                self.bus.cmd.output.next = self.widget_a.bus.cmd.output.val() + 1_u32;
                 self.widget_a.bus.cmd.read.next = self.bus.cmd.read.val();
 
                 self.bus.data.underflow.next = self.widget_a.bus.data.underflow.val();

@@ -3,9 +3,9 @@ use rust_hdl_core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Strobe<F: Domain, const N: usize> {
-    pub enable: Signal<In, Bit>,
-    pub strobe: Signal<Out, Bit>,
-    pub clock: Signal<In, Clock<F>>,
+    pub enable: Signal<In, Bit, F>,
+    pub strobe: Signal<Out, Bit, F>,
+    pub clock: Signal<In, Clock, F>,
     threshold: Constant<Bits<N>>,
     counter: DFF<Bits<N>, F>,
 }
@@ -35,11 +35,11 @@ impl<F: Domain, const N: usize> Logic for Strobe<F, N> {
         self.counter.clk.next = self.clock.val();
         // Latch prevention
         self.counter.d.next = self.counter.q.val();
-        if self.enable.val() {
-            self.counter.d.next = self.counter.q.val() + 1_usize;
+        if self.enable.val().raw() {
+            self.counter.d.next = self.counter.q.val() + 1_u32;
         }
         self.strobe.next = self.enable.val() & (self.counter.q.val() == self.threshold.val());
-        if self.strobe.val() {
+        if self.strobe.val().raw() {
             self.counter.d.next = 1_u32.into();
         }
     }

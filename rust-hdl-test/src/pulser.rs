@@ -5,9 +5,9 @@ use std::time::Duration;
 
 #[derive(LogicBlock)]
 pub struct Pulser<F: Domain> {
-    pub clock: Signal<In, Clock<F>>,
-    pub enable: Signal<In, Bit>,
-    pub pulse: Signal<Out, Bit>,
+    pub clock: Signal<In, Clock, F>,
+    pub enable: Signal<In, Bit, F>,
+    pub pulse: Signal<Out, Bit, F>,
     strobe: Strobe<F, 32>,
     shot: Shot<F, 32>,
 }
@@ -46,6 +46,7 @@ fn test_pulser_synthesis() {
     uut.enable.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
+    println!("{}", vlog);
     yosys_validate("pulser", &vlog).unwrap();
 }
 
@@ -58,7 +59,7 @@ fn test_pulser() {
     sim.add_clock(5, |x: &mut Pulser<Khz10>| x.clock.next = !x.clock.val());
     sim.add_testbench(|mut sim: Sim<Pulser<Khz10>>| {
         let mut x = sim.init()?;
-        x.enable.next = true;
+        x.enable.next = true.into();
         x = sim.wait(10_000_000, x)?;
         sim.done(x)?;
         Ok(())

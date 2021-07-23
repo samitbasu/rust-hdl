@@ -22,3 +22,4 @@ pub mod synth;
 pub mod vcd_probe;
 pub mod verilog_gen;
 pub mod verilog_visitor;
+mod tagged;

@@ -10,19 +10,19 @@ make_domain!(Mhz25, 25_000_000);
 #[derive(LogicBlock)]
 pub struct AlchitryCuPulserPLL {
     pulser: Pulser<Mhz25>,
-    clock: Signal<In, Clock<Mhz100>>,
-    leds: Signal<Out, Bits<8>>,
+    clock: Signal<In, Clock, Mhz100>,
+    leds: Signal<Out, Bits<8>, Async>,
     pll: ICE40PLLBlock<Mhz100, Mhz25>,
 }
 
 impl Logic for AlchitryCuPulserPLL {
     #[hdl_gen]
     fn update(&mut self) {
-        self.pulser.enable.next = true;
+        self.pulser.enable.next = true.into();
         self.pll.clock_in.next = self.clock.val();
         self.pulser.clock.next = self.pll.clock_out.val();
         self.leds.next = 0x00_u8.into();
-        if self.pulser.pulse.val() {
+        if self.pulser.pulse.val().raw() {
             self.leds.next = 0xAA_u8.into();
         }
     }

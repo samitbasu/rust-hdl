@@ -9,10 +9,10 @@ use rust_hdl_alchitry_cu::pins::Mhz100;
 #[derive(LogicBlock)]
 pub struct AlchitryCuPWM<F: Domain, const P: usize> {
     pwm: PulseWidthModulator<F, P>,
-    clock: Signal<In, Clock<F>>,
+    clock: Signal<In, Clock, F>,
     strobe: Strobe<F, 32>,
-    leds: Signal<Out, Bits<8>>,
-    rom: ROM<Bits<8>, Bits<P>>,
+    leds: Signal<Out, Bits<8>, Async>,
+    rom: ROM<Bits<8>, Bits<P>, F>,
     counter: DFF<Bits<8>, F>
 }
 
@@ -20,17 +20,17 @@ impl<F: Domain, const P: usize> Logic for AlchitryCuPWM<F, P> {
     #[hdl_gen]
     fn update(&mut self) {
         self.pwm.clock.next = self.clock.val();
-        self.pwm.enable.next = true;
+        self.pwm.enable.next = true.into();
 
         self.rom.address.next = self.counter.q.val();
 
         self.pwm.threshold.next = self.rom.data.val();
 
-        self.strobe.enable.next = true;
+        self.strobe.enable.next = true.into();
         self.strobe.clock.next = self.clock.val();
 
         self.leds.next = 0x00_u8.into();
-        if self.pwm.active.val() {
+        if self.pwm.active.val().raw() {
             self.leds.next = 0xFF_u8.into();
         }
 

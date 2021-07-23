@@ -12,9 +12,9 @@ use rust_hdl_alchitry_cu::pins::Mhz100;
 
 #[derive(LogicBlock)]
 pub struct FaderWithSyncROM<F: Domain> {
-    pub clock: Signal<In, Clock<F>>,
-    pub active: Signal<Out, Bit>,
-    pub enable: Signal<In, Bit>,
+    pub clock: Signal<In, Clock, F>,
+    pub active: Signal<Out, Bit, F>,
+    pub enable: Signal<In, Bit, F>,
     strobe: Strobe<F, 32>,
     pwm: PulseWidthModulator<F, 6>,
     rom: SyncROM<Bits<8>, Bits<6>, F>,
@@ -58,9 +58,9 @@ make_domain!(Mhz25, 25_000_000);
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPWMVecSyncROM<const P: usize> {
-    clock: Signal<In, Clock<Mhz100>>,
-    leds: Signal<Out, Bits<8>>,
-    local: Signal<Local, Bits<8>>,
+    clock: Signal<In, Clock, Mhz100>,
+    leds: Signal<Out, Bits<8>, Async>,
+    local: Signal<Local, Bits<8>, Async>,
     faders: [FaderWithSyncROM<Mhz25>; 8],
     pll: ICE40PLLBlock<Mhz100, Mhz25>,
 }
@@ -71,11 +71,11 @@ impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
         self.pll.clock_in.next = self.clock.val();
         for i in 0_usize..8_usize {
             self.faders[i].clock.next = self.pll.clock_out.val();
-            self.faders[i].enable.next = true;
+            self.faders[i].enable.next = true.into();
         }
         self.local.next = 0x00_u8.into();
         for i in 0_usize..8_usize {
-            self.local.next = self.local.val().replace_bit(i, self.faders[i].active.val());
+            self.local.next = self.local.val().raw().replace_bit(i, self.faders[i].active.val().raw()).into();
         }
         self.leds.next = self.local.val();
     }

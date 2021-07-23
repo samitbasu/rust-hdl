@@ -118,9 +118,9 @@ fn test_pll_gen() {
 
 #[derive(LogicBlock)]
 pub struct ICE40PLLBlock<FIN: Domain, FOUT: Domain> {
-    pub clock_in: Signal<In, Clock<FIN>>,
-    pub clock_out: Signal<Out, Clock<FOUT>>,
-    pub locked: Signal<Out, Bit>,
+    pub clock_in: Signal<In, Clock, FIN>,
+    pub clock_out: Signal<Out, Clock, FOUT>,
+    pub locked: Signal<Out, Bit, Async>,
     core: ICEPLL40Core,
     _settings: ICE40PLLSettings,
 }
@@ -131,7 +131,7 @@ impl<FIN: Domain, FOUT: Domain> ICE40PLLBlock<FIN, FOUT> {
         let freq_out_mhz = (FOUT::FREQ as f64) / (1_000_000.0);
         Self {
             clock_in: Signal::default(),
-            clock_out: Signal::new_with_default(Clock(false, Default::default())),
+            clock_out: Signal::new_with_default(Clock(false)),
             locked: Signal::new_with_default(false),
             core: ICEPLL40Core::new(),
             _settings: analyze(true, freq_in_mhz, freq_out_mhz).unwrap()

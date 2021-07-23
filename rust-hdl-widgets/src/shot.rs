@@ -1,18 +1,13 @@
 use crate::dff::DFF;
-use rust_hdl_core::bits::{bit_cast, Bit, Bits};
-use rust_hdl_core::clock::{Clock, NANOS_PER_FEMTO, freq_hz_to_period_femto, Domain};
-use rust_hdl_core::constant::Constant;
-use rust_hdl_core::direction::{In, Out};
-use rust_hdl_core::logic::Logic;
-use rust_hdl_core::signal::Signal;
+use rust_hdl_core::prelude::*;
 use rust_hdl_macros::{hdl_gen, LogicBlock};
 use std::time::Duration;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Shot<F: Domain, const N: usize> {
-    pub trigger: Signal<In, Bit>,
-    pub active: Signal<Out, Bit>,
-    pub clock: Signal<In, Clock<F>>,
+    pub trigger: Signal<In, Bit, F>,
+    pub active: Signal<Out, Bit, F>,
+    pub clock: Signal<In, Clock, F>,
     duration: Constant<Bits<N>>,
     counter: DFF<Bits<N>, F>,
     state: DFF<Bit, F>,
@@ -40,14 +35,17 @@ impl<F: Domain, const N: usize> Logic for Shot<F, N> {
     fn update(&mut self) {
         self.counter.clk.next = self.clock.val();
         self.state.clk.next = self.clock.val();
-        self.counter.d.next = self.counter.q.val() + bit_cast::<N, 1>(self.state.q.val().into());
+        self.counter.d.next = self.counter.q.val();
+        if self.state.q.val().raw() {
+            self.counter.d.next = self.counter.q.val() + 1_u32;
+        }
         self.state.d.next = self.state.q.val();
-        if !self.state.q.val() && self.trigger.val() {
-            self.state.d.next = true;
+        if !self.state.q.val().raw() && self.trigger.val().raw() {
+            self.state.d.next = true.into();
             self.counter.d.next = 0_u32.into();
         }
-        if self.state.q.val() && (self.counter.q.val() == self.duration.val()) {
-            self.state.d.next = false;
+        if self.state.q.val().raw() && (self.counter.q.val() == self.duration.val()) {
+            self.state.d.next = false.into();
         }
         self.active.next = self.state.q.val();
     }
