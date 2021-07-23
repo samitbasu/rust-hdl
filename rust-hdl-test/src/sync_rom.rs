@@ -3,9 +3,11 @@ use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
 use std::collections::BTreeMap;
 
+make_domain!(Mhz1, 1_000_000);
+
 #[derive(LogicBlock)]
 struct SyncROMTest {
-    rom: SyncROM<Bits<4>, Bits<4>, 1_000_000>
+    rom: SyncROM<Bits<4>, Bits<4>, Mhz1>
 }
 
 impl SyncROMTest {

@@ -1,8 +1,4 @@
-use rust_hdl_core::block::Block;
-use rust_hdl_core::check_connected::check_connected;
-use rust_hdl_core::logic::Logic;
-use rust_hdl_core::module_defines::generate_verilog;
-use rust_hdl_core::simulate::{Sim, Simulation};
+use rust_hdl_core::prelude::*;
 use rust_hdl_macros::LogicBlock;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::strobe::Strobe;
@@ -23,9 +19,11 @@ mod alchitry_cu_pwm_vec_srom;
 mod alchitry_cu_icepll;
 mod alchitry_cu_pulser_pll;
 
+make_domain!(Mhz1, 1_000_000);
+
 #[derive(LogicBlock)]
 struct UUT {
-    strobe: Strobe<32, 1_000_000>,
+    strobe: Strobe<Mhz1, 32>,
 }
 
 impl Logic for UUT {
@@ -38,7 +36,7 @@ impl Logic for UUT {
 
 #[test]
 fn test_strobe_as_verilog() {
-    let mut uut = Strobe::<32, 1_000_000>::new(10.0);
+    let mut uut : Strobe<Mhz1, 32> = Strobe::new(10.0);
     uut.enable.connect();
     uut.clock.connect();
     uut.connect_all();
@@ -68,7 +66,7 @@ fn test_strobe() {
 }
 
 fn main() {
-    let x = rust_hdl_widgets::strobe::Strobe::<16, 1_000_000>::new(1.0);
+    let x: Strobe::<Mhz1, 16> = rust_hdl_widgets::strobe::Strobe::new(1.0);
     let y = x.hdl();
     println!("{:?}", y);
 }

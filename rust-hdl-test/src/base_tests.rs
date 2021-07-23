@@ -1,22 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use rust_hdl_core::ast::VerilogLiteral;
-    use rust_hdl_core::bits::{clog2, Bit, Bits};
-    use rust_hdl_core::block::Block;
-    use rust_hdl_core::check_connected::check_connected;
-    use rust_hdl_core::clock::Clock;
-    use rust_hdl_core::constant::Constant;
-    use rust_hdl_core::direction::{In, Local, Out};
-    use rust_hdl_core::logic::Logic;
-    use rust_hdl_core::module_defines::{generate_verilog};
-    use rust_hdl_core::signal::Signal;
-    use rust_hdl_core::simulate;
-    use rust_hdl_core::simulate::{simulate, Sim, Simulation};
-    use rust_hdl_core::synth::{Synth, VCDValue};
+    use rust_hdl_core::prelude::*;
     use rust_hdl_macros::hdl_gen;
     use rust_hdl_macros::LogicBlock;
     use rust_hdl_widgets::dff::DFF;
     use rust_hdl_widgets::strobe::Strobe;
+    use rust_hdl_alchitry_cu::pins::{Async, Mhz100};
 
     #[derive(Copy, Clone, Debug, PartialEq)]
     enum MyState {
@@ -69,7 +58,8 @@ mod tests {
 
     #[test]
     fn test_visit_version() {
-        let mut uut: Strobe<32, 100> = Strobe::new(10.0);
+        make_domain!(F, 100);
+        let mut uut: Strobe<F, 32> = Strobe::new(10.0);
         // Simulate 100 clock cycles
         uut.enable.next = true;
         println!("Starting");
@@ -79,7 +69,7 @@ mod tests {
         check_connected(&uut);
         let mut strobe_count = 0;
         for clock in 0..10_000_000 {
-            uut.clock.next = Clock(clock % 2 == 0);
+            uut.clock.next = Clock(clock % 2 == 0, Default::default());
             if !simulate(&mut uut, 10) {
                 panic!("Logic did not converge");
             }
@@ -143,9 +133,9 @@ mod tests {
 
         #[derive(Clone, Debug, LogicBlock)]
         struct StateMachine {
-            pub clock: Signal<In, Clock<0>>,
+            pub clock: Signal<In, Clock<Async>>,
             pub advance: Signal<In, Bit>,
-            state: DFF<MyState, 0>,
+            state: DFF<MyState, Async>,
         }
 
         impl StateMachine {
@@ -182,7 +172,7 @@ mod tests {
         uut.connect_all();
         check_connected(&uut);
         for clock in 0..10 {
-            uut.clock.next = Clock(clock % 2 == 0);
+            uut.clock.next = Clock(clock % 2 == 0, Default::default());
             uut.advance.next = true;
             if !simulate(&mut uut, 10) {
                 panic!("Logic did not converge");
@@ -196,10 +186,10 @@ mod tests {
     fn test_write_modules() {
         #[derive(Clone, Debug, LogicBlock)]
         struct StrobePair {
-            pub clock: Signal<In, Clock<100_000_000>>,
+            pub clock: Signal<In, Clock<Mhz100>>,
             pub enable: Signal<In, Bit>,
-            a_strobe: Strobe<32, 100_000_000>,
-            b_strobe: Strobe<32, 100_000_000>,
+            a_strobe: Strobe<Mhz100, 32>,
+            b_strobe: Strobe<Mhz100, 32>,
             increment: Constant<Bits<6>>,
             local: Signal<Local, Bit>,
         }
@@ -245,12 +235,12 @@ mod tests {
         struct Semaphore {
             pub push: Signal<In, Bit>,
             pub pop: Signal<In, Bit>,
-            pub clk: Signal<In, Clock<100_000_000>>,
+            pub clk: Signal<In, Clock<Mhz100>>,
             pub empty: Signal<Out, Bit>,
             pub full: Signal<Out, Bit>,
             will_read: Signal<Local, Bit>,
             will_write: Signal<Local, Bit>,
-            count: DFF<Bits<4>, 100_000_000>,
+            count: DFF<Bits<4>, Mhz100>,
         }
 
         impl Logic for Semaphore {
@@ -317,7 +307,7 @@ mod tests {
     #[derive(LogicBlock)]
     struct Circuit {
         x: Signal<In, Bits<32>>,
-        pub strobe: Strobe<32, 100_000_000>,
+        pub strobe: Strobe<Mhz100, 32>,
     }
 
     impl Logic for Circuit {
@@ -325,7 +315,7 @@ mod tests {
         fn update(&mut self) {}
     }
 
-    fn sample_func(mut ep: Sim<Circuit>) -> simulate::Result<()> {
+    fn sample_func(mut ep: Sim<Circuit>) -> rust_hdl_core::simulate::Result<()> {
         // Need an initialization stage...
         // Get the initial circuit - this must be serviced first.
         println!("Initialize TB 1");
@@ -347,7 +337,7 @@ mod tests {
         Ok(())
     }
 
-    fn sample_func2(mut ep: Sim<Circuit>) -> simulate::Result<()> {
+    fn sample_func2(mut ep: Sim<Circuit>) -> rust_hdl_core::simulate::Result<()> {
         let x = ep.init()?;
         println!("Hello from TB 2");
         let mut x = ep.wait(125, x)?;

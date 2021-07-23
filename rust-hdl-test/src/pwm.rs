@@ -3,10 +3,12 @@ use rust_hdl_widgets::pwm::PulseWidthModulator;
 use std::fs::File;
 use rust_hdl_synth::yosys_validate;
 
+make_domain!(Mhz1, 1_000_000);
+
 #[derive(LogicBlock)]
 struct PWMTest {
-    pub clock: Signal<In, Clock<1_000_000>>,
-    pub pwm: PulseWidthModulator<8, 1_000_000>,
+    pub clock: Signal<In, Clock<Mhz1>>,
+    pub pwm: PulseWidthModulator<Mhz1, 8>,
 }
 
 impl Default for PWMTest {

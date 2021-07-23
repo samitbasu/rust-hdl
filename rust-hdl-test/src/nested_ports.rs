@@ -11,6 +11,7 @@ use rust_hdl_core::verilog_gen::VerilogCodeGenerator;
 use rust_hdl_core::verilog_visitor::VerilogVisitor;
 use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface};
 use std::fs::File;
+use rust_hdl_alchitry_cu::pins::Mhz100;
 
 struct SignalLister {}
 
@@ -39,7 +40,7 @@ fn test_write_modules_nested_ports() {
 
     #[derive(Clone, Debug, Default, LogicBlock)]
     struct Widget {
-        pub clock: Signal<In, Clock<100_000_000>>,
+        pub clock: Signal<In, Clock<Mhz100>>,
         pub bus: MyBus,
     }
 
@@ -63,7 +64,7 @@ fn test_write_modules_nested_ports() {
         pub bus: MyBus,
         widget_a: Widget,
         widget_b: Widget,
-        pub clock: Signal<In, Clock<100_000_000>>,
+        pub clock: Signal<In, Clock<Mhz100>>,
         pub select: Signal<In, Bit>,
     }
 

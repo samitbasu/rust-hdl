@@ -4,18 +4,19 @@ use rust_hdl_core::check_connected::check_connected;
 use rust_hdl_synth::yosys_validate;
 use std::collections::BTreeMap;
 use crate::snore::snore;
+use rust_hdl_alchitry_cu::pins::Mhz100;
 
 #[derive(LogicBlock)]
-pub struct AlchitryCuPWM<const P: usize, const F: u64> {
-    pwm: PulseWidthModulator<P, F>,
+pub struct AlchitryCuPWM<F: Domain, const P: usize> {
+    pwm: PulseWidthModulator<F, P>,
     clock: Signal<In, Clock<F>>,
-    strobe: Strobe<32, {F}>,
+    strobe: Strobe<F, 32>,
     leds: Signal<Out, Bits<8>>,
     rom: ROM<Bits<8>, Bits<P>>,
     counter: DFF<Bits<8>, F>
 }
 
-impl<const P: usize, const F: u64> Logic for AlchitryCuPWM<P, F> {
+impl<F: Domain, const P: usize> Logic for AlchitryCuPWM<F, P> {
     #[hdl_gen]
     fn update(&mut self) {
         self.pwm.clock.next = self.clock.val();
@@ -38,7 +39,7 @@ impl<const P: usize, const F: u64> Logic for AlchitryCuPWM<P, F> {
     }
 }
 
-impl<const P: usize> Default for AlchitryCuPWM<P, 100_000_000> {
+impl<const P: usize> Default for AlchitryCuPWM<Mhz100, P> {
     fn default() -> Self {
         let rom = (0..256_u32)
             .map(|x| (Bits::<8>::from(x), snore(x)))
@@ -56,7 +57,7 @@ impl<const P: usize> Default for AlchitryCuPWM<P, 100_000_000> {
 
 #[test]
 fn test_pwm_synthesizes() {
-    let mut uut : AlchitryCuPWM<6, 100_000_000> = AlchitryCuPWM::default();
+    let mut uut : AlchitryCuPWM<Mhz100, 6> = AlchitryCuPWM::default();
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);

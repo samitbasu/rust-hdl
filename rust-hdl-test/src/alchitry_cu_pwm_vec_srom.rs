@@ -8,19 +8,20 @@ use rust_hdl_widgets::prelude::*;
 use crate::snore;
 use rust_hdl_widgets::sync_rom::SyncROM;
 use rust_hdl_alchitry_cu::ice_pll::ICE40PLLBlock;
+use rust_hdl_alchitry_cu::pins::Mhz100;
 
 #[derive(LogicBlock)]
-pub struct FaderWithSyncROM<const F: u64> {
+pub struct FaderWithSyncROM<F: Domain> {
     pub clock: Signal<In, Clock<F>>,
     pub active: Signal<Out, Bit>,
     pub enable: Signal<In, Bit>,
-    strobe: Strobe<32, {F}>,
-    pwm: PulseWidthModulator<6, {F}>,
-    rom: SyncROM<Bits<8>, Bits<6>, {F}>,
-    counter: DFF<Bits<8>, {F}>,
+    strobe: Strobe<F, 32>,
+    pwm: PulseWidthModulator<F, 6>,
+    rom: SyncROM<Bits<8>, Bits<6>, F>,
+    counter: DFF<Bits<8>, F>,
 }
 
-impl<const F: u64> FaderWithSyncROM<F> {
+impl<F: Domain> FaderWithSyncROM<F> {
     pub fn new(phase: u32) -> Self {
         let rom = (0..256_u32)
             .map(|x| (Bits::<8>::from(x), snore::snore(x + phase)))
@@ -37,7 +38,7 @@ impl<const F: u64> FaderWithSyncROM<F> {
     }
 }
 
-impl<const F: u64> Logic for FaderWithSyncROM<F> {
+impl<F: Domain> Logic for FaderWithSyncROM<F> {
     #[hdl_gen]
     fn update(&mut self) {
         self.strobe.clock.next = self.clock.val();
@@ -53,13 +54,15 @@ impl<const F: u64> Logic for FaderWithSyncROM<F> {
     }
 }
 
+make_domain!(Mhz25, 25_000_000);
+
 #[derive(LogicBlock)]
 pub struct AlchitryCuPWMVecSyncROM<const P: usize> {
-    clock: Signal<In, Clock<100_000_000>>,
+    clock: Signal<In, Clock<Mhz100>>,
     leds: Signal<Out, Bits<8>>,
     local: Signal<Local, Bits<8>>,
-    faders: [FaderWithSyncROM<25_000_000>; 8],
-    pll: ICE40PLLBlock<100_000_000, 25_000_000>,
+    faders: [FaderWithSyncROM<Mhz25>; 8],
+    pll: ICE40PLLBlock<Mhz100, Mhz25>,
 }
 
 impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
@@ -80,7 +83,7 @@ impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
 
 impl<const P: usize> Default for AlchitryCuPWMVecSyncROM<P> {
     fn default() -> Self {
-        let faders : [FaderWithSyncROM<25_000_000>; 8] =
+        let faders : [FaderWithSyncROM<Mhz25>; 8] =
             [
                 FaderWithSyncROM::new(0),
                 FaderWithSyncROM::new(18),

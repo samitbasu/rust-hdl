@@ -1,10 +1,10 @@
-use rust_hdl_core::bits::Bits;
-use rust_hdl_core::clock::Clock;
-use rust_hdl_core::direction::{In, Out};
-use rust_hdl_core::logic::Logic;
-use rust_hdl_core::prelude::Signal;
+use rust_hdl_core::prelude::*;
 
-pub fn clock() -> Signal<In, Clock<100_000_000>> {
+make_domain!(Mhz100, 100_000_000);
+
+make_domain!(Async, 0);
+
+pub fn clock() -> Signal<In, Clock<Mhz100>> {
     let mut x = Signal::default();
     x.add_location(0, "P7");
     x.connect();

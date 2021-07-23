@@ -1,19 +1,19 @@
 use rust_hdl_core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock)]
-pub struct DFF<T: Synth, const F: u64> {
+pub struct DFF<T: Synth, F: Domain> {
     pub d: Signal<In, T>,
     pub q: Signal<Out, T>,
     pub clk: Signal<In, Clock<F>>,
 }
 
-impl<T: Synth, const F: u64> Default for DFF<T, F> {
+impl<T: Synth, F: Domain> Default for DFF<T, F> {
     fn default() -> DFF<T, F> {
         Self::new(T::default())
     }
 }
 
-impl<T: Synth, const F: u64> DFF<T, F> {
+impl<T: Synth, F: Domain> DFF<T, F> {
     pub fn new(init: T) -> DFF<T, F> {
         Self {
             d: Signal::default(),
@@ -23,7 +23,7 @@ impl<T: Synth, const F: u64> DFF<T, F> {
     }
 }
 
-impl<T: Synth, const F: u64> Logic for DFF<T, F> {
+impl<T: Synth, F: Domain> Logic for DFF<T, F> {
     fn update(&mut self) {
         if self.clk.pos_edge() {
             self.q.next = self.d.val()

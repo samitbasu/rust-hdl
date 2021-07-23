@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::ast::VerilogLiteral;
 use crate::bits::{Bit, Bits};
-use crate::clock::Clock;
+use crate::clock::{Clock, Domain};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum VCDValue {
@@ -60,7 +60,7 @@ impl Synth for Bit {
     }
 }
 
-impl<const F: u64> Synth for Clock<F> {
+impl<D: Domain> Synth for Clock<D> {
     const BITS: usize = 1;
 
     fn vcd(self) -> VCDValue {

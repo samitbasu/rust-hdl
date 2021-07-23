@@ -6,19 +6,20 @@ use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::*;
 
 use crate::snore;
+use rust_hdl_alchitry_cu::pins::Mhz100;
 
 #[derive(LogicBlock)]
-pub struct Fader<const F: u64> {
+pub struct Fader<F: Domain> {
     pub clock: Signal<In, Clock<F>>,
     pub active: Signal<Out, Bit>,
     pub enable: Signal<In, Bit>,
-    strobe: Strobe<32, F>,
-    pwm: PulseWidthModulator<6, F>,
+    strobe: Strobe<F, 32>,
+    pwm: PulseWidthModulator<F, 6>,
     rom: ROM<Bits<8>, Bits<6>>,
     counter: DFF<Bits<8>, F>
 }
 
-impl<const F: u64> Fader<F> {
+impl<F: Domain> Fader<F> {
     pub fn new(phase: u32) -> Self {
         let rom = (0..256_u32)
             .map(|x| (Bits::<8>::from(x), snore::snore(x + phase)))
@@ -35,7 +36,7 @@ impl<const F: u64> Fader<F> {
     }
 }
 
-impl<const F: u64> Logic for Fader<F> {
+impl<F: Domain> Logic for Fader<F> {
     #[hdl_gen]
     fn update(&mut self) {
         self.strobe.clock.next = self.clock.val();
@@ -51,14 +52,14 @@ impl<const F: u64> Logic for Fader<F> {
 }
 
 #[derive(LogicBlock)]
-pub struct AlchitryCuPWMVec<const P: usize, const F: u64> {
+pub struct AlchitryCuPWMVec<F: Domain, const P: usize> {
     clock: Signal<In, Clock<F>>,
     leds: Signal<Out, Bits<8>>,
     local: Signal<Local, Bits<8>>,
     faders: [Fader<F>; 8],
 }
 
-impl<const P: usize, const F: u64> Logic for AlchitryCuPWMVec<P, F> {
+impl<F: Domain, const P: usize> Logic for AlchitryCuPWMVec<F, P> {
     #[hdl_gen]
     fn update(&mut self) {
         for i in 0_usize..8_usize {
@@ -73,9 +74,9 @@ impl<const P: usize, const F: u64> Logic for AlchitryCuPWMVec<P, F> {
     }
 }
 
-impl<const P: usize> Default for AlchitryCuPWMVec<P, 100_000_000> {
+impl<const P: usize> Default for AlchitryCuPWMVec<Mhz100, P> {
     fn default() -> Self {
-        let faders : [Fader<100_000_000>; 8] =
+        let faders : [Fader<Mhz100>; 8] =
         [
             Fader::new(0),
             Fader::new(18),
@@ -97,7 +98,7 @@ impl<const P: usize> Default for AlchitryCuPWMVec<P, 100_000_000> {
 
 #[test]
 fn test_pwm_vec_synthesizes() {
-    let mut uut : AlchitryCuPWMVec<6, 100_000_000> = AlchitryCuPWMVec::default();
+    let mut uut : AlchitryCuPWMVec<Mhz100, 6> = AlchitryCuPWMVec::default();
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);

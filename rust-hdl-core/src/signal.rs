@@ -1,7 +1,7 @@
 use crate::ast::VerilogLiteral;
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
-use crate::clock::Clock;
+use crate::clock::{Clock, Domain};
 use crate::constraint::{Constraint, PinConstraint};
 use crate::direction::{Direction, In, Out};
 use crate::logic::Logic;
@@ -115,7 +115,7 @@ impl<D: Direction, T: Synth> Block for Signal<D, T> {
     }
 }
 
-impl<const F: u64> Signal<In, Clock<F>> {
+impl<D: Domain> Signal<In, Clock<D>> {
     #[inline(always)]
     pub fn pos_edge(&self) -> bool {
         self.changed && self.val.0 && !self.prev.0

@@ -117,7 +117,7 @@ fn test_pll_gen() {
 }
 
 #[derive(LogicBlock)]
-pub struct ICE40PLLBlock<const FIN: u64, const FOUT: u64> {
+pub struct ICE40PLLBlock<FIN: Domain, FOUT: Domain> {
     pub clock_in: Signal<In, Clock<FIN>>,
     pub clock_out: Signal<Out, Clock<FOUT>>,
     pub locked: Signal<Out, Bit>,
@@ -125,13 +125,13 @@ pub struct ICE40PLLBlock<const FIN: u64, const FOUT: u64> {
     _settings: ICE40PLLSettings,
 }
 
-impl<const FIN: u64, const FOUT: u64> ICE40PLLBlock<FIN, FOUT> {
+impl<FIN: Domain, FOUT: Domain> ICE40PLLBlock<FIN, FOUT> {
     pub fn new() -> Self {
-        let freq_in_mhz = (FIN as f64) / (1_000_000.0);
-        let freq_out_mhz = (FOUT as f64) / (1_000_000.0);
+        let freq_in_mhz = (FIN::FREQ as f64) / (1_000_000.0);
+        let freq_out_mhz = (FOUT::FREQ as f64) / (1_000_000.0);
         Self {
             clock_in: Signal::default(),
-            clock_out: Signal::new_with_default(Clock(false)),
+            clock_out: Signal::new_with_default(Clock(false, Default::default())),
             locked: Signal::new_with_default(false),
             core: ICEPLL40Core::new(),
             _settings: analyze(true, freq_in_mhz, freq_out_mhz).unwrap()
@@ -139,14 +139,14 @@ impl<const FIN: u64, const FOUT: u64> ICE40PLLBlock<FIN, FOUT> {
     }
 }
 
-impl<const FIN: u64, const FOUT: u64> Default for ICE40PLLBlock<FIN, FOUT> {
+impl<FIN: Domain, FOUT: Domain> Default for ICE40PLLBlock<FIN, FOUT> {
     fn default() -> Self {
         Self::new()
     }
 }
 
 
-impl<const FIN: u64, const FOUT: u64> Logic for ICE40PLLBlock<FIN, FOUT> {
+impl<FIN: Domain, FOUT: Domain> Logic for ICE40PLLBlock<FIN, FOUT> {
     fn update(&mut self) {
     }
 

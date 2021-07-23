@@ -3,13 +3,16 @@ use rust_hdl_core::prelude::*;
 use crate::pulser::Pulser;
 use rust_hdl_alchitry_cu::ice_pll::ICE40PLLBlock;
 use std::time::Duration;
+use rust_hdl_alchitry_cu::pins::Mhz100;
+
+make_domain!(Mhz25, 25_000_000);
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPulserPLL {
-    pulser: Pulser<25_000_000>,
-    clock: Signal<In, Clock<100_000_000>>,
+    pulser: Pulser<Mhz25>,
+    clock: Signal<In, Clock<Mhz100>>,
     leds: Signal<Out, Bits<8>>,
-    pll: ICE40PLLBlock<100_000_000, 25_000_000>,
+    pll: ICE40PLLBlock<Mhz100, Mhz25>,
 }
 
 impl Logic for AlchitryCuPulserPLL {

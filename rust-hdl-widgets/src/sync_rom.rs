@@ -5,14 +5,14 @@ use std::collections::BTreeMap;
 pub struct SyncROM<
     A: Synth + Ord,
     D: Synth,
-    const F: u64> {
+    F: Domain> {
     pub address: Signal<In, A>,
     pub clock: Signal<In, Clock<F>>,
     pub data: Signal<Out, D>,
     _sim: BTreeMap<A, D>,
 }
 
-impl<A: Synth + Ord, D: Synth, const F: u64> SyncROM<A, D, F> {
+impl<A: Synth + Ord, D: Synth, F: Domain> SyncROM<A, D, F> {
     pub fn new(values: BTreeMap<A, D>) -> Self {
         Self {
             address: Signal::default(),
@@ -23,7 +23,7 @@ impl<A: Synth + Ord, D: Synth, const F: u64> SyncROM<A, D, F> {
     }
 }
 
-impl<A: Synth + Ord, D: Synth, const F: u64> Logic for SyncROM<A, D, F> {
+impl<A: Synth + Ord, D: Synth, F: Domain> Logic for SyncROM<A, D, F> {
     fn update(&mut self) {
         if self.clock.pos_edge() {
             self.data.next = *self._sim.get(&self.address.val()).unwrap_or(&D::default());

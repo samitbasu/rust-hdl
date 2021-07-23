@@ -2,7 +2,7 @@ use crate::dff::DFF;
 use rust_hdl_core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock)]
-pub struct Strobe<const N: usize, const F: u64> {
+pub struct Strobe<F: Domain, const N: usize> {
     pub enable: Signal<In, Bit>,
     pub strobe: Signal<Out, Bit>,
     pub clock: Signal<In, Clock<F>>,
@@ -10,9 +10,9 @@ pub struct Strobe<const N: usize, const F: u64> {
     counter: DFF<Bits<N>, F>,
 }
 
-impl<const N: usize, const F: u64> Strobe<N, F> {
+impl<F: Domain, const N: usize> Strobe<F, N> {
     pub fn new(strobe_freq_hz: f64) -> Self {
-        let clock_duration_femto = freq_hz_to_period_femto(F as f64);
+        let clock_duration_femto = freq_hz_to_period_femto(F::FREQ as f64);
         let strobe_interval_femto = freq_hz_to_period_femto(strobe_freq_hz);
         let interval = strobe_interval_femto / clock_duration_femto;
         let threshold = interval.round() as u64;
@@ -28,7 +28,7 @@ impl<const N: usize, const F: u64> Strobe<N, F> {
     }
 }
 
-impl<const N: usize, const F: u64> Logic for Strobe<N, F> {
+impl<F: Domain, const N: usize> Logic for Strobe<F, N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the counter clock to my clock
