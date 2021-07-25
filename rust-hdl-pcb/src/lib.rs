@@ -7,6 +7,9 @@ use crate::tdk_cga_series::make_tdk_cga_capacitor;
 use crate::capacitors::{CapacitorKind, DielectricCode, CapacitorTolerance};
 use crate::kemet_t491_series::make_kemet_t491_capacitor;
 use crate::avx_caps::make_avx_capacitor;
+use crate::kemet_ceramic_caps::make_kemet_ceramic_capacitor;
+use crate::tdk_c_series::make_tdk_c_series_capacitor;
+use crate::yageo_cc_caps::make_yageo_cc_series_cap;
 
 mod bom;
 mod capacitors;
@@ -23,6 +26,9 @@ mod traco_power_tmr1_series;
 mod yageo_rc_rl_at_series;
 mod kemet_t491_series;
 mod avx_caps;
+mod kemet_ceramic_caps;
+mod tdk_c_series;
+mod yageo_cc_caps;
 
 #[test]
 fn test_yageo_rc_68k() {
@@ -101,4 +107,34 @@ fn test_avx() {
     assert_eq!(avx.kind, CapacitorKind::MultiLayerChip(DielectricCode::X7R));
     assert_eq!(avx.value_pf, 47e5);
     assert_eq!(avx.tolerance, CapacitorTolerance::TenPercent);
+}
+
+#[test]
+fn test_kemet() {
+    let c = make_kemet_ceramic_capacitor("C0603C104K5RACTU");
+    assert_eq!(c.details.size, SizeCode::I0603);
+    assert_eq!(c.kind, CapacitorKind::MultiLayerChip(DielectricCode::X7R));
+    assert_eq!(c.value_pf, 10e4);
+    assert_eq!(c.tolerance, CapacitorTolerance::TenPercent);
+}
+
+#[test]
+fn test_tdk_c_series() {
+    let c = make_tdk_c_series_capacitor("C1608X7R1C105K080AC");
+    assert_eq!(c.details.size, SizeCode::I0603);
+    assert_eq!(c.kind, CapacitorKind::MultiLayerChip(DielectricCode::X7R));
+    assert_eq!(c.value_pf, 10e5);
+    assert_eq!(c.tolerance, CapacitorTolerance::TenPercent);
+    assert_eq!(c.voltage, 16.0);
+}
+
+#[test]
+fn test_yageo_cc_series() {
+    let c = make_yageo_cc_series_cap("CC0805KKX5R8BB106");
+    // 'Cap Ceramic 10uF 25V X5R 10% Pad SMD 0805 85°C T/R
+    assert_eq!(c.details.size, SizeCode::I0805);
+    assert_eq!(c.tolerance, CapacitorTolerance::TenPercent);
+    assert_eq!(c.voltage, 25.0);
+    assert_eq!(c.kind, CapacitorKind::MultiLayerChip(DielectricCode::X5R));
+    assert_eq!(c.value_pf, 10.*1e6);
 }

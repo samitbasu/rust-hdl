@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter, Pointer};
+use std::str::FromStr;
 
 pub fn map_three_digit_cap_to_pf(pf: &str) -> f64 {
     return if &pf[1..2] == "R" {
@@ -21,6 +22,21 @@ pub enum DielectricCode {
     X7T,
 }
 
+impl FromStr for DielectricCode {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "X5R" => DielectricCode::X5R,
+            "X7R" => DielectricCode::X7R,
+            "C0G" => DielectricCode::C0G,
+            "NP0" => DielectricCode::C0G,
+            "X7T" => DielectricCode::X7T,
+            _ => panic!("Unsupported dielectric code {}", s)
+        })
+    }
+}
+
 impl Display for DielectricCode {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -41,8 +57,11 @@ pub enum CapacitorKind {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CapacitorTolerance {
+    TenthPF,
     QuarterPF,
     HalfPF,
+    OnePercent,
+    TwoPercent,
     FivePercent,
     TenPercent,
     TwentyPercent,
@@ -51,8 +70,11 @@ pub enum CapacitorTolerance {
 impl Display for CapacitorTolerance {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            CapacitorTolerance::TenthPF => "0.1PF",
             CapacitorTolerance::QuarterPF => "0.25PF",
             CapacitorTolerance::HalfPF => "0.5PF",
+            CapacitorTolerance::OnePercent => "1%",
+            CapacitorTolerance::TwoPercent => "2%",
             CapacitorTolerance::FivePercent => "5%",
             CapacitorTolerance::TenPercent => "10%",
             CapacitorTolerance::TwentyPercent => "20%"

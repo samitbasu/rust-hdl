@@ -23,14 +23,7 @@ fn map_part_number_to_size(part: &str) -> SizeCode {
 }
 
 fn map_part_number_to_dielectric(part_number: &str) -> DielectricCode {
-    match &part_number[6..=8] {
-        "X5R" => DielectricCode::X5R,
-        "X7R" => DielectricCode::X7R,
-        "C0G" => DielectricCode::C0G,
-        "NP0" => DielectricCode::C0G,
-        "X7T" => DielectricCode::X7T,
-        _ => panic!("Unknown dielectric code {}", part_number)
-    }
+    (&part_number[6..=8]).parse().unwrap()
 }
 
 fn map_part_number_to_voltage(part_number: &str) -> f64 {
