@@ -1,9 +1,9 @@
-use rust_hdl_alchitry_cu::synth::generate_bitstream;
-use rust_hdl_core::prelude::*;
 use crate::pulser::Pulser;
 use rust_hdl_alchitry_cu::ice_pll::ICE40PLLBlock;
-use std::time::Duration;
 use rust_hdl_alchitry_cu::pins::Mhz100;
+use rust_hdl_alchitry_cu::synth::generate_bitstream;
+use rust_hdl_core::prelude::*;
+use std::time::Duration;
 
 make_domain!(Mhz25, 25_000_000);
 

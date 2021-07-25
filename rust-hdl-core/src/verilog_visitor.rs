@@ -1,4 +1,8 @@
-use crate::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression, VerilogIndexAssignment, VerilogLiteral, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogStatement, VerilogLoop};
+use crate::ast::{
+    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
+    VerilogIndexAssignment, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary,
+    VerilogStatement,
+};
 
 pub trait VerilogVisitor {
     fn visit_block(&mut self, b: &VerilogBlock) {
@@ -91,7 +95,12 @@ pub trait VerilogVisitor {
         walk_slice(self, a, b, c);
     }
 
-    fn visit_index_replace(&mut self, a: &VerilogExpression, b: &VerilogExpression, c: &VerilogExpression) {
+    fn visit_index_replace(
+        &mut self,
+        a: &VerilogExpression,
+        b: &VerilogExpression,
+        c: &VerilogExpression,
+    ) {
         walk_index_replacement(self, a, b, c);
     }
 }
@@ -136,9 +145,7 @@ pub fn walk_block<V: VerilogVisitor + ?Sized>(visitor: &mut V, b: &VerilogBlock)
     }
 }
 
-pub fn walk_loop<V: VerilogVisitor + ?Sized>(
-    visitor: &mut V,
-    lp: &VerilogLoop) {
+pub fn walk_loop<V: VerilogVisitor + ?Sized>(visitor: &mut V, lp: &VerilogLoop) {
     visitor.visit_literal(&lp.from);
     visitor.visit_literal(&lp.to);
     visitor.visit_block(&lp.block);

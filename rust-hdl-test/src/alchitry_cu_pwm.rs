@@ -1,10 +1,10 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
-use rust_hdl_core::check_connected::check_connected;
-use rust_hdl_synth::yosys_validate;
-use std::collections::BTreeMap;
 use crate::snore::snore;
 use rust_hdl_alchitry_cu::pins::Mhz100;
+use rust_hdl_core::check_connected::check_connected;
+use rust_hdl_core::prelude::*;
+use rust_hdl_synth::yosys_validate;
+use rust_hdl_widgets::prelude::*;
+use std::collections::BTreeMap;
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPWM<F: Domain, const P: usize> {
@@ -13,7 +13,7 @@ pub struct AlchitryCuPWM<F: Domain, const P: usize> {
     strobe: Strobe<F, 32>,
     leds: Signal<Out, Bits<8>, Async>,
     rom: ROM<Bits<8>, Bits<P>, F>,
-    counter: DFF<Bits<8>, F>
+    counter: DFF<Bits<8>, F>,
 }
 
 impl<F: Domain, const P: usize> Logic for AlchitryCuPWM<F, P> {
@@ -50,14 +50,14 @@ impl<const P: usize> Default for AlchitryCuPWM<Mhz100, P> {
             strobe: Strobe::new(60.0),
             leds: rust_hdl_alchitry_cu::pins::leds(),
             rom: ROM::new(rom),
-            counter: DFF::new(0_u8.into())
+            counter: DFF::new(0_u8.into()),
         }
     }
 }
 
 #[test]
 fn test_pwm_synthesizes() {
-    let mut uut : AlchitryCuPWM<Mhz100, 6> = AlchitryCuPWM::default();
+    let mut uut: AlchitryCuPWM<Mhz100, 6> = AlchitryCuPWM::default();
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
@@ -65,4 +65,3 @@ fn test_pwm_synthesizes() {
     yosys_validate("pwm_cu", &vlog).unwrap();
     rust_hdl_alchitry_cu::synth::generate_bitstream(uut, "pwm_cu");
 }
-

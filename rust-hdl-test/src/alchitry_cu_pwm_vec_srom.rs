@@ -6,9 +6,9 @@ use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::*;
 
 use crate::snore;
-use rust_hdl_widgets::sync_rom::SyncROM;
 use rust_hdl_alchitry_cu::ice_pll::ICE40PLLBlock;
 use rust_hdl_alchitry_cu::pins::Mhz100;
+use rust_hdl_widgets::sync_rom::SyncROM;
 
 #[derive(LogicBlock)]
 pub struct FaderWithSyncROM<F: Domain> {
@@ -75,7 +75,12 @@ impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
         }
         self.local.next = 0x00_u8.into();
         for i in 0_usize..8_usize {
-            self.local.next = self.local.val().raw().replace_bit(i, self.faders[i].active.val().raw()).into();
+            self.local.next = self
+                .local
+                .val()
+                .raw()
+                .replace_bit(i, self.faders[i].active.val().raw())
+                .into();
         }
         self.leds.next = self.local.val();
     }
@@ -83,17 +88,16 @@ impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
 
 impl<const P: usize> Default for AlchitryCuPWMVecSyncROM<P> {
     fn default() -> Self {
-        let faders : [FaderWithSyncROM<Mhz25>; 8] =
-            [
-                FaderWithSyncROM::new(0),
-                FaderWithSyncROM::new(18),
-                FaderWithSyncROM::new(36),
-                FaderWithSyncROM::new(54),
-                FaderWithSyncROM::new(72),
-                FaderWithSyncROM::new(90),
-                FaderWithSyncROM::new(108),
-                FaderWithSyncROM::new(128),
-            ];
+        let faders: [FaderWithSyncROM<Mhz25>; 8] = [
+            FaderWithSyncROM::new(0),
+            FaderWithSyncROM::new(18),
+            FaderWithSyncROM::new(36),
+            FaderWithSyncROM::new(54),
+            FaderWithSyncROM::new(72),
+            FaderWithSyncROM::new(90),
+            FaderWithSyncROM::new(108),
+            FaderWithSyncROM::new(128),
+        ];
         Self {
             clock: rust_hdl_alchitry_cu::pins::clock(),
             leds: rust_hdl_alchitry_cu::pins::leds(),
@@ -106,7 +110,7 @@ impl<const P: usize> Default for AlchitryCuPWMVecSyncROM<P> {
 
 #[test]
 fn test_pwm_vec_sync_rom_synthesizes() {
-    let mut uut : AlchitryCuPWMVecSyncROM<6> = AlchitryCuPWMVecSyncROM::default();
+    let mut uut: AlchitryCuPWMVecSyncROM<6> = AlchitryCuPWMVecSyncROM::default();
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);

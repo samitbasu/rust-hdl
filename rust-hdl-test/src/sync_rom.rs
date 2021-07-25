@@ -1,30 +1,29 @@
-use rust_hdl_widgets::sync_rom::SyncROM;
 use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
+use rust_hdl_widgets::sync_rom::SyncROM;
 use std::collections::BTreeMap;
 
 make_domain!(Mhz1, 1_000_000);
 
 #[derive(LogicBlock)]
 struct SyncROMTest {
-    rom: SyncROM<Bits<4>, Bits<4>, Mhz1>
+    rom: SyncROM<Bits<4>, Bits<4>, Mhz1>,
 }
 
 impl SyncROMTest {
     pub fn new() -> SyncROMTest {
         let mut rom = BTreeMap::new();
         for i in 0_u32..16 {
-            rom.insert(Bits::<4>::from(i), Bits::<4>::from(15-i));
+            rom.insert(Bits::<4>::from(i), Bits::<4>::from(15 - i));
         }
         SyncROMTest {
-            rom: SyncROM::new(rom)
+            rom: SyncROM::new(rom),
         }
     }
 }
 
 impl Logic for SyncROMTest {
-    fn update(&mut self) {
-    }
+    fn update(&mut self) {}
 }
 
 #[test]

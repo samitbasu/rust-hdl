@@ -16,8 +16,8 @@
 //  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
 
-use rust_hdl_core::prelude::*;
 use rust_hdl_core::ast::VerilogLiteral;
+use rust_hdl_core::prelude::*;
 
 #[derive(Clone, Default, Debug)]
 struct ICE40PLLSettings {
@@ -26,19 +26,25 @@ struct ICE40PLLSettings {
     divr: i32,
     divf: i32,
     divq: i32,
-    simple: bool
+    simple: bool,
 }
 
 impl ICE40PLLSettings {
     fn filter_range(&self) -> usize {
         let f_pfd = self.f_pllin / (self.divr as f64 + 1.);
-        let filter_range =
-        if f_pfd < 17. {1}
-        else if f_pfd < 26. {2}
-        else if f_pfd < 44. {3}
-        else if f_pfd < 66. {4}
-        else if f_pfd < 101. {5}
-        else {6};
+        let filter_range = if f_pfd < 17. {
+            1
+        } else if f_pfd < 26. {
+            2
+        } else if f_pfd < 44. {
+            3
+        } else if f_pfd < 66. {
+            4
+        } else if f_pfd < 101. {
+            5
+        } else {
+            6
+        };
         filter_range
     }
 }
@@ -48,17 +54,23 @@ fn analyze(simple_feedback: bool, f_pllin: f64, f_pllout: f64) -> Option<ICE40PL
     let mut best = ICE40PLLSettings::default();
     best.simple = simple_feedback;
 
-    let divf_max = if simple_feedback {127} else {63};
+    let divf_max = if simple_feedback { 127 } else { 63 };
     // The documentation in the iCE40 PLL Usage Guide incorrectly lists the
     // maximum value of DIVF as 63, when it is only limited to 63 when using
     // feedback modes other that SIMPLE.
 
     if f_pllin < 10. || f_pllin > 133. {
-        panic!("Error: PLL input frequency {} MHz is outside range 10 MHz - 133 MHz!\n", f_pllin);
+        panic!(
+            "Error: PLL input frequency {} MHz is outside range 10 MHz - 133 MHz!\n",
+            f_pllin
+        );
     }
 
     if f_pllout < 16. || f_pllout > 275. {
-        panic!("Error: PLL output frequency {} MHz is outside range 16 MHz - 275 MHz!\n", f_pllout);
+        panic!(
+            "Error: PLL output frequency {} MHz is outside range 16 MHz - 275 MHz!\n",
+            f_pllout
+        );
     }
 
     for divr in 0..=15 {
@@ -74,7 +86,9 @@ fn analyze(simple_feedback: bool, f_pllin: f64, f_pllout: f64) -> Option<ICE40PL
                 }
                 for divq in 1..=6 {
                     let fout = f_vco * f64::exp2(-divq as f64);
-                    if f64::abs(fout - f_pllout) < f64::abs(best.fout - f_pllout) || !found_something {
+                    if f64::abs(fout - f_pllout) < f64::abs(best.fout - f_pllout)
+                        || !found_something
+                    {
                         best.fout = fout;
                         best.divr = divr;
                         best.divf = divf;
@@ -89,7 +103,9 @@ fn analyze(simple_feedback: bool, f_pllin: f64, f_pllout: f64) -> Option<ICE40PL
                         continue;
                     }
                     let fout = f_vco * f64::exp2(-divq as f64);
-                    if f64::abs(fout - f_pllout) < f64::abs(best.fout - f_pllout) || !found_something {
+                    if f64::abs(fout - f_pllout) < f64::abs(best.fout - f_pllout)
+                        || !found_something
+                    {
                         best.fout = fout;
                         best.divr = divr;
                         best.divf = divf;
@@ -134,7 +150,7 @@ impl<FIN: Domain, FOUT: Domain> ICE40PLLBlock<FIN, FOUT> {
             clock_out: Signal::new_with_default(Clock(false)),
             locked: Signal::new_with_default(false),
             core: ICEPLL40Core::new(),
-            _settings: analyze(true, freq_in_mhz, freq_out_mhz).unwrap()
+            _settings: analyze(true, freq_in_mhz, freq_out_mhz).unwrap(),
         }
     }
 }
@@ -145,10 +161,8 @@ impl<FIN: Domain, FOUT: Domain> Default for ICE40PLLBlock<FIN, FOUT> {
     }
 }
 
-
 impl<FIN: Domain, FOUT: Domain> Logic for ICE40PLLBlock<FIN, FOUT> {
-    fn update(&mut self) {
-    }
+    fn update(&mut self) {}
 
     fn connect(&mut self) {
         self.clock_out.connect();
@@ -156,8 +170,8 @@ impl<FIN: Domain, FOUT: Domain> Logic for ICE40PLLBlock<FIN, FOUT> {
     }
 
     fn hdl(&self) -> Verilog {
-        Verilog::Custom(
-            format!("\
+        Verilog::Custom(format!(
+            "\
 SB_PLL40_CORE #(
                 .FEEDBACK_PATH(\"{feedback}\"),
                 .DIVR({DIVR}),
@@ -171,18 +185,21 @@ SB_PLL40_CORE #(
                 .REFERENCECLK(clock_in),
                 .PLLOUTCORE(clock_out));
 ",
-                feedback = if self._settings.simple {"SIMPLE"} else {"NON_SIMPLE"},
-                DIVR = VerilogLiteral::from(self._settings.divr as u32),
-                DIVF = VerilogLiteral::from(self._settings.divf as u32),
-                DIVQ = VerilogLiteral::from(self._settings.divq as u32),
-                FILTER_RANGE = VerilogLiteral::from(self._settings.filter_range())))
+            feedback = if self._settings.simple {
+                "SIMPLE"
+            } else {
+                "NON_SIMPLE"
+            },
+            DIVR = VerilogLiteral::from(self._settings.divr as u32),
+            DIVF = VerilogLiteral::from(self._settings.divf as u32),
+            DIVQ = VerilogLiteral::from(self._settings.divq as u32),
+            FILTER_RANGE = VerilogLiteral::from(self._settings.filter_range())
+        ))
     }
 }
 
-
 #[derive(LogicBlock)]
-pub struct ICEPLL40Core {
-}
+pub struct ICEPLL40Core {}
 
 impl ICEPLL40Core {
     pub fn new() -> ICEPLL40Core {
@@ -226,7 +243,8 @@ parameter ENABLE_ICEGATE = 1'b0;
 parameter TEST_MODE = 1'b0;
 parameter EXTERNAL_DIVIDE_FACTOR = 1;
 endmodule
-            "#.into()
+            "#
+            .into(),
         )
     }
 }

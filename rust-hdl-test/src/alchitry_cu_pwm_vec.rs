@@ -16,7 +16,7 @@ pub struct Fader<F: Domain> {
     strobe: Strobe<F, 32>,
     pwm: PulseWidthModulator<F, 6>,
     rom: ROM<Bits<8>, Bits<6>, F>,
-    counter: DFF<Bits<8>, F>
+    counter: DFF<Bits<8>, F>,
 }
 
 impl<F: Domain> Fader<F> {
@@ -31,7 +31,7 @@ impl<F: Domain> Fader<F> {
             strobe: Strobe::new(120.0),
             pwm: PulseWidthModulator::default(),
             rom: ROM::new(rom),
-            counter: DFF::new(Bits::<8>::default())
+            counter: DFF::new(Bits::<8>::default()),
         }
     }
 }
@@ -68,7 +68,12 @@ impl<F: Domain, const P: usize> Logic for AlchitryCuPWMVec<F, P> {
         }
         self.local.next = 0x00_u8.into();
         for i in 0_usize..8_usize {
-            self.local.next = self.local.val().raw().replace_bit(i, self.faders[i].active.val().raw()).into();
+            self.local.next = self
+                .local
+                .val()
+                .raw()
+                .replace_bit(i, self.faders[i].active.val().raw())
+                .into();
         }
         self.leds.next = self.local.val();
     }
@@ -76,8 +81,7 @@ impl<F: Domain, const P: usize> Logic for AlchitryCuPWMVec<F, P> {
 
 impl<const P: usize> Default for AlchitryCuPWMVec<Mhz100, P> {
     fn default() -> Self {
-        let faders : [Fader<Mhz100>; 8] =
-        [
+        let faders: [Fader<Mhz100>; 8] = [
             Fader::new(0),
             Fader::new(18),
             Fader::new(36),
@@ -91,14 +95,14 @@ impl<const P: usize> Default for AlchitryCuPWMVec<Mhz100, P> {
             clock: rust_hdl_alchitry_cu::pins::clock(),
             leds: rust_hdl_alchitry_cu::pins::leds(),
             local: Signal::default(),
-            faders
+            faders,
         }
     }
 }
 
 #[test]
 fn test_pwm_vec_synthesizes() {
-    let mut uut : AlchitryCuPWMVec<Mhz100, 6> = AlchitryCuPWMVec::default();
+    let mut uut: AlchitryCuPWMVec<Mhz100, 6> = AlchitryCuPWMVec::default();
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);

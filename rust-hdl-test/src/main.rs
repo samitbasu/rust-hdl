@@ -4,20 +4,20 @@ use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::strobe::Strobe;
 use std::fs::File;
 
+mod alchitry_cu_icepll;
+mod alchitry_cu_pulser;
+mod alchitry_cu_pulser_pll;
+mod alchitry_cu_pwm;
+mod alchitry_cu_pwm_vec;
+mod alchitry_cu_pwm_vec_srom;
 mod base_tests;
 mod fifo;
 mod nested_ports;
 mod pulser;
-mod rom;
 mod pwm;
-mod alchitry_cu_pulser;
-mod alchitry_cu_pwm;
-mod alchitry_cu_pwm_vec;
+mod rom;
 mod snore;
 mod sync_rom;
-mod alchitry_cu_pwm_vec_srom;
-mod alchitry_cu_icepll;
-mod alchitry_cu_pulser_pll;
 
 make_domain!(Mhz1, 1_000_000);
 
@@ -36,7 +36,7 @@ impl Logic for UUT {
 
 #[test]
 fn test_strobe_as_verilog() {
-    let mut uut : Strobe<Mhz1, 32> = Strobe::new(10.0);
+    let mut uut: Strobe<Mhz1, 32> = Strobe::new(10.0);
     uut.enable.connect();
     uut.clock.connect();
     uut.connect_all();
@@ -58,7 +58,7 @@ fn test_strobe() {
         Ok(())
     });
     let mut uut = UUT {
-        strobe: Strobe::new( 10.0),
+        strobe: Strobe::new(10.0),
     };
     uut.connect_all();
     sim.run_traced(uut, 100_000, File::create("strobe.vcd").unwrap())
@@ -66,7 +66,7 @@ fn test_strobe() {
 }
 
 fn main() {
-    let x: Strobe::<Mhz1, 16> = rust_hdl_widgets::strobe::Strobe::new(1.0);
+    let x: Strobe<Mhz1, 16> = rust_hdl_widgets::strobe::Strobe::new(1.0);
     let y = x.hdl();
     println!("{:?}", y);
 }

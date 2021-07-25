@@ -89,7 +89,9 @@ impl<D: Direction, T: Synth, F: Domain> Atom for Signal<D, T, F> {
         self.val.verilog()
     }
 
-    fn constraints(&self) -> Vec<PinConstraint> {self.constraints.clone()}
+    fn constraints(&self) -> Vec<PinConstraint> {
+        self.constraints.clone()
+    }
 }
 
 impl<D: Direction, T: Synth, F: Domain> Logic for Signal<D, T, F> {

@@ -21,7 +21,13 @@ impl<A: Synth + Ord, D: Synth, F: Domain> ROM<A, D, F> {
 
 impl<A: Synth + Ord, D: Synth, F: Domain> Logic for ROM<A, D, F> {
     fn update(&mut self) {
-        self.data.next = Tagged(*self._sim.get(&self.address.val().raw()).unwrap_or(&D::default()), PhantomData);
+        self.data.next = Tagged(
+            *self
+                ._sim
+                .get(&self.address.val().raw())
+                .unwrap_or(&D::default()),
+            PhantomData,
+        );
     }
 
     fn connect(&mut self) {
@@ -29,18 +35,28 @@ impl<A: Synth + Ord, D: Synth, F: Domain> Logic for ROM<A, D, F> {
     }
 
     fn hdl(&self) -> Verilog {
-        let cases = self._sim.iter()
-            .map(|x|
-                format!("  {}: data = {};", x.0.verilog().to_string(),
-                        x.1.verilog().to_string()))
+        let cases = self
+            ._sim
+            .iter()
+            .map(|x| {
+                format!(
+                    "  {}: data = {};",
+                    x.0.verilog().to_string(),
+                    x.1.verilog().to_string()
+                )
+            })
             .collect::<Vec<_>>()
             .join("\n");
-        Verilog::Custom(format!("\
+        Verilog::Custom(format!(
+            "\
 always @*
 case (address)
   {cases}
   default: data = {default};
 endcase
-        ", cases = cases, default = D::default().verilog().to_string()))
+        ",
+            cases = cases,
+            default = D::default().verilog().to_string()
+        ))
     }
 }

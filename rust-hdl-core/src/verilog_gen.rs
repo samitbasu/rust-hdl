@@ -1,9 +1,12 @@
-use crate::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression, VerilogLiteral, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogLoop};
+use crate::ast::{
+    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
+    VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary,
+};
 use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{walk_block, VerilogVisitor};
+use evalexpr::ContextWithMutableVariables;
 use num_bigint::BigUint;
 use regex::Regex;
-use evalexpr::ContextWithMutableVariables;
 
 struct LoopVariable {
     variable: String,
@@ -12,7 +15,7 @@ struct LoopVariable {
 
 pub struct VerilogCodeGenerator {
     io: CodeWriter,
-    loops: Vec<LoopVariable>
+    loops: Vec<LoopVariable>,
 }
 
 impl VerilogCodeGenerator {
@@ -40,7 +43,6 @@ impl VerilogCodeGenerator {
         a.to_string()
     }
 
-
     fn ident_fixup(&self, a: &str) -> String {
         let mut x = a.to_owned();
         for index in &self.loops {
@@ -51,7 +53,8 @@ impl VerilogCodeGenerator {
         if x.starts_with(".") {
             x.remove(0);
         }
-        x = x.replace(".", "_")
+        x = x
+            .replace(".", "_")
             .replace("::", "_")
             .trim_end_matches("_next")
             .to_owned();
@@ -60,7 +63,6 @@ impl VerilogCodeGenerator {
         }
         x
     }
-
 }
 
 impl ToString for VerilogCodeGenerator {
@@ -74,7 +76,6 @@ pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
     gen.visit_block(code);
     format!("always @(*) {}", gen.to_string())
 }
-
 
 impl VerilogVisitor for VerilogCodeGenerator {
     fn visit_block(&mut self, b: &VerilogBlock) {
@@ -91,7 +92,7 @@ impl VerilogVisitor for VerilogCodeGenerator {
         for i in start..end {
             self.loops.push(LoopVariable {
                 variable: a.index.clone(),
-                value: i
+                value: i,
             });
             walk_block(self, &a.block);
             self.loops.pop();
@@ -233,7 +234,12 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.write(format!(")+:({})]", width));
     }
 
-    fn visit_index_replace(&mut self, sig: &VerilogExpression, ndx: &VerilogExpression, val: &VerilogExpression) {
+    fn visit_index_replace(
+        &mut self,
+        sig: &VerilogExpression,
+        ndx: &VerilogExpression,
+        val: &VerilogExpression,
+    ) {
         self.io.write("(");
         self.visit_expression(sig);
         self.io.write(" & ~(1 << (");

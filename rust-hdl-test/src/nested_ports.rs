@@ -1,7 +1,7 @@
+use rust_hdl_alchitry_cu::pins::Mhz100;
 use rust_hdl_core::prelude::*;
 use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface};
 use std::fs::File;
-use rust_hdl_alchitry_cu::pins::Mhz100;
 
 struct SignalLister {}
 

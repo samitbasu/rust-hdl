@@ -1,8 +1,8 @@
+use crate::pulser::Pulser;
+use rust_hdl_alchitry_cu::pins::Mhz100;
 use rust_hdl_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_core::prelude::*;
-use crate::pulser::Pulser;
 use std::time::Duration;
-use rust_hdl_alchitry_cu::pins::Mhz100;
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPulser {

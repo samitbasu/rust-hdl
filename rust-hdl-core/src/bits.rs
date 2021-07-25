@@ -3,8 +3,8 @@ use crate::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
 use crate::synth::VCDValue;
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
-use std::num::Wrapping;
 use std::hash::Hasher;
+use std::num::Wrapping;
 
 // This comes with a few invariants that must be maintained for short representation
 // The short value must be less than 2^N
@@ -143,7 +143,7 @@ impl<const N: usize> Bits<N> {
         }
     }
 
-    pub fn replace_bit(&self, index: usize, val: bool) -> Self{
+    pub fn replace_bit(&self, index: usize, val: bool) -> Self {
         assert!(index < N);
         match self {
             Bits::Short(x) => Bits::Short(x.replace_bit(index, val)),
@@ -342,7 +342,6 @@ impl<const N: usize> std::ops::Not for Bits<N> {
         }
     }
 }
-
 
 impl<const N: usize> std::cmp::Ord for Bits<N> {
     fn cmp(&self, other: &Bits<N>) -> Ordering {
@@ -611,11 +610,13 @@ mod tests {
     fn test_set_bits() {
         let a = bits::<16>(0xdead);
         let b = bits::<4>(0xf);
-        let mut c = a.clone(); c.set_bits(4, b);
+        let mut c = a.clone();
+        c.set_bits(4, b);
         assert_eq!(c, bits::<16>(0xdefd));
         let a = bits::<48>(0xabcd_dead_cafe_babe);
         let b = bits::<8>(0xde);
-        let mut c = a.clone(); c.set_bits(16, b);
+        let mut c = a.clone();
+        c.set_bits(16, b);
         assert_eq!(c, bits::<48>(0xabcd_dead_cade_babe));
     }
     #[test]

@@ -1,5 +1,5 @@
-use rust_hdl_core::prelude::*;
 use rust_hdl_core::named_path::NamedPath;
+use rust_hdl_core::prelude::*;
 
 #[derive(Default)]
 struct PCFGenerator {
@@ -31,13 +31,14 @@ impl Probe for PCFGenerator {
                         if signal.bits() == 1 {
                             self.pcf.push(format!("set_io {} {}", name, l))
                         } else {
-                            self.pcf.push(format!("set_io {}[{}] {}", name, pin.index, l))
+                            self.pcf
+                                .push(format!("set_io {}[{}] {}", name, pin.index, l))
                         }
                     }
-                    Constraint::Custom(s) => {
-                        self.pcf.push(s.clone())
+                    Constraint::Custom(s) => self.pcf.push(s.clone()),
+                    _ => {
+                        panic!("Pin constraint type {:?} is unsupported!", pin.constraint)
                     }
-                    _ => { panic!("Pin constraint type {:?} is unsupported!", pin.constraint) }
                 }
             }
         }

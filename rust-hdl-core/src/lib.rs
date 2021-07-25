@@ -19,7 +19,7 @@ pub mod signal;
 pub mod simulate;
 pub mod struct_valued;
 pub mod synth;
+mod tagged;
 pub mod vcd_probe;
 pub mod verilog_gen;
 pub mod verilog_visitor;
-mod tagged;

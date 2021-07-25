@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
 
-use crate::clock::{Domain, Clock};
-use crate::prelude::Synth;
-use crate::bits::Bits;
 use crate::bits::bit_cast;
-use std::ops::{Add, Not, BitAnd, Sub};
+use crate::bits::Bits;
+use crate::clock::{Clock, Domain};
+use crate::prelude::Synth;
 use std::cmp::Ordering;
+use std::ops::{Add, BitAnd, Not, Sub};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub struct Tagged<T: Synth, F: Domain>(pub T, pub PhantomData<F>);
@@ -23,10 +23,14 @@ impl<F: Domain, const N: usize> From<u32> for Tagged<Bits<N>, F> {
 }
 
 impl<F: Domain, const N: usize> From<u8> for Tagged<Bits<N>, F> {
-    fn from(x: u8) -> Self { Tagged(x.into(), PhantomData)}
+    fn from(x: u8) -> Self {
+        Tagged(x.into(), PhantomData)
+    }
 }
 
-pub fn tagged_bit_cast<F: Domain, const M: usize, const N: usize>(x: Tagged<Bits<N>, F>) -> Tagged<Bits<M>, F> {
+pub fn tagged_bit_cast<F: Domain, const M: usize, const N: usize>(
+    x: Tagged<Bits<N>, F>,
+) -> Tagged<Bits<M>, F> {
     Tagged(bit_cast::<M, N>(x.0), PhantomData)
 }
 
@@ -36,7 +40,7 @@ impl<T: Synth, F: Domain> Tagged<T, F> {
     }
 }
 
-impl<T: Synth + BitAnd<bool, Output=T>, F: Domain> BitAnd<bool> for Tagged<T, F> {
+impl<T: Synth + BitAnd<bool, Output = T>, F: Domain> BitAnd<bool> for Tagged<T, F> {
     type Output = Tagged<T, F>;
 
     fn bitand(self, rhs: bool) -> Self::Output {
@@ -44,7 +48,7 @@ impl<T: Synth + BitAnd<bool, Output=T>, F: Domain> BitAnd<bool> for Tagged<T, F>
     }
 }
 
-impl<T: Synth + BitAnd<T, Output=T>, F: Domain> BitAnd<Tagged<T, F>> for Tagged<T, F> {
+impl<T: Synth + BitAnd<T, Output = T>, F: Domain> BitAnd<Tagged<T, F>> for Tagged<T, F> {
     type Output = Tagged<T, F>;
 
     fn bitand(self, rhs: Tagged<T, F>) -> Self::Output {
@@ -59,7 +63,7 @@ impl<F: Domain, const N: usize> Add<Tagged<bool, F>> for Tagged<Bits<N>, F> {
         Self(self.0 + rhs.0, PhantomData)
     }
 }
-impl<T: Synth + Add<u32, Output=T>, F: Domain> Add<u32> for Tagged<T, F> {
+impl<T: Synth + Add<u32, Output = T>, F: Domain> Add<u32> for Tagged<T, F> {
     type Output = Tagged<T, F>;
 
     fn add(self, rhs: u32) -> Self::Output {
@@ -67,7 +71,7 @@ impl<T: Synth + Add<u32, Output=T>, F: Domain> Add<u32> for Tagged<T, F> {
     }
 }
 
-impl<T: Synth + Sub<u32, Output=T>, F: Domain> Sub<u32> for Tagged<T, F> {
+impl<T: Synth + Sub<u32, Output = T>, F: Domain> Sub<u32> for Tagged<T, F> {
     type Output = Tagged<T, F>;
 
     fn sub(self, rhs: u32) -> Self::Output {
@@ -114,7 +118,6 @@ impl<T: Synth + PartialEq<u32>, F: Domain> PartialEq<u32> for Tagged<T, F> {
         self.0 == *other
     }
 }
-
 
 impl<T: Synth + PartialOrd, F: Domain> PartialOrd for Tagged<T, F> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {

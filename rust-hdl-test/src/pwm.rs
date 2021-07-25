@@ -1,7 +1,7 @@
 use rust_hdl_core::prelude::*;
+use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::pwm::PulseWidthModulator;
 use std::fs::File;
-use rust_hdl_synth::yosys_validate;
 
 make_domain!(Mhz1, 1_000_000);
 
@@ -15,7 +15,7 @@ impl Default for PWMTest {
     fn default() -> Self {
         Self {
             clock: Signal::default(),
-            pwm: PulseWidthModulator::default()
+            pwm: PulseWidthModulator::default(),
         }
     }
 }
@@ -50,5 +50,6 @@ fn test_pwm_circuit() {
         assert_eq!(accum, 32);
         Ok(())
     });
-    sim.run_traced(uut, 512*10, File::create("pwm.vcd").unwrap()).unwrap();
+    sim.run_traced(uut, 512 * 10, File::create("pwm.vcd").unwrap())
+        .unwrap();
 }

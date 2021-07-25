@@ -1,7 +1,7 @@
 use crate::common::TS;
 use quote::quote;
-use syn::{Expr, Member, Result};
 use syn::spanned::Spanned;
+use syn::{Expr, Member, Result};
 
 pub fn connect_gen(item: &syn::ItemFn) -> Result<TS> {
     let body = connect_block(&item.block)?;
@@ -27,7 +27,7 @@ fn connect_statement(statement: &syn::Stmt) -> Result<TS> {
         _ => Err(syn::Error::new(
             statement.span(),
             "Local definitions and items are not allowed in HDL kernels",
-        ))
+        )),
     }
 }
 
@@ -37,7 +37,7 @@ fn connect_inner_statement(expr: &syn::Expr) -> Result<TS> {
         Expr::If(x) => connect_conditional(x),
         Expr::Match(x) => connect_match(x),
         Expr::ForLoop(x) => connect_for_loop(x),
-        _ => Ok(TS::new())
+        _ => Ok(TS::new()),
     }
 }
 
@@ -76,7 +76,10 @@ fn connect_conditional(conditions: &syn::ExprIf) -> Result<TS> {
                 br2 = connect_conditional(cond)?;
             }
             _ => {
-                return Err(syn::Error::new(conditions.span(), "Unsupported if/else structure"))
+                return Err(syn::Error::new(
+                    conditions.span(),
+                    "Unsupported if/else structure",
+                ))
             }
         }
     }
@@ -88,7 +91,7 @@ fn connect_match(m: &syn::ExprMatch) -> Result<TS> {
     for arm in &m.arms {
         branches.push(connect_body(&arm.body)?);
     }
-    Ok(quote!{#(#branches);*;})
+    Ok(quote! {#(#branches);*;})
 }
 
 fn connect_body(body: &syn::Expr) -> Result<TS> {
@@ -98,4 +101,3 @@ fn connect_body(body: &syn::Expr) -> Result<TS> {
         connect_inner_statement(body)
     }
 }
-

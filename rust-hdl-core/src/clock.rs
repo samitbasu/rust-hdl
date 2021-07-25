@@ -5,7 +5,7 @@ use std::fmt::Debug;
 #[derive(Clone, Copy, Default, PartialEq, Eq, Hash, Debug)]
 pub struct Clock(pub bool);
 
-pub const NANOS_PER_FEMTO : f64 = 1_000_000.0;
+pub const NANOS_PER_FEMTO: f64 = 1_000_000.0;
 
 pub fn freq_hz_to_period_femto(freq: f64) -> f64 {
     (1.0e15 / freq).round()
@@ -37,7 +37,7 @@ macro_rules! make_domain {
         impl Domain for $name {
             const FREQ: u64 = $freq;
         }
-    }
+    };
 }
 
 make_domain!(Async, 0);

@@ -41,7 +41,7 @@ impl<F: Domain> Logic for Pulser<F> {
 fn test_pulser_synthesis() {
     make_domain!(Hz100, 100);
     use rust_hdl_synth::yosys_validate;
-    let mut uut : Pulser<Hz100> = Pulser::new( 1.0, Duration::from_millis(100));
+    let mut uut: Pulser<Hz100> = Pulser::new(1.0, Duration::from_millis(100));
     uut.clock.connect();
     uut.enable.connect();
     uut.connect_all();
@@ -52,7 +52,6 @@ fn test_pulser_synthesis() {
 
 #[test]
 fn test_pulser() {
-
     make_domain!(Khz10, 10_000);
 
     let mut sim = Simulation::new();
@@ -68,5 +67,6 @@ fn test_pulser() {
     uut.clock.connect();
     uut.enable.connect();
     uut.connect_all();
-    sim.run_traced(uut, 100_000, std::fs::File::create("pulser.vcd").unwrap()).unwrap();
+    sim.run_traced(uut, 100_000, std::fs::File::create("pulser.vcd").unwrap())
+        .unwrap();
 }

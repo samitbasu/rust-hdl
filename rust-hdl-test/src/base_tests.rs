@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod tests {
+    use rust_hdl_alchitry_cu::pins::Mhz100;
     use rust_hdl_core::prelude::*;
     use rust_hdl_macros::hdl_gen;
     use rust_hdl_macros::LogicBlock;
     use rust_hdl_widgets::dff::DFF;
     use rust_hdl_widgets::strobe::Strobe;
-    use rust_hdl_alchitry_cu::pins::Mhz100;
     use std::marker::PhantomData;
 
     #[derive(Copy, Clone, Debug, PartialEq)]

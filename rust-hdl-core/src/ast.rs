@@ -52,7 +52,7 @@ pub struct VerilogLoop {
     pub index: String,
     pub from: VerilogLiteral,
     pub to: VerilogLiteral,
-    pub block: VerilogBlock
+    pub block: VerilogBlock,
 }
 
 #[derive(Debug, Clone)]
@@ -86,7 +86,7 @@ impl VerilogLiteral {
         match m.len() {
             0 => 0,
             1 => m[0] as usize,
-            _ => panic!("Loop index is too large!")
+            _ => panic!("Loop index is too large!"),
         }
     }
 }
@@ -103,10 +103,13 @@ macro_rules! define_literal_from_uint {
         impl From<$name> for VerilogLiteral {
             fn from(x: $name) -> Self {
                 let bi: BigUint = x.into();
-                VerilogLiteral {val: bi, bits: $width}
+                VerilogLiteral {
+                    val: bi,
+                    bits: $width,
+                }
             }
         }
-    }
+    };
 }
 
 define_literal_from_uint!(u128, 128);
@@ -163,7 +166,11 @@ pub enum VerilogExpression {
     Unary(VerilogOpUnary, Box<VerilogExpression>),
     Index(String, Box<VerilogExpression>),
     Slice(String, usize, Box<VerilogExpression>),
-    IndexReplace(Box<VerilogExpression>, Box<VerilogExpression>, Box<VerilogExpression>),
+    IndexReplace(
+        Box<VerilogExpression>,
+        Box<VerilogExpression>,
+        Box<VerilogExpression>,
+    ),
 }
 
 #[derive(Debug, Clone)]

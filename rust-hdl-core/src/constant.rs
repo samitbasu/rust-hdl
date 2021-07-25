@@ -1,10 +1,10 @@
 use crate::ast::VerilogLiteral;
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
+use crate::constraint::PinConstraint;
 use crate::logic::Logic;
 use crate::probe::Probe;
 use crate::synth::{Synth, VCDValue};
-use crate::constraint::PinConstraint;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Constant<T: Synth> {
@@ -67,7 +67,9 @@ impl<T: Synth> Atom for Constant<T> {
         0_usize
     }
 
-    fn constraints(&self) -> Vec<PinConstraint> {vec![]}
+    fn constraints(&self) -> Vec<PinConstraint> {
+        vec![]
+    }
 }
 
 impl<T: Synth> Block for Constant<T> {
