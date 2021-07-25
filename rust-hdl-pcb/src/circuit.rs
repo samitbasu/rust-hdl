@@ -1,8 +1,8 @@
 use crate::bom::{Manufacturer, Supplier};
 use crate::designator::Designator;
 use crate::epin::{EPin, InputRange, OutputRange};
-use crate::capacitors::{CapacitorKind, WorkingVoltage, DielectricCode, CapacitorTolerance};
-use crate::resistors::{PowerMilliWatt, ResistorTolerance, ResistorKind};
+use crate::capacitors::{CapacitorKind, DielectricCode, CapacitorTolerance};
+use crate::resistors::{PowerWatt, ResistorTolerance, ResistorKind, ResistorTempco};
 use crate::smd::SizeCode;
 
 #[derive(Clone, Debug)]
@@ -23,8 +23,7 @@ pub struct Capacitor {
     pub details: PartDetails,
     pub value_pf: f64,
     pub kind: CapacitorKind,
-    pub voltage: WorkingVoltage,
-    pub dielectric: DielectricCode,
+    pub voltage: f64,
     pub tolerance: CapacitorTolerance,
 }
 
@@ -33,8 +32,9 @@ pub struct Resistor {
     pub details: PartDetails,
     pub value_ohms: f64,
     pub kind: ResistorKind,
-    pub power: PowerMilliWatt,
+    pub power_watt: PowerWatt,
     pub tolerance: ResistorTolerance,
+    pub tempco: Option<ResistorTempco>,
 }
 
 pub struct Net {

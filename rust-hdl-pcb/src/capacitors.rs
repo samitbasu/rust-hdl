@@ -1,49 +1,15 @@
 use std::fmt::{Display, Formatter, Pointer};
 
-pub enum CapacitanceValues {
-    F100N,
-    FU1,
-    F1U,
-    F4U7,
-    F22U,
-    F10U,
-    F100U,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum WorkingVoltage {
-    V2V5,
-    V4,
-    V6V3,
-    V10,
-    V16,
-    V25,
-    V35,
-    V50,
-    V75,
-    V100,
-    V250,
-    V450,
-    V630,
-}
-
-impl Display for WorkingVoltage {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            WorkingVoltage::V2V5 => "2.5V",
-            WorkingVoltage::V4 => "4V",
-            WorkingVoltage::V6V3 => "6.3V",
-            WorkingVoltage::V10 => "10V",
-            WorkingVoltage::V16 => "16V",
-            WorkingVoltage::V25 => "25V",
-            WorkingVoltage::V35 => "35V",
-            WorkingVoltage::V50 => "50V",
-            WorkingVoltage::V75 => "75V",
-            WorkingVoltage::V100 => "100V",
-            WorkingVoltage::V250 => "250V",
-            WorkingVoltage::V450 => "450V",
-            WorkingVoltage::V630 => "630V",
-        }.fmt(f)
+pub fn map_three_digit_cap_to_pf(pf: &str) -> f64 {
+    return if &pf[1..2] == "R" {
+        let pf_ones = &pf[0..1].parse::<f64>().unwrap();
+        let pf_tenths = &pf[2..3].parse::<f64>().unwrap();
+        pf_ones + pf_tenths * 0.1
+    } else {
+        let pf_tens = &pf[0..1].parse::<f64>().unwrap();
+        let pf_ones = &pf[1..2].parse::<f64>().unwrap();
+        let pf_exp = &pf[2..3].parse::<f64>().unwrap();
+        (pf_tens * 10.0 + pf_ones) * 10.0_f64.powf(*pf_exp)
     }
 }
 
@@ -68,7 +34,7 @@ impl Display for DielectricCode {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CapacitorKind {
-    MultiLayerChip,
+    MultiLayerChip(DielectricCode),
     Tantalum,
     AluminumPolyLowESR,
 }
@@ -91,5 +57,25 @@ impl Display for CapacitorTolerance {
             CapacitorTolerance::TenPercent => "10%",
             CapacitorTolerance::TwentyPercent => "20%"
         }.fmt(f)
+    }
+}
+
+pub fn map_pf_to_label(value: f64) -> String {
+    fn print_short(x: f64) -> String {
+        let y = format!("{:.1}", x);
+        y.replace(".0", "")
+    }
+    if value < 1e3 {
+        // pF case
+        format!("{}pF", print_short(value))
+    } else if value < 1e6 {
+        // nF case
+        format!("{}nF", print_short(value / 1e3))
+    } else if value < 1e9 {
+        // uF case
+        format!("{}uF", print_short(value / 1e6))
+    } else {
+        // mF case??
+        format!("{}mF", print_short(value / 1e9))
     }
 }

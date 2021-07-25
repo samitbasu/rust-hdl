@@ -1,9 +1,10 @@
-use crate::smd::SizeCode;
-use crate::capacitors::{DielectricCode, WorkingVoltage, CapacitorTolerance, CapacitorKind};
-use crate::circuit::{Capacitor, PartDetails};
 use crate::bom::Manufacturer;
-use crate::epin::EPin;
+use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode, map_three_digit_cap_to_pf};
+use crate::capacitors;
+use crate::circuit::{Capacitor, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
+use crate::epin::EPin;
+use crate::smd::SizeCode;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {
     match &part[3..4] {
@@ -32,33 +33,24 @@ fn map_part_number_to_dielectric(part_number: &str) -> DielectricCode {
     }
 }
 
-fn map_part_number_to_voltage(part_number: &str) -> WorkingVoltage {
+fn map_part_number_to_voltage(part_number: &str) -> f64 {
     match &part_number[9..=10] {
-        "2A" => WorkingVoltage::V100,
-        "0E" => WorkingVoltage::V2V5,
-        "0G" => WorkingVoltage::V4,
-        "0J" => WorkingVoltage::V6V3,
-        "1A" => WorkingVoltage::V10,
-        "1C" => WorkingVoltage::V16,
-        "1E" => WorkingVoltage::V25,
-        "1V" => WorkingVoltage::V35,
-        "1H" => WorkingVoltage::V50,
-        "1N" => WorkingVoltage::V75,
+        "2A" => 100.,
+        "0E" => 2.5,
+        "0G" => 4.,
+        "0J" => 6.3,
+        "1A" => 10.,
+        "1C" => 16.,
+        "1E" => 25.,
+        "1V" => 35.,
+        "1H" => 50.,
+        "1N" => 75.,
         _ => panic!("Unknown working voltage {}!", part_number)
     }
 }
 
 fn map_part_number_to_pf(pf: &str) -> f64 {
-    if &pf[12..13] == "R" {
-        let pf_ones = &pf[11..12].parse::<f64>().unwrap();
-        let pf_tenths = &pf[13..14].parse::<f64>().unwrap();
-        return pf_ones + pf_tenths * 0.1;
-    } else {
-        let pf_tens = &pf[11..12].parse::<f64>().unwrap();
-        let pf_ones = &pf[12..13].parse::<f64>().unwrap();
-        let pf_exp = &pf[13..14].parse::<f64>().unwrap();
-        return (pf_tens * 10.0 + pf_ones) * 10.0_f64.powf(*pf_exp);
-    }
+    map_three_digit_cap_to_pf(&pf[11..])
 }
 
 fn map_part_number_to_tolerance(part_number: &str) -> CapacitorTolerance {
@@ -72,31 +64,15 @@ fn map_part_number_to_tolerance(part_number: &str) -> CapacitorTolerance {
     }
 }
 
-fn map_pf_to_label(value: f64) -> String {
-    if value < 1e3 {
-        // pF case
-        format!("{:.1} pF", value)
-    } else if value < 1e6 {
-        // nF case
-        format!("{:.1} nF", value / 1e3)
-    } else if value < 1e9 {
-        // uF case
-        format!("{:.1} uF", value / 1e6)
-    } else {
-        // mF case??
-        format!("{:.1} mF", value / 1e9)
-    }
-}
-
 
 pub fn make_tdk_cga_capacitor(part_number: &str) -> Capacitor {
     let size = map_part_number_to_size(part_number);
     let tolerance = map_part_number_to_tolerance(part_number);
     let value_pf = map_part_number_to_pf(part_number);
-    let value = map_pf_to_label(value_pf);
+    let value = capacitors::map_pf_to_label(value_pf);
     let dielectric = map_part_number_to_dielectric(part_number);
     let voltage = map_part_number_to_voltage(part_number);
-    let label = format!("{} {} {} {}", value, tolerance, voltage, dielectric);
+    let label = format!("{} {} {}V {}", value, tolerance, voltage, dielectric);
     let manufacturer = Manufacturer {
         name: "TDK".to_string(),
         part_number: part_number.to_owned()
@@ -118,9 +94,8 @@ pub fn make_tdk_cga_capacitor(part_number: &str) -> Capacitor {
             size,
         },
         value_pf,
-        kind: CapacitorKind::MultiLayerChip,
+        kind: CapacitorKind::MultiLayerChip(dielectric),
         voltage,
-        dielectric,
         tolerance,
     }
 }
@@ -163,7 +138,7 @@ fn matching_parts() {
         let pf = map_part_number_to_pf(part);
         if (tolerance == CapacitorTolerance::TwentyPercent) &&
             (dielectric == DielectricCode::X7R) &&
-            (voltage == WorkingVoltage::V100) &&
+            (voltage == 100.) &&
             (size == SizeCode::I0805) &&
             (pf == 100.0 * 1000.0) {
             println!("Part {} tolerance {} dielectric {} voltage {} size {} value {}", part,

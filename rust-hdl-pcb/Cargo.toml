@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 enum-iterator = "0.6.0"
 url = "2.2.2"
+num-rational = "0.4.0"
