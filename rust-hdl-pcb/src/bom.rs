@@ -13,6 +13,6 @@ pub struct Supplier {
 
 #[derive(Clone, Debug)]
 pub struct Manufacturer {
-    pub manufacturer: String,
+    pub name: String,
     pub part_number: String,
 }

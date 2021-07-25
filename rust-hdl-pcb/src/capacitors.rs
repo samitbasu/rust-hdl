@@ -66,15 +66,15 @@ impl Display for DielectricCode {
     }
 }
 
-
-pub enum Kind {
-    Chip,
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum CapacitorKind {
+    MultiLayerChip,
     Tantalum,
     AluminumPolyLowESR,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Tolerance {
+pub enum CapacitorTolerance {
     QuarterPF,
     HalfPF,
     FivePercent,
@@ -82,14 +82,14 @@ pub enum Tolerance {
     TwentyPercent,
 }
 
-impl Display for Tolerance {
+impl Display for CapacitorTolerance {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Tolerance::QuarterPF => "0.25PF",
-            Tolerance::HalfPF => "0.5PF",
-            Tolerance::FivePercent => "5%",
-            Tolerance::TenPercent => "10%",
-            Tolerance::TwentyPercent => "20%"
+            CapacitorTolerance::QuarterPF => "0.25PF",
+            CapacitorTolerance::HalfPF => "0.5PF",
+            CapacitorTolerance::FivePercent => "5%",
+            CapacitorTolerance::TenPercent => "10%",
+            CapacitorTolerance::TwentyPercent => "20%"
         }.fmt(f)
     }
 }

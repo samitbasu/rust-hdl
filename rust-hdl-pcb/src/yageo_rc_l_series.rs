@@ -1,116 +1,140 @@
 use crate::bom::Manufacturer;
-use crate::circuit::Part;
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
-use crate::resistors::{PowerWatt, ResistanceValues, Tolerance};
+use crate::resistors::{PowerMilliWatt, ResistorTolerance, ResistorKind};
 use crate::smd::SizeCode;
+use crate::circuit::{Resistor, PartDetails};
+use std::fs::File;
 
-fn map_size_to_code(size: SizeCode) -> &'static str {
+fn map_part_number_to_size(part: &str) -> SizeCode {
+    match &part[2..=5] {
+        "0075" => SizeCode::I0075,
+        "0100" => SizeCode::I0100,
+        "0201" => SizeCode::I0201,
+        "0402" => SizeCode::I0402,
+        "0603" => SizeCode::I0603,
+        "0805" => SizeCode::I0805,
+        "1206" => SizeCode::I1206,
+        "1210" => SizeCode::I1210,
+        "1218" => SizeCode::I1218,
+        "2010" => SizeCode::I2010,
+        "2512" => SizeCode::I2512,
+        _ => panic!("Unsupported part number for Yageo RC-L series {}", part)
+    }
+}
+
+fn map_part_number_to_tolerance(part: &str) -> ResistorTolerance {
+    match &part[6..7] {
+        "B" => ResistorTolerance::TenthPercent,
+        "D" => ResistorTolerance::HalfPercent,
+        "F" => ResistorTolerance::OnePercent,
+        "J" => ResistorTolerance::FivePercent,
+        _ => panic!("Unsupported tolerance in Yageo FC L resistor part {}", part)
+    }
+}
+
+fn drop_char(txt: &str) -> &str {
+    let len = txt.len();
+    &txt[..(len-1)]
+}
+
+fn map_part_number_to_resistance_code(part: &str) -> &str {
+    drop_char(&part[11..])
+}
+
+fn map_part_number_to_resistance(part: &str) -> f64 {
+    let mut resistance = map_part_number_to_resistance_code(part).to_owned();
+    let mut multiplier = 1.0;
+    if resistance.contains("K") {
+        multiplier = 1.0e3;
+        resistance = resistance.replace("K", ".");
+    }
+    if resistance.contains("M") {
+        multiplier = 1.0e6;
+        resistance = resistance.replace("M", ".");
+    }
+    if resistance.contains("R") {
+        multiplier = 1.0;
+        resistance = resistance.replace("R", ".");
+    }
+    resistance.parse::<f64>().unwrap() * multiplier
+}
+
+fn power_rating(size: SizeCode) -> PowerMilliWatt {
     match size {
-        SizeCode::I0075 => "0075",
-        SizeCode::I0100 => "0100",
-        SizeCode::I0201 => "0201",
-        SizeCode::I0402 => "0402",
-        SizeCode::I0603 => "0603",
-        SizeCode::I0805 => "0805",
-        SizeCode::I1206 => "1206",
-        SizeCode::I1210 => "1210",
-        SizeCode::I1218 => "1218",
-        SizeCode::I2010 => "2010",
-        SizeCode::I2512 => "2512",
-        _ => "NONE",
+        SizeCode::I0075 => PowerMilliWatt::MW20,
+        SizeCode::I0100 => PowerMilliWatt::MW31P25,
+        SizeCode::I0201 => PowerMilliWatt::MW50,
+        SizeCode::I0402 => PowerMilliWatt::MW62P5,
+        SizeCode::I0603 => PowerMilliWatt::MW100,
+        SizeCode::I0805 => PowerMilliWatt::MW125,
+        SizeCode::I1206 => PowerMilliWatt::MW250,
+        SizeCode::I1210 => PowerMilliWatt::MW500,
+        SizeCode::I1218 => PowerMilliWatt::MW1000,
+        SizeCode::I2010 => PowerMilliWatt::MW750,
+        SizeCode::I2512 => PowerMilliWatt::MW1000,
+        _ => panic!("Unsupported size")
     }
-}
-
-fn map_tolerance_to_code(tol: Tolerance) -> &'static str {
-    match tol {
-        Tolerance::TenthPercent => "B",
-        Tolerance::HalfPercent => "D",
-        Tolerance::OnePercent => "F",
-        Tolerance::FivePercent => "J",
-    }
-}
-
-fn make_yageo_rc_l_series_part_number(
-    size: SizeCode,
-    tol: Tolerance,
-    value: ResistanceValues,
-) -> String {
-    format!(
-        "RC{size}{tolerance}R-07{value}L",
-        size = map_size_to_code(size),
-        tolerance = map_tolerance_to_code(tol),
-        value = format!("{:?}", value).replace("Ohm", "")
-    )
 }
 
 #[test]
 fn test_part_number_mapping() {
     // From the spec sheet example
-    assert_eq!(
-        make_yageo_rc_l_series_part_number(
-            SizeCode::I0402,
-            Tolerance::FivePercent,
-            ResistanceValues::Ohm100K
-        ),
-        "RC0402JR-07100KL"
-    );
+    let part_number = "RC0402JR-07100KL";
+    assert_eq!(map_part_number_to_size(part_number), SizeCode::I0402);
+    assert_eq!(map_part_number_to_tolerance(part_number), ResistorTolerance::FivePercent);
+    assert_eq!(map_part_number_to_resistance(part_number), 100e3);
 }
 
-fn power_rating(size: SizeCode) -> PowerWatt {
-    match size {
-        SizeCode::I0075 => PowerWatt::Fiftieth,
-        SizeCode::I0100 => PowerWatt::ThirtySecond,
-        SizeCode::I0201 => PowerWatt::Twentieth,
-        SizeCode::I0402 => PowerWatt::Sixteenth,
-        SizeCode::I0603 => PowerWatt::Tenth,
-        SizeCode::I0805 => PowerWatt::Eighth,
-        SizeCode::I1206 => PowerWatt::Quarter,
-        SizeCode::I1210 => PowerWatt::Half,
-        SizeCode::I1218 => PowerWatt::One,
-        SizeCode::I2010 => PowerWatt::ThreeQuarter,
-        SizeCode::I2512 => PowerWatt::One,
-        _ => panic!("Unsupported size")
+#[test]
+fn test_part_number_parses() {
+    use std::path::PathBuf;
+    use std::io::BufRead;
+
+    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    path.push("test");
+    path.push("yageo_rc_l_parts.txt");
+    let list = File::open(path).unwrap();
+    let lines = std::io::BufReader::new(list).lines();
+    for part in lines {
+        let part_number = part.unwrap();
+        let size = map_part_number_to_size(&part_number);
+        let tolerance = map_part_number_to_tolerance(&part_number);
+        let resistance = map_part_number_to_resistance(&part_number);
+        println!("Part {} -> {} {} {}", part_number, size, tolerance, resistance);
     }
 }
 
-pub fn make_yageo_rc_l_series_part(
-    size: SizeCode,
-    tol: Tolerance,
-    value: ResistanceValues,
-    power: Option<PowerWatt>,
-) -> Option<Part> {
-    let part_power = power_rating(size);
-    if let Some(required_power) = power {
-        return None;
+pub fn make_yageo_rc_l_resistor(part_number: &str) -> Resistor {
+    let size = map_part_number_to_size(part_number);
+    let tolerance = map_part_number_to_tolerance(part_number);
+    let value_ohms = map_part_number_to_resistance(part_number);
+    let value = map_part_number_to_resistance_code(part_number);
+    let power = power_rating(size);
+    let label = format!("{} {} {}",value,tolerance,power);
+    let manufacturer = Manufacturer {
+        name: "Yageo".to_string(),
+        part_number: part_number.to_owned()
+    };
+    let description = format!("Yageo RC-L Thick Film Resistor SMD {} {}", size, label);
+    Resistor {
+        details: PartDetails {
+            label,
+            manufacturer,
+            description,
+            comment: "".to_string(),
+            pins: vec![EPin::passive(1), EPin::passive(2)],
+            suppliers: vec![],
+            datasheet: Some(url::Url::parse("https://www.yageo.com/upload/media/product/productsearch/datasheet/rchip/PYu-RC_Group_51_RoHS_L_11.pdf").unwrap()),
+            designator: Designator {
+                kind: DesignatorKind::Resistor,
+                index: None,
+            },
+            size
+        },
+        value_ohms,
+        kind: ResistorKind::ThickFilmChip,
+        power,
+        tolerance,
     }
-    Some(Part {
-        label: format!(
-            "{:?} {} {} {}",
-            value,
-            tol.to_string(),
-            size.to_string(),
-            part_power.to_string()
-        )
-        .replace("Ohm", ""),
-        manufacturer: Manufacturer {
-            manufacturer: "Yageo".to_string(),
-            part_number: make_yageo_rc_l_series_part_number(size, tol, value),
-        },
-        description: format!(
-            "Yageo RC-L Thin Film Resistor SMD {:?} {} {:?} {}",
-            value,
-            tol.to_string(),
-            size,
-            part_power.to_string()
-        ),
-        comment: "".to_string(),
-        pins: vec![EPin::passive(1), EPin::passive(2)],
-        suppliers: vec![],
-        datasheet: None,
-        designator: Designator {
-            kind: DesignatorKind::Resistor,
-            index: None,
-        },
-    })
 }
