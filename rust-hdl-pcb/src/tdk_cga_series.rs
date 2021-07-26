@@ -1,5 +1,5 @@
 use crate::bom::Manufacturer;
-use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode, map_three_digit_cap_to_pf};
+use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode, map_three_digit_cap_to_pf, make_mlcc};
 use crate::capacitors;
 use crate::circuit::{Capacitor, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
@@ -71,26 +71,7 @@ pub fn make_tdk_cga_capacitor(part_number: &str) -> Capacitor {
         part_number: part_number.to_owned()
     };
     let description = format!("TDK CGA Series Automotive Grade MLCC Capacitor SMD {} {}", size, label);
-    Capacitor {
-        details: PartDetails {
-            label,
-            manufacturer,
-            description,
-            comment: "".to_string(),
-            pins: vec![EPin::passive(1), EPin::passive(2)],
-            suppliers: vec![],
-            datasheet: None,
-            designator: Designator {
-                kind: DesignatorKind::Capacitor,
-                index: None,
-            },
-            size,
-        },
-        value_pf,
-        kind: CapacitorKind::MultiLayerChip(dielectric),
-        voltage,
-        tolerance,
-    }
+    make_mlcc(label, manufacturer, description, size, value_pf, dielectric, voltage, tolerance)
 }
 
 

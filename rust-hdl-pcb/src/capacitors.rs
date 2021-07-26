@@ -1,5 +1,17 @@
 use std::fmt::{Display, Formatter, Pointer};
 use std::str::FromStr;
+use crate::bom::Manufacturer;
+use crate::smd::SizeCode;
+use crate::circuit::{Capacitor, PartDetails};
+use crate::epin::EPin;
+use crate::designator::{Designator, DesignatorKind};
+
+pub fn map_three_digit_cap_to_uf(uf: &str) -> f64 {
+    let uf_tens = &uf[0..1].parse::<f64>().unwrap();
+    let uf_ones = &uf[1..2].parse::<f64>().unwrap();
+    let uf_exp = &uf[2..3].parse::<f64>().unwrap();
+    (uf_tens * 10.0 + uf_ones) * 10.0_f64.powf(*uf_exp)
+}
 
 pub fn map_three_digit_cap_to_pf(pf: &str) -> f64 {
     return if &pf[1..2] == "R" {
@@ -52,7 +64,7 @@ impl Display for DielectricCode {
 pub enum CapacitorKind {
     MultiLayerChip(DielectricCode),
     Tantalum,
-    AluminumPolyLowESR,
+    AluminumPolyLowESR(i32),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -99,5 +111,36 @@ pub fn map_pf_to_label(value: f64) -> String {
     } else {
         // mF case??
         format!("{}mF", print_short(value / 1e9))
+    }
+}
+
+pub fn make_passive_two_pin(label: String, manufacturer: Manufacturer, description: String, size: SizeCode) -> PartDetails {
+    PartDetails {
+        label,
+        manufacturer,
+        description,
+        comment: "".to_string(),
+        pins: vec![EPin::passive(1), EPin::passive(2)],
+        suppliers: vec![],
+        designator: Designator { kind: DesignatorKind::Capacitor, index: None },
+        size
+    }
+}
+
+pub fn make_mlcc(label: String,
+                 manufacturer: Manufacturer,
+                 description: String,
+                 size: SizeCode,
+                 value_pf: f64,
+                 dielectric: DielectricCode,
+                 voltage: f64,
+                 tolerance: CapacitorTolerance
+) -> Capacitor {
+    Capacitor {
+        details: make_passive_two_pin(label, manufacturer, description, size),
+        value_pf,
+        kind: CapacitorKind::MultiLayerChip(dielectric),
+        voltage,
+        tolerance
     }
 }

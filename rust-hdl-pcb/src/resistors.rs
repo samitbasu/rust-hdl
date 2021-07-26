@@ -1,50 +1,62 @@
 use std::fmt::{Display, Formatter};
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum ResistorTempco {
-    Ppm15degC,
-    Ppm25degC,
-    Ppm50degC,
-}
-
-impl Display for ResistorTempco {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ResistorTempco::Ppm15degC => "15 ppm/C",
-            ResistorTempco::Ppm25degC => "25 ppm/C",
-            ResistorTempco::Ppm50degC => "50 ppm/C",
-        }.fmt(f)
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum ResistorTolerance {
-    TenthPercent,
-    HalfPercent,
-    OnePercent,
-    TwoPercent,
-    FivePercent,
-}
-
-impl Display for ResistorTolerance {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ResistorTolerance::TenthPercent => "0.1%",
-            ResistorTolerance::HalfPercent => "0.5%",
-            ResistorTolerance::OnePercent => "1%",
-            ResistorTolerance::TwoPercent => "2%",
-            ResistorTolerance::FivePercent => "5%",
-        }
-        .fmt(f)
-    }
-}
+use crate::bom::Manufacturer;
+use crate::smd::SizeCode;
+use crate::circuit::Resistor;
+use crate::capacitors::make_passive_two_pin;
 
 pub type PowerWatt = num_rational::Rational32;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ResistorKind {
     ThinFilmChip,
     ThickFilmChip,
-    WireWound,
+    MetalFilm,
     Carbon
+}
+
+pub fn map_resistance_to_string(value: f64) -> String {
+    if value < 1e3 {
+        format!("{:.3}", value).replace(".", "R")
+    } else if value < 1e6 {
+        format!("{:.3}", value / 1e3).replace(".", "K")
+    } else {
+        format!("{:.3}", value / 1e6).replace(".", "M")
+    }
+}
+
+pub fn map_resistance_letter_code_to_value(resistance: &str) -> f64 {
+    let mut resistance = resistance.to_owned();
+    let mut multiplier = 1.0;
+    if resistance.contains("K") {
+        multiplier = 1.0e3;
+        resistance = resistance.replace("K", ".");
+    }
+    if resistance.contains("M") {
+        multiplier = 1.0e6;
+        resistance = resistance.replace("M", ".");
+    }
+    if resistance.contains("R") {
+        multiplier = 1.0;
+        resistance = resistance.replace("R", ".");
+    }
+    resistance.parse::<f64>().unwrap() * multiplier
+}
+
+pub fn make_chip_resistor(label: String,
+                      manufacturer: Manufacturer,
+                      description: String,
+                      size: SizeCode,
+                      value_ohms: f64,
+                      power_watt: PowerWatt,
+                      tolerance: f64,
+                      tempco: Option<f64>,
+                      kind: ResistorKind) -> Resistor {
+    Resistor {
+        details: make_passive_two_pin(label, manufacturer, description, size),
+        value_ohms,
+        kind,
+        power_watt,
+        tolerance,
+        tempco
+    }
 }

@@ -2,7 +2,7 @@ use crate::bom::{Manufacturer, Supplier};
 use crate::designator::Designator;
 use crate::epin::{EPin, InputRange, OutputRange};
 use crate::capacitors::{CapacitorKind, DielectricCode, CapacitorTolerance};
-use crate::resistors::{PowerWatt, ResistorTolerance, ResistorKind, ResistorTempco};
+use crate::resistors::{PowerWatt, ResistorKind};
 use crate::smd::SizeCode;
 
 #[derive(Clone, Debug)]
@@ -13,7 +13,6 @@ pub struct PartDetails {
     pub comment: String,
     pub pins: Vec<EPin>,
     pub suppliers: Vec<Supplier>,
-    pub datasheet: Option<url::Url>,
     pub designator: Designator,
     pub size: SizeCode,
 }
@@ -33,8 +32,8 @@ pub struct Resistor {
     pub value_ohms: f64,
     pub kind: ResistorKind,
     pub power_watt: PowerWatt,
-    pub tolerance: ResistorTolerance,
-    pub tempco: Option<ResistorTempco>,
+    pub tolerance: f64,
+    pub tempco: Option<f64>,
 }
 
 pub struct Net {

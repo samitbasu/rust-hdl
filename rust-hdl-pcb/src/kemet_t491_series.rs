@@ -42,8 +42,9 @@ pub fn make_kemet_t491_capacitor(part_number: &str) -> Capacitor {
     let tolerance = map_part_number_to_tolerance(part_number);
     let value = map_pf_to_label(value_pf);
     let label = format!("{} {} {}V Ta", value, tolerance, voltage);
+    let size = SizeCode::I1206;
     let description = format!("Kemet T491 Series MnO2 Tantalum Capacitor SMD {} {}",
-        SizeCode::I1206, label);
+        size, label);
     Capacitor {
         details: PartDetails {
             label,
@@ -53,9 +54,8 @@ pub fn make_kemet_t491_capacitor(part_number: &str) -> Capacitor {
             comment: "".to_string(),
             pins: vec![EPin::passive(1), EPin::passive(2)],
             suppliers: vec![],
-            datasheet: Some(url::Url::parse("https://content.kemet.com/datasheets/KEM_T2005_T491.pdf").unwrap()),
             designator: Designator { kind: DesignatorKind::Capacitor, index: None },
-            size: SizeCode::I1206
+            size,
         },
         value_pf,
         kind: CapacitorKind::Tantalum,

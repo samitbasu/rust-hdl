@@ -1,5 +1,5 @@
 use crate::smd::SizeCode;
-use crate::capacitors::{DielectricCode, map_three_digit_cap_to_pf, CapacitorTolerance, map_pf_to_label, CapacitorKind};
+use crate::capacitors::{DielectricCode, map_three_digit_cap_to_pf, CapacitorTolerance, map_pf_to_label, CapacitorKind, make_mlcc};
 use crate::circuit::{Capacitor, PartDetails};
 use crate::bom::Manufacturer;
 use crate::designator::{Designator, DesignatorKind};
@@ -57,22 +57,5 @@ pub fn make_avx_capacitor(part_number: &str) -> Capacitor {
         part_number: part_number.to_owned()
     };
     let description = format!("AVX X7R Series MLCC Capacitor SMD {} {}", size, label);
-    let datasheet = Some(url::Url::parse("https://datasheets.avx.com/X7RDielectric.pdf").unwrap());
-    Capacitor {
-        details: PartDetails {
-            label,
-            manufacturer,
-            description,
-            comment: "".to_string(),
-            pins: vec![EPin::passive(1), EPin::passive(2)],
-            suppliers: vec![],
-            datasheet,
-            designator: Designator { kind: DesignatorKind::Capacitor, index: None },
-            size
-        },
-        value_pf,
-        kind: CapacitorKind::MultiLayerChip(dielectric),
-        voltage,
-        tolerance
-    }
+    make_mlcc(label, manufacturer, description, size, value_pf, dielectric, voltage, tolerance)
 }

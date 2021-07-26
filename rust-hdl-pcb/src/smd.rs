@@ -2,7 +2,21 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use std::string::ParseError;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
+pub struct TolerancedDim {
+    pub nominal_mm: f64,
+    pub tolerance_mm: f64,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct PTHResistor {
+    pub body_length: TolerancedDim,
+    pub body_diameter: TolerancedDim,
+    pub lead_length: TolerancedDim,
+    pub lead_diameter: TolerancedDim,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum SizeCode {
     I0075,
     I0100,
@@ -20,6 +34,8 @@ pub enum SizeCode {
     I2220,
     I2512,
     I3025,
+    PTHResistor(PTHResistor),
+    Custom(String),
 }
 
 impl FromStr for SizeCode {
@@ -43,7 +59,7 @@ impl FromStr for SizeCode {
             "1825" => SizeCode::I1825,
             "2220" => SizeCode::I2220,
             "3025" => SizeCode::I3025,
-            _ => panic!("Cannot parse {} as size code", s)
+            _ => SizeCode::Custom(s.to_owned()),
         })
     }
 }
@@ -67,6 +83,8 @@ impl Display for SizeCode {
             SizeCode::I1825 => "1825",
             SizeCode::I2220 => "2220",
             SizeCode::I3025 => "3025",
+            SizeCode::PTHResistor(p) => "PTH",
+            SizeCode::Custom(s) => s,
         }
         .fmt(f)
     }

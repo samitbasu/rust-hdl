@@ -1,5 +1,5 @@
 use crate::smd::SizeCode;
-use crate::capacitors::{DielectricCode, map_three_digit_cap_to_pf, CapacitorTolerance, map_pf_to_label, CapacitorKind};
+use crate::capacitors::{DielectricCode, map_three_digit_cap_to_pf, CapacitorTolerance, map_pf_to_label, CapacitorKind, make_mlcc};
 use crate::circuit::{Capacitor, PartDetails};
 use crate::bom::Manufacturer;
 use crate::designator::{Designator, DesignatorKind};
@@ -52,22 +52,5 @@ pub fn make_yageo_cc_series_cap(part_number: &str) -> Capacitor {
         part_number: part_number.to_owned()
     };
     let description = format!("Yageo commercial CC Series MLCC Capacitor SMD {} {}", size, label);
-    let datasheet = Some(url::Url::parse("https://www.yageo.com/upload/media/product/productsearch/datasheet/mlcc/UPY-GPHC_X5R_4V-to-50V_26.pdf").unwrap());
-    Capacitor {
-        details: PartDetails {
-            label,
-            manufacturer,
-            description,
-            comment: "".to_string(),
-            pins: vec![EPin::passive(1), EPin::passive(2)],
-            suppliers: vec![],
-            datasheet,
-            designator: Designator { kind: DesignatorKind::Capacitor, index: None },
-            size
-        },
-        value_pf,
-        kind: CapacitorKind::MultiLayerChip(dielectric),
-        voltage,
-        tolerance
-    }
+    make_mlcc(label, manufacturer, description, size, value_pf, dielectric, voltage, tolerance)
 }
