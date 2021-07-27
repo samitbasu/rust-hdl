@@ -1,10 +1,11 @@
-use std::fmt::{Display, Formatter, Pointer};
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use crate::bom::Manufacturer;
 use crate::smd::SizeCode;
 use crate::circuit::{Capacitor, PartDetails};
 use crate::epin::EPin;
 use crate::designator::{Designator, DesignatorKind};
+use crate::utils::pin_list;
 
 pub fn map_three_digit_cap_to_uf(uf: &str) -> f64 {
     let uf_tens = &uf[0..1].parse::<f64>().unwrap();
@@ -120,7 +121,7 @@ pub fn make_passive_two_pin(label: String, manufacturer: Manufacturer, descripti
         manufacturer,
         description,
         comment: "".to_string(),
-        pins: vec![EPin::passive(1), EPin::passive(2)],
+        pins: pin_list(vec![EPin::passive(), EPin::passive()]),
         suppliers: vec![],
         designator: Designator { kind: DesignatorKind::Capacitor, index: None },
         size

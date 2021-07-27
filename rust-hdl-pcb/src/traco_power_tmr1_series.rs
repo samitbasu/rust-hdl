@@ -1,8 +1,5 @@
 use enum_iterator::IntoEnumIterator;
 
-use crate::bom::Supplier;
-use crate::epin::{InputRange, OutputRange};
-
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum InputType {
     Nominal05,

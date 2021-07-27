@@ -1,12 +1,8 @@
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 
-use url::Url;
-
 use crate::bom::Manufacturer;
-use crate::circuit::{PartDetails, Resistor};
-use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, PinKind};
+use crate::circuit::{Resistor};
 use crate::resistors::{make_chip_resistor, PowerWatt, ResistorKind, map_resistance_letter_code_to_value, map_resistance_to_string};
 use crate::smd::{SizeCode, PTHResistor, TolerancedDim};
 use crate::utils;

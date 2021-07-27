@@ -1,9 +1,11 @@
 use crate::bom::{Manufacturer, Supplier};
 use crate::designator::Designator;
-use crate::epin::{EPin, InputRange, OutputRange};
-use crate::capacitors::{CapacitorKind, DielectricCode, CapacitorTolerance};
+use crate::epin::{EPin};
+use crate::capacitors::{CapacitorTolerance, CapacitorKind};
 use crate::resistors::{PowerWatt, ResistorKind};
 use crate::smd::SizeCode;
+use crate::diode::DiodeKind;
+use std::collections::BTreeMap;
 
 #[derive(Clone, Debug)]
 pub struct PartDetails {
@@ -11,7 +13,7 @@ pub struct PartDetails {
     pub manufacturer: Manufacturer,
     pub description: String,
     pub comment: String,
-    pub pins: Vec<EPin>,
+    pub pins: BTreeMap<u64, EPin>,
     pub suppliers: Vec<Supplier>,
     pub designator: Designator,
     pub size: SizeCode,
@@ -36,6 +38,22 @@ pub struct Resistor {
     pub tempco: Option<f64>,
 }
 
+#[derive(Clone, Debug)]
+pub struct Diode {
+    pub details: PartDetails,
+    pub forward_drop_volts: f64,
+    pub kind: DiodeKind,
+}
+
+#[derive(Clone, Debug)]
+pub struct Regulator {
+    pub details: PartDetails,
+    pub input_min_voltage: f64,
+    pub input_max_voltage: f64,
+    pub output_nominal_voltage: f64,
+    pub output_max_current_ma: f64
+}
+
 pub struct Net {
     source_pin: u64,
     dest_pin: u64,
@@ -45,12 +63,14 @@ pub struct Net {
 pub enum CircuitNode {
     Capacitor(Capacitor),
     Resistor(Resistor),
+    Diode(Diode),
+    Regulator(Regulator),
     IntegratedCircuit(PartDetails),
     Circuit(Box<Circuit>),
 }
 
 pub struct Circuit {
-    pins: Vec<EPin>,
+    pins: BTreeMap<u64, EPin>,
     nodes: Vec<CircuitNode>,
     net: Vec<Net>,
 }

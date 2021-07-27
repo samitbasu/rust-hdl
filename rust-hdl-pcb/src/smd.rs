@@ -34,6 +34,7 @@ pub enum SizeCode {
     I2220,
     I2512,
     I3025,
+    SOT223,
     PTHResistor(PTHResistor),
     Custom(String),
 }
@@ -59,6 +60,7 @@ impl FromStr for SizeCode {
             "1825" => SizeCode::I1825,
             "2220" => SizeCode::I2220,
             "3025" => SizeCode::I3025,
+            "SOT223" => SizeCode::SOT223,
             _ => SizeCode::Custom(s.to_owned()),
         })
     }
@@ -83,7 +85,8 @@ impl Display for SizeCode {
             SizeCode::I1825 => "1825",
             SizeCode::I2220 => "2220",
             SizeCode::I3025 => "3025",
-            SizeCode::PTHResistor(p) => "PTH",
+            SizeCode::SOT223 => "SOT223",
+            SizeCode::PTHResistor(_p) => "PTH",
             SizeCode::Custom(s) => s,
         }
         .fmt(f)

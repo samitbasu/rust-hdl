@@ -1,5 +1,3 @@
-use crate::circuit::Circuit;
-use crate::designator::Designator;
 use crate::resistors::{PowerWatt, ResistorKind};
 use crate::smd::SizeCode;
 use crate::yageo_resistor_series::make_yageo_series_resistor;
@@ -13,6 +11,11 @@ use crate::yageo_cc_caps::make_yageo_cc_series_cap;
 use crate::murata_mlcc_caps::{make_murata_capacitor};
 use crate::panasonic_era_resistors::{make_panasonic_resistor};
 use crate::nippon_electrolytic_caps::make_nippon_hxd_capacitor;
+use crate::wurth_led::make_wurth_led;
+use crate::diode::DiodeKind;
+use crate::epin::{PinKind, PassiveKind, SignalKind};
+use crate::ldo::{make_zldo1117g_regulator, make_ti_tps_7b84_regulator, make_mcp_1799_regulator, make_on_semi_ncv33375_regulator};
+use crate::analog_devices::make_lt3092_current_source;
 
 mod bom;
 mod capacitors;
@@ -35,6 +38,10 @@ mod yageo_cc_caps;
 mod panasonic_era_resistors;
 mod utils;
 mod nippon_electrolytic_caps;
+mod wurth_led;
+mod diode;
+mod ldo;
+mod analog_devices;
 
 #[test]
 fn test_yageo_rc_68k() {
@@ -210,4 +217,132 @@ fn test_yageo_pth_resistors() {
     assert_eq!(r.tolerance, 5.);
     assert_eq!(r.power_watt, PowerWatt::new(1, 1));
     assert_eq!(r.value_ohms, 10.0);
+}
+
+#[test]
+fn test_green_led() {
+    let d = make_wurth_led("150060GS75000");
+    assert_eq!(d.kind, DiodeKind::LED("Green".into()));
+    assert_eq!(d.forward_drop_volts, 3.2);
+    assert_eq!(d.details.pins.len(), 2);
+    assert_eq!(d.details.pins[&1].kind, PinKind::Passive(PassiveKind::Negative));
+    assert_eq!(d.details.pins[&2].kind, PinKind::Passive(PassiveKind::Positive));
+}
+
+#[test]
+fn test_zldo_regulator() {
+    let v = make_zldo1117g_regulator("ZLDO1117G50TA");
+    assert_eq!(v.input_max_voltage, 18.0);
+    assert_eq!(v.output_nominal_voltage, 5.0);
+    assert_eq!(v.details.pins.len(), 4);
+    assert_eq!(v.details.pins[&1].kind, PinKind::PowerReturn);
+    assert_eq!(v.details.pins[&2].kind, PinKind::PowerSource);
+    assert_eq!(v.details.pins[&3].kind, PinKind::PowerSink);
+    assert_eq!(v.details.pins[&4].kind, PinKind::PowerSource);
+    let v = make_zldo1117g_regulator("ZLDO1117G33TA");
+    assert_eq!(v.input_max_voltage, 18.0);
+    assert_eq!(v.output_nominal_voltage, 3.3);
+    assert_eq!(v.details.pins.len(), 4);
+    assert_eq!(v.details.pins[&1].kind, PinKind::PowerReturn);
+    assert_eq!(v.details.pins[&2].kind, PinKind::PowerSource);
+    assert_eq!(v.details.pins[&3].kind, PinKind::PowerSink);
+    assert_eq!(v.details.pins[&4].kind, PinKind::PowerSource);
+}
+
+#[test]
+fn test_ti_tps_regulator() {
+    let v = make_ti_tps_7b84_regulator("TPS7B8450QDCYRQ1");
+    assert_eq!(v.input_max_voltage, 42.0);
+    assert_eq!(v.output_nominal_voltage, 5.0);
+    assert_eq!(v.output_max_current_ma, 150.0);
+    assert_eq!(v.details.pins[&1].kind, PinKind::PowerSink);
+    assert_eq!(v.details.pins[&1].name, "IN");
+    assert_eq!(v.details.pins[&2].kind, PinKind::Input(SignalKind::Any));
+    assert_eq!(v.details.pins[&2].name, "EN");
+    assert_eq!(v.details.pins[&3].kind, PinKind::PowerSource);
+    assert_eq!(v.details.pins[&3].name, "OUT");
+    assert_eq!(v.details.pins[&4].kind, PinKind::PowerReturn);
+    assert_eq!(v.details.pins[&4].name, "GND");
+    let v = make_ti_tps_7b84_regulator("TPS7B8433QDCYRQ1");
+    assert_eq!(v.input_max_voltage, 42.0);
+    assert_eq!(v.output_nominal_voltage, 3.3);
+    assert_eq!(v.output_max_current_ma, 150.0);
+    assert_eq!(v.details.pins[&1].kind, PinKind::PowerSink);
+    assert_eq!(v.details.pins[&1].name, "IN");
+    assert_eq!(v.details.pins[&2].kind, PinKind::Input(SignalKind::Any));
+    assert_eq!(v.details.pins[&2].name, "EN");
+    assert_eq!(v.details.pins[&3].kind, PinKind::PowerSource);
+    assert_eq!(v.details.pins[&3].name, "OUT");
+    assert_eq!(v.details.pins[&4].kind, PinKind::PowerReturn);
+    assert_eq!(v.details.pins[&4].name, "GND");
+}
+
+#[test]
+fn test_on_semi_regulators() {
+    let v = make_on_semi_ncv33375_regulator("NCV33375ST3.3T3G");
+    assert_eq!(v.input_max_voltage, 13.0);
+    assert_eq!(v.output_nominal_voltage, 3.3);
+    assert_eq!(v.output_max_current_ma, 300.0);
+    assert_eq!(v.details.pins[&1].kind, PinKind::PowerSink);
+    assert_eq!(v.details.pins[&1].name, "VIN");
+    assert_eq!(v.details.pins[&2].kind, PinKind::Input(SignalKind::Any));
+    assert_eq!(v.details.pins[&2].name, "ON/OFF");
+    assert_eq!(v.details.pins[&3].kind, PinKind::PowerSource);
+    assert_eq!(v.details.pins[&3].name, "VOUT");
+    assert_eq!(v.details.pins[&4].kind, PinKind::PowerReturn);
+    assert_eq!(v.details.pins[&4].name, "GND");
+    let v = make_on_semi_ncv33375_regulator("NCV33375ST1.8T3G");
+    assert_eq!(v.input_max_voltage, 13.0);
+    assert_eq!(v.output_nominal_voltage, 1.8);
+    assert_eq!(v.output_max_current_ma, 300.0);
+    assert_eq!(v.details.pins[&1].kind, PinKind::PowerSink);
+    assert_eq!(v.details.pins[&1].name, "VIN");
+    assert_eq!(v.details.pins[&2].kind, PinKind::Input(SignalKind::Any));
+    assert_eq!(v.details.pins[&2].name, "ON/OFF");
+    assert_eq!(v.details.pins[&3].kind, PinKind::PowerSource);
+    assert_eq!(v.details.pins[&3].name, "VOUT");
+    assert_eq!(v.details.pins[&4].kind, PinKind::PowerReturn);
+    assert_eq!(v.details.pins[&4].name, "GND");
+}
+
+#[test]
+fn test_microchip_regulators() {
+    let v = make_mcp_1799_regulator("MCP1799T-5002H/DB");
+    assert_eq!(v.input_max_voltage, 45.0);
+    assert_eq!(v.output_nominal_voltage, 5.0);
+    assert_eq!(v.output_max_current_ma, 80.0);
+    assert_eq!(v.details.pins[&1].kind, PinKind::PowerSink);
+    assert_eq!(v.details.pins[&1].name, "VIN");
+    assert_eq!(v.details.pins[&2].kind, PinKind::PowerReturn);
+    assert_eq!(v.details.pins[&2].name, "GND_1");
+    assert_eq!(v.details.pins[&3].kind, PinKind::PowerSource);
+    assert_eq!(v.details.pins[&3].name, "VOUT");
+    assert_eq!(v.details.pins[&4].kind, PinKind::PowerReturn);
+    assert_eq!(v.details.pins[&4].name, "GND_2");
+    let v = make_mcp_1799_regulator("MCP1799T-3302H/DB");
+    assert_eq!(v.input_max_voltage, 45.0);
+    assert_eq!(v.output_nominal_voltage, 3.3);
+    assert_eq!(v.output_max_current_ma, 80.0);
+    assert_eq!(v.details.pins[&1].kind, PinKind::PowerSink);
+    assert_eq!(v.details.pins[&1].name, "VIN");
+    assert_eq!(v.details.pins[&2].kind, PinKind::PowerReturn);
+    assert_eq!(v.details.pins[&2].name, "GND_1");
+    assert_eq!(v.details.pins[&3].kind, PinKind::PowerSource);
+    assert_eq!(v.details.pins[&3].name, "VOUT");
+    assert_eq!(v.details.pins[&4].kind, PinKind::PowerReturn);
+    assert_eq!(v.details.pins[&4].name, "GND_2");
+}
+
+#[test]
+fn test_lt3092() {
+    let u = make_lt3092_current_source("LT3092EST#PBF");
+    assert_eq!(u.pins.len(), 4);
+    assert_eq!(u.pins[&1].kind, PinKind::Input(SignalKind::Any));
+    assert_eq!(u.pins[&1].name, "SET");
+    assert_eq!(u.pins[&2].kind, PinKind::PowerSource);
+    assert_eq!(u.pins[&2].name, "OUT_1");
+    assert_eq!(u.pins[&3].kind, PinKind::PowerSink);
+    assert_eq!(u.pins[&3].name, "IN");
+    assert_eq!(u.pins[&4].kind, PinKind::PowerSource);
+    assert_eq!(u.pins[&4].name, "OUT_2");
 }

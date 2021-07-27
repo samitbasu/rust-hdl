@@ -1,6 +1,6 @@
 use crate::circuit::Capacitor;
 use crate::smd::SizeCode;
-use crate::capacitors::{CapacitorTolerance, map_three_digit_cap_to_pf, DielectricCode, make_mlcc, map_pf_to_label, CapacitorKind};
+use crate::capacitors::{CapacitorTolerance, map_three_digit_cap_to_pf, DielectricCode, make_mlcc, map_pf_to_label};
 use crate::bom::Manufacturer;
 
 fn make_murata_grt_188r61h_capacitor(part_number: &str) -> Capacitor {

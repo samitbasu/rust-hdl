@@ -1,9 +1,10 @@
 use crate::circuit::{Capacitor, PartDetails};
-use crate::capacitors::{DielectricCode, map_three_digit_cap_to_pf, CapacitorTolerance, CapacitorKind, map_pf_to_label};
+use crate::capacitors::{map_three_digit_cap_to_pf, CapacitorTolerance, CapacitorKind, map_pf_to_label};
 use crate::bom::Manufacturer;
 use crate::designator::{Designator, DesignatorKind};
 use crate::smd::SizeCode;
 use crate::epin::EPin;
+use crate::utils::pin_list;
 
 
 fn map_part_number_to_pf(part_number: &str) -> f64 {
@@ -52,7 +53,7 @@ pub fn make_kemet_t491_capacitor(part_number: &str) -> Capacitor {
                 part_number: part_number.to_owned() },
             description,
             comment: "".to_string(),
-            pins: vec![EPin::passive(1), EPin::passive(2)],
+            pins: pin_list(vec![EPin::passive_pos(), EPin::passive_neg()]),
             suppliers: vec![],
             designator: Designator { kind: DesignatorKind::Capacitor, index: None },
             size,

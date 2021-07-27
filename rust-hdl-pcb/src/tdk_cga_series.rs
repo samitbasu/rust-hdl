@@ -1,9 +1,7 @@
 use crate::bom::Manufacturer;
-use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode, map_three_digit_cap_to_pf, make_mlcc};
+use crate::capacitors::{CapacitorTolerance, DielectricCode, map_three_digit_cap_to_pf, make_mlcc};
 use crate::capacitors;
-use crate::circuit::{Capacitor, PartDetails};
-use crate::designator::{Designator, DesignatorKind};
-use crate::epin::EPin;
+use crate::circuit::{Capacitor};
 use crate::smd::SizeCode;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {

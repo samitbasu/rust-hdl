@@ -1,4 +1,3 @@
-use std::fmt::{Display, Formatter};
 use crate::bom::Manufacturer;
 use crate::smd::SizeCode;
 use crate::circuit::Resistor;
@@ -11,7 +10,6 @@ pub enum ResistorKind {
     ThinFilmChip,
     ThickFilmChip,
     MetalFilm,
-    Carbon
 }
 
 pub fn map_resistance_to_string(value: f64) -> String {
