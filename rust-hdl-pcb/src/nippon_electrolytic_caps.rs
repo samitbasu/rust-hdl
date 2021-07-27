@@ -86,6 +86,7 @@ pub fn make_nippon_hxd_capacitor(part_number: &str) -> Capacitor {
             part_number: part_number.to_owned() },
             description,
             comment: "".to_string(),
+            hide_pin_designators: true,
             pins: pin_list(vec![EPin::passive_pos(), EPin::passive_neg()]),
             suppliers: vec![],
             designator: Designator{ kind: DesignatorKind::Capacitor, index: None},

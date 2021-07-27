@@ -13,9 +13,13 @@ use crate::panasonic_era_resistors::{make_panasonic_resistor};
 use crate::nippon_electrolytic_caps::make_nippon_hxd_capacitor;
 use crate::wurth_led::make_wurth_led;
 use crate::diode::DiodeKind;
-use crate::epin::{PinKind, PassiveKind, SignalKind};
+use crate::epin::{PinKind, EPin};
 use crate::ldo::{make_zldo1117g_regulator, make_ti_tps_7b84_regulator, make_mcp_1799_regulator, make_on_semi_ncv33375_regulator};
 use crate::analog_devices::make_lt3092_current_source;
+use crate::inductors::make_ty_brl_series;
+use crate::lvc_one_gate::{make_lvc_one_gate};
+use crate::circuit::{LogicSignalStandard, LogicFunction};
+use crate::sn74_series_logic::{make_sn74hct541, make_sn74_series};
 
 mod bom;
 mod capacitors;
@@ -42,6 +46,8 @@ mod wurth_led;
 mod diode;
 mod ldo;
 mod analog_devices;
+mod lvc_one_gate;
+mod sn74_series_logic;
 
 #[test]
 fn test_yageo_rc_68k() {
@@ -225,8 +231,8 @@ fn test_green_led() {
     assert_eq!(d.kind, DiodeKind::LED("Green".into()));
     assert_eq!(d.forward_drop_volts, 3.2);
     assert_eq!(d.details.pins.len(), 2);
-    assert_eq!(d.details.pins[&1].kind, PinKind::Passive(PassiveKind::Negative));
-    assert_eq!(d.details.pins[&2].kind, PinKind::Passive(PassiveKind::Positive));
+    assert_eq!(d.details.pins[&1].kind, PinKind::PassiveNeg);
+    assert_eq!(d.details.pins[&2].kind, PinKind::PassivePos);
 }
 
 #[test]
@@ -257,7 +263,7 @@ fn test_ti_tps_regulator() {
     assert_eq!(v.output_max_current_ma, 150.0);
     assert_eq!(v.details.pins[&1].kind, PinKind::PowerSink);
     assert_eq!(v.details.pins[&1].name, "IN");
-    assert_eq!(v.details.pins[&2].kind, PinKind::Input(SignalKind::Any));
+    assert_eq!(v.details.pins[&2].kind, PinKind::Input);
     assert_eq!(v.details.pins[&2].name, "EN");
     assert_eq!(v.details.pins[&3].kind, PinKind::PowerSource);
     assert_eq!(v.details.pins[&3].name, "OUT");
@@ -269,7 +275,7 @@ fn test_ti_tps_regulator() {
     assert_eq!(v.output_max_current_ma, 150.0);
     assert_eq!(v.details.pins[&1].kind, PinKind::PowerSink);
     assert_eq!(v.details.pins[&1].name, "IN");
-    assert_eq!(v.details.pins[&2].kind, PinKind::Input(SignalKind::Any));
+    assert_eq!(v.details.pins[&2].kind, PinKind::Input);
     assert_eq!(v.details.pins[&2].name, "EN");
     assert_eq!(v.details.pins[&3].kind, PinKind::PowerSource);
     assert_eq!(v.details.pins[&3].name, "OUT");
@@ -285,7 +291,7 @@ fn test_on_semi_regulators() {
     assert_eq!(v.output_max_current_ma, 300.0);
     assert_eq!(v.details.pins[&1].kind, PinKind::PowerSink);
     assert_eq!(v.details.pins[&1].name, "VIN");
-    assert_eq!(v.details.pins[&2].kind, PinKind::Input(SignalKind::Any));
+    assert_eq!(v.details.pins[&2].kind, PinKind::Input);
     assert_eq!(v.details.pins[&2].name, "ON/OFF");
     assert_eq!(v.details.pins[&3].kind, PinKind::PowerSource);
     assert_eq!(v.details.pins[&3].name, "VOUT");
@@ -297,7 +303,7 @@ fn test_on_semi_regulators() {
     assert_eq!(v.output_max_current_ma, 300.0);
     assert_eq!(v.details.pins[&1].kind, PinKind::PowerSink);
     assert_eq!(v.details.pins[&1].name, "VIN");
-    assert_eq!(v.details.pins[&2].kind, PinKind::Input(SignalKind::Any));
+    assert_eq!(v.details.pins[&2].kind, PinKind::Input);
     assert_eq!(v.details.pins[&2].name, "ON/OFF");
     assert_eq!(v.details.pins[&3].kind, PinKind::PowerSource);
     assert_eq!(v.details.pins[&3].name, "VOUT");
@@ -337,7 +343,7 @@ fn test_microchip_regulators() {
 fn test_lt3092() {
     let u = make_lt3092_current_source("LT3092EST#PBF");
     assert_eq!(u.pins.len(), 4);
-    assert_eq!(u.pins[&1].kind, PinKind::Input(SignalKind::Any));
+    assert_eq!(u.pins[&1].kind, PinKind::Input);
     assert_eq!(u.pins[&1].name, "SET");
     assert_eq!(u.pins[&2].kind, PinKind::PowerSource);
     assert_eq!(u.pins[&2].name, "OUT_1");
@@ -345,4 +351,134 @@ fn test_lt3092() {
     assert_eq!(u.pins[&3].name, "IN");
     assert_eq!(u.pins[&4].kind, PinKind::PowerSource);
     assert_eq!(u.pins[&4].name, "OUT_2");
+}
+
+#[test]
+fn test_brl() {
+    let l = make_ty_brl_series("BRL3225T101K");
+    assert_eq!(l.details.size, SizeCode::I1210);
+    assert_eq!(l.details.pins.len(), 2);
+    assert_eq!(l.max_current_milliamps, 250.0);
+    assert_eq!(l.dc_resistance_ohms, 2.5);
+    assert_eq!(l.value_microhenry, 100.0);
+    assert_eq!(l.details.pins[&1].kind, PinKind::Passive);
+    assert_eq!(l.details.pins[&2].kind, PinKind::Passive);
+}
+
+#[test]
+fn test_xor() {
+    let u = make_lvc_one_gate("SN74LVC1G86DCK");
+    assert_eq!(u.input_type, LogicSignalStandard::WideRange);
+    assert_eq!(u.output_type, LogicSignalStandard::WideRange);
+    assert_eq!(u.min_supply_voltage, 1.65);
+    assert_eq!(u.max_supply_voltage, 5.5);
+    assert_eq!(u.drive_current_ma, 32.0);
+    assert_eq!(u.details.size, SizeCode::SC70);
+    assert_eq!(u.function, LogicFunction::XOR);
+    assert_eq!(u.details.pins[&1].kind, PinKind::Input);
+    assert_eq!(u.details.pins[&1].name, "A");
+    assert_eq!(u.details.pins[&2].kind, PinKind::Input);
+    assert_eq!(u.details.pins[&2].name, "B");
+    assert_eq!(u.details.pins[&3].kind, PinKind::PowerReturn);
+    assert_eq!(u.details.pins[&3].name, "GND");
+    assert_eq!(u.details.pins[&4].kind, PinKind::Output);
+    assert_eq!(u.details.pins[&4].name, "Y");
+    assert_eq!(u.details.pins[&5].kind, PinKind::PowerSink);
+    assert_eq!(u.details.pins[&5].name, "VCC");
+}
+
+#[test]
+fn test_octal_buffer() {
+    let u = make_sn74_series("SN74HCT541PWR");
+    assert_eq!(u.details.manufacturer.name, "TI");
+    assert_eq!(u.details.manufacturer.part_number, "SN74HCT541PWR");
+    assert_eq!(u.input_type, LogicSignalStandard::TTL);
+    assert_eq!(u.output_type, LogicSignalStandard::TriState5v0);
+    assert_eq!(u.drive_current_ma, 6.0);
+    assert_eq!(u.min_supply_voltage, 4.5);
+    assert_eq!(u.max_supply_voltage, 5.5);
+    assert_eq!(u.details.size, SizeCode::TSSOP(20));
+    assert_eq!(u.function, LogicFunction::Buffer);
+    assert_eq!(u.details.pins[&1], EPin::new("OE1", PinKind::InputInverted));
+    assert_eq!(u.details.pins[&19], EPin::new("OE2", PinKind::InputInverted));
+    assert_eq!(u.details.pins[&10], EPin::new("GND", PinKind::PowerReturn));
+    assert_eq!(u.details.pins[&20], EPin::new("VCC", PinKind::PowerSink));
+    for i in 2..=9 {
+        assert_eq!(u.details.pins[&i], EPin::new(&format!("A{}", i-1), PinKind::Input));
+        assert_eq!(u.details.pins[&(19-i+1)], EPin::new(&format!("Y{}", i-1), PinKind::TriState));
+    }
+}
+
+#[test]
+fn test_decoder() {
+    let u = make_sn74_series("SN74HCT138PWR");
+    assert_eq!(u.details.manufacturer.name, "TI");
+    assert_eq!(u.details.manufacturer.part_number, "SN74HCT138PWR");
+    assert_eq!(u.input_type, LogicSignalStandard::TTL);
+    assert_eq!(u.output_type, LogicSignalStandard::TTL);
+    assert_eq!(u.drive_current_ma, 4.0);
+    assert_eq!(u.min_supply_voltage, 4.5);
+    assert_eq!(u.max_supply_voltage, 5.5);
+    assert_eq!(u.details.size, SizeCode::TSSOP(16));
+    assert_eq!(u.function, LogicFunction::Decoder);
+    assert_eq!(u.details.pins[&1], EPin::new("A", PinKind::Input));
+    assert_eq!(u.details.pins[&2], EPin::new("B", PinKind::Input));
+    assert_eq!(u.details.pins[&3], EPin::new("C", PinKind::Input));
+    assert_eq!(u.details.pins[&4], EPin::new("G2A", PinKind::InputInverted));
+    assert_eq!(u.details.pins[&5], EPin::new("G2B", PinKind::InputInverted));
+    assert_eq!(u.details.pins[&6], EPin::new("G1", PinKind::Input));
+    assert_eq!(u.details.pins[&7], EPin::new("Y7", PinKind::Output));
+    assert_eq!(u.details.pins[&8], EPin::new("GND", PinKind::PowerReturn));
+    assert_eq!(u.details.pins[&16], EPin::new("VCC", PinKind::PowerSink));
+    for i in 9..=15 {
+        assert_eq!(u.details.pins[&i], EPin::new(&format!("Y{}", 15-i), PinKind::Output));
+    }
+}
+
+#[test]
+fn test_multiplexer() {
+    let u = make_sn74_series("SN74HC151QDRQ1");
+    assert_eq!(u.details.manufacturer.name, "TI");
+    assert_eq!(u.details.manufacturer.part_number, "SN74HC151QDRQ1");
+    assert_eq!(u.input_type, LogicSignalStandard::TTL);
+    assert_eq!(u.output_type, LogicSignalStandard::TTL);
+    assert_eq!(u.drive_current_ma, 6.0);
+    assert_eq!(u.min_supply_voltage, 2.0);
+    assert_eq!(u.max_supply_voltage, 6.0);
+    assert_eq!(u.details.size, SizeCode::SOIC(16));
+    assert_eq!(u.function, LogicFunction::Multiplexer);
+    for i in 0..=3 {
+        assert_eq!(u.details.pins[&(i+1)], EPin::new(&format!("D{}",3-i), PinKind::Input));
+        assert_eq!(u.details.pins[&(i+12)], EPin::new(&format!("D{}",7-i), PinKind::Input));
+    }
+    assert_eq!(u.details.pins[&5], EPin::new("Y", PinKind::Output));
+    assert_eq!(u.details.pins[&6], EPin::new("W", PinKind::Output));
+    assert_eq!(u.details.pins[&7], EPin::new("G", PinKind::InputInverted));
+    assert_eq!(u.details.pins[&8], EPin::new("GND", PinKind::PowerReturn));
+    assert_eq!(u.details.pins[&9], EPin::new("C", PinKind::Input));
+    assert_eq!(u.details.pins[&10], EPin::new("B", PinKind::Input));
+    assert_eq!(u.details.pins[&11], EPin::new("A", PinKind::Input));
+    assert_eq!(u.details.pins[&16], EPin::new("VCC", PinKind::PowerSink));
+}
+
+#[test]
+fn test_buffer() {
+    let u = make_lvc_one_gate("74LVC1G125SE-7");
+    assert_eq!(u.input_type, LogicSignalStandard::WideRange);
+    assert_eq!(u.output_type, LogicSignalStandard::TriState);
+    assert_eq!(u.min_supply_voltage, 1.65);
+    assert_eq!(u.max_supply_voltage, 5.5);
+    assert_eq!(u.drive_current_ma, 24.0);
+    assert_eq!(u.details.size, SizeCode::SOT353);
+    assert_eq!(u.function, LogicFunction::Buffer);
+    assert_eq!(u.details.pins[&1].kind, PinKind::InputInverted);
+    assert_eq!(u.details.pins[&1].name, "OE");
+    assert_eq!(u.details.pins[&2].kind, PinKind::Input);
+    assert_eq!(u.details.pins[&2].name, "A");
+    assert_eq!(u.details.pins[&3].kind, PinKind::PowerReturn);
+    assert_eq!(u.details.pins[&3].name, "GND");
+    assert_eq!(u.details.pins[&4].kind, PinKind::TriState);
+    assert_eq!(u.details.pins[&4].name, "Y");
+    assert_eq!(u.details.pins[&5].kind, PinKind::PowerSink);
+    assert_eq!(u.details.pins[&5].name, "VCC");
 }

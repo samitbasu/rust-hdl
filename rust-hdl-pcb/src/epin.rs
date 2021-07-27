@@ -12,28 +12,14 @@ pub struct OutputRange {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum SignalKind {
-    Any,
-    Logic5V,
-    Logic3V3,
-    Clock,
-    Custom,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum PassiveKind {
-    Any,
-    Positive,
-    Negative,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PinKind {
-    Input(SignalKind),
-    Output(SignalKind),
-    Bidirectional(SignalKind),
-    TriState(SignalKind),
-    Passive(PassiveKind),
+    Input,
+    InputInverted,
+    Output,
+    TriState,
+    Passive,
+    PassivePos,
+    PassiveNeg,
     PowerSink,
     PowerSource,
     PowerReturn,
@@ -44,33 +30,35 @@ pub enum PinKind {
     Unspecified,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct EPin {
     pub kind: PinKind,
     pub name: String,
-    pub designator_visible: bool,
 }
 
 impl EPin {
+    pub fn new(name: &str, kind: PinKind) -> Self {
+        Self {
+            kind,
+            name: name.into()
+        }
+    }
     pub fn passive() -> Self {
         EPin {
-            kind: PinKind::Passive(PassiveKind::Any),
+            kind: PinKind::Passive,
             name: "".to_string(),
-            designator_visible: false,
         }
     }
     pub fn passive_pos() -> Self {
         EPin {
-            kind: PinKind::Passive(PassiveKind::Positive),
+            kind: PinKind::PassivePos,
             name: "".to_string(),
-            designator_visible: false,
         }
     }
     pub fn passive_neg() -> Self {
         EPin {
-            kind: PinKind::Passive(PassiveKind::Negative),
+            kind: PinKind::PassiveNeg,
             name: "".to_string(),
-            designator_visible: false,
         }
     }
 

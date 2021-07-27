@@ -2,7 +2,7 @@ use crate::circuit::{Regulator, PartDetails};
 use crate::bom::Manufacturer;
 use crate::smd::SizeCode;
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, PinKind, InputRange, SignalKind};
+use crate::epin::{EPin, PinKind};
 use crate::utils::pin_list;
 
 pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> Regulator {
@@ -21,26 +21,23 @@ pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> Regulator {
             manufacturer: Manufacturer { name: "ON Semiconductor".to_string(), part_number: part_number.into() },
             description: "300mA LDO Automotive, 13V input range".to_string(),
             comment: "".to_string(),
+            hide_pin_designators: false,
             pins: pin_list(vec![
                 EPin {
                     kind: PinKind::PowerSink,
                     name: "VIN".into(),
-                    designator_visible: true
                 },
                 EPin {
-                    kind: PinKind::Input(SignalKind::Any),
+                    kind: PinKind::Input,
                     name: "ON/OFF".into(),
-                    designator_visible: true,
                 },
                 EPin {
                     kind: PinKind::PowerSource,
                     name: "VOUT".into(),
-                    designator_visible: true,
                 },
                 EPin {
                     kind: PinKind::PowerReturn,
                     name: "GND".into(),
-                    designator_visible: true,
                 }
             ]),
             suppliers: vec![],
@@ -67,26 +64,23 @@ pub fn make_mcp_1799_regulator(part_number: &str) -> Regulator {
             manufacturer: Manufacturer { name: "Microchip".to_string(), part_number: part_number.into() },
             description: "80mA LDO Automotive, 45V input range".to_string(),
             comment: "".to_string(),
+            hide_pin_designators: false,
             pins: pin_list(vec![
                 EPin {
                     kind: PinKind::PowerSink,
                     name: "VIN".into(),
-                    designator_visible: true
                 },
                 EPin {
                     kind: PinKind::PowerReturn,
                     name: "GND_1".into(),
-                    designator_visible: true,
                 },
                 EPin {
                     kind: PinKind::PowerSource,
                     name: "VOUT".into(),
-                    designator_visible: true,
                 },
                 EPin {
                     kind: PinKind::PowerReturn,
                     name: "GND_2".into(),
-                    designator_visible: true,
                 }
             ]),
             suppliers: vec![],
@@ -113,26 +107,23 @@ pub fn make_ti_tps_7b84_regulator(part_number: &str) -> Regulator {
             manufacturer: Manufacturer { name: "TI".to_string(), part_number: part_number.into() },
             description: "150mA LDO, 40V input range".to_string(),
             comment: "".to_string(),
+            hide_pin_designators: false,
             pins: pin_list(vec![
                 EPin {
                     kind: PinKind::PowerSink,
                     name: "IN".into(),
-                    designator_visible: true
                 },
                 EPin {
-                    kind: PinKind::Input(SignalKind::Any),
+                    kind: PinKind::Input,
                     name: "EN".into(),
-                    designator_visible: true,
                 },
                 EPin {
                     kind: PinKind::PowerSource,
                     name: "OUT".into(),
-                    designator_visible: true,
                 },
                 EPin {
                     kind: PinKind::PowerReturn,
                     name: "GND".into(),
-                    designator_visible: true,
                 }
             ]),
             suppliers: vec![],
@@ -164,26 +155,23 @@ pub fn make_zldo1117g_regulator(part_number: &str) -> Regulator {
             manufacturer: Manufacturer { name: "Diodes".to_string(), part_number: part_number.into() },
             description: "1A LDO, 18V input range".to_string(),
             comment: "".to_string(),
+            hide_pin_designators: false,
             pins: pin_list(vec![
                 EPin {
                     kind: PinKind::PowerReturn,
                     name: "GND".into(),
-                    designator_visible: true
                 },
                 EPin {
                     kind: PinKind::PowerSource,
                     name: "Vout_1".into(),
-                    designator_visible: true,
                 },
                 EPin {
                     kind: PinKind::PowerSink,
                     name: "Vin".into(),
-                    designator_visible: true,
                 },
                 EPin {
                     kind: PinKind::PowerSource,
                     name: "Vout_2".into(),
-                    designator_visible: true,
                 }
             ]),
             suppliers: vec![],

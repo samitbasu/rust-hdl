@@ -15,6 +15,7 @@ pub fn make_wurth_led(part_number: &str) -> Diode {
             manufacturer: Manufacturer { name: "".to_string(), part_number: "".to_string() },
             description: "Green 520nm LED Indication - Discrete 3.2V".to_string(),
             comment: "".to_string(),
+            hide_pin_designators: true,
             pins: pin_list(vec![EPin::passive_neg(), EPin::passive_pos()]),
             suppliers: vec![],
             designator: Designator { kind: DesignatorKind::Diode, index: None },

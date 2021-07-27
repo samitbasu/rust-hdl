@@ -13,6 +13,7 @@ pub struct PartDetails {
     pub manufacturer: Manufacturer,
     pub description: String,
     pub comment: String,
+    pub hide_pin_designators: bool,
     pub pins: BTreeMap<u64, EPin>,
     pub suppliers: Vec<Supplier>,
     pub designator: Designator,
@@ -39,6 +40,15 @@ pub struct Resistor {
 }
 
 #[derive(Clone, Debug)]
+pub struct Inductor {
+    pub details: PartDetails,
+    pub value_microhenry: f64,
+    pub tolerance: f64,
+    pub dc_resistance_ohms: f64,
+    pub max_current_milliamps: f64,
+}
+
+#[derive(Clone, Debug)]
 pub struct Diode {
     pub details: PartDetails,
     pub forward_drop_volts: f64,
@@ -54,6 +64,34 @@ pub struct Regulator {
     pub output_max_current_ma: f64
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LogicSignalStandard {
+    CMOS3V3,
+    TTL,
+    WideRange,
+    TriState,
+    TriState5v0
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LogicFunction {
+    XOR,
+    Buffer,
+    Decoder,
+    Multiplexer
+}
+
+#[derive(Clone, Debug)]
+pub struct Logic {
+    pub details: PartDetails,
+    pub drive_current_ma: f64,
+    pub min_supply_voltage: f64,
+    pub max_supply_voltage: f64,
+    pub input_type: LogicSignalStandard,
+    pub output_type: LogicSignalStandard,
+    pub function: LogicFunction,
+}
+
 pub struct Net {
     source_pin: u64,
     dest_pin: u64,
@@ -65,6 +103,7 @@ pub enum CircuitNode {
     Resistor(Resistor),
     Diode(Diode),
     Regulator(Regulator),
+    Inductor(Inductor),
     IntegratedCircuit(PartDetails),
     Circuit(Box<Circuit>),
 }

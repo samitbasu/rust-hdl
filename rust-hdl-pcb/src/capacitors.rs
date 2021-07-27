@@ -19,6 +19,10 @@ pub fn map_three_digit_cap_to_pf(pf: &str) -> f64 {
         let pf_ones = &pf[0..1].parse::<f64>().unwrap();
         let pf_tenths = &pf[2..3].parse::<f64>().unwrap();
         pf_ones + pf_tenths * 0.1
+    } else if &pf[0..1] == "R" {
+        let pf_tenths = &pf[1..2].parse::<f64>().unwrap();
+        let pf_hundredths = &pf[2..3].parse::<f64>().unwrap();
+        pf_tenths * 0.1 + pf_hundredths * 0.001
     } else {
         let pf_tens = &pf[0..1].parse::<f64>().unwrap();
         let pf_ones = &pf[1..2].parse::<f64>().unwrap();
@@ -121,6 +125,7 @@ pub fn make_passive_two_pin(label: String, manufacturer: Manufacturer, descripti
         manufacturer,
         description,
         comment: "".to_string(),
+        hide_pin_designators: true,
         pins: pin_list(vec![EPin::passive(), EPin::passive()]),
         suppliers: vec![],
         designator: Designator { kind: DesignatorKind::Capacitor, index: None },
