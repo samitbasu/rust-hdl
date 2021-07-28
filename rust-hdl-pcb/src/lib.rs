@@ -19,10 +19,10 @@ use crate::analog_devices::make_lt3092_current_source;
 use crate::inductors::make_ty_brl_series;
 use crate::lvc_one_gate::{make_lvc_one_gate};
 use crate::circuit::{LogicSignalStandard, LogicFunction};
-use crate::sn74_series_logic::{make_sn74hct541, make_sn74_series};
+use crate::sn74_series_logic::{make_sn74_series};
 use crate::isolators::make_iso7741edwrq1;
 use crate::adc::make_ads868x;
-use crate::connectors::make_sullins_sbh11_header;
+use crate::connectors::{make_sullins_sbh11_header, make_molex_55935_connector, make_amphenol_10056845_header};
 
 mod bom;
 mod capacitors;
@@ -523,6 +523,28 @@ fn test_sullins_connector() {
     let j = make_sullins_sbh11_header("SBH11-PBPC-D13-RA-BK");
     assert_eq!(j.manufacturer.name, "Sullins Connector Solutions");
     assert_eq!(j.pins.len(), 26);
+    for pin in &j.pins {
+        assert_eq!(pin.1.name, format!("{}", pin.0));
+        assert_eq!(pin.1.kind, PinKind::Passive);
+    }
+}
+
+#[test]
+fn test_molex_connector() {
+    let j = make_molex_55935_connector("0559350810");
+    assert_eq!(j.manufacturer.name, "Molex");
+    assert_eq!(j.pins.len(), 8);
+    for pin in &j.pins {
+        assert_eq!(pin.1.name, format!("{}", pin.0));
+        assert_eq!(pin.1.kind, PinKind::Passive);
+    }
+}
+
+#[test]
+fn test_amphenol_connectr() {
+    let j = make_amphenol_10056845_header("10056845-108LF");
+    assert_eq!(j.manufacturer.name, "Amphenol");
+    assert_eq!(j.pins.len(), 8);
     for pin in &j.pins {
         assert_eq!(pin.1.name, format!("{}", pin.0));
         assert_eq!(pin.1.kind, PinKind::Passive);
