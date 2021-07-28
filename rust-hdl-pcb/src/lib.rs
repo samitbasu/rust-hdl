@@ -20,6 +20,9 @@ use crate::inductors::make_ty_brl_series;
 use crate::lvc_one_gate::{make_lvc_one_gate};
 use crate::circuit::{LogicSignalStandard, LogicFunction};
 use crate::sn74_series_logic::{make_sn74hct541, make_sn74_series};
+use crate::isolators::make_iso7741edwrq1;
+use crate::adc::make_ads868x;
+use crate::connectors::make_sullins_sbh11_header;
 
 mod bom;
 mod capacitors;
@@ -48,6 +51,9 @@ mod ldo;
 mod analog_devices;
 mod lvc_one_gate;
 mod sn74_series_logic;
+mod isolators;
+mod adc;
+mod connectors;
 
 #[test]
 fn test_yageo_rc_68k() {
@@ -481,4 +487,44 @@ fn test_buffer() {
     assert_eq!(u.details.pins[&4].name, "Y");
     assert_eq!(u.details.pins[&5].kind, PinKind::PowerSink);
     assert_eq!(u.details.pins[&5].name, "VCC");
+}
+
+#[test]
+fn test_isolator() {
+    let u = make_iso7741edwrq1("ISO7741EDWRQ1");
+    for i in [2, 8, 9, 15] {
+        assert_eq!(u.pins[&i].kind, PinKind::PowerReturn);
+        assert!(u.pins[&i].name.starts_with("GND"));
+    }
+    for i in [3, 4, 5, 11] {
+        assert_eq!(u.pins[&i].kind, PinKind::Input);
+    }
+    for i in [6, 12, 13, 14] {
+        assert_eq!(u.pins[&i].kind, PinKind::Output);
+    }
+    assert_eq!(u.pins.iter().map(|x| x.1.name.clone()).collect::<Vec<_>>(),
+        vec!["VCC1", "GND1_1", "INA", "INB", "INC", "OUTD", "EN1", "GND1_2",
+            "GND2_2", "EN2", "IND", "OUTC", "OUTB", "OUTA", "GND2_1", "VCC2"]);
+    assert_eq!(u.size, SizeCode::SOIC(16));
+}
+
+#[test]
+fn test_ads8689() {
+    let u = make_ads868x("ADS8689IPW");
+    assert_eq!(u.pins.iter().map(|x|x.1.name.clone()).collect::<Vec<_>>(),
+    vec!["DGND","AVDD","AGND","REFIO","REFGND","REFCAP","AIN_P","AIN_GND",
+        "RST","SDI","CONVST/CS","SCLK","SDO-0","ALARM/SDO-1/GPO","RVS","DVDD"]);
+    assert_eq!(u.size, SizeCode::TSSOP(16));
+    assert_eq!(u.manufacturer.name,"TI");
+}
+
+#[test]
+fn test_sullins_connector() {
+    let j = make_sullins_sbh11_header("SBH11-PBPC-D13-RA-BK");
+    assert_eq!(j.manufacturer.name, "Sullins Connector Solutions");
+    assert_eq!(j.pins.len(), 26);
+    for pin in &j.pins {
+        assert_eq!(pin.1.name, format!("{}", pin.0));
+        assert_eq!(pin.1.kind, PinKind::Passive);
+    }
 }
