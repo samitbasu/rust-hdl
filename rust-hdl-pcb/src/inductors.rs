@@ -1,10 +1,10 @@
-use crate::circuit::{Inductor, PartDetails};
-use crate::smd::SizeCode;
-use crate::capacitors::map_three_digit_cap_to_pf;
-use crate::designator::{Designator, DesignatorKind};
 use crate::bom::Manufacturer;
+use crate::capacitors::map_three_digit_cap_to_pf;
+use crate::circuit::{Inductor, PartDetails};
+use crate::designator::{Designator, DesignatorKind};
+use crate::epin::{EPin, make_passive_pin_pair};
+use crate::smd::SizeCode;
 use crate::utils::pin_list;
-use crate::epin::EPin;
 
 // https://www.yuden.co.jp/productdata/catalog/wound07_e.pdf
 pub fn make_ty_brl_series(part_number: &str) -> Inductor {
@@ -13,7 +13,7 @@ pub fn make_ty_brl_series(part_number: &str) -> Inductor {
         "1608" => SizeCode::I0603,
         "2012" => SizeCode::I0805,
         "3225" => SizeCode::I1210,
-        _ => panic!("Unsupported part type")
+        _ => panic!("Unsupported part type"),
     };
     let tolerance = if part_number.ends_with("K") {
         10.0
@@ -29,20 +29,24 @@ pub fn make_ty_brl_series(part_number: &str) -> Inductor {
     Inductor {
         details: PartDetails {
             label: part_number.to_string(),
-            manufacturer: Manufacturer { name: "Taiyo Yuden".to_string(), part_number: part_number.into()},
+            manufacturer: Manufacturer {
+                name: "Taiyo Yuden".to_string(),
+                part_number: part_number.into(),
+            },
             description: "".to_string(),
             comment: "".to_string(),
             hide_pin_designators: true,
-            pins: pin_list(vec![EPin::passive(), EPin::passive()]),
+            pins: pin_list(make_passive_pin_pair()),
             suppliers: vec![],
-            designator: Designator { kind: DesignatorKind::Inductor, index: None },
-            size
+            designator: Designator {
+                kind: DesignatorKind::Inductor,
+                index: None,
+            },
+            size,
         },
         value_microhenry,
         tolerance,
         dc_resistance_ohms,
-        max_current_milliamps
+        max_current_milliamps,
     }
-
-
 }

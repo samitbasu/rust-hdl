@@ -1,11 +1,11 @@
+use crate::bom::Manufacturer;
+use crate::circuit::{Capacitor, PartDetails};
+use crate::designator::{Designator, DesignatorKind};
+use crate::epin::{EPin, EdgeLocation, PinLocation, make_passive_pin_pair};
+use crate::smd::SizeCode;
+use crate::utils::pin_list;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
-use crate::bom::Manufacturer;
-use crate::smd::SizeCode;
-use crate::circuit::{Capacitor, PartDetails};
-use crate::epin::EPin;
-use crate::designator::{Designator, DesignatorKind};
-use crate::utils::pin_list;
 
 pub fn map_three_digit_cap_to_uf(uf: &str) -> f64 {
     let uf_tens = &uf[0..1].parse::<f64>().unwrap();
@@ -28,7 +28,7 @@ pub fn map_three_digit_cap_to_pf(pf: &str) -> f64 {
         let pf_ones = &pf[1..2].parse::<f64>().unwrap();
         let pf_exp = &pf[2..3].parse::<f64>().unwrap();
         (pf_tens * 10.0 + pf_ones) * 10.0_f64.powf(*pf_exp)
-    }
+    };
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -49,7 +49,7 @@ impl FromStr for DielectricCode {
             "C0G" => DielectricCode::C0G,
             "NP0" => DielectricCode::C0G,
             "X7T" => DielectricCode::X7T,
-            _ => panic!("Unsupported dielectric code {}", s)
+            _ => panic!("Unsupported dielectric code {}", s),
         })
     }
 }
@@ -61,7 +61,8 @@ impl Display for DielectricCode {
             DielectricCode::X7R => "X7R",
             DielectricCode::C0G => "C0G",
             DielectricCode::X7T => "X7T",
-        }.fmt(f)
+        }
+        .fmt(f)
     }
 }
 
@@ -94,8 +95,9 @@ impl Display for CapacitorTolerance {
             CapacitorTolerance::TwoPercent => "2%",
             CapacitorTolerance::FivePercent => "5%",
             CapacitorTolerance::TenPercent => "10%",
-            CapacitorTolerance::TwentyPercent => "20%"
-        }.fmt(f)
+            CapacitorTolerance::TwentyPercent => "20%",
+        }
+        .fmt(f)
     }
 }
 
@@ -119,34 +121,44 @@ pub fn map_pf_to_label(value: f64) -> String {
     }
 }
 
-pub fn make_passive_two_pin(label: String, manufacturer: Manufacturer, description: String, size: SizeCode) -> PartDetails {
+pub fn make_passive_two_pin(
+    label: String,
+    manufacturer: Manufacturer,
+    description: String,
+    size: SizeCode,
+    symbol_len: u64,
+) -> PartDetails {
     PartDetails {
         label,
         manufacturer,
         description,
         comment: "".to_string(),
         hide_pin_designators: true,
-        pins: pin_list(vec![EPin::passive(), EPin::passive()]),
+        pins: pin_list(make_passive_pin_pair()),
         suppliers: vec![],
-        designator: Designator { kind: DesignatorKind::Capacitor, index: None },
-        size
+        designator: Designator {
+            kind: DesignatorKind::Capacitor,
+            index: None,
+        },
+        size,
     }
 }
 
-pub fn make_mlcc(label: String,
-                 manufacturer: Manufacturer,
-                 description: String,
-                 size: SizeCode,
-                 value_pf: f64,
-                 dielectric: DielectricCode,
-                 voltage: f64,
-                 tolerance: CapacitorTolerance
+pub fn make_mlcc(
+    label: String,
+    manufacturer: Manufacturer,
+    description: String,
+    size: SizeCode,
+    value_pf: f64,
+    dielectric: DielectricCode,
+    voltage: f64,
+    tolerance: CapacitorTolerance,
 ) -> Capacitor {
     Capacitor {
-        details: make_passive_two_pin(label, manufacturer, description, size),
+        details: make_passive_two_pin(label, manufacturer, description, size, 100),
         value_pf,
         kind: CapacitorKind::MultiLayerChip(dielectric),
         voltage,
-        tolerance
+        tolerance,
     }
 }

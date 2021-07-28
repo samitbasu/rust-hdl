@@ -1,7 +1,9 @@
-use crate::smd::SizeCode;
-use crate::capacitors::{DielectricCode, map_three_digit_cap_to_pf, CapacitorTolerance, map_pf_to_label, make_mlcc};
-use crate::circuit::{Capacitor};
 use crate::bom::Manufacturer;
+use crate::capacitors::{
+    make_mlcc, map_pf_to_label, map_three_digit_cap_to_pf, CapacitorTolerance, DielectricCode,
+};
+use crate::circuit::Capacitor;
+use crate::smd::SizeCode;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {
     (&part[2..=5]).parse().unwrap()
@@ -15,7 +17,7 @@ fn map_part_number_to_voltage(part: &str) -> f64 {
         "7" => 16.0,
         "8" => 25.0,
         "9" => 50.0,
-        _ => panic!("No working voltage for {}", part)
+        _ => panic!("No working voltage for {}", part),
     }
 }
 
@@ -47,8 +49,20 @@ pub fn make_yageo_cc_series_cap(part_number: &str) -> Capacitor {
     let label = format!("{} {} {}V {}", value, tolerance, voltage, dielectric);
     let manufacturer = Manufacturer {
         name: "Yageo".to_string(),
-        part_number: part_number.to_owned()
+        part_number: part_number.to_owned(),
     };
-    let description = format!("Yageo commercial CC Series MLCC Capacitor SMD {} {}", size, label);
-    make_mlcc(label, manufacturer, description, size, value_pf, dielectric, voltage, tolerance)
+    let description = format!(
+        "Yageo commercial CC Series MLCC Capacitor SMD {} {}",
+        size, label
+    );
+    make_mlcc(
+        label,
+        manufacturer,
+        description,
+        size,
+        value_pf,
+        dielectric,
+        voltage,
+        tolerance,
+    )
 }

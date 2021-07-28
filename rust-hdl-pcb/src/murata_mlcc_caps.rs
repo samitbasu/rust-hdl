@@ -1,7 +1,9 @@
+use crate::bom::Manufacturer;
+use crate::capacitors::{
+    make_mlcc, map_pf_to_label, map_three_digit_cap_to_pf, CapacitorTolerance, DielectricCode,
+};
 use crate::circuit::Capacitor;
 use crate::smd::SizeCode;
-use crate::capacitors::{CapacitorTolerance, map_three_digit_cap_to_pf, DielectricCode, make_mlcc, map_pf_to_label};
-use crate::bom::Manufacturer;
 
 fn make_murata_grt_188r61h_capacitor(part_number: &str) -> Capacitor {
     assert!(part_number.starts_with("GRT188R61H"));
@@ -14,10 +16,22 @@ fn make_murata_grt_188r61h_capacitor(part_number: &str) -> Capacitor {
     let label = format!("{} {} {}V {}", value, tolerance, voltage, dielectric);
     let manufacturer = Manufacturer {
         name: "muRata".to_string(),
-        part_number: part_number.to_owned()
+        part_number: part_number.to_owned(),
     };
-    let description = format!("muRata AEC-Q200 GRT188 Series MLCC Capacitor SMD {} {}", size, label);
-    make_mlcc(label, manufacturer, description, size, value_pf, dielectric, voltage, tolerance)
+    let description = format!(
+        "muRata AEC-Q200 GRT188 Series MLCC Capacitor SMD {} {}",
+        size, label
+    );
+    make_mlcc(
+        label,
+        manufacturer,
+        description,
+        size,
+        value_pf,
+        dielectric,
+        voltage,
+        tolerance,
+    )
 }
 
 fn make_murata_grm21br61c_capacitor(part_number: &str) -> Capacitor {
@@ -31,10 +45,22 @@ fn make_murata_grm21br61c_capacitor(part_number: &str) -> Capacitor {
     let label = format!("{} {} {}V {}", value, tolerance, voltage, dielectric);
     let manufacturer = Manufacturer {
         name: "muRata".to_string(),
-        part_number: part_number.to_owned()
+        part_number: part_number.to_owned(),
     };
-    let description = format!("muRata General GRM21B Series MLCC Capacitor SMD {} {}", size, label);
-    make_mlcc(label, manufacturer, description, size, value_pf, dielectric, voltage, tolerance)
+    let description = format!(
+        "muRata General GRM21B Series MLCC Capacitor SMD {} {}",
+        size, label
+    );
+    make_mlcc(
+        label,
+        manufacturer,
+        description,
+        size,
+        value_pf,
+        dielectric,
+        voltage,
+        tolerance,
+    )
 }
 
 pub fn make_murata_capacitor(part_number: &str) -> Capacitor {

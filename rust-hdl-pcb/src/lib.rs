@@ -1,59 +1,64 @@
+use crate::adc::make_ads868x;
+use crate::analog_devices::make_lt3092_current_source;
+use crate::avx_caps::make_avx_capacitor;
+use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode};
+use crate::circuit::{LogicFunction, LogicSignalStandard};
+use crate::connectors::{
+    make_amphenol_10056845_header, make_molex_55935_connector, make_sullins_sbh11_header,
+};
+use crate::diode::DiodeKind;
+use crate::epin::{EPin, PinKind};
+use crate::inductors::make_ty_brl_series;
+use crate::isolators::make_iso7741edwrq1;
+use crate::kemet_ceramic_caps::make_kemet_ceramic_capacitor;
+use crate::kemet_t491_series::make_kemet_t491_capacitor;
+use crate::ldo::{
+    make_mcp_1799_regulator, make_on_semi_ncv33375_regulator, make_ti_tps_7b84_regulator,
+    make_zldo1117g_regulator,
+};
+use crate::lvc_one_gate::make_lvc_one_gate;
+use crate::murata_mlcc_caps::make_murata_capacitor;
+use crate::nippon_electrolytic_caps::make_nippon_hxd_capacitor;
+use crate::panasonic_era_resistors::make_panasonic_resistor;
 use crate::resistors::{PowerWatt, ResistorKind};
 use crate::smd::SizeCode;
-use crate::yageo_resistor_series::make_yageo_series_resistor;
-use crate::tdk_cga_series::make_tdk_cga_capacitor;
-use crate::capacitors::{CapacitorKind, DielectricCode, CapacitorTolerance};
-use crate::kemet_t491_series::make_kemet_t491_capacitor;
-use crate::avx_caps::make_avx_capacitor;
-use crate::kemet_ceramic_caps::make_kemet_ceramic_capacitor;
+use crate::sn74_series_logic::make_sn74_series;
 use crate::tdk_c_series::make_tdk_c_series_capacitor;
-use crate::yageo_cc_caps::make_yageo_cc_series_cap;
-use crate::murata_mlcc_caps::{make_murata_capacitor};
-use crate::panasonic_era_resistors::{make_panasonic_resistor};
-use crate::nippon_electrolytic_caps::make_nippon_hxd_capacitor;
+use crate::tdk_cga_series::make_tdk_cga_capacitor;
 use crate::wurth_led::make_wurth_led;
-use crate::diode::DiodeKind;
-use crate::epin::{PinKind, EPin};
-use crate::ldo::{make_zldo1117g_regulator, make_ti_tps_7b84_regulator, make_mcp_1799_regulator, make_on_semi_ncv33375_regulator};
-use crate::analog_devices::make_lt3092_current_source;
-use crate::inductors::make_ty_brl_series;
-use crate::lvc_one_gate::{make_lvc_one_gate};
-use crate::circuit::{LogicSignalStandard, LogicFunction};
-use crate::sn74_series_logic::{make_sn74_series};
-use crate::isolators::make_iso7741edwrq1;
-use crate::adc::make_ads868x;
-use crate::connectors::{make_sullins_sbh11_header, make_molex_55935_connector, make_amphenol_10056845_header};
+use crate::yageo_cc_caps::make_yageo_cc_series_cap;
+use crate::yageo_resistor_series::make_yageo_series_resistor;
 
+mod adc;
+mod analog_devices;
+mod avx_caps;
 mod bom;
 mod capacitors;
 mod circuit;
+mod connectors;
 mod designator;
 mod digikey_table;
+mod diode;
 mod epin;
 mod inductors;
+mod isolators;
+mod kemet_ceramic_caps;
+mod kemet_t491_series;
+mod ldo;
+mod lvc_one_gate;
 mod murata_mlcc_caps;
+mod nippon_electrolytic_caps;
+mod panasonic_era_resistors;
 mod resistors;
 mod smd;
+mod sn74_series_logic;
+mod tdk_c_series;
 mod tdk_cga_series;
 mod traco_power_tmr1_series;
-mod yageo_resistor_series;
-mod kemet_t491_series;
-mod avx_caps;
-mod kemet_ceramic_caps;
-mod tdk_c_series;
-mod yageo_cc_caps;
-mod panasonic_era_resistors;
 mod utils;
-mod nippon_electrolytic_caps;
 mod wurth_led;
-mod diode;
-mod ldo;
-mod analog_devices;
-mod lvc_one_gate;
-mod sn74_series_logic;
-mod isolators;
-mod adc;
-mod connectors;
+mod yageo_cc_caps;
+mod yageo_resistor_series;
 
 #[test]
 fn test_yageo_rc_68k() {
@@ -78,7 +83,10 @@ fn test_tdk_cga_cap() {
     let filter_cap = make_tdk_cga_capacitor("CGA4J2X7R2A104K125AA");
     // 'TDK         CGA4J2X7R2A104K125AA             SMD Multilayer Ceramic Capacitor, 0805 [2012 Metric], 0.1 F, 100 V,  10%, X7R, CGA Series
     assert_eq!(filter_cap.details.manufacturer.name, "TDK");
-    assert_eq!(filter_cap.kind, CapacitorKind::MultiLayerChip(DielectricCode::X7R));
+    assert_eq!(
+        filter_cap.kind,
+        CapacitorKind::MultiLayerChip(DielectricCode::X7R)
+    );
     assert_eq!(filter_cap.details.size, SizeCode::I0805);
     assert_eq!(filter_cap.value_pf, 0.1 * 1e6);
     assert_eq!(filter_cap.voltage, 100.);
@@ -161,7 +169,7 @@ fn test_yageo_cc_series() {
     assert_eq!(c.tolerance, CapacitorTolerance::TenPercent);
     assert_eq!(c.voltage, 25.0);
     assert_eq!(c.kind, CapacitorKind::MultiLayerChip(DielectricCode::X5R));
-    assert_eq!(c.value_pf, 10.*1e6);
+    assert_eq!(c.value_pf, 10. * 1e6);
 }
 
 #[test]
@@ -172,7 +180,7 @@ fn test_murata_grt_series() {
     assert_eq!(c.tolerance, CapacitorTolerance::TenPercent);
     assert_eq!(c.voltage, 50.0);
     assert_eq!(c.kind, CapacitorKind::MultiLayerChip(DielectricCode::X5R));
-    assert_eq!(c.value_pf, 10.*1e5);
+    assert_eq!(c.value_pf, 10. * 1e5);
 }
 
 #[test]
@@ -215,7 +223,7 @@ fn test_chemi_con_hybrid_cap() {
     // 100 uF, 50V Alum Poly 25 mR ESR, Hybrid
     assert_eq!(c.voltage, 50.);
     assert_eq!(c.kind, CapacitorKind::AluminumPolyLowESR(25));
-    assert_eq!(c.value_pf, 100.*1e6);
+    assert_eq!(c.value_pf, 100. * 1e6);
     assert_eq!(c.details.size, SizeCode::Custom("JA0".to_owned()))
 }
 
@@ -405,13 +413,19 @@ fn test_octal_buffer() {
     assert_eq!(u.max_supply_voltage, 5.5);
     assert_eq!(u.details.size, SizeCode::TSSOP(20));
     assert_eq!(u.function, LogicFunction::Buffer);
-    assert_eq!(u.details.pins[&1], EPin::new("OE1", PinKind::InputInverted));
-    assert_eq!(u.details.pins[&19], EPin::new("OE2", PinKind::InputInverted));
-    assert_eq!(u.details.pins[&10], EPin::new("GND", PinKind::PowerReturn));
-    assert_eq!(u.details.pins[&20], EPin::new("VCC", PinKind::PowerSink));
+    assert_eq!(u.details.pins[&1].name, "~OE1");
+    assert_eq!(u.details.pins[&1].kind, PinKind::InputInverted);
+    assert_eq!(u.details.pins[&19].name, "~OE2");
+    assert_eq!(u.details.pins[&19].kind, PinKind::InputInverted);
+    assert_eq!(u.details.pins[&10].name, "GND");
+    assert_eq!(u.details.pins[&10].kind, PinKind::PowerReturn);
+    assert_eq!(u.details.pins[&20].name, "VCC");
+    assert_eq!(u.details.pins[&20].kind, PinKind::PowerSink);
     for i in 2..=9 {
-        assert_eq!(u.details.pins[&i], EPin::new(&format!("A{}", i-1), PinKind::Input));
-        assert_eq!(u.details.pins[&(19-i+1)], EPin::new(&format!("Y{}", i-1), PinKind::TriState));
+        assert_eq!(u.details.pins[&i].name, format!("A{}", i - 1));
+        assert_eq!(u.details.pins[&i].kind, PinKind::Input);
+        assert_eq!(u.details.pins[&(19 - i + 1)].name, format!("Y{}", i - 1));
+        assert_eq!(u.details.pins[&(19 - i + 1)].kind, PinKind::TriState);
     }
 }
 
@@ -427,17 +441,27 @@ fn test_decoder() {
     assert_eq!(u.max_supply_voltage, 5.5);
     assert_eq!(u.details.size, SizeCode::TSSOP(16));
     assert_eq!(u.function, LogicFunction::Decoder);
-    assert_eq!(u.details.pins[&1], EPin::new("A", PinKind::Input));
-    assert_eq!(u.details.pins[&2], EPin::new("B", PinKind::Input));
-    assert_eq!(u.details.pins[&3], EPin::new("C", PinKind::Input));
-    assert_eq!(u.details.pins[&4], EPin::new("G2A", PinKind::InputInverted));
-    assert_eq!(u.details.pins[&5], EPin::new("G2B", PinKind::InputInverted));
-    assert_eq!(u.details.pins[&6], EPin::new("G1", PinKind::Input));
-    assert_eq!(u.details.pins[&7], EPin::new("Y7", PinKind::Output));
-    assert_eq!(u.details.pins[&8], EPin::new("GND", PinKind::PowerReturn));
-    assert_eq!(u.details.pins[&16], EPin::new("VCC", PinKind::PowerSink));
+    assert_eq!(u.details.pins[&1].name, "A");
+    assert_eq!(u.details.pins[&1].kind, PinKind::Input);
+    assert_eq!(u.details.pins[&2].name, "B");
+    assert_eq!(u.details.pins[&2].kind, PinKind::Input);
+    assert_eq!(u.details.pins[&3].name, "C");
+    assert_eq!(u.details.pins[&3].kind, PinKind::Input);
+    assert_eq!(u.details.pins[&4].name, "~G2A");
+    assert_eq!(u.details.pins[&4].kind, PinKind::InputInverted);
+    assert_eq!(u.details.pins[&5].name, "~G2B");
+    assert_eq!(u.details.pins[&5].kind, PinKind::InputInverted);
+    assert_eq!(u.details.pins[&6].name, "G1");
+    assert_eq!(u.details.pins[&6].kind, PinKind::Input);
+    assert_eq!(u.details.pins[&7].name, "Y7");
+    assert_eq!(u.details.pins[&7].kind, PinKind::Output);
+    assert_eq!(u.details.pins[&8].name, "GND");
+    assert_eq!(u.details.pins[&8].kind, PinKind::PowerReturn);
+    assert_eq!(u.details.pins[&16].name, "VCC");
+    assert_eq!(u.details.pins[&16].kind, PinKind::PowerSink);
     for i in 9..=15 {
-        assert_eq!(u.details.pins[&i], EPin::new(&format!("Y{}", 15-i), PinKind::Output));
+        assert_eq!(u.details.pins[&i].name, format!("Y{}", 15 - i));
+        assert_eq!(u.details.pins[&i].kind, PinKind::Output);
     }
 }
 
@@ -454,17 +478,27 @@ fn test_multiplexer() {
     assert_eq!(u.details.size, SizeCode::SOIC(16));
     assert_eq!(u.function, LogicFunction::Multiplexer);
     for i in 0..=3 {
-        assert_eq!(u.details.pins[&(i+1)], EPin::new(&format!("D{}",3-i), PinKind::Input));
-        assert_eq!(u.details.pins[&(i+12)], EPin::new(&format!("D{}",7-i), PinKind::Input));
+        assert_eq!(u.details.pins[&(i + 1)].name, format!("D{}", 3 - i));
+        assert_eq!(u.details.pins[&(i + 1)].kind, PinKind::Input);
+        assert_eq!(u.details.pins[&(i + 12)].name, format!("D{}", 7 - i));
+        assert_eq!(u.details.pins[&(i + 12)].kind, PinKind::Input);
     }
-    assert_eq!(u.details.pins[&5], EPin::new("Y", PinKind::Output));
-    assert_eq!(u.details.pins[&6], EPin::new("W", PinKind::Output));
-    assert_eq!(u.details.pins[&7], EPin::new("G", PinKind::InputInverted));
-    assert_eq!(u.details.pins[&8], EPin::new("GND", PinKind::PowerReturn));
-    assert_eq!(u.details.pins[&9], EPin::new("C", PinKind::Input));
-    assert_eq!(u.details.pins[&10], EPin::new("B", PinKind::Input));
-    assert_eq!(u.details.pins[&11], EPin::new("A", PinKind::Input));
-    assert_eq!(u.details.pins[&16], EPin::new("VCC", PinKind::PowerSink));
+    assert_eq!(u.details.pins[&5].name, "Y");
+    assert_eq!(u.details.pins[&5].kind, PinKind::Output);
+    assert_eq!(u.details.pins[&6].name, "W");
+    assert_eq!(u.details.pins[&6].kind, PinKind::Output);
+    assert_eq!(u.details.pins[&7].name, "~G");
+    assert_eq!(u.details.pins[&7].kind, PinKind::InputInverted);
+    assert_eq!(u.details.pins[&8].name, "GND");
+    assert_eq!(u.details.pins[&8].kind, PinKind::PowerReturn);
+    assert_eq!(u.details.pins[&9].name, "C");
+    assert_eq!(u.details.pins[&9].kind, PinKind::Input);
+    assert_eq!(u.details.pins[&10].name, "B");
+    assert_eq!(u.details.pins[&10].kind, PinKind::Input);
+    assert_eq!(u.details.pins[&11].name, "A");
+    assert_eq!(u.details.pins[&11].kind, PinKind::Input);
+    assert_eq!(u.details.pins[&16].name, "VCC");
+    assert_eq!(u.details.pins[&16].kind, PinKind::PowerSink);
 }
 
 #[test]
@@ -478,7 +512,7 @@ fn test_buffer() {
     assert_eq!(u.details.size, SizeCode::SOT353);
     assert_eq!(u.function, LogicFunction::Buffer);
     assert_eq!(u.details.pins[&1].kind, PinKind::InputInverted);
-    assert_eq!(u.details.pins[&1].name, "OE");
+    assert_eq!(u.details.pins[&1].name, "~OE");
     assert_eq!(u.details.pins[&2].kind, PinKind::Input);
     assert_eq!(u.details.pins[&2].name, "A");
     assert_eq!(u.details.pins[&3].kind, PinKind::PowerReturn);
@@ -502,20 +536,42 @@ fn test_isolator() {
     for i in [6, 12, 13, 14] {
         assert_eq!(u.pins[&i].kind, PinKind::Output);
     }
-    assert_eq!(u.pins.iter().map(|x| x.1.name.clone()).collect::<Vec<_>>(),
-        vec!["VCC1", "GND1_1", "INA", "INB", "INC", "OUTD", "EN1", "GND1_2",
-            "GND2_2", "EN2", "IND", "OUTC", "OUTB", "OUTA", "GND2_1", "VCC2"]);
+    assert_eq!(
+        u.pins.iter().map(|x| x.1.name.clone()).collect::<Vec<_>>(),
+        vec![
+            "VCC1", "GND1_1", "INA", "INB", "INC", "OUTD", "EN1", "GND1_2", "GND2_2", "EN2", "IND",
+            "OUTC", "OUTB", "OUTA", "GND2_1", "VCC2"
+        ]
+    );
     assert_eq!(u.size, SizeCode::SOIC(16));
 }
 
 #[test]
 fn test_ads8689() {
     let u = make_ads868x("ADS8689IPW");
-    assert_eq!(u.pins.iter().map(|x|x.1.name.clone()).collect::<Vec<_>>(),
-    vec!["DGND","AVDD","AGND","REFIO","REFGND","REFCAP","AIN_P","AIN_GND",
-        "RST","SDI","CONVST/CS","SCLK","SDO-0","ALARM/SDO-1/GPO","RVS","DVDD"]);
+    assert_eq!(
+        u.pins.iter().map(|x| x.1.name.clone()).collect::<Vec<_>>(),
+        vec![
+            "DGND",
+            "AVDD",
+            "AGND",
+            "REFIO",
+            "REFGND",
+            "REFCAP",
+            "AIN_P",
+            "AIN_GND",
+            "~RST",
+            "SDI",
+            "CONVST/~CS",
+            "SCLK",
+            "SDO-0",
+            "ALARM/SDO-1/GPO",
+            "RVS",
+            "DVDD"
+        ]
+    );
     assert_eq!(u.size, SizeCode::TSSOP(16));
-    assert_eq!(u.manufacturer.name,"TI");
+    assert_eq!(u.manufacturer.name, "TI");
 }
 
 #[test]

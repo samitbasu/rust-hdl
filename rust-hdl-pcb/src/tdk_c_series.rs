@@ -1,7 +1,9 @@
-use crate::smd::SizeCode;
-use crate::capacitors::{DielectricCode, map_three_digit_cap_to_pf, CapacitorTolerance, map_pf_to_label, make_mlcc};
-use crate::circuit::{Capacitor};
 use crate::bom::Manufacturer;
+use crate::capacitors::{
+    make_mlcc, map_pf_to_label, map_three_digit_cap_to_pf, CapacitorTolerance, DielectricCode,
+};
+use crate::circuit::Capacitor;
+use crate::smd::SizeCode;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {
     match &part[0..=4] {
@@ -13,7 +15,7 @@ fn map_part_number_to_size(part: &str) -> SizeCode {
         "C3225" => SizeCode::I1210,
         "C4532" => SizeCode::I1812,
         "C5750" => SizeCode::I2220,
-        _ => panic!("Unrecognized size code {}", part)
+        _ => panic!("Unrecognized size code {}", part),
     }
 }
 
@@ -27,7 +29,7 @@ fn map_part_number_to_voltage(part: &str) -> f64 {
         "1V" => 35.0,
         "1H" => 50.0,
         "1N" => 75.0,
-        _ => panic!("No working voltage for {}", part)
+        _ => panic!("No working voltage for {}", part),
     }
 }
 
@@ -65,8 +67,20 @@ pub fn make_tdk_c_series_capacitor(part_number: &str) -> Capacitor {
     let label = format!("{} {} {}V {}", value, tolerance, voltage, dielectric);
     let manufacturer = Manufacturer {
         name: "TDK".to_string(),
-        part_number: part_number.to_owned()
+        part_number: part_number.to_owned(),
     };
-    let description = format!("TDK Commercial C Series MLCC Capacitor SMD {} {}", size, label);
-    make_mlcc(label, manufacturer, description, size, value_pf, dielectric, voltage, tolerance)
+    let description = format!(
+        "TDK Commercial C Series MLCC Capacitor SMD {} {}",
+        size, label
+    );
+    make_mlcc(
+        label,
+        manufacturer,
+        description,
+        size,
+        value_pf,
+        dielectric,
+        voltage,
+        tolerance,
+    )
 }

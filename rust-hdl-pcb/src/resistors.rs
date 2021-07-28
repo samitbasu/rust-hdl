@@ -1,7 +1,7 @@
 use crate::bom::Manufacturer;
-use crate::smd::SizeCode;
-use crate::circuit::Resistor;
 use crate::capacitors::make_passive_two_pin;
+use crate::circuit::Resistor;
+use crate::smd::SizeCode;
 
 pub type PowerWatt = num_rational::Rational32;
 
@@ -40,21 +40,23 @@ pub fn map_resistance_letter_code_to_value(resistance: &str) -> f64 {
     resistance.parse::<f64>().unwrap() * multiplier
 }
 
-pub fn make_chip_resistor(label: String,
-                      manufacturer: Manufacturer,
-                      description: String,
-                      size: SizeCode,
-                      value_ohms: f64,
-                      power_watt: PowerWatt,
-                      tolerance: f64,
-                      tempco: Option<f64>,
-                      kind: ResistorKind) -> Resistor {
+pub fn make_chip_resistor(
+    label: String,
+    manufacturer: Manufacturer,
+    description: String,
+    size: SizeCode,
+    value_ohms: f64,
+    power_watt: PowerWatt,
+    tolerance: f64,
+    tempco: Option<f64>,
+    kind: ResistorKind,
+) -> Resistor {
     Resistor {
-        details: make_passive_two_pin(label, manufacturer, description, size),
+        details: make_passive_two_pin(label, manufacturer, description, size, 300),
         value_ohms,
         kind,
         power_watt,
         tolerance,
-        tempco
+        tempco,
     }
 }

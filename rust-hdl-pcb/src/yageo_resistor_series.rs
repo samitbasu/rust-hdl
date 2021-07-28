@@ -2,9 +2,12 @@ use std::fmt::{Display, Formatter};
 use std::fs::File;
 
 use crate::bom::Manufacturer;
-use crate::circuit::{Resistor};
-use crate::resistors::{make_chip_resistor, PowerWatt, ResistorKind, map_resistance_letter_code_to_value, map_resistance_to_string};
-use crate::smd::{SizeCode, PTHResistor, TolerancedDim};
+use crate::circuit::Resistor;
+use crate::resistors::{
+    make_chip_resistor, map_resistance_letter_code_to_value, map_resistance_to_string, PowerWatt,
+    ResistorKind,
+};
+use crate::smd::{PTHResistor, SizeCode, TolerancedDim};
 use crate::utils;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {
@@ -18,7 +21,7 @@ fn map_part_number_to_tolerance(part: &str) -> f64 {
         "F" => 1.0,
         "G" => 2.0,
         "J" => 5.0,
-        _ => panic!("Unsupported tolerance in Yageo FC L resistor part {}", part)
+        _ => panic!("Unsupported tolerance in Yageo FC L resistor part {}", part),
     }
 }
 
@@ -44,16 +47,16 @@ fn power_rating(size: SizeCode) -> PowerWatt {
     match size {
         SizeCode::I0075 => PowerWatt::new(1, 50),
         SizeCode::I0100 => PowerWatt::new(1, 32),
-        SizeCode::I0201 => PowerWatt::new(1,20),
+        SizeCode::I0201 => PowerWatt::new(1, 20),
         SizeCode::I0402 => PowerWatt::new(1, 16),
-        SizeCode::I0603 => PowerWatt::new(1,10),
-        SizeCode::I0805 => PowerWatt::new(1,8),
-        SizeCode::I1206 => PowerWatt::new(1,4),
-        SizeCode::I1210 => PowerWatt::new(1,2),
+        SizeCode::I0603 => PowerWatt::new(1, 10),
+        SizeCode::I0805 => PowerWatt::new(1, 8),
+        SizeCode::I1206 => PowerWatt::new(1, 4),
+        SizeCode::I1210 => PowerWatt::new(1, 2),
         SizeCode::I1218 => PowerWatt::new(1, 1),
         SizeCode::I2010 => PowerWatt::new(3, 4),
         SizeCode::I2512 => PowerWatt::new(1, 1),
-        _ => panic!("Unsupported size")
+        _ => panic!("Unsupported size"),
     }
 }
 
@@ -68,8 +71,8 @@ fn test_part_number_mapping() {
 
 #[test]
 fn test_part_number_parses() {
-    use std::path::PathBuf;
     use std::io::BufRead;
+    use std::path::PathBuf;
 
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     path.push("test");
@@ -81,7 +84,10 @@ fn test_part_number_parses() {
         let size = map_part_number_to_size(&part_number);
         let tolerance = map_part_number_to_tolerance(&part_number);
         let resistance = map_part_number_to_resistance(&part_number);
-        println!("Part {} -> {} {} {}", part_number, size, tolerance, resistance);
+        println!(
+            "Part {} -> {} {} {}",
+            part_number, size, tolerance, resistance
+        );
     }
 }
 
@@ -110,73 +116,61 @@ impl Display for YageoSeries {
 
 fn map_pth_series_to_size(series: YageoSeries) -> SizeCode {
     match series {
-        YageoSeries::FMP50 => {
-            SizeCode::PTHResistor(
-                PTHResistor {
-                    body_length: TolerancedDim {
-                        nominal_mm: 3.4,
-                        tolerance_mm: 0.3
-                    },
-                    body_diameter: TolerancedDim {
-                        nominal_mm: 1.9,
-                        tolerance_mm: 0.2
-                    },
-                    lead_length: TolerancedDim {
-                        nominal_mm: 28.0,
-                        tolerance_mm: 2.0
-                    },
-                    lead_diameter: TolerancedDim {
-                        nominal_mm: 0.45,
-                        tolerance_mm: 0.05
-                    }
-                }
-            )
-        }
-        YageoSeries::FMP100 => {
-            SizeCode::PTHResistor(
-                PTHResistor {
-                    body_length: TolerancedDim {
-                        nominal_mm: 6.3,
-                        tolerance_mm: 0.5
-                    },
-                    body_diameter: TolerancedDim {
-                        nominal_mm: 2.4,
-                        tolerance_mm: 0.2
-                    },
-                    lead_length: TolerancedDim {
-                        nominal_mm: 28.0,
-                        tolerance_mm: 2.0
-                    },
-                    lead_diameter: TolerancedDim {
-                        nominal_mm: 0.55,
-                        tolerance_mm: 0.05
-                    }
-                }
-            )
-        }
-        YageoSeries::FMP200 => {
-            SizeCode::PTHResistor(
-                PTHResistor {
-                    body_length: TolerancedDim {
-                        nominal_mm: 9.0,
-                        tolerance_mm: 0.5
-                    },
-                    body_diameter: TolerancedDim {
-                        nominal_mm: 3.9,
-                        tolerance_mm: 0.3
-                    },
-                    lead_length: TolerancedDim {
-                        nominal_mm: 26.0,
-                        tolerance_mm: 2.0
-                    },
-                    lead_diameter: TolerancedDim {
-                        nominal_mm: 0.55,
-                        tolerance_mm: 0.05
-                    }
-                }
-            )
-        }
-        _ => unimplemented!()
+        YageoSeries::FMP50 => SizeCode::PTHResistor(PTHResistor {
+            body_length: TolerancedDim {
+                nominal_mm: 3.4,
+                tolerance_mm: 0.3,
+            },
+            body_diameter: TolerancedDim {
+                nominal_mm: 1.9,
+                tolerance_mm: 0.2,
+            },
+            lead_length: TolerancedDim {
+                nominal_mm: 28.0,
+                tolerance_mm: 2.0,
+            },
+            lead_diameter: TolerancedDim {
+                nominal_mm: 0.45,
+                tolerance_mm: 0.05,
+            },
+        }),
+        YageoSeries::FMP100 => SizeCode::PTHResistor(PTHResistor {
+            body_length: TolerancedDim {
+                nominal_mm: 6.3,
+                tolerance_mm: 0.5,
+            },
+            body_diameter: TolerancedDim {
+                nominal_mm: 2.4,
+                tolerance_mm: 0.2,
+            },
+            lead_length: TolerancedDim {
+                nominal_mm: 28.0,
+                tolerance_mm: 2.0,
+            },
+            lead_diameter: TolerancedDim {
+                nominal_mm: 0.55,
+                tolerance_mm: 0.05,
+            },
+        }),
+        YageoSeries::FMP200 => SizeCode::PTHResistor(PTHResistor {
+            body_length: TolerancedDim {
+                nominal_mm: 9.0,
+                tolerance_mm: 0.5,
+            },
+            body_diameter: TolerancedDim {
+                nominal_mm: 3.9,
+                tolerance_mm: 0.3,
+            },
+            lead_length: TolerancedDim {
+                nominal_mm: 26.0,
+                tolerance_mm: 2.0,
+            },
+            lead_diameter: TolerancedDim {
+                nominal_mm: 0.55,
+                tolerance_mm: 0.05,
+            },
+        }),
+        _ => unimplemented!(),
     }
 }
 
@@ -185,7 +179,7 @@ fn map_pth_series_to_power(series: YageoSeries) -> PowerWatt {
         YageoSeries::FMP50 => PowerWatt::new(1, 2),
         YageoSeries::FMP100 => PowerWatt::new(1, 1),
         YageoSeries::FMP200 => PowerWatt::new(2, 1),
-        _ => unimplemented!()
+        _ => unimplemented!(),
     }
 }
 
@@ -198,10 +192,20 @@ fn make_yageo_pth(part_number: &str, series: YageoSeries) -> Resistor {
     let label = format!("{} {}% {}W", value, tolerance, power);
     let manufacturer = Manufacturer {
         name: "Yageo".to_string(),
-        part_number: part_number.to_owned()
+        part_number: part_number.to_owned(),
     };
     let description = format!("Yageo {} Metal Film PTH {} {}", series, size, label);
-    make_chip_resistor(label, manufacturer, description, size, value_ohms, power, tolerance, None, ResistorKind::MetalFilm)
+    make_chip_resistor(
+        label,
+        manufacturer,
+        description,
+        size,
+        value_ohms,
+        power,
+        tolerance,
+        None,
+        ResistorKind::MetalFilm,
+    )
 }
 
 fn make_yageo_chip(part_number: &str, series: YageoSeries) -> Resistor {
@@ -216,13 +220,26 @@ fn make_yageo_chip(part_number: &str, series: YageoSeries) -> Resistor {
     } else {
         "".to_owned()
     };
-    let label = format!("{} {}% {}W",value,tolerance,power);
+    let label = format!("{} {}% {}W", value, tolerance, power);
     let manufacturer = Manufacturer {
         name: "Yageo".to_string(),
-        part_number: part_number.to_owned()
+        part_number: part_number.to_owned(),
     };
-    let description = format!("Yageo {} Thick Film Resistor SMD {} {} {}", series, size, label, tempco_string);
-    make_chip_resistor(label, manufacturer, description, size, value_ohms, power, tolerance, tempco, ResistorKind::ThickFilmChip)
+    let description = format!(
+        "Yageo {} Thick Film Resistor SMD {} {} {}",
+        series, size, label, tempco_string
+    );
+    make_chip_resistor(
+        label,
+        manufacturer,
+        description,
+        size,
+        value_ohms,
+        power,
+        tolerance,
+        tempco,
+        ResistorKind::ThickFilmChip,
+    )
 }
 
 pub fn make_yageo_series_resistor(part_number: &str) -> Resistor {
@@ -230,14 +247,12 @@ pub fn make_yageo_series_resistor(part_number: &str) -> Resistor {
         "RC" => make_yageo_chip(part_number, YageoSeries::RC),
         "RL" => make_yageo_chip(part_number, YageoSeries::RL),
         "AT" => make_yageo_chip(part_number, YageoSeries::AT),
-        _ => {
-            match &part_number[0..6] {
-                "FMP-50" => make_yageo_pth(part_number, YageoSeries::FMP50),
-                "FMP100" => make_yageo_pth(part_number, YageoSeries::FMP100),
-                "FMP200" => make_yageo_pth(part_number, YageoSeries::FMP200),
-                _ => panic!("unrecognized Yageo series {}", part_number)
-            }
-        }
+        _ => match &part_number[0..6] {
+            "FMP-50" => make_yageo_pth(part_number, YageoSeries::FMP50),
+            "FMP100" => make_yageo_pth(part_number, YageoSeries::FMP100),
+            "FMP200" => make_yageo_pth(part_number, YageoSeries::FMP200),
+            _ => panic!("unrecognized Yageo series {}", part_number),
+        },
     }
 }
 

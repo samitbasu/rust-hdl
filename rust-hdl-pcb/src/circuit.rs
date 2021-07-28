@@ -1,10 +1,10 @@
 use crate::bom::{Manufacturer, Supplier};
+use crate::capacitors::{CapacitorKind, CapacitorTolerance};
 use crate::designator::Designator;
-use crate::epin::{EPin};
-use crate::capacitors::{CapacitorTolerance, CapacitorKind};
+use crate::diode::DiodeKind;
+use crate::epin::EPin;
 use crate::resistors::{PowerWatt, ResistorKind};
 use crate::smd::SizeCode;
-use crate::diode::DiodeKind;
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug)]
@@ -61,7 +61,7 @@ pub struct Regulator {
     pub input_min_voltage: f64,
     pub input_max_voltage: f64,
     pub output_nominal_voltage: f64,
-    pub output_max_current_ma: f64
+    pub output_max_current_ma: f64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -70,7 +70,7 @@ pub enum LogicSignalStandard {
     TTL,
     WideRange,
     TriState,
-    TriState5v0
+    TriState5v0,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -78,7 +78,7 @@ pub enum LogicFunction {
     XOR,
     Buffer,
     Decoder,
-    Multiplexer
+    Multiplexer,
 }
 
 #[derive(Clone, Debug)]

@@ -1,8 +1,11 @@
-use crate::circuit::Resistor;
-use crate::smd::SizeCode;
-use crate::resistors::{PowerWatt, make_chip_resistor, ResistorKind, map_resistance_to_string, map_resistance_letter_code_to_value};
-use crate::utils::drop_char;
 use crate::bom::Manufacturer;
+use crate::circuit::Resistor;
+use crate::resistors::{
+    make_chip_resistor, map_resistance_letter_code_to_value, map_resistance_to_string, PowerWatt,
+    ResistorKind,
+};
+use crate::smd::SizeCode;
+use crate::utils::drop_char;
 
 fn map_erj_to_size(part_number: &str) -> SizeCode {
     match &part_number[3..=4] {
@@ -14,7 +17,7 @@ fn map_erj_to_size(part_number: &str) -> SizeCode {
         "6R" => SizeCode::I0805,
         "8B" => SizeCode::I1206,
         "8R" => SizeCode::I1206,
-        _ => panic!("Unsupported size code {}", part_number)
+        _ => panic!("Unsupported size code {}", part_number),
     }
 }
 
@@ -24,11 +27,11 @@ fn map_erj_to_power(part_number: &str) -> PowerWatt {
         "3B" => PowerWatt::new(25, 100),
         "3R" => PowerWatt::new(1, 10),
         "6D" => PowerWatt::new(1, 2),
-        "6B" => PowerWatt::new(1,3),
-        "6R" => PowerWatt::new(1,8),
+        "6B" => PowerWatt::new(1, 3),
+        "6R" => PowerWatt::new(1, 8),
         "8B" => PowerWatt::new(1, 2),
         "8R" => PowerWatt::new(1, 4),
-        _ => panic!("Unsupported size code {}", part_number)
+        _ => panic!("Unsupported size code {}", part_number),
     }
 }
 
@@ -39,7 +42,7 @@ fn map_era_to_size(part_number: &str) -> SizeCode {
         "3A" => SizeCode::I0603,
         "6A" => SizeCode::I0805,
         "8A" => SizeCode::I1206,
-        _ => panic!("Unknown part number size code {}", part_number)
+        _ => panic!("Unknown part number size code {}", part_number),
     }
 }
 
@@ -50,7 +53,7 @@ fn map_size_code_to_power(size: SizeCode) -> PowerWatt {
         SizeCode::I0603 => PowerWatt::new(1, 10),
         SizeCode::I0805 => PowerWatt::new(1, 8),
         SizeCode::I1206 => PowerWatt::new(1, 4),
-        _ => panic!("unexpected size code {}", size)
+        _ => panic!("unexpected size code {}", size),
     }
 }
 
@@ -63,7 +66,7 @@ fn map_part_number_to_tolerance(part_number: &str) -> f64 {
         "F" => 1.0,
         "G" => 2.0,
         "J" => 5.0,
-        _ => panic!("Unexpected tolerance code in part number {}", part_number)
+        _ => panic!("Unexpected tolerance code in part number {}", part_number),
     }
 }
 
@@ -74,7 +77,7 @@ fn map_part_number_to_tempco(part_number: &str) -> f64 {
         "E" => 25.0,
         "H" => 50.0,
         "K" => 100.0,
-        _ => panic!("Unexpected tempco code in part number {}", part_number)
+        _ => panic!("Unexpected tempco code in part number {}", part_number),
     }
 }
 
@@ -97,18 +100,31 @@ fn make_panasonic_era_resistor(part_number: &str) -> Resistor {
     let value_ohms = map_part_number_to_resistance(part_number);
     let value = map_resistance_to_string(value_ohms);
     let tempco_string = format!("{} ppm/K", tempco);
-    let label = format!("{} {}% {}W",value, tolerance, power);
+    let label = format!("{} {}% {}W", value, tolerance, power);
     let manufacturer = Manufacturer {
         name: "Panasonic".to_string(),
-        part_number: part_number.to_owned()
+        part_number: part_number.to_owned(),
     };
-    let description = format!("Panasonic ERA Thin Film Resistor SMD {} {} {}", size, label, tempco_string);
-    make_chip_resistor(label, manufacturer, description, size, value_ohms, power, tolerance, Some(tempco), ResistorKind::ThinFilmChip)
+    let description = format!(
+        "Panasonic ERA Thin Film Resistor SMD {} {} {}",
+        size, label, tempco_string
+    );
+    make_chip_resistor(
+        label,
+        manufacturer,
+        description,
+        size,
+        value_ohms,
+        power,
+        tolerance,
+        Some(tempco),
+        ResistorKind::ThinFilmChip,
+    )
 }
 
 fn make_panasonic_erj_resistor(part_number: &str) -> Resistor {
     assert_eq!(&part_number[0..3], "ERJ");
-    let part_number = &part_number.to_string().replace("-","");
+    let part_number = &part_number.to_string().replace("-", "");
     let size = map_erj_to_size(part_number);
     let power = map_erj_to_power(part_number);
     let tolerance = map_part_number_to_tolerance(part_number);
@@ -117,10 +133,20 @@ fn make_panasonic_erj_resistor(part_number: &str) -> Resistor {
     let label = format!("{} {}% {}W", value, tolerance, power);
     let manufacturer = Manufacturer {
         name: "Panasonic".to_string(),
-        part_number: part_number.to_owned()
+        part_number: part_number.to_owned(),
     };
     let description = format!("Panasonic ERJ Thick Film Resistor SMD {} {}", size, label);
-    make_chip_resistor(label, manufacturer, description, size, value_ohms, power, tolerance, None, ResistorKind::ThickFilmChip)
+    make_chip_resistor(
+        label,
+        manufacturer,
+        description,
+        size,
+        value_ohms,
+        power,
+        tolerance,
+        None,
+        ResistorKind::ThickFilmChip,
+    )
 }
 
 pub fn make_panasonic_resistor(part_number: &str) -> Resistor {

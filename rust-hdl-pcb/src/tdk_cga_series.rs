@@ -1,7 +1,7 @@
 use crate::bom::Manufacturer;
-use crate::capacitors::{CapacitorTolerance, DielectricCode, map_three_digit_cap_to_pf, make_mlcc};
 use crate::capacitors;
-use crate::circuit::{Capacitor};
+use crate::capacitors::{make_mlcc, map_three_digit_cap_to_pf, CapacitorTolerance, DielectricCode};
+use crate::circuit::Capacitor;
 use crate::smd::SizeCode;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {
@@ -16,7 +16,7 @@ fn map_part_number_to_size(part: &str) -> SizeCode {
         "9" => SizeCode::I2220,
         "D" => SizeCode::I3025,
         "E" => SizeCode::I0204,
-        _ => panic!("Unknown CGA part size {}", part)
+        _ => panic!("Unknown CGA part size {}", part),
     }
 }
 
@@ -36,7 +36,7 @@ fn map_part_number_to_voltage(part_number: &str) -> f64 {
         "1V" => 35.,
         "1H" => 50.,
         "1N" => 75.,
-        _ => panic!("Unknown working voltage {}!", part_number)
+        _ => panic!("Unknown working voltage {}!", part_number),
     }
 }
 
@@ -51,10 +51,9 @@ fn map_part_number_to_tolerance(part_number: &str) -> CapacitorTolerance {
         "J" => CapacitorTolerance::FivePercent,
         "K" => CapacitorTolerance::TenPercent,
         "M" => CapacitorTolerance::TwentyPercent,
-        _ => panic!("Unknown part tolerance {}", part_number)
+        _ => panic!("Unknown part tolerance {}", part_number),
     }
 }
-
 
 pub fn make_tdk_cga_capacitor(part_number: &str) -> Capacitor {
     let size = map_part_number_to_size(part_number);
@@ -66,17 +65,28 @@ pub fn make_tdk_cga_capacitor(part_number: &str) -> Capacitor {
     let label = format!("{} {} {}V {}", value, tolerance, voltage, dielectric);
     let manufacturer = Manufacturer {
         name: "TDK".to_string(),
-        part_number: part_number.to_owned()
+        part_number: part_number.to_owned(),
     };
-    let description = format!("TDK CGA Series Automotive Grade MLCC Capacitor SMD {} {}", size, label);
-    make_mlcc(label, manufacturer, description, size, value_pf, dielectric, voltage, tolerance)
+    let description = format!(
+        "TDK CGA Series Automotive Grade MLCC Capacitor SMD {} {}",
+        size, label
+    );
+    make_mlcc(
+        label,
+        manufacturer,
+        description,
+        size,
+        value_pf,
+        dielectric,
+        voltage,
+        tolerance,
+    )
 }
-
 
 #[cfg(test)]
 fn known_parts() -> Vec<String> {
-    use std::path::PathBuf;
     use std::io::BufRead;
+    use std::path::PathBuf;
 
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     path.push("test");
@@ -89,12 +99,14 @@ fn known_parts() -> Vec<String> {
 #[test]
 fn part_number_decodes() {
     for part in &known_parts() {
-        println!("Part {} tolerance {} dielectric {} voltage {} size {} value {}", part,
-                 map_part_number_to_tolerance(part),
-                 map_part_number_to_dielectric(part),
-                 map_part_number_to_voltage(part),
-                 map_part_number_to_size(part),
-                 map_part_number_to_pf(part)
+        println!(
+            "Part {} tolerance {} dielectric {} voltage {} size {} value {}",
+            part,
+            map_part_number_to_tolerance(part),
+            map_part_number_to_dielectric(part),
+            map_part_number_to_voltage(part),
+            map_part_number_to_size(part),
+            map_part_number_to_pf(part)
         )
     }
 }
@@ -108,17 +120,20 @@ fn matching_parts() {
         let voltage = map_part_number_to_voltage(part);
         let size = map_part_number_to_size(part);
         let pf = map_part_number_to_pf(part);
-        if (tolerance == CapacitorTolerance::TwentyPercent) &&
-            (dielectric == DielectricCode::X7R) &&
-            (voltage == 100.) &&
-            (size == SizeCode::I0805) &&
-            (pf == 100.0 * 1000.0) {
-            println!("Part {} tolerance {} dielectric {} voltage {} size {} value {}", part,
-                     map_part_number_to_tolerance(part),
-                     map_part_number_to_dielectric(part),
-                     map_part_number_to_voltage(part),
-                     map_part_number_to_size(part),
-                     map_part_number_to_pf(part)
+        if (tolerance == CapacitorTolerance::TwentyPercent)
+            && (dielectric == DielectricCode::X7R)
+            && (voltage == 100.)
+            && (size == SizeCode::I0805)
+            && (pf == 100.0 * 1000.0)
+        {
+            println!(
+                "Part {} tolerance {} dielectric {} voltage {} size {} value {}",
+                part,
+                map_part_number_to_tolerance(part),
+                map_part_number_to_dielectric(part),
+                map_part_number_to_voltage(part),
+                map_part_number_to_size(part),
+                map_part_number_to_pf(part)
             );
             count += 1;
         }

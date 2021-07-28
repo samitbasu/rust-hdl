@@ -1,7 +1,9 @@
-use crate::smd::SizeCode;
-use crate::capacitors::{DielectricCode, map_three_digit_cap_to_pf, CapacitorTolerance, map_pf_to_label, make_mlcc};
-use crate::circuit::{Capacitor};
 use crate::bom::Manufacturer;
+use crate::capacitors::{
+    make_mlcc, map_pf_to_label, map_three_digit_cap_to_pf, CapacitorTolerance, DielectricCode,
+};
+use crate::circuit::Capacitor;
+use crate::smd::SizeCode;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {
     (&part[0..=3]).parse().unwrap()
@@ -18,7 +20,7 @@ fn map_part_number_to_voltage(part: &str) -> f64 {
         "1" => 100.0,
         "2" => 200.0,
         "7" => 500.0,
-        _ => panic!("No working voltage for {}", part)
+        _ => panic!("No working voltage for {}", part),
     }
 }
 
@@ -52,8 +54,17 @@ pub fn make_avx_capacitor(part_number: &str) -> Capacitor {
     let label = format!("{} {} {}V {}", value, tolerance, voltage, dielectric);
     let manufacturer = Manufacturer {
         name: "AVX".to_string(),
-        part_number: part_number.to_owned()
+        part_number: part_number.to_owned(),
     };
     let description = format!("AVX X7R Series MLCC Capacitor SMD {} {}", size, label);
-    make_mlcc(label, manufacturer, description, size, value_pf, dielectric, voltage, tolerance)
+    make_mlcc(
+        label,
+        manufacturer,
+        description,
+        size,
+        value_pf,
+        dielectric,
+        voltage,
+        tolerance,
+    )
 }
