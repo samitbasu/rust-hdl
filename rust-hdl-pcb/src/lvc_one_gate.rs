@@ -5,6 +5,7 @@ use crate::epin::{EPin, PinKind};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
+use crate::glyph::make_ic_body;
 
 pub fn make_sn74lvc1g125se7(part_number: &str) -> Logic {
     assert_eq!(part_number, "74LVC1G125SE-7");
@@ -25,6 +26,7 @@ pub fn make_sn74lvc1g125se7(part_number: &str) -> Logic {
                 pin!("Y", TriState, 0, East),
                 pin!("VCC", PowerSink, 200, East),
             ]),
+            outline: vec![make_ic_body(-400, -400, 400, 400)],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::Resistor,
@@ -60,6 +62,7 @@ pub fn make_sn74lvc1g86dck(part_number: &str) -> Logic {
                 pin!("Y", Output, 0, East),
                 pin!("VCC", PowerSink, 300, East)
             ]),
+            outline: vec![make_ic_body(-500, -500, 600, 500)],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::IntegratedCircuit,

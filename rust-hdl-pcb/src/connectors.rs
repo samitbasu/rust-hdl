@@ -5,6 +5,7 @@ use crate::epin::{EPin, PinKind, PinLocation, EdgeLocation};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use std::collections::BTreeMap;
+use crate::glyph::make_ic_body;
 
 fn make_passive_pins(count: u32) -> BTreeMap<u64, EPin> {
     pin_list(
@@ -34,6 +35,7 @@ pub fn make_molex_55935_connector(part_number: &str) -> PartDetails {
         comment: "".to_string(),
         hide_pin_designators: true,
         pins: make_passive_pins(8),
+        outline: vec![make_ic_body(-200, -500, 0, 400)],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::Connector,
@@ -55,6 +57,7 @@ pub fn make_sullins_sbh11_header(part_number: &str) -> PartDetails {
         comment: "".to_string(),
         hide_pin_designators: true,
         pins: make_passive_pins(26),
+        outline: vec![make_ic_body(-200, -1400, 0, 1300)],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::Connector,
@@ -76,6 +79,7 @@ pub fn make_amphenol_10056845_header(part_number: &str) -> PartDetails {
         comment: "".to_string(),
         hide_pin_designators: true,
         pins: make_passive_pins(8),
+        outline: vec![make_ic_body(-200, -400, 300, 400)],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::Connector,

@@ -59,6 +59,8 @@ mod utils;
 mod wurth_led;
 mod yageo_cc_caps;
 mod yageo_resistor_series;
+mod schematic;
+mod glyph;
 
 #[test]
 fn test_yageo_rc_68k() {

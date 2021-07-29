@@ -20,6 +20,7 @@ pub fn make_wurth_led(part_number: &str) -> Diode {
             comment: "".to_string(),
             hide_pin_designators: true,
             pins: pin_list(vec![EPin::passive_neg(), EPin::passive_pos()]),
+            outline: vec![],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::Diode,

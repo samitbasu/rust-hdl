@@ -37,6 +37,7 @@ pub fn make_ty_brl_series(part_number: &str) -> Inductor {
             comment: "".to_string(),
             hide_pin_designators: true,
             pins: pin_list(make_passive_pin_pair()),
+            outline: vec![],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::Inductor,

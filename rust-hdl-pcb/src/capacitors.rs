@@ -135,6 +135,7 @@ pub fn make_passive_two_pin(
         comment: "".to_string(),
         hide_pin_designators: true,
         pins: pin_list(make_passive_pin_pair()),
+        outline: vec![],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::Capacitor,

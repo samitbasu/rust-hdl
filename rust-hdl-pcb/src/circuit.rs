@@ -1,11 +1,13 @@
+use std::collections::BTreeMap;
+
 use crate::bom::{Manufacturer, Supplier};
 use crate::capacitors::{CapacitorKind, CapacitorTolerance};
 use crate::designator::Designator;
 use crate::diode::DiodeKind;
 use crate::epin::EPin;
+use crate::glyph::Glyph;
 use crate::resistors::{PowerWatt, ResistorKind};
 use crate::smd::SizeCode;
-use std::collections::BTreeMap;
 
 #[derive(Clone, Debug)]
 pub struct PartDetails {
@@ -15,6 +17,7 @@ pub struct PartDetails {
     pub comment: String,
     pub hide_pin_designators: bool,
     pub pins: BTreeMap<u64, EPin>,
+    pub outline: Vec<Glyph>,
     pub suppliers: Vec<Supplier>,
     pub designator: Designator,
     pub size: SizeCode,

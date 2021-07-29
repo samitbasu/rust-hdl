@@ -5,6 +5,7 @@ use crate::epin::{EPin, PinKind};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
+use crate::glyph::{make_ic_body, make_line};
 
 pub fn make_iso7741edwrq1(part_number: &str) -> PartDetails {
     assert_eq!(part_number, "ISO7741EDWRQ1");
@@ -36,6 +37,11 @@ pub fn make_iso7741edwrq1(part_number: &str) -> PartDetails {
         comment: "".to_string(),
         hide_pin_designators: false,
         pins: pin_list(pins),
+        outline: vec![
+            make_ic_body(-600, -1100, 500, 1000),
+            make_line(-100, 700, -100, -700),
+            make_line(0, 700, 0, -700),
+        ],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::IntegratedCircuit,

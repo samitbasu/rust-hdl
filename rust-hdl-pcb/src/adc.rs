@@ -5,6 +5,7 @@ use crate::epin::{EPin, PinKind, PinLocation, EdgeLocation};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
+use crate::glyph::{Glyph, make_ic_body};
 
 
 pub fn make_ads868x(part_number: &str) -> PartDetails {
@@ -38,6 +39,7 @@ pub fn make_ads868x(part_number: &str) -> PartDetails {
         comment: "".to_string(),
         hide_pin_designators: false,
         pins: pin_list(pins),
+        outline: vec![make_ic_body(-800, -1400, 900, 1200)],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::IntegratedCircuit,

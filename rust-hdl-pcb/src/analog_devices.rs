@@ -5,6 +5,7 @@ use crate::epin::{EPin, PinKind};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
+use crate::glyph::make_ic_body;
 
 pub fn make_lt3092_current_source(part_number: &str) -> PartDetails {
     assert!(part_number.starts_with("LT3092"));
@@ -23,6 +24,7 @@ pub fn make_lt3092_current_source(part_number: &str) -> PartDetails {
             pin!("IN", PowerSink, 200, West),
             pin!("OUT_2", PowerSource, 200, East),
         ]),
+        outline: vec![make_ic_body(-400, -200, 400, 300)],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::IntegratedCircuit,

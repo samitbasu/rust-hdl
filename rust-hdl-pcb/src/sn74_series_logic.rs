@@ -5,6 +5,7 @@ use crate::epin::{EPin, PinKind};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
+use crate::glyph::make_ic_body;
 
 pub fn make_sn74hct138(part_number: &str) -> Logic {
     assert_eq!(part_number, "SN74HCT138PWR");
@@ -33,6 +34,7 @@ pub fn make_sn74hct138(part_number: &str) -> Logic {
             comment: "".to_string(),
             hide_pin_designators: false,
             pins: pin_list(pinset),
+            outline: vec![make_ic_body(-600, -900, 600, 1000)],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::IntegratedCircuit,
@@ -73,6 +75,7 @@ pub fn make_sn74hct541(part_number: &str) -> Logic {
             comment: "".to_string(),
             hide_pin_designators: false,
             pins: pin_list(pinset),
+            outline: vec![make_ic_body(-700, -1200, 600, 1000)],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::IntegratedCircuit,
@@ -117,6 +120,7 @@ pub fn make_sn74hc151(part_number: &str) -> Logic {
             comment: "".to_string(),
             hide_pin_designators: false,
             pins: pin_list(pins),
+            outline: vec![make_ic_body(-500, -700, 400, 1200)],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::IntegratedCircuit,

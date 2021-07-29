@@ -5,6 +5,7 @@ use crate::epin::{EPin, PinKind};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
+use crate::glyph::make_ic_body;
 
 pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> Regulator {
     assert!(part_number.starts_with("NCV33375ST"));
@@ -32,6 +33,7 @@ pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> Regulator {
                 pin!("VOUT", PowerSource, 200, East),
                 pin!("GND", PowerReturn, 0, South),
             ]),
+            outline: vec![make_ic_body(-400, -200, 500, 400)],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::VoltageRegulator,
@@ -69,6 +71,7 @@ pub fn make_mcp_1799_regulator(part_number: &str) -> Regulator {
                 pin!("VOUT", PowerSource, 100, East),
                 pin!("GND_2", PowerReturn, -200, East),
             ]),
+            outline: vec![make_ic_body(-400, -300, 500, 200)],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::VoltageRegulator,
@@ -106,6 +109,7 @@ pub fn make_ti_tps_7b84_regulator(part_number: &str) -> Regulator {
                 pin!("OUT", PowerSource, 200, East),
                 pin!("GND", PowerReturn, 0, South),
             ]),
+            outline: vec![make_ic_body(-500, -200, 500, 300)],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::VoltageRegulator,
@@ -148,6 +152,7 @@ pub fn make_zldo1117g_regulator(part_number: &str) -> Regulator {
                 pin!("Vin", PowerSink, 300, West),
                 pin!("Vout_2", PowerSource, 100, East)
             ]),
+            outline: vec![make_ic_body(-400, -300, 400, 400)],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::VoltageRegulator,

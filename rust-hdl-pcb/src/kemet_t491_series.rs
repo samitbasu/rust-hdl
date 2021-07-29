@@ -60,6 +60,7 @@ pub fn make_kemet_t491_capacitor(part_number: &str) -> Capacitor {
             comment: "".to_string(),
             hide_pin_designators: true,
             pins: pin_list(vec![EPin::passive_pos(), EPin::passive_neg()]),
+            outline: vec![],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::Capacitor,
