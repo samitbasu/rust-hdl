@@ -95,12 +95,14 @@ pub struct Logic {
     pub function: LogicFunction,
 }
 
+#[derive(Clone, Debug)]
 pub struct Net {
     source_pin: u64,
     dest_pin: u64,
     name: String,
 }
 
+#[derive(Clone, Debug)]
 pub enum CircuitNode {
     Capacitor(Capacitor),
     Resistor(Resistor),
@@ -109,8 +111,11 @@ pub enum CircuitNode {
     Inductor(Inductor),
     IntegratedCircuit(PartDetails),
     Circuit(Box<Circuit>),
+    Connector(PartDetails),
+    Logic(Logic),
 }
 
+#[derive(Clone, Debug)]
 pub struct Circuit {
     pins: BTreeMap<u64, EPin>,
     nodes: Vec<CircuitNode>,

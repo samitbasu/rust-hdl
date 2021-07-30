@@ -1,13 +1,13 @@
 use crate::bom::Manufacturer;
-use crate::circuit::{PartDetails, Regulator};
+use crate::circuit::{PartDetails, Regulator, CircuitNode};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
-use crate::glyph::make_ic_body;
+use crate::glyph::{make_ic_body, make_label};
 
-pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> Regulator {
+pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("NCV33375ST"));
     let voltage = match &part_number[10..=12] {
         "1.8" => 1.8,
@@ -17,7 +17,7 @@ pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> Regulator {
         "5.0" => 5.0,
         _ => panic!("Unexpected voltage in part {}", part_number),
     };
-    Regulator {
+    CircuitNode::Regulator(Regulator {
         details: PartDetails {
             label: part_number.to_string(),
             manufacturer: Manufacturer {
@@ -31,9 +31,13 @@ pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> Regulator {
                 pin!("VIN", PowerSink, 200, West),
                 pin!("ON/OFF", Input, -100, West),
                 pin!("VOUT", PowerSource, 200, East),
-                pin!("GND", PowerReturn, 0, South),
+                pin!("GND", PowerReturn, 100, South),
             ]),
-            outline: vec![make_ic_body(-400, -200, 500, 400)],
+            outline: vec![
+                make_ic_body(-400, -200, 500, 400),
+                make_label(-400, 400, "V?"),
+                make_label(-200, 400, part_number)
+            ],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::VoltageRegulator,
@@ -45,17 +49,17 @@ pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> Regulator {
         input_max_voltage: 13.0,
         output_nominal_voltage: voltage,
         output_max_current_ma: 300.0,
-    }
+    })
 }
 
-pub fn make_mcp_1799_regulator(part_number: &str) -> Regulator {
+pub fn make_mcp_1799_regulator(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("MCP1799"));
     let voltage = match &part_number[9..=10] {
         "33" => 3.3,
         "50" => 5.0,
         _ => panic!("unwknown part number"),
     };
-    Regulator {
+    CircuitNode::Regulator(Regulator {
         details: PartDetails {
             label: part_number.to_string(),
             manufacturer: Manufacturer {
@@ -71,7 +75,11 @@ pub fn make_mcp_1799_regulator(part_number: &str) -> Regulator {
                 pin!("VOUT", PowerSource, 100, East),
                 pin!("GND_2", PowerReturn, -200, East),
             ]),
-            outline: vec![make_ic_body(-400, -300, 500, 200)],
+            outline: vec![
+                make_ic_body(-400, -300, 500, 200),
+                make_label(-400, 200, "V?"),
+                make_label(-400, -400, part_number),
+            ],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::VoltageRegulator,
@@ -83,17 +91,17 @@ pub fn make_mcp_1799_regulator(part_number: &str) -> Regulator {
         input_max_voltage: 45.0,
         output_nominal_voltage: voltage,
         output_max_current_ma: 80.0,
-    }
+    })
 }
 
-pub fn make_ti_tps_7b84_regulator(part_number: &str) -> Regulator {
+pub fn make_ti_tps_7b84_regulator(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("TPS7B84"));
     let voltage = match &part_number[7..=8] {
         "33" => 3.3,
         "50" => 5.0,
         _ => panic!("unknown part number"),
     };
-    Regulator {
+    CircuitNode::Regulator(Regulator {
         details: PartDetails {
             label: part_number.to_string(),
             manufacturer: Manufacturer {
@@ -109,7 +117,11 @@ pub fn make_ti_tps_7b84_regulator(part_number: &str) -> Regulator {
                 pin!("OUT", PowerSource, 200, East),
                 pin!("GND", PowerReturn, 0, South),
             ]),
-            outline: vec![make_ic_body(-500, -200, 500, 300)],
+            outline: vec![
+                make_ic_body(-500, -200, 500, 300),
+                make_label(-500, 300, "V?"),
+                make_label(-300, 300, part_number),
+            ],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::VoltageRegulator,
@@ -121,10 +133,10 @@ pub fn make_ti_tps_7b84_regulator(part_number: &str) -> Regulator {
         input_max_voltage: 42.0,
         output_nominal_voltage: voltage,
         output_max_current_ma: 150.0,
-    }
+    })
 }
 
-pub fn make_zldo1117g_regulator(part_number: &str) -> Regulator {
+pub fn make_zldo1117g_regulator(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("ZLDO1117G"));
     assert!(part_number.ends_with("TA"));
     let voltage = match &part_number[9..=10] {
@@ -136,7 +148,7 @@ pub fn make_zldo1117g_regulator(part_number: &str) -> Regulator {
         "50" => 5.0,
         _ => panic!("Unrecognized part number {}", part_number),
     };
-    Regulator {
+    CircuitNode::Regulator(Regulator {
         details: PartDetails {
             label: part_number.to_string(),
             manufacturer: Manufacturer {
@@ -152,7 +164,11 @@ pub fn make_zldo1117g_regulator(part_number: &str) -> Regulator {
                 pin!("Vin", PowerSink, 300, West),
                 pin!("Vout_2", PowerSource, 100, East)
             ]),
-            outline: vec![make_ic_body(-400, -300, 400, 400)],
+            outline: vec![
+                make_ic_body(-400, -300, 400, 400),
+                make_label(-400, 400, "V?"),
+                make_label(-200, 400, part_number),
+            ],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::VoltageRegulator,
@@ -164,5 +180,5 @@ pub fn make_zldo1117g_regulator(part_number: &str) -> Regulator {
         input_max_voltage: 18.0,
         output_nominal_voltage: voltage,
         output_max_current_ma: 1000.0,
-    }
+    })
 }

@@ -2,7 +2,7 @@ use crate::adc::make_ads868x;
 use crate::analog_devices::make_lt3092_current_source;
 use crate::avx_caps::make_avx_capacitor;
 use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode};
-use crate::circuit::{LogicFunction, LogicSignalStandard};
+use crate::circuit::{LogicFunction, LogicSignalStandard, CircuitNode};
 use crate::connectors::{
     make_amphenol_10056845_header, make_molex_55935_connector, make_sullins_sbh11_header,
 };
@@ -28,6 +28,7 @@ use crate::tdk_cga_series::make_tdk_cga_capacitor;
 use crate::wurth_led::make_wurth_led;
 use crate::yageo_cc_caps::make_yageo_cc_series_cap;
 use crate::yageo_resistor_series::make_yageo_series_resistor;
+use crate::schematic::make_svg;
 
 mod adc;
 mod analog_devices;
@@ -253,7 +254,10 @@ fn test_green_led() {
 
 #[test]
 fn test_zldo_regulator() {
-    let v = make_zldo1117g_regulator("ZLDO1117G50TA");
+    let v = match make_zldo1117g_regulator("ZLDO1117G50TA") {
+        CircuitNode::Regulator(r) => r,
+        _ => panic!()
+    };
     assert_eq!(v.input_max_voltage, 18.0);
     assert_eq!(v.output_nominal_voltage, 5.0);
     assert_eq!(v.details.pins.len(), 4);
@@ -261,7 +265,10 @@ fn test_zldo_regulator() {
     assert_eq!(v.details.pins[&2].kind, PinKind::PowerSource);
     assert_eq!(v.details.pins[&3].kind, PinKind::PowerSink);
     assert_eq!(v.details.pins[&4].kind, PinKind::PowerSource);
-    let v = make_zldo1117g_regulator("ZLDO1117G33TA");
+    let v = match make_zldo1117g_regulator("ZLDO1117G33TA") {
+        CircuitNode::Regulator(r) => r,
+        _ => panic!()
+    };
     assert_eq!(v.input_max_voltage, 18.0);
     assert_eq!(v.output_nominal_voltage, 3.3);
     assert_eq!(v.details.pins.len(), 4);
@@ -273,7 +280,10 @@ fn test_zldo_regulator() {
 
 #[test]
 fn test_ti_tps_regulator() {
-    let v = make_ti_tps_7b84_regulator("TPS7B8450QDCYRQ1");
+    let v = match make_ti_tps_7b84_regulator("TPS7B8450QDCYRQ1") {
+        CircuitNode::Regulator(r) => r,
+        _ => panic!(),
+    };
     assert_eq!(v.input_max_voltage, 42.0);
     assert_eq!(v.output_nominal_voltage, 5.0);
     assert_eq!(v.output_max_current_ma, 150.0);
@@ -285,7 +295,10 @@ fn test_ti_tps_regulator() {
     assert_eq!(v.details.pins[&3].name, "OUT");
     assert_eq!(v.details.pins[&4].kind, PinKind::PowerReturn);
     assert_eq!(v.details.pins[&4].name, "GND");
-    let v = make_ti_tps_7b84_regulator("TPS7B8433QDCYRQ1");
+    let v = match make_ti_tps_7b84_regulator("TPS7B8433QDCYRQ1") {
+        CircuitNode::Regulator(r) => r,
+        _ => panic!(),
+    };
     assert_eq!(v.input_max_voltage, 42.0);
     assert_eq!(v.output_nominal_voltage, 3.3);
     assert_eq!(v.output_max_current_ma, 150.0);
@@ -301,7 +314,10 @@ fn test_ti_tps_regulator() {
 
 #[test]
 fn test_on_semi_regulators() {
-    let v = make_on_semi_ncv33375_regulator("NCV33375ST3.3T3G");
+    let v = match make_on_semi_ncv33375_regulator("NCV33375ST3.3T3G") {
+        CircuitNode::Regulator(v) => v,
+        _ => panic!()
+    };
     assert_eq!(v.input_max_voltage, 13.0);
     assert_eq!(v.output_nominal_voltage, 3.3);
     assert_eq!(v.output_max_current_ma, 300.0);
@@ -313,7 +329,10 @@ fn test_on_semi_regulators() {
     assert_eq!(v.details.pins[&3].name, "VOUT");
     assert_eq!(v.details.pins[&4].kind, PinKind::PowerReturn);
     assert_eq!(v.details.pins[&4].name, "GND");
-    let v = make_on_semi_ncv33375_regulator("NCV33375ST1.8T3G");
+    let v = match make_on_semi_ncv33375_regulator("NCV33375ST1.8T3G") {
+        CircuitNode::Regulator(v) => v,
+        _ => panic!()
+    };
     assert_eq!(v.input_max_voltage, 13.0);
     assert_eq!(v.output_nominal_voltage, 1.8);
     assert_eq!(v.output_max_current_ma, 300.0);
@@ -329,7 +348,10 @@ fn test_on_semi_regulators() {
 
 #[test]
 fn test_microchip_regulators() {
-    let v = make_mcp_1799_regulator("MCP1799T-5002H/DB");
+    let v = match make_mcp_1799_regulator("MCP1799T-5002H/DB") {
+        CircuitNode::Regulator(r) => r,
+        _ => panic!()
+    };
     assert_eq!(v.input_max_voltage, 45.0);
     assert_eq!(v.output_nominal_voltage, 5.0);
     assert_eq!(v.output_max_current_ma, 80.0);
@@ -341,7 +363,10 @@ fn test_microchip_regulators() {
     assert_eq!(v.details.pins[&3].name, "VOUT");
     assert_eq!(v.details.pins[&4].kind, PinKind::PowerReturn);
     assert_eq!(v.details.pins[&4].name, "GND_2");
-    let v = make_mcp_1799_regulator("MCP1799T-3302H/DB");
+    let v = match make_mcp_1799_regulator("MCP1799T-3302H/DB") {
+        CircuitNode::Regulator(r) => r,
+        _ => panic!()
+    };
     assert_eq!(v.input_max_voltage, 45.0);
     assert_eq!(v.output_nominal_voltage, 3.3);
     assert_eq!(v.output_max_current_ma, 80.0);
@@ -357,7 +382,10 @@ fn test_microchip_regulators() {
 
 #[test]
 fn test_lt3092() {
-    let u = make_lt3092_current_source("LT3092EST#PBF");
+    let u = match make_lt3092_current_source("LT3092EST#PBF") {
+        CircuitNode::IntegratedCircuit(u) => u,
+        _ => panic!()
+    };
     assert_eq!(u.pins.len(), 4);
     assert_eq!(u.pins[&1].kind, PinKind::Input);
     assert_eq!(u.pins[&1].name, "SET");
@@ -383,7 +411,10 @@ fn test_brl() {
 
 #[test]
 fn test_xor() {
-    let u = make_lvc_one_gate("SN74LVC1G86DCK");
+    let u = match make_lvc_one_gate("SN74LVC1G86DCK") {
+        CircuitNode::Logic(l) => l,
+        _ => panic!()
+    };
     assert_eq!(u.input_type, LogicSignalStandard::WideRange);
     assert_eq!(u.output_type, LogicSignalStandard::WideRange);
     assert_eq!(u.min_supply_voltage, 1.65);
@@ -405,7 +436,10 @@ fn test_xor() {
 
 #[test]
 fn test_octal_buffer() {
-    let u = make_sn74_series("SN74HCT541PWR");
+    let u = match make_sn74_series("SN74HCT541PWR") {
+        CircuitNode::Logic(l) => l,
+        _ => panic!(),
+    };
     assert_eq!(u.details.manufacturer.name, "TI");
     assert_eq!(u.details.manufacturer.part_number, "SN74HCT541PWR");
     assert_eq!(u.input_type, LogicSignalStandard::TTL);
@@ -433,7 +467,10 @@ fn test_octal_buffer() {
 
 #[test]
 fn test_decoder() {
-    let u = make_sn74_series("SN74HCT138PWR");
+    let u = match make_sn74_series("SN74HCT138PWR") {
+        CircuitNode::Logic(l) => l,
+        _ => panic!(),
+    };
     assert_eq!(u.details.manufacturer.name, "TI");
     assert_eq!(u.details.manufacturer.part_number, "SN74HCT138PWR");
     assert_eq!(u.input_type, LogicSignalStandard::TTL);
@@ -469,7 +506,10 @@ fn test_decoder() {
 
 #[test]
 fn test_multiplexer() {
-    let u = make_sn74_series("SN74HC151QDRQ1");
+    let u = match make_sn74_series("SN74HC151QDRQ1") {
+        CircuitNode::Logic(l) => l,
+        _ => panic!()
+    };
     assert_eq!(u.details.manufacturer.name, "TI");
     assert_eq!(u.details.manufacturer.part_number, "SN74HC151QDRQ1");
     assert_eq!(u.input_type, LogicSignalStandard::TTL);
@@ -505,7 +545,10 @@ fn test_multiplexer() {
 
 #[test]
 fn test_buffer() {
-    let u = make_lvc_one_gate("74LVC1G125SE-7");
+    let u = match make_lvc_one_gate("74LVC1G125SE-7") {
+        CircuitNode::Logic(l) => l,
+        _ => panic!(),
+    };
     assert_eq!(u.input_type, LogicSignalStandard::WideRange);
     assert_eq!(u.output_type, LogicSignalStandard::TriState);
     assert_eq!(u.min_supply_voltage, 1.65);
@@ -527,7 +570,10 @@ fn test_buffer() {
 
 #[test]
 fn test_isolator() {
-    let u = make_iso7741edwrq1("ISO7741EDWRQ1");
+    let u = match make_iso7741edwrq1("ISO7741EDWRQ1") {
+        CircuitNode::IntegratedCircuit(u) => u,
+        _ => panic!(),
+    };
     for i in [2, 8, 9, 15] {
         assert_eq!(u.pins[&i].kind, PinKind::PowerReturn);
         assert!(u.pins[&i].name.starts_with("GND"));
@@ -550,7 +596,10 @@ fn test_isolator() {
 
 #[test]
 fn test_ads8689() {
-    let u = make_ads868x("ADS8689IPW");
+    let u = match make_ads868x("ADS8689IPW") {
+        CircuitNode::IntegratedCircuit(u) => u,
+        _ => panic!("Wrong type returned")
+    };
     assert_eq!(
         u.pins.iter().map(|x| x.1.name.clone()).collect::<Vec<_>>(),
         vec![
@@ -589,7 +638,10 @@ fn test_sullins_connector() {
 
 #[test]
 fn test_molex_connector() {
-    let j = make_molex_55935_connector("0559350810");
+    let j = match make_molex_55935_connector("0559350810") {
+        CircuitNode::Connector(j) => j,
+        _ => panic!()
+    };
     assert_eq!(j.manufacturer.name, "Molex");
     assert_eq!(j.pins.len(), 8);
     for pin in &j.pins {
@@ -599,12 +651,62 @@ fn test_molex_connector() {
 }
 
 #[test]
-fn test_amphenol_connectr() {
-    let j = make_amphenol_10056845_header("10056845-108LF");
+fn test_amphenol_connector() {
+    let j = match make_amphenol_10056845_header("10056845-108LF") {
+        CircuitNode::Connector(j) => j,
+        _ => panic!(),
+    };
     assert_eq!(j.manufacturer.name, "Amphenol");
     assert_eq!(j.pins.len(), 8);
     for pin in &j.pins {
         assert_eq!(pin.1.name, format!("{}", pin.0));
         assert_eq!(pin.1.kind, PinKind::Passive);
+    }
+}
+
+pub fn make_ic_library() -> Vec<CircuitNode> {
+    vec![
+        make_ads868x("ADS8689IPW"),
+        make_lt3092_current_source("LT3092EST#PBF"),
+        make_molex_55935_connector("0559350810"),
+        make_amphenol_10056845_header("10056845-108LF"),
+        make_on_semi_ncv33375_regulator("NCV33375ST3.3T3G"),
+        make_zldo1117g_regulator("ZLDO1117G50TA"),
+        make_ti_tps_7b84_regulator("TPS7B8450QDCYRQ1"),
+        make_mcp_1799_regulator("MCP1799T-5002H/DB"),
+        make_lt3092_current_source("LT3092EST#PBF"),
+        make_lvc_one_gate("SN74LVC1G86DCK"),
+        make_sn74_series("SN74HCT541PWR"),
+        make_sn74_series("SN74HCT138PWR"),
+        make_sn74_series("SN74HC151QDRQ1"),
+        make_lvc_one_gate("74LVC1G125SE-7"),
+        make_iso7741edwrq1("ISO7741EDWRQ1"),
+        make_ads868x("ADS8689IPW"),
+    ]
+}
+
+#[test]
+fn test_schematics() {
+    for p in make_ic_library() {
+        println!("SVG Generation for {:?}", p);
+        match p {
+            CircuitNode::Capacitor(_) => {}
+            CircuitNode::Resistor(_) => {}
+            CircuitNode::Diode(_) => {}
+            CircuitNode::Regulator(v) => {
+                make_svg(&v.details)
+            }
+            CircuitNode::Inductor(_) => {}
+            CircuitNode::IntegratedCircuit(p) => {
+                make_svg(&p)
+            }
+            CircuitNode::Circuit(_) => {}
+            CircuitNode::Connector(j) => {
+                make_svg(&j)
+            }
+            CircuitNode::Logic(l) => {
+                make_svg(&l.details)
+            }
+        }
     }
 }

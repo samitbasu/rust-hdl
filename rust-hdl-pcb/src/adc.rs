@@ -1,14 +1,14 @@
 use crate::bom::Manufacturer;
-use crate::circuit::PartDetails;
+use crate::circuit::{PartDetails, CircuitNode};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind, PinLocation, EdgeLocation};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
-use crate::glyph::{Glyph, make_ic_body};
+use crate::glyph::{Glyph, make_ic_body, make_label};
 
 
-pub fn make_ads868x(part_number: &str) -> PartDetails {
+pub fn make_ads868x(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("ADS868"));
     assert!(part_number.ends_with("IPW"));
     let pins = vec![
@@ -29,7 +29,7 @@ pub fn make_ads868x(part_number: &str) -> PartDetails {
         pin!("RVS", Output, 700, East),
         pin!("DVDD", PowerSink, 300, North),
     ];
-    PartDetails {
+    CircuitNode::IntegratedCircuit(PartDetails {
         label: part_number.into(),
         manufacturer: Manufacturer {
             name: "TI".to_string(),
@@ -39,12 +39,16 @@ pub fn make_ads868x(part_number: &str) -> PartDetails {
         comment: "".to_string(),
         hide_pin_designators: false,
         pins: pin_list(pins),
-        outline: vec![make_ic_body(-800, -1400, 900, 1200)],
+        outline: vec![
+            make_ic_body(-800, -1400, 900, 1200),
+            make_label(-800, 1200, "U?"),
+            make_label(-800, -1500, part_number),
+        ],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::IntegratedCircuit,
             index: None,
         },
         size: SizeCode::TSSOP(16),
-    }
+    })
 }

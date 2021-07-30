@@ -1,13 +1,13 @@
 use crate::bom::Manufacturer;
-use crate::circuit::{Logic, LogicFunction, LogicSignalStandard, PartDetails};
+use crate::circuit::{Logic, LogicFunction, LogicSignalStandard, PartDetails, CircuitNode};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
-use crate::glyph::make_ic_body;
+use crate::glyph::{make_ic_body, make_label};
 
-pub fn make_sn74hct138(part_number: &str) -> Logic {
+pub fn make_sn74hct138(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "SN74HCT138PWR");
     let mut pinset = vec![
         pin!("A", Input, 800, West),
@@ -23,7 +23,7 @@ pub fn make_sn74hct138(part_number: &str) -> Logic {
         pinset.push(pin!(&format!("Y{}", 6 - i), Output, 600-200*i, East));
     }
     pinset.push(pin!("VCC", PowerSink, 900, East));
-    Logic {
+    CircuitNode::Logic(Logic {
         details: PartDetails {
             label: part_number.into(),
             manufacturer: Manufacturer {
@@ -34,7 +34,11 @@ pub fn make_sn74hct138(part_number: &str) -> Logic {
             comment: "".to_string(),
             hide_pin_designators: false,
             pins: pin_list(pinset),
-            outline: vec![make_ic_body(-600, -900, 600, 1000)],
+            outline: vec![
+                make_ic_body(-600, -900, 600, 1000),
+                make_label(-600, 1000, "U?"),
+                make_label(-600, -1000, part_number),
+            ],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::IntegratedCircuit,
@@ -48,10 +52,10 @@ pub fn make_sn74hct138(part_number: &str) -> Logic {
         input_type: LogicSignalStandard::TTL,
         output_type: LogicSignalStandard::TTL,
         function: LogicFunction::Decoder,
-    }
+    })
 }
 
-pub fn make_sn74hct541(part_number: &str) -> Logic {
+pub fn make_sn74hct541(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "SN74HCT541PWR");
     let mut pinset = vec![];
     pinset.push(pin!("~OE1", InputInverted, 900, West));
@@ -64,7 +68,7 @@ pub fn make_sn74hct541(part_number: &str) -> Logic {
     }
     pinset.push(pin!("~OE2", InputInverted, -1100, West));
     pinset.push(pin!("VCC", PowerSink, 900, East));
-    Logic {
+    CircuitNode::Logic(Logic {
         details: PartDetails {
             label: part_number.into(),
             manufacturer: Manufacturer {
@@ -75,7 +79,11 @@ pub fn make_sn74hct541(part_number: &str) -> Logic {
             comment: "".to_string(),
             hide_pin_designators: false,
             pins: pin_list(pinset),
-            outline: vec![make_ic_body(-700, -1200, 600, 1000)],
+            outline: vec![
+                make_ic_body(-700, -1200, 600, 1000),
+                make_label(-700, 1000, "U?"),
+                make_label(-700, -1300, part_number),
+            ],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::IntegratedCircuit,
@@ -89,10 +97,10 @@ pub fn make_sn74hct541(part_number: &str) -> Logic {
         input_type: LogicSignalStandard::TTL,
         output_type: LogicSignalStandard::TriState5v0,
         function: LogicFunction::Buffer,
-    }
+    })
 }
 
-pub fn make_sn74hc151(part_number: &str) -> Logic {
+pub fn make_sn74hc151(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "SN74HC151QDRQ1");
     let mut pins = vec![];
     for i in 0..=3 {
@@ -109,7 +117,7 @@ pub fn make_sn74hc151(part_number: &str) -> Logic {
         pins.push(pin!(&format!("D{}", 7 - i), Input, -400+200*i, West));
     }
     pins.push(pin!("VCC", PowerSink, 1100, East));
-    Logic {
+    CircuitNode::Logic(Logic {
         details: PartDetails {
             label: part_number.into(),
             manufacturer: Manufacturer {
@@ -120,7 +128,11 @@ pub fn make_sn74hc151(part_number: &str) -> Logic {
             comment: "".to_string(),
             hide_pin_designators: false,
             pins: pin_list(pins),
-            outline: vec![make_ic_body(-500, -700, 400, 1200)],
+            outline: vec![
+                make_ic_body(-500, -700, 400, 1200),
+                make_label(-500, 1200, "U?"),
+                make_label(-300, 1200, part_number),
+            ],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::IntegratedCircuit,
@@ -134,10 +146,10 @@ pub fn make_sn74hc151(part_number: &str) -> Logic {
         input_type: LogicSignalStandard::TTL,
         output_type: LogicSignalStandard::TTL,
         function: LogicFunction::Multiplexer,
-    }
+    })
 }
 
-pub fn make_sn74_series(part_number: &str) -> Logic {
+pub fn make_sn74_series(part_number: &str) -> CircuitNode {
     if part_number.starts_with("SN74HCT541") {
         make_sn74hct541(part_number)
     } else if part_number.starts_with("SN74HCT138") {

@@ -1,13 +1,14 @@
 use crate::bom::Manufacturer;
-use crate::circuit::PartDetails;
+use crate::circuit::{PartDetails, CircuitNode};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind, PinLocation, EdgeLocation};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use std::collections::BTreeMap;
-use crate::glyph::make_ic_body;
+use crate::glyph::{make_ic_body, make_label};
+use crate::pin;
 
-fn make_passive_pins(count: u32) -> BTreeMap<u64, EPin> {
+fn make_passive_pins(count: u32, start_y: i32, delta_y: i32) -> BTreeMap<u64, EPin> {
     pin_list(
         (0..count)
             .into_iter()
@@ -15,7 +16,7 @@ fn make_passive_pins(count: u32) -> BTreeMap<u64, EPin> {
                 &format!("{}", x + 1),
                 PinKind::Passive,
                  PinLocation {
-                     offset: x as i32,
+                     offset: start_y - delta_y*(x as i32),
                      edge: EdgeLocation::East,
                  }
             ))
@@ -23,9 +24,9 @@ fn make_passive_pins(count: u32) -> BTreeMap<u64, EPin> {
     )
 }
 
-pub fn make_molex_55935_connector(part_number: &str) -> PartDetails {
+pub fn make_molex_55935_connector(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "0559350810"); // TODO - generalize to other pin counts
-    PartDetails {
+    CircuitNode::Connector(PartDetails {
         label: "8pos, 2mm MicroClasp".to_string(),
         manufacturer: Manufacturer {
             name: "Molex".to_string(),
@@ -34,15 +35,19 @@ pub fn make_molex_55935_connector(part_number: &str) -> PartDetails {
         description: "Connector Shrouded Header 8 pos, 2mm RA Thru-Hole MicroClasp".to_string(),
         comment: "".to_string(),
         hide_pin_designators: true,
-        pins: make_passive_pins(8),
-        outline: vec![make_ic_body(-200, -500, 0, 400)],
+        pins: make_passive_pins(8, 300, 100),
+        outline: vec![
+            make_ic_body(-200, -500, 0, 400),
+            make_label(-200, 400, "J?"),
+            make_label(-200, -600, part_number)
+        ],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::Connector,
             index: None,
         },
         size: SizeCode::Custom("PTH, Right Angle".into()),
-    }
+    })
 }
 
 pub fn make_sullins_sbh11_header(part_number: &str) -> PartDetails {
@@ -56,7 +61,7 @@ pub fn make_sullins_sbh11_header(part_number: &str) -> PartDetails {
         description: "Connector/Header 26 Pos, 2.54mm, Right Angle".to_string(),
         comment: "".to_string(),
         hide_pin_designators: true,
-        pins: make_passive_pins(26),
+        pins: make_passive_pins(26, 1200, 100),
         outline: vec![make_ic_body(-200, -1400, 0, 1300)],
         suppliers: vec![],
         designator: Designator {
@@ -67,9 +72,9 @@ pub fn make_sullins_sbh11_header(part_number: &str) -> PartDetails {
     }
 }
 
-pub fn make_amphenol_10056845_header(part_number: &str) -> PartDetails {
+pub fn make_amphenol_10056845_header(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "10056845-108LF"); // TODO - generalize to other pin counts
-    PartDetails {
+    CircuitNode::Connector(PartDetails {
         label: "8P, 2.54mm, RA".into(),
         manufacturer: Manufacturer {
             name: "Amphenol".to_string(),
@@ -78,13 +83,26 @@ pub fn make_amphenol_10056845_header(part_number: &str) -> PartDetails {
         description: "Connector/Header 8 Pos, 2.54mm, Right Angle".to_string(),
         comment: "".to_string(),
         hide_pin_designators: true,
-        pins: make_passive_pins(8),
-        outline: vec![make_ic_body(-200, -400, 300, 400)],
+        pins: pin_list(vec![
+            pin!("1", Passive, 300, West),
+            pin!("2", Passive, 300, East),
+            pin!("3", Passive, 100, West),
+            pin!("4", Passive, 100, East),
+            pin!("5", Passive, -100, West),
+            pin!("6", Passive, -100, East),
+            pin!("7", Passive, -300, West),
+            pin!("8", Passive, -300, East)
+        ]),
+        outline: vec![
+            make_ic_body(-200, -400, 300, 400),
+            make_label(-200, 400, "J?"),
+            make_label(-200, -500, part_number)
+        ],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::Connector,
             index: None,
         },
         size: SizeCode::Custom("PTH, Right Angle".into()),
-    }
+    })
 }

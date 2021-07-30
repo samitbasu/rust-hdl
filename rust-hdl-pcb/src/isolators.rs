@@ -1,13 +1,13 @@
 use crate::bom::Manufacturer;
-use crate::circuit::PartDetails;
+use crate::circuit::{PartDetails, CircuitNode};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
-use crate::glyph::{make_ic_body, make_line};
+use crate::glyph::{make_ic_body, make_line, make_label};
 
-pub fn make_iso7741edwrq1(part_number: &str) -> PartDetails {
+pub fn make_iso7741edwrq1(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "ISO7741EDWRQ1");
     let pins = vec![
         pin!("VCC1", PowerSink, 800, West),
@@ -27,7 +27,7 @@ pub fn make_iso7741edwrq1(part_number: &str) -> PartDetails {
         pin!("GND2_1", PowerReturn, -900, East),
         pin!("VCC2", PowerSink, 800, East),
     ];
-    PartDetails {
+    CircuitNode::IntegratedCircuit(PartDetails {
         label: part_number.into(),
         manufacturer: Manufacturer {
             name: "TI".to_string(),
@@ -41,6 +41,8 @@ pub fn make_iso7741edwrq1(part_number: &str) -> PartDetails {
             make_ic_body(-600, -1100, 500, 1000),
             make_line(-100, 700, -100, -700),
             make_line(0, 700, 0, -700),
+            make_label(-600, 1000, "U?"),
+            make_label(-600, -1200, part_number),
         ],
         suppliers: vec![],
         designator: Designator {
@@ -48,5 +50,5 @@ pub fn make_iso7741edwrq1(part_number: &str) -> PartDetails {
             index: None,
         },
         size: SizeCode::SOIC(16),
-    }
+    })
 }

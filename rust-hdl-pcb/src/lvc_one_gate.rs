@@ -1,15 +1,15 @@
 use crate::bom::Manufacturer;
-use crate::circuit::{Logic, LogicFunction, LogicSignalStandard, PartDetails};
+use crate::circuit::{Logic, LogicFunction, LogicSignalStandard, PartDetails, CircuitNode};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
-use crate::glyph::make_ic_body;
+use crate::glyph::{make_ic_body, make_label};
 
-pub fn make_sn74lvc1g125se7(part_number: &str) -> Logic {
+pub fn make_sn74lvc1g125se7(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "74LVC1G125SE-7");
-    Logic {
+    CircuitNode::Logic( Logic {
         details: PartDetails {
             label: part_number.into(),
             manufacturer: Manufacturer {
@@ -26,7 +26,11 @@ pub fn make_sn74lvc1g125se7(part_number: &str) -> Logic {
                 pin!("Y", TriState, 0, East),
                 pin!("VCC", PowerSink, 200, East),
             ]),
-            outline: vec![make_ic_body(-400, -400, 400, 400)],
+            outline: vec![
+                make_ic_body(-400, -400, 400, 400),
+                make_label(-400, 400, "V?"),
+                make_label(-400, -500, part_number),
+            ],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::Resistor,
@@ -40,12 +44,12 @@ pub fn make_sn74lvc1g125se7(part_number: &str) -> Logic {
         input_type: LogicSignalStandard::WideRange,
         output_type: LogicSignalStandard::TriState,
         function: LogicFunction::Buffer,
-    }
+    })
 }
 
-pub fn make_sn74lvc1g86dck(part_number: &str) -> Logic {
+pub fn make_sn74lvc1g86dck(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "SN74LVC1G86DCK");
-    Logic {
+    CircuitNode::Logic(Logic {
         details: PartDetails {
             label: part_number.into(),
             manufacturer: Manufacturer {
@@ -62,7 +66,11 @@ pub fn make_sn74lvc1g86dck(part_number: &str) -> Logic {
                 pin!("Y", Output, 0, East),
                 pin!("VCC", PowerSink, 300, East)
             ]),
-            outline: vec![make_ic_body(-500, -500, 600, 500)],
+            outline: vec![
+                make_ic_body(-500, -500, 600, 500),
+                make_label(-500, 500, "V?"),
+                make_label(-500, -600, part_number),
+            ],
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::IntegratedCircuit,
@@ -76,10 +84,10 @@ pub fn make_sn74lvc1g86dck(part_number: &str) -> Logic {
         input_type: LogicSignalStandard::WideRange,
         output_type: LogicSignalStandard::WideRange,
         function: LogicFunction::XOR,
-    }
+    })
 }
 
-pub fn make_lvc_one_gate(part_number: &str) -> Logic {
+pub fn make_lvc_one_gate(part_number: &str) -> CircuitNode {
     if part_number.starts_with("74LVC1G125") {
         make_sn74lvc1g125se7(part_number)
     } else if part_number.starts_with("SN74LVC1G86") {
