@@ -2,7 +2,7 @@ use crate::adc::make_ads868x;
 use crate::analog_devices::make_lt3092_current_source;
 use crate::avx_caps::make_avx_capacitor;
 use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode};
-use crate::circuit::{LogicFunction, LogicSignalStandard, CircuitNode};
+use crate::circuit::{LogicFunction, LogicSignalStandard, CircuitNode, Capacitor};
 use crate::connectors::{
     make_amphenol_10056845_header, make_molex_55935_connector, make_sullins_sbh11_header,
 };
@@ -29,6 +29,7 @@ use crate::wurth_led::make_wurth_led;
 use crate::yageo_cc_caps::make_yageo_cc_series_cap;
 use crate::yageo_resistor_series::make_yageo_series_resistor;
 use crate::schematic::make_svg;
+use crate::glyph::make_pin;
 
 mod adc;
 mod analog_devices;
@@ -65,7 +66,10 @@ mod glyph;
 
 #[test]
 fn test_yageo_rc_68k() {
-    let led_limit = make_yageo_series_resistor("RC0603FR-0768KL");
+    let led_limit = match make_yageo_series_resistor("RC0603FR-0768KL") {
+        CircuitNode::Resistor(r) => r,
+        _ => panic!()
+    };
     println!("{:?}", led_limit);
     assert_eq!(led_limit.value_ohms, 68e3);
     assert_eq!(led_limit.details.size, SizeCode::I0603);
@@ -74,7 +78,10 @@ fn test_yageo_rc_68k() {
 
 #[test]
 fn test_yageo_rc_1k() {
-    let current_limit = make_yageo_series_resistor("RC1206FR-071KL");
+    let current_limit = match make_yageo_series_resistor("RC1206FR-071KL") {
+        CircuitNode::Resistor(r) => r,
+        _ => panic!()
+    };
     assert_eq!(current_limit.value_ohms, 1.0e3);
     assert_eq!(current_limit.details.size, SizeCode::I1206);
     assert!(current_limit.power_watt >= PowerWatt::new(1, 4));
@@ -83,7 +90,7 @@ fn test_yageo_rc_1k() {
 
 #[test]
 fn test_tdk_cga_cap() {
-    let filter_cap = make_tdk_cga_capacitor("CGA4J2X7R2A104K125AA");
+    let filter_cap = as_cap(make_tdk_cga_capacitor("CGA4J2X7R2A104K125AA"));
     // 'TDK         CGA4J2X7R2A104K125AA             SMD Multilayer Ceramic Capacitor, 0805 [2012 Metric], 0.1 F, 100 V,  10%, X7R, CGA Series
     assert_eq!(filter_cap.details.manufacturer.name, "TDK");
     assert_eq!(
@@ -98,7 +105,7 @@ fn test_tdk_cga_cap() {
 
 #[test]
 fn test_kemet_tantalum_cap() {
-    let kemet = make_kemet_t491_capacitor("T491A106K010AT");
+    let kemet = as_cap(make_kemet_t491_capacitor("T491A106K010AT"));
     assert_eq!(kemet.details.size, SizeCode::I1206);
     assert_eq!(kemet.kind, CapacitorKind::Tantalum);
     assert_eq!(kemet.value_pf, 10. * 1e6);
@@ -109,7 +116,10 @@ fn test_kemet_tantalum_cap() {
 
 #[test]
 fn test_yageo_precision() {
-    let precise = make_yageo_series_resistor("RL0603FR-070R47L");
+    let precise = match make_yageo_series_resistor("RL0603FR-070R47L") {
+        CircuitNode::Resistor(r) => r,
+        _ => panic!()
+    };
     // 'Res Thick Film 0603 0.47 Ohm 1% 0.1W(1/10W) ±800ppm/C Molded SMD Paper T/R
     assert_eq!(precise.details.size, SizeCode::I0603);
     assert_eq!(precise.tolerance, 1.0);
@@ -118,7 +128,10 @@ fn test_yageo_precision() {
 
 #[test]
 fn test_yageo_bulk() {
-    let bulk = make_yageo_series_resistor("RC1206FR-071KL");
+    let bulk = match make_yageo_series_resistor("RC1206FR-071KL") {
+        CircuitNode::Resistor(r) => r,
+        _ => panic!()
+    };
     // 'YAGEO - RC1206FR-071KL. - RES, THICK FILM, 1K, 1%, 0.25W, 1206, REEL
     assert_eq!(bulk.tolerance, 1.0);
     assert_eq!(bulk.power_watt, PowerWatt::new(1, 4));
@@ -129,7 +142,10 @@ fn test_yageo_bulk() {
 #[test]
 fn test_yageo_tempco() {
     // T491A106K010AT
-    let temp = make_yageo_series_resistor("AT0603BRD0720KL");
+    let temp = match make_yageo_series_resistor("AT0603BRD0720KL") {
+        CircuitNode::Resistor(r) => r,
+        _ => panic!(),
+    };
     // '20K 0.1% precision
     assert_eq!(temp.tolerance, 0.1);
     assert_eq!(temp.value_ohms, 20e3);
@@ -138,7 +154,10 @@ fn test_yageo_tempco() {
 
 #[test]
 fn test_avx() {
-    let avx = make_avx_capacitor("22201C475KAT2A");
+    let avx = match make_avx_capacitor("22201C475KAT2A") {
+        CircuitNode::Capacitor(c) => c,
+        _ => panic!()
+    };
     assert_eq!(avx.details.size, SizeCode::I2220);
     assert_eq!(avx.kind, CapacitorKind::MultiLayerChip(DielectricCode::X7R));
     assert_eq!(avx.value_pf, 47e5);
@@ -147,7 +166,10 @@ fn test_avx() {
 
 #[test]
 fn test_kemet() {
-    let c = make_kemet_ceramic_capacitor("C0603C104K5RACTU");
+    let c = match make_kemet_ceramic_capacitor("C0603C104K5RACTU") {
+        CircuitNode::Capacitor(c) => c,
+        _ => panic!()
+    };
     assert_eq!(c.details.size, SizeCode::I0603);
     assert_eq!(c.kind, CapacitorKind::MultiLayerChip(DielectricCode::X7R));
     assert_eq!(c.value_pf, 10e4);
@@ -156,7 +178,7 @@ fn test_kemet() {
 
 #[test]
 fn test_tdk_c_series() {
-    let c = make_tdk_c_series_capacitor("C1608X7R1C105K080AC");
+    let c = as_cap(make_tdk_c_series_capacitor("C1608X7R1C105K080AC"));
     assert_eq!(c.details.size, SizeCode::I0603);
     assert_eq!(c.kind, CapacitorKind::MultiLayerChip(DielectricCode::X7R));
     assert_eq!(c.value_pf, 10e5);
@@ -166,7 +188,7 @@ fn test_tdk_c_series() {
 
 #[test]
 fn test_yageo_cc_series() {
-    let c = make_yageo_cc_series_cap("CC0805KKX5R8BB106");
+    let c = as_cap(make_yageo_cc_series_cap("CC0805KKX5R8BB106"));
     // 'Cap Ceramic 10uF 25V X5R 10% Pad SMD 0805 85°C T/R
     assert_eq!(c.details.size, SizeCode::I0805);
     assert_eq!(c.tolerance, CapacitorTolerance::TenPercent);
@@ -175,9 +197,17 @@ fn test_yageo_cc_series() {
     assert_eq!(c.value_pf, 10. * 1e6);
 }
 
+#[cfg(test)]
+fn as_cap(c: CircuitNode) -> Capacitor {
+    match c {
+        CircuitNode::Capacitor(c) => c,
+        _ => panic!()
+    }
+}
+
 #[test]
 fn test_murata_grt_series() {
-    let c = make_murata_capacitor("GRT188R61H105KE13D");
+    let c = as_cap(make_murata_capacitor("GRT188R61H105KE13D"));
     // 'Multilayer Ceramic Capacitors MLCC - SMD/SMT 0603 50Vdc 1.0uF X5R 10%
     assert_eq!(c.details.size, SizeCode::I0603);
     assert_eq!(c.tolerance, CapacitorTolerance::TenPercent);
@@ -188,7 +218,10 @@ fn test_murata_grt_series() {
 
 #[test]
 fn test_panasonic_era_series() {
-    let r = make_panasonic_resistor("ERA8AEB201V");
+    let r = match make_panasonic_resistor("ERA8AEB201V") {
+        CircuitNode::Resistor(r) => r,
+        _ => panic!()
+    };
     // 'RES SMD 200 OHM 0.1% 1/4W 1206
     assert_eq!(r.details.size, SizeCode::I1206);
     assert_eq!(r.tolerance, 0.1);
@@ -200,7 +233,10 @@ fn test_panasonic_era_series() {
 
 #[test]
 fn test_panasonic_erj_series() {
-    let r = make_panasonic_resistor("ERJ-3RQFR22V");
+    let r = match make_panasonic_resistor("ERJ-3RQFR22V") {
+        CircuitNode::Resistor(r) => r,
+        _ => panic!()
+    };
     // 'Res Thick Film 0603 0.22 Ohm 1% 1/10W ±300ppm/°C Molded SMD Punched Carrier T/R
     assert_eq!(r.details.size, SizeCode::I0603);
     assert_eq!(r.tolerance, 1.);
@@ -211,7 +247,7 @@ fn test_panasonic_erj_series() {
 
 #[test]
 fn test_murata_grm_series() {
-    let c = make_murata_capacitor("GRM21BR61C226ME44L");
+    let c = as_cap(make_murata_capacitor("GRM21BR61C226ME44L"));
     // '0805 22 uF 16 V ±20% Tolerance X5R Multilayer Ceramic Chip Capacitor
     assert_eq!(c.details.size, SizeCode::I0805);
     assert_eq!(c.voltage, 16.);
@@ -222,7 +258,7 @@ fn test_murata_grm_series() {
 
 #[test]
 fn test_chemi_con_hybrid_cap() {
-    let c = make_nippon_hxd_capacitor("HHXD500ARA101MJA0G");
+    let c = as_cap(make_nippon_hxd_capacitor("HHXD500ARA101MJA0G"));
     // 100 uF, 50V Alum Poly 25 mR ESR, Hybrid
     assert_eq!(c.voltage, 50.);
     assert_eq!(c.kind, CapacitorKind::AluminumPolyLowESR(25));
@@ -232,11 +268,17 @@ fn test_chemi_con_hybrid_cap() {
 
 #[test]
 fn test_yageo_pth_resistors() {
-    let r = make_yageo_series_resistor("FMP100JR-52-15K");
+    let r = match make_yageo_series_resistor("FMP100JR-52-15K") {
+        CircuitNode::Resistor(r) => r,
+        _ => panic!()
+    };
     assert_eq!(r.tolerance, 5.);
     assert_eq!(r.power_watt, PowerWatt::new(1, 1));
     assert_eq!(r.value_ohms, 15e3);
-    let r = make_yageo_series_resistor("FMP100JR-52-10R");
+    let r = match make_yageo_series_resistor("FMP100JR-52-10R") {
+        CircuitNode::Resistor(r) => r,
+        _ => panic!()
+    };
     assert_eq!(r.tolerance, 5.);
     assert_eq!(r.power_watt, PowerWatt::new(1, 1));
     assert_eq!(r.value_ohms, 10.0);
@@ -664,7 +706,8 @@ fn test_amphenol_connector() {
     }
 }
 
-pub fn make_ic_library() -> Vec<CircuitNode> {
+#[cfg(test)]
+fn make_sample_library() -> Vec<CircuitNode> {
     vec![
         make_ads868x("ADS8689IPW"),
         make_lt3092_current_source("LT3092EST#PBF"),
@@ -682,16 +725,23 @@ pub fn make_ic_library() -> Vec<CircuitNode> {
         make_lvc_one_gate("74LVC1G125SE-7"),
         make_iso7741edwrq1("ISO7741EDWRQ1"),
         make_ads868x("ADS8689IPW"),
+        make_yageo_series_resistor("RC0603FR-0768KL"),
+        make_kemet_ceramic_capacitor("C0603C104K5RACTU"),
+        make_nippon_hxd_capacitor("HHXD500ARA101MJA0G")
     ]
 }
 
 #[test]
 fn test_schematics() {
-    for p in make_ic_library() {
+    for p in make_sample_library() {
         println!("SVG Generation for {:?}", p);
         match p {
-            CircuitNode::Capacitor(_) => {}
-            CircuitNode::Resistor(_) => {}
+            CircuitNode::Capacitor(c) => {
+                make_svg(&c.details)
+            }
+            CircuitNode::Resistor(r) => {
+                make_svg(&r.details)
+            }
             CircuitNode::Diode(_) => {}
             CircuitNode::Regulator(v) => {
                 make_svg(&v.details)

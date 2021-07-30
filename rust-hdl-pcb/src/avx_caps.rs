@@ -2,7 +2,7 @@ use crate::bom::Manufacturer;
 use crate::capacitors::{
     make_mlcc, map_pf_to_label, map_three_digit_cap_to_pf, CapacitorTolerance, DielectricCode,
 };
-use crate::circuit::Capacitor;
+use crate::circuit::{Capacitor, CircuitNode};
 use crate::smd::SizeCode;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {
@@ -44,7 +44,7 @@ fn map_part_number_to_tolerance(part: &str) -> CapacitorTolerance {
     }
 }
 
-pub fn make_avx_capacitor(part_number: &str) -> Capacitor {
+pub fn make_avx_capacitor(part_number: &str) -> CircuitNode {
     let size = map_part_number_to_size(part_number);
     let tolerance = map_part_number_to_tolerance(part_number);
     let value_pf = map_part_number_to_pf(part_number);

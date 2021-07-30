@@ -1,11 +1,12 @@
 use crate::bom::Manufacturer;
-use crate::circuit::{Capacitor, PartDetails};
+use crate::circuit::{Capacitor, PartDetails, CircuitNode};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, EdgeLocation, PinLocation, make_passive_pin_pair};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+use crate::glyph::{make_pin, make_line, make_label, Glyph, make_arc};
 
 pub fn map_three_digit_cap_to_uf(uf: &str) -> f64 {
     let uf_tens = &uf[0..1].parse::<f64>().unwrap();
@@ -121,21 +122,48 @@ pub fn map_pf_to_label(value: f64) -> String {
     }
 }
 
-pub fn make_passive_two_pin(
+/*
+    (arc (pt 170 0) (radius 99.963) (startAngle 135.852) (sweepAngle 89.47) (width 10))
+    (line (pt -10 60) (pt -10 20) (width 10) )
+    (line (pt -30 40) (pt 10 40) (width 10) )
+
+ */
+pub fn make_polarized_capacitor_outline() -> Vec<Glyph> {
+    vec![
+        make_pin(0, 0, EdgeLocation::West, 100),
+        make_pin(100, 0, EdgeLocation::East, 100),
+        make_line(30, 70, 30, -70),
+        make_line(30, 0, 0, 0),
+        make_line(70, 0, 100, 0),
+        make_line(-10, 60, -10, 20),
+        make_line(-30, 40, 10, 40),
+        make_arc(170, 0, 100.0, 135.0, 90.0)
+    ]
+}
+
+pub fn make_unpolarized_capacitor(
     label: String,
     manufacturer: Manufacturer,
     description: String,
-    size: SizeCode,
-    symbol_len: u64,
+    size: SizeCode
 ) -> PartDetails {
     PartDetails {
-        label,
+        label: label.clone(),
         manufacturer,
         description,
         comment: "".to_string(),
         hide_pin_designators: true,
         pins: pin_list(make_passive_pin_pair()),
-        outline: vec![],
+        outline: vec![
+            make_pin(0, 0, EdgeLocation::West, 100),
+            make_pin(100, 0, EdgeLocation::East, 100),
+            make_line(30, 70, 30, -70),
+            make_line(70, 70, 70, -70),
+            make_line(30, 0, 0, 0),
+            make_line(70, 0, 100, 0),
+            make_label(-10, 80, "C?"),
+            make_label(-10, -180, &label),
+        ],
         suppliers: vec![],
         designator: Designator {
             kind: DesignatorKind::Capacitor,
@@ -154,12 +182,12 @@ pub fn make_mlcc(
     dielectric: DielectricCode,
     voltage: f64,
     tolerance: CapacitorTolerance,
-) -> Capacitor {
-    Capacitor {
-        details: make_passive_two_pin(label, manufacturer, description, size, 100),
+) -> CircuitNode {
+    CircuitNode::Capacitor(Capacitor {
+        details: make_unpolarized_capacitor(label, manufacturer, description, size),
         value_pf,
         kind: CapacitorKind::MultiLayerChip(dielectric),
         voltage,
         tolerance,
-    }
+    })
 }

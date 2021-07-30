@@ -1,7 +1,7 @@
 use crate::bom::Manufacturer;
-use crate::circuit::Resistor;
+use crate::circuit::{Resistor, CircuitNode};
 use crate::resistors::{
-    make_chip_resistor, map_resistance_letter_code_to_value, map_resistance_to_string, PowerWatt,
+    make_resistor, map_resistance_letter_code_to_value, map_resistance_to_string, PowerWatt,
     ResistorKind,
 };
 use crate::smd::SizeCode;
@@ -91,7 +91,7 @@ fn map_part_number_to_resistance(part_number: &str) -> f64 {
     sig_figs * (10.0_f64).powf(exp)
 }
 
-fn make_panasonic_era_resistor(part_number: &str) -> Resistor {
+fn make_panasonic_era_resistor(part_number: &str) -> CircuitNode {
     assert_eq!(&part_number[0..3], "ERA");
     let size = map_era_to_size(part_number);
     let power = map_size_code_to_power(size.clone());
@@ -109,7 +109,7 @@ fn make_panasonic_era_resistor(part_number: &str) -> Resistor {
         "Panasonic ERA Thin Film Resistor SMD {} {} {}",
         size, label, tempco_string
     );
-    make_chip_resistor(
+    make_resistor(
         label,
         manufacturer,
         description,
@@ -122,7 +122,7 @@ fn make_panasonic_era_resistor(part_number: &str) -> Resistor {
     )
 }
 
-fn make_panasonic_erj_resistor(part_number: &str) -> Resistor {
+fn make_panasonic_erj_resistor(part_number: &str) -> CircuitNode {
     assert_eq!(&part_number[0..3], "ERJ");
     let part_number = &part_number.to_string().replace("-", "");
     let size = map_erj_to_size(part_number);
@@ -136,7 +136,7 @@ fn make_panasonic_erj_resistor(part_number: &str) -> Resistor {
         part_number: part_number.to_owned(),
     };
     let description = format!("Panasonic ERJ Thick Film Resistor SMD {} {}", size, label);
-    make_chip_resistor(
+    make_resistor(
         label,
         manufacturer,
         description,
@@ -149,7 +149,7 @@ fn make_panasonic_erj_resistor(part_number: &str) -> Resistor {
     )
 }
 
-pub fn make_panasonic_resistor(part_number: &str) -> Resistor {
+pub fn make_panasonic_resistor(part_number: &str) -> CircuitNode {
     if part_number.starts_with("ERJ") {
         make_panasonic_erj_resistor(part_number)
     } else {

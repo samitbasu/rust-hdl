@@ -2,9 +2,9 @@ use std::fmt::{Display, Formatter};
 use std::fs::File;
 
 use crate::bom::Manufacturer;
-use crate::circuit::Resistor;
+use crate::circuit::{Resistor, CircuitNode};
 use crate::resistors::{
-    make_chip_resistor, map_resistance_letter_code_to_value, map_resistance_to_string, PowerWatt,
+    make_resistor, map_resistance_letter_code_to_value, map_resistance_to_string, PowerWatt,
     ResistorKind,
 };
 use crate::smd::{PTHResistor, SizeCode, TolerancedDim};
@@ -183,7 +183,7 @@ fn map_pth_series_to_power(series: YageoSeries) -> PowerWatt {
     }
 }
 
-fn make_yageo_pth(part_number: &str, series: YageoSeries) -> Resistor {
+fn make_yageo_pth(part_number: &str, series: YageoSeries) -> CircuitNode {
     let size = map_pth_series_to_size(series);
     let tolerance = map_part_number_to_tolerance(part_number);
     let value_ohms = map_resistance_letter_code_to_value(&part_number[12..]);
@@ -195,7 +195,7 @@ fn make_yageo_pth(part_number: &str, series: YageoSeries) -> Resistor {
         part_number: part_number.to_owned(),
     };
     let description = format!("Yageo {} Metal Film PTH {} {}", series, size, label);
-    make_chip_resistor(
+    make_resistor(
         label,
         manufacturer,
         description,
@@ -208,7 +208,7 @@ fn make_yageo_pth(part_number: &str, series: YageoSeries) -> Resistor {
     )
 }
 
-fn make_yageo_chip(part_number: &str, series: YageoSeries) -> Resistor {
+fn make_yageo_chip(part_number: &str, series: YageoSeries) -> CircuitNode {
     let size = map_part_number_to_size(part_number);
     let tolerance = map_part_number_to_tolerance(part_number);
     let value_ohms = map_part_number_to_resistance(part_number);
@@ -229,7 +229,7 @@ fn make_yageo_chip(part_number: &str, series: YageoSeries) -> Resistor {
         "Yageo {} Thick Film Resistor SMD {} {} {}",
         series, size, label, tempco_string
     );
-    make_chip_resistor(
+    make_resistor(
         label,
         manufacturer,
         description,
@@ -242,7 +242,7 @@ fn make_yageo_chip(part_number: &str, series: YageoSeries) -> Resistor {
     )
 }
 
-pub fn make_yageo_series_resistor(part_number: &str) -> Resistor {
+pub fn make_yageo_series_resistor(part_number: &str) -> CircuitNode {
     match &part_number[0..2] {
         "RC" => make_yageo_chip(part_number, YageoSeries::RC),
         "RL" => make_yageo_chip(part_number, YageoSeries::RL),

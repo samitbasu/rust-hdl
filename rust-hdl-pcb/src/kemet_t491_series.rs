@@ -1,8 +1,6 @@
 use crate::bom::Manufacturer;
-use crate::capacitors::{
-    map_pf_to_label, map_three_digit_cap_to_pf, CapacitorKind, CapacitorTolerance,
-};
-use crate::circuit::{Capacitor, PartDetails};
+use crate::capacitors::{map_pf_to_label, map_three_digit_cap_to_pf, CapacitorKind, CapacitorTolerance, make_polarized_capacitor_outline};
+use crate::circuit::{Capacitor, PartDetails, CircuitNode};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::EPin;
 use crate::smd::SizeCode;
@@ -37,7 +35,7 @@ fn map_part_number_to_voltage(part_number: &str) -> f64 {
     }
 }
 
-pub fn make_kemet_t491_capacitor(part_number: &str) -> Capacitor {
+pub fn make_kemet_t491_capacitor(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("T491A"));
     let voltage = map_part_number_to_voltage(part_number);
     let value_pf = map_part_number_to_pf(part_number);
@@ -49,7 +47,7 @@ pub fn make_kemet_t491_capacitor(part_number: &str) -> Capacitor {
         "Kemet T491 Series MnO2 Tantalum Capacitor SMD {} {}",
         size, label
     );
-    Capacitor {
+    CircuitNode::Capacitor(Capacitor {
         details: PartDetails {
             label,
             manufacturer: Manufacturer {
@@ -60,7 +58,7 @@ pub fn make_kemet_t491_capacitor(part_number: &str) -> Capacitor {
             comment: "".to_string(),
             hide_pin_designators: true,
             pins: pin_list(vec![EPin::passive_pos(), EPin::passive_neg()]),
-            outline: vec![],
+            outline: make_polarized_capacitor_outline(),
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::Capacitor,
@@ -72,5 +70,5 @@ pub fn make_kemet_t491_capacitor(part_number: &str) -> Capacitor {
         kind: CapacitorKind::Tantalum,
         voltage,
         tolerance,
-    }
+    })
 }

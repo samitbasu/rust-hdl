@@ -1,7 +1,11 @@
 use crate::bom::Manufacturer;
-use crate::capacitors::make_passive_two_pin;
-use crate::circuit::Resistor;
+use crate::capacitors::make_unpolarized_capacitor;
+use crate::circuit::{Resistor, PartDetails, CircuitNode};
 use crate::smd::SizeCode;
+use crate::epin::{make_passive_pin_pair, EdgeLocation};
+use crate::utils::pin_list;
+use crate::glyph::{make_pin, make_line, make_label};
+use crate::designator::{Designator, DesignatorKind};
 
 pub type PowerWatt = num_rational::Rational32;
 
@@ -40,7 +44,43 @@ pub fn map_resistance_letter_code_to_value(resistance: &str) -> f64 {
     resistance.parse::<f64>().unwrap() * multiplier
 }
 
-pub fn make_chip_resistor(
+fn make_resistor_details(
+    label: String,
+    manufacturer: Manufacturer,
+    description: String,
+    size: SizeCode
+) -> PartDetails {
+    PartDetails {
+        label: label.clone(),
+        manufacturer,
+        description,
+        comment: "".to_string(),
+        hide_pin_designators: true,
+        pins: pin_list(make_passive_pin_pair()),
+        outline: vec![
+            make_pin(-100, 0, EdgeLocation::West, 100),
+            make_pin(200, 0, EdgeLocation::East, 100),
+            make_line(-100,  0, -70,  30),
+            make_line(-70, 30,-10,-30),
+            make_line(-10,-30,50,30),
+            make_line(50,30,110,-30),
+            make_line(110,-30, 170,30),
+            make_line(170, 30, 200, 0),
+            make_label(-110, 40, "R?"),
+            make_label(-110, -140, &label),
+        ],
+        suppliers: vec![],
+        designator: Designator {
+            kind: DesignatorKind::Resistor,
+            index: None,
+        },
+        size,
+    }
+}
+
+
+
+pub fn make_resistor(
     label: String,
     manufacturer: Manufacturer,
     description: String,
@@ -50,13 +90,13 @@ pub fn make_chip_resistor(
     tolerance: f64,
     tempco: Option<f64>,
     kind: ResistorKind,
-) -> Resistor {
-    Resistor {
-        details: make_passive_two_pin(label, manufacturer, description, size, 300),
+) -> CircuitNode {
+    CircuitNode::Resistor(Resistor {
+        details: make_resistor_details(label, manufacturer, description, size),
         value_ohms,
         kind,
         power_watt,
         tolerance,
         tempco,
-    }
+    })
 }

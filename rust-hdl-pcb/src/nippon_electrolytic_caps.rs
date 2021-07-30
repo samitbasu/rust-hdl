@@ -1,8 +1,6 @@
 use crate::bom::Manufacturer;
-use crate::capacitors::{
-    map_pf_to_label, map_three_digit_cap_to_uf, CapacitorKind, CapacitorTolerance,
-};
-use crate::circuit::{Capacitor, PartDetails};
+use crate::capacitors::{map_pf_to_label, map_three_digit_cap_to_uf, CapacitorKind, CapacitorTolerance, make_polarized_capacitor_outline};
+use crate::circuit::{Capacitor, PartDetails, CircuitNode};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::EPin;
 use crate::smd::SizeCode;
@@ -73,7 +71,7 @@ fn match_hxd_esr(voltage: f64, cap_pf: f64, size_code: &str) -> i32 {
     }
 }
 
-pub fn make_nippon_hxd_capacitor(part_number: &str) -> Capacitor {
+pub fn make_nippon_hxd_capacitor(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("HHXD"));
     let voltage = (&part_number[4..=6]).parse::<f64>().unwrap() / 10.0;
     assert_eq!(&part_number[7..8], "A");
@@ -88,7 +86,7 @@ pub fn make_nippon_hxd_capacitor(part_number: &str) -> Capacitor {
         "United Chemi-Con HXD Seris Alum Poly SMD {} {}",
         size, label
     );
-    Capacitor {
+    CircuitNode::Capacitor(Capacitor {
         details: PartDetails {
             label,
             manufacturer: Manufacturer {
@@ -99,7 +97,7 @@ pub fn make_nippon_hxd_capacitor(part_number: &str) -> Capacitor {
             comment: "".to_string(),
             hide_pin_designators: true,
             pins: pin_list(vec![EPin::passive_pos(), EPin::passive_neg()]),
-            outline: vec![],
+            outline: make_polarized_capacitor_outline(),
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::Capacitor,
@@ -111,5 +109,5 @@ pub fn make_nippon_hxd_capacitor(part_number: &str) -> Capacitor {
         kind: CapacitorKind::AluminumPolyLowESR(esr),
         voltage,
         tolerance,
-    }
+    })
 }

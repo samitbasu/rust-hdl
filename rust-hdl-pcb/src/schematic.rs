@@ -171,6 +171,35 @@ pub fn add_outline_to_path(doc: Document, g: &Glyph) -> Document {
                 .set("stroke-width", 10)
                 .set("d", data)
             )
+        },
+        Glyph::Pin(p) => {
+            match p.location {
+                EdgeLocation::East => {
+                    let data = Data::new()
+                        .move_to((p.p0.x, -p.p0.y))
+                        .line_to((p.p0.x + p.length, -p.p0.y));
+                    doc.add(
+                        Path::new()
+                            .set("fill", "none")
+                            .set("stroke", "black")
+                            .set("stroke-width", 10)
+                            .set("d", data)
+                    )
+                }
+                EdgeLocation::West => {
+                    let data = Data::new()
+                        .move_to((p.p0.x, -p.p0.y))
+                        .line_to((p.p0.x - p.length, -p.p0.y));
+                    doc.add(
+                        Path::new()
+                            .set("fill", "none")
+                            .set("stroke", "black")
+                            .set("stroke-width", 10)
+                            .set("d", data)
+                    )
+                }
+                _ => unimplemented!(),
+            }
         }
         Glyph::Text(t) => {
             let txt = Text::new()
@@ -181,6 +210,22 @@ pub fn add_outline_to_path(doc: Document, g: &Glyph) -> Document {
                 .set("alignment-baseline", "top")
                 .set("font-size", 85);
             doc.add(txt)
+        }
+        Glyph::Arc(a) => {
+            let p1x = a.p0.x as f64 + a.radius * f64::cos(a.start_angle.to_radians());
+            let p1y = a.p0.y as f64 + a.radius * f64::sin(a.start_angle.to_radians());
+            let p2x = a.p0.x as f64 + a.radius * f64::cos(a.start_angle.to_radians() + a.sweep_angle.to_radians());
+            let p2y = a.p0.y as f64 + a.radius * f64::sin(a.start_angle.to_radians() + a.sweep_angle.to_radians());
+            let data = Data::new()
+                .move_to((p1x, p1y))
+                .elliptical_arc_to((a.radius, a.radius, 0.0, 0, 1, p2x, p2y));
+            doc.add(
+                Path::new()
+                    .set("fill", "none")
+                    .set("stroke", "#0433FF")
+                    .set("stroke-width", 10)
+                    .set("d", data)
+            )
         }
     }
 }

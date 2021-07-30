@@ -2,10 +2,10 @@ use crate::bom::Manufacturer;
 use crate::capacitors::{
     make_mlcc, map_pf_to_label, map_three_digit_cap_to_pf, CapacitorTolerance, DielectricCode,
 };
-use crate::circuit::Capacitor;
+use crate::circuit::{Capacitor, CircuitNode};
 use crate::smd::SizeCode;
 
-fn make_murata_grt_188r61h_capacitor(part_number: &str) -> Capacitor {
+fn make_murata_grt_188r61h_capacitor(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("GRT188R61H"));
     let size = SizeCode::I0603;
     let tolerance = CapacitorTolerance::TenPercent;
@@ -34,7 +34,7 @@ fn make_murata_grt_188r61h_capacitor(part_number: &str) -> Capacitor {
     )
 }
 
-fn make_murata_grm21br61c_capacitor(part_number: &str) -> Capacitor {
+fn make_murata_grm21br61c_capacitor(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("GRM21BR61C"));
     let size = SizeCode::I0805;
     let tolerance = CapacitorTolerance::TwentyPercent;
@@ -63,7 +63,7 @@ fn make_murata_grm21br61c_capacitor(part_number: &str) -> Capacitor {
     )
 }
 
-pub fn make_murata_capacitor(part_number: &str) -> Capacitor {
+pub fn make_murata_capacitor(part_number: &str) -> CircuitNode {
     if part_number.starts_with("GRM21BR61C") {
         make_murata_grm21br61c_capacitor(part_number)
     } else if part_number.starts_with("GRT188R61H") {
