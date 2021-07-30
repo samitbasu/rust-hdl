@@ -1,13 +1,14 @@
 use crate::bom::Manufacturer;
 use crate::capacitors::map_three_digit_cap_to_pf;
-use crate::circuit::{Inductor, PartDetails};
+use crate::circuit::{Inductor, PartDetails, CircuitNode};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, make_passive_pin_pair};
+use crate::epin::{EPin, make_passive_pin_pair, EdgeLocation};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
+use crate::glyph::{make_pin, make_arc};
 
 // https://www.yuden.co.jp/productdata/catalog/wound07_e.pdf
-pub fn make_ty_brl_series(part_number: &str) -> Inductor {
+pub fn make_ty_brl_series(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("BRL"));
     let size = match &part_number[3..=6] {
         "1608" => SizeCode::I0603,
@@ -26,7 +27,15 @@ pub fn make_ty_brl_series(part_number: &str) -> Inductor {
     assert_eq!(part_number, "BRL3225T101K"); // Add others in the future...
     let dc_resistance_ohms = 2.5;
     let max_current_milliamps = 250.0;
-    Inductor {
+    let mut outline = vec![
+        make_pin(-200, 0, EdgeLocation::West, 100),
+        make_pin(200, 0, EdgeLocation::East, 100)
+    ];
+    outline.extend(
+        (0..=3).into_iter()
+            .map(|x| make_arc(-150 + x*100, 0, 50.0, 179.9, -179.9))
+            .collect::<Vec<_>>());
+    CircuitNode::Inductor(Inductor {
         details: PartDetails {
             label: part_number.to_string(),
             manufacturer: Manufacturer {
@@ -37,7 +46,7 @@ pub fn make_ty_brl_series(part_number: &str) -> Inductor {
             comment: "".to_string(),
             hide_pin_designators: true,
             pins: pin_list(make_passive_pin_pair()),
-            outline: vec![],
+            outline,
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::Inductor,
@@ -49,5 +58,5 @@ pub fn make_ty_brl_series(part_number: &str) -> Inductor {
         tolerance,
         dc_resistance_ohms,
         max_current_milliamps,
-    }
+    })
 }

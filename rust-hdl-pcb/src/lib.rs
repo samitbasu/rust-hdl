@@ -286,7 +286,10 @@ fn test_yageo_pth_resistors() {
 
 #[test]
 fn test_green_led() {
-    let d = make_wurth_led("150060GS75000");
+    let d = match make_wurth_led("150060GS75000") {
+        CircuitNode::Diode(d) => d,
+        _ => panic!()
+    };
     assert_eq!(d.kind, DiodeKind::LED("Green".into()));
     assert_eq!(d.forward_drop_volts, 3.2);
     assert_eq!(d.details.pins.len(), 2);
@@ -441,7 +444,10 @@ fn test_lt3092() {
 
 #[test]
 fn test_brl() {
-    let l = make_ty_brl_series("BRL3225T101K");
+    let l = match make_ty_brl_series("BRL3225T101K") {
+        CircuitNode::Inductor(i) => i,
+        _ => panic!()
+    };
     assert_eq!(l.details.size, SizeCode::I1210);
     assert_eq!(l.details.pins.len(), 2);
     assert_eq!(l.max_current_milliamps, 250.0);
@@ -669,7 +675,10 @@ fn test_ads8689() {
 
 #[test]
 fn test_sullins_connector() {
-    let j = make_sullins_sbh11_header("SBH11-PBPC-D13-RA-BK");
+    let j = match make_sullins_sbh11_header("SBH11-PBPC-D13-RA-BK") {
+        CircuitNode::Connector(j) => j,
+        _ => panic!()
+    };
     assert_eq!(j.manufacturer.name, "Sullins Connector Solutions");
     assert_eq!(j.pins.len(), 26);
     for pin in &j.pins {
@@ -727,7 +736,9 @@ fn make_sample_library() -> Vec<CircuitNode> {
         make_ads868x("ADS8689IPW"),
         make_yageo_series_resistor("RC0603FR-0768KL"),
         make_kemet_ceramic_capacitor("C0603C104K5RACTU"),
-        make_nippon_hxd_capacitor("HHXD500ARA101MJA0G")
+        make_nippon_hxd_capacitor("HHXD500ARA101MJA0G"),
+        make_ty_brl_series("BRL3225T101K"),
+        make_wurth_led("150060GS75000"),
     ]
 }
 
@@ -742,11 +753,15 @@ fn test_schematics() {
             CircuitNode::Resistor(r) => {
                 make_svg(&r.details)
             }
-            CircuitNode::Diode(_) => {}
+            CircuitNode::Diode(d) => {
+                make_svg(&d.details)
+            }
             CircuitNode::Regulator(v) => {
                 make_svg(&v.details)
             }
-            CircuitNode::Inductor(_) => {}
+            CircuitNode::Inductor(i) => {
+                make_svg(&i.details)
+            }
             CircuitNode::IntegratedCircuit(p) => {
                 make_svg(&p)
             }

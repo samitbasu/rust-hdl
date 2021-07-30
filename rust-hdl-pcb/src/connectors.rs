@@ -50,9 +50,9 @@ pub fn make_molex_55935_connector(part_number: &str) -> CircuitNode {
     })
 }
 
-pub fn make_sullins_sbh11_header(part_number: &str) -> PartDetails {
+pub fn make_sullins_sbh11_header(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "SBH11-PBPC-D13-RA-BK"); // TODO - generalize to other pin counts
-    PartDetails {
+    CircuitNode::Connector(PartDetails {
         label: "26P, 2.54mm, RA".into(),
         manufacturer: Manufacturer {
             name: "Sullins Connector Solutions".to_string(),
@@ -69,7 +69,7 @@ pub fn make_sullins_sbh11_header(part_number: &str) -> PartDetails {
             index: None,
         },
         size: SizeCode::Custom("PTH, Right Angle".into()),
-    }
+    })
 }
 
 pub fn make_amphenol_10056845_header(part_number: &str) -> CircuitNode {
