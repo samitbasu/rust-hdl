@@ -6,6 +6,7 @@ use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
 use crate::glyph::{make_ic_body, make_line, make_label};
+use crate::epin::{EdgeLocation, PinLocation};
 
 pub fn make_iso7741edwrq1(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "ISO7741EDWRQ1");

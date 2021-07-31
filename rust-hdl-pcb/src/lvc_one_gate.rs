@@ -6,6 +6,8 @@ use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
 use crate::glyph::{make_ic_body, make_label};
+use crate::epin::{EdgeLocation, PinLocation};
+
 
 pub fn make_sn74lvc1g125se7(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "74LVC1G125SE-7");

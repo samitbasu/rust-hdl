@@ -6,6 +6,8 @@ use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use crate::pin;
 use crate::glyph::{make_ic_body, make_label};
+use crate::epin::EdgeLocation;
+use crate::epin::PinLocation;
 
 pub fn make_lt3092_current_source(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("LT3092"));

@@ -116,9 +116,9 @@ pub fn make_passive_pin_pair() -> Vec<EPin> {
 #[macro_export]
 macro_rules! pin {
     ($name:expr, $kind:ident, $pos: expr, $edge: ident) => {
-        EPin::new($name, crate::epin::PinKind::$kind, crate::epin::PinLocation {
+        EPin::new($name, PinKind::$kind, PinLocation {
             offset: $pos,
-            edge: crate::epin::EdgeLocation::$edge
+            edge: EdgeLocation::$edge
         })
     }
 }
