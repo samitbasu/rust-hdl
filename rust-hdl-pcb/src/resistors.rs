@@ -51,6 +51,8 @@ fn make_resistor_details(
     description: String,
     size: SizeCode,
 ) -> PartDetails {
+    let line1: String = label.split(" ").take(2).collect::<Vec<_>>().join(" ");
+    let line2: String = label.split(" ").skip(2).collect::<Vec<_>>().join(" ");
     PartDetails {
         label: label.clone(),
         manufacturer,
@@ -68,7 +70,8 @@ fn make_resistor_details(
             make_line(110, -30, 170, 30),
             make_line(170, 30, 200, 0),
             make_label(-110, 40, "R?", BottomLeft),
-            make_label(-110, -40, &label, TopLeft),
+            make_label(-110, -40, &line1, TopLeft),
+            make_label(-110, -140, &line2, TopLeft),
         ],
         suppliers: vec![],
         designator: Designator {

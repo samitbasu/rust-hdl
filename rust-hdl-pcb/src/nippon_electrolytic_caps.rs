@@ -84,7 +84,7 @@ pub fn make_nippon_hxd_capacitor(part_number: &str) -> CircuitNode {
     let tolerance = CapacitorTolerance::TwentyPercent;
     let size = SizeCode::Custom(part_number[14..=16].to_owned());
     let esr = match_hxd_esr(voltage, value_pf, &part_number[14..=16]);
-    let label = format!("{} {} {}V ESR {} mR", value, tolerance, voltage, esr);
+    let label = format!("{} {} {}V {}mR", value, tolerance, voltage, esr);
     let description = format!(
         "United Chemi-Con HXD Seris Alum Poly SMD {} {}",
         size, label

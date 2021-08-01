@@ -365,4 +365,10 @@ pub fn make_svgs(part: &PartDetails) {
     write_to_svg(&make_flip_lr_part(part), &format!("{}_lr.svg", base));
     write_to_svg(&make_flip_ud_part(part), &format!("{}_ud.svg", base));
     write_to_svg(&make_flip_ud_part(&make_flip_lr_part(part)), &format!("{}_lr_ud.svg", base));
+    let mut part = part.clone();
+    part.schematic_orientation.rotation = SchematicRotation::Vertical;
+    write_to_svg(&part, &format!("{}_rot.svg", base));
+    write_to_svg(&make_flip_lr_part(&part), &format!("{}_rot_lr.svg", base));
+    write_to_svg(&make_flip_ud_part(&part), &format!("{}_rot_ud.svg", base));
+    write_to_svg(&make_flip_ud_part(&make_flip_lr_part(&part)), &format!("{}_rot_lr_ud.svg", base));
 }

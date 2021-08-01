@@ -38,9 +38,12 @@ pub fn make_ty_brl_series(part_number: &str) -> CircuitNode {
             .map(|x| make_arc(-150 + x * 100, 0, 50.0, 179.9, -179.9))
             .collect::<Vec<_>>(),
     );
+    let line1: String = label.split(" ").take(2).collect::<Vec<_>>().join(" ");
+    let line2: String = label.split(" ").skip(2).collect::<Vec<_>>().join(" ");
     outline.extend(vec![
        make_label(-200, 70, "L?", TextJustification::BottomLeft),
-       make_label(-200, -30, &label, TextJustification::TopLeft),
+       make_label(-300, -30, &line1, TextJustification::TopLeft),
+       make_label(-300, -130, &line2, TextJustification::TopLeft),
     ]);
     CircuitNode::Inductor(Inductor {
         details: PartDetails {

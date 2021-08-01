@@ -129,9 +129,11 @@ pub fn map_pf_to_label(value: f64) -> String {
 
 */
 pub fn make_polarized_capacitor_outline(label: &str) -> Vec<Glyph> {
+    let line1: String = label.split(" ").take(2).collect::<Vec<_>>().join(" ");
+    let line2: String = label.split(" ").skip(2).collect::<Vec<_>>().join(" ");
     vec![
-        make_pin(0, 0, EdgeLocation::West, 100),
-        make_pin(100, 0, EdgeLocation::East, 100),
+        make_pin(0, 0, EdgeLocation::West, 200),
+        make_pin(100, 0, EdgeLocation::East, 200),
         make_line(30, 70, 30, -70),
         make_line(30, 0, 0, 0),
         make_line(70, 0, 100, 0),
@@ -139,7 +141,8 @@ pub fn make_polarized_capacitor_outline(label: &str) -> Vec<Glyph> {
         make_line(-30, 40, 10, 40),
         make_arc(170, 0, 100.0, 135.0, 90.0),
         make_label(-10, 80, "C?", TextJustification::BottomLeft),
-        make_label(-10, -80, label, TextJustification::TopLeft),
+        make_label(-200, -80, &line1, TextJustification::TopLeft),
+        make_label(-200, -180, &line2, TextJustification::TopLeft),
     ]
 }
 
@@ -149,6 +152,8 @@ pub fn make_unpolarized_capacitor(
     description: String,
     size: SizeCode,
 ) -> PartDetails {
+    let line1: String = label.split(" ").take(2).collect::<Vec<_>>().join(" ");
+    let line2: String = label.split(" ").skip(2).collect::<Vec<_>>().join(" ");
     PartDetails {
         label: label.clone(),
         manufacturer,
@@ -157,14 +162,15 @@ pub fn make_unpolarized_capacitor(
         hide_pin_designators: true,
         pins: pin_list(make_passive_pin_pair()),
         outline: vec![
-            make_pin(0, 0, EdgeLocation::West, 100),
-            make_pin(100, 0, EdgeLocation::East, 100),
+            make_pin(0, 0, EdgeLocation::West, 200),
+            make_pin(100, 0, EdgeLocation::East, 200),
             make_line(30, 70, 30, -70),
             make_line(70, 70, 70, -70),
             make_line(30, 0, 0, 0),
             make_line(70, 0, 100, 0),
             make_label(-10, 80, "C?", TextJustification::BottomLeft),
-            make_label(-10, -80, &label, TextJustification::TopLeft),
+            make_label(-200, -80, &line1, TextJustification::TopLeft),
+            make_label(-200, -180, &line2, TextJustification::TopLeft),
         ],
         suppliers: vec![],
         designator: Designator {
