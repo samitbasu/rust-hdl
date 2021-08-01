@@ -1,13 +1,13 @@
 use crate::bom::Manufacturer;
-use crate::circuit::{PartDetails, CircuitNode};
+use crate::circuit::{CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, PinKind};
-use crate::smd::SizeCode;
-use crate::utils::pin_list;
-use crate::pin;
-use crate::glyph::{make_ic_body, make_label};
 use crate::epin::EdgeLocation;
 use crate::epin::PinLocation;
+use crate::epin::{EPin, PinKind};
+use crate::glyph::{make_ic_body, make_label, TextJustification};
+use crate::pin;
+use crate::smd::SizeCode;
+use crate::utils::pin_list;
 
 pub fn make_lt3092_current_source(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("LT3092"));
@@ -28,8 +28,8 @@ pub fn make_lt3092_current_source(part_number: &str) -> CircuitNode {
         ]),
         outline: vec![
             make_ic_body(-400, -200, 400, 300),
-            make_label(-400, 300, "U?"),
-            make_label(-400, -300, part_number),
+            make_label(-400, 300, "U?", TextJustification::BottomLeft),
+            make_label(-400, -200, part_number, TextJustification::TopLeft),
         ],
         suppliers: vec![],
         designator: Designator {
@@ -37,5 +37,6 @@ pub fn make_lt3092_current_source(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::SOT223,
+        schematic_orientation: Default::default()
     })
 }

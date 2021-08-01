@@ -1,12 +1,13 @@
 use crate::bom::Manufacturer;
-use crate::circuit::{Logic, LogicFunction, LogicSignalStandard, PartDetails, CircuitNode};
+use crate::circuit::{CircuitNode, Logic, LogicFunction, LogicSignalStandard, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
+use crate::epin::{EdgeLocation, PinLocation};
+use crate::glyph::{make_ic_body, make_label};
+use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
-use crate::pin;
-use crate::glyph::{make_ic_body, make_label};
-use crate::epin::{EdgeLocation, PinLocation};
+use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 
 pub fn make_sn74hct138(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "SN74HCT138PWR");
@@ -21,7 +22,7 @@ pub fn make_sn74hct138(part_number: &str) -> CircuitNode {
         pin!("GND", PowerReturn, -800, West),
     ];
     for i in 0..=6 {
-        pinset.push(pin!(&format!("Y{}", 6 - i), Output, 600-200*i, East));
+        pinset.push(pin!(&format!("Y{}", 6 - i), Output, 600 - 200 * i, East));
     }
     pinset.push(pin!("VCC", PowerSink, 900, East));
     CircuitNode::Logic(Logic {
@@ -37,8 +38,8 @@ pub fn make_sn74hct138(part_number: &str) -> CircuitNode {
             pins: pin_list(pinset),
             outline: vec![
                 make_ic_body(-600, -900, 600, 1000),
-                make_label(-600, 1000, "U?"),
-                make_label(-600, -1000, part_number),
+                make_label(-600, 1000, "U?", BottomLeft),
+                make_label(-600, -900, part_number, TopLeft),
             ],
             suppliers: vec![],
             designator: Designator {
@@ -46,6 +47,7 @@ pub fn make_sn74hct138(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::TSSOP(16),
+            schematic_orientation: Default::default()
         },
         drive_current_ma: 4.0,
         min_supply_voltage: 4.5,
@@ -61,11 +63,16 @@ pub fn make_sn74hct541(part_number: &str) -> CircuitNode {
     let mut pinset = vec![];
     pinset.push(pin!("~OE1", InputInverted, 900, West));
     for i in 1..=8 {
-        pinset.push(pin!(&format!("A{}", i), Input, 800 - i*200, West));
+        pinset.push(pin!(&format!("A{}", i), Input, 800 - i * 200, West));
     }
     pinset.push(pin!("GND", PowerReturn, -1100, East));
     for i in 1..=8 {
-        pinset.push(pin!(&format!("Y{}", 9 - i), TriState, -1000 + i*200, East));
+        pinset.push(pin!(
+            &format!("Y{}", 9 - i),
+            TriState,
+            -1000 + i * 200,
+            East
+        ));
     }
     pinset.push(pin!("~OE2", InputInverted, -1100, West));
     pinset.push(pin!("VCC", PowerSink, 900, East));
@@ -82,8 +89,8 @@ pub fn make_sn74hct541(part_number: &str) -> CircuitNode {
             pins: pin_list(pinset),
             outline: vec![
                 make_ic_body(-700, -1200, 600, 1000),
-                make_label(-700, 1000, "U?"),
-                make_label(-700, -1300, part_number),
+                make_label(-700, 1000, "U?", BottomLeft),
+                make_label(-700, -1200, part_number, TopLeft),
             ],
             suppliers: vec![],
             designator: Designator {
@@ -91,6 +98,7 @@ pub fn make_sn74hct541(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::TSSOP(20),
+            schematic_orientation: Default::default()
         },
         drive_current_ma: 6.0,
         min_supply_voltage: 4.5,
@@ -105,7 +113,7 @@ pub fn make_sn74hc151(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "SN74HC151QDRQ1");
     let mut pins = vec![];
     for i in 0..=3 {
-        pins.push(pin!(&format!("D{}", 3 - i), Input, 400 + 200*i, West));
+        pins.push(pin!(&format!("D{}", 3 - i), Input, 400 + 200 * i, West));
     }
     pins.push(pin!("Y", Output, 700, East));
     pins.push(pin!("W", Output, 400, East));
@@ -115,7 +123,7 @@ pub fn make_sn74hc151(part_number: &str) -> CircuitNode {
     pins.push(pin!("B", Input, -200, South));
     pins.push(pin!("A", Input, 0, South));
     for i in 0..=3 {
-        pins.push(pin!(&format!("D{}", 7 - i), Input, -400+200*i, West));
+        pins.push(pin!(&format!("D{}", 7 - i), Input, -400 + 200 * i, West));
     }
     pins.push(pin!("VCC", PowerSink, 1100, East));
     CircuitNode::Logic(Logic {
@@ -131,8 +139,8 @@ pub fn make_sn74hc151(part_number: &str) -> CircuitNode {
             pins: pin_list(pins),
             outline: vec![
                 make_ic_body(-500, -700, 400, 1200),
-                make_label(-500, 1200, "U?"),
-                make_label(-300, 1200, part_number),
+                make_label(-500, 1200, "U?", BottomLeft),
+                make_label(-300, 1200, part_number, BottomLeft),
             ],
             suppliers: vec![],
             designator: Designator {
@@ -140,6 +148,7 @@ pub fn make_sn74hc151(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::SOIC(16),
+            schematic_orientation: Default::default()
         },
         drive_current_ma: 6.0,
         min_supply_voltage: 2.0,

@@ -2,12 +2,13 @@ use crate::adc::make_ads868x;
 use crate::analog_devices::make_lt3092_current_source;
 use crate::avx_caps::make_avx_capacitor;
 use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode};
-use crate::circuit::{LogicFunction, LogicSignalStandard, CircuitNode, Capacitor};
+use crate::circuit::{Capacitor, CircuitNode, LogicFunction, LogicSignalStandard};
 use crate::connectors::{
     make_amphenol_10056845_header, make_molex_55935_connector, make_sullins_sbh11_header,
 };
 use crate::diode::DiodeKind;
 use crate::epin::{EPin, PinKind};
+use crate::glyph::make_pin;
 use crate::inductors::make_ty_brl_series;
 use crate::isolators::make_iso7741edwrq1;
 use crate::kemet_ceramic_caps::make_kemet_ceramic_capacitor;
@@ -21,6 +22,7 @@ use crate::murata_mlcc_caps::make_murata_capacitor;
 use crate::nippon_electrolytic_caps::make_nippon_hxd_capacitor;
 use crate::panasonic_era_resistors::make_panasonic_resistor;
 use crate::resistors::{PowerWatt, ResistorKind};
+use crate::schematic::{make_svg, make_flip_lr_part, make_flip_ud_part, make_svgs};
 use crate::smd::SizeCode;
 use crate::sn74_series_logic::make_sn74_series;
 use crate::tdk_c_series::make_tdk_c_series_capacitor;
@@ -28,8 +30,6 @@ use crate::tdk_cga_series::make_tdk_cga_capacitor;
 use crate::wurth_led::make_wurth_led;
 use crate::yageo_cc_caps::make_yageo_cc_series_cap;
 use crate::yageo_resistor_series::make_yageo_series_resistor;
-use crate::schematic::make_svg;
-use crate::glyph::make_pin;
 
 pub mod adc;
 pub mod analog_devices;
@@ -42,6 +42,7 @@ pub mod designator;
 pub mod digikey_table;
 pub mod diode;
 pub mod epin;
+pub mod glyph;
 pub mod inductors;
 pub mod isolators;
 pub mod kemet_ceramic_caps;
@@ -52,6 +53,7 @@ pub mod murata_mlcc_caps;
 pub mod nippon_electrolytic_caps;
 pub mod panasonic_era_resistors;
 pub mod resistors;
+pub mod schematic;
 pub mod smd;
 pub mod sn74_series_logic;
 pub mod tdk_c_series;
@@ -61,14 +63,12 @@ pub mod utils;
 pub mod wurth_led;
 pub mod yageo_cc_caps;
 pub mod yageo_resistor_series;
-pub mod schematic;
-pub mod glyph;
 
 #[test]
 fn test_yageo_rc_68k() {
     let led_limit = match make_yageo_series_resistor("RC0603FR-0768KL") {
         CircuitNode::Resistor(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     println!("{:?}", led_limit);
     assert_eq!(led_limit.value_ohms, 68e3);
@@ -80,7 +80,7 @@ fn test_yageo_rc_68k() {
 fn test_yageo_rc_1k() {
     let current_limit = match make_yageo_series_resistor("RC1206FR-071KL") {
         CircuitNode::Resistor(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(current_limit.value_ohms, 1.0e3);
     assert_eq!(current_limit.details.size, SizeCode::I1206);
@@ -118,7 +118,7 @@ fn test_kemet_tantalum_cap() {
 fn test_yageo_precision() {
     let precise = match make_yageo_series_resistor("RL0603FR-070R47L") {
         CircuitNode::Resistor(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     // 'Res Thick Film 0603 0.47 Ohm 1% 0.1W(1/10W) ±800ppm/C Molded SMD Paper T/R
     assert_eq!(precise.details.size, SizeCode::I0603);
@@ -130,7 +130,7 @@ fn test_yageo_precision() {
 fn test_yageo_bulk() {
     let bulk = match make_yageo_series_resistor("RC1206FR-071KL") {
         CircuitNode::Resistor(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     // 'YAGEO - RC1206FR-071KL. - RES, THICK FILM, 1K, 1%, 0.25W, 1206, REEL
     assert_eq!(bulk.tolerance, 1.0);
@@ -156,7 +156,7 @@ fn test_yageo_tempco() {
 fn test_avx() {
     let avx = match make_avx_capacitor("22201C475KAT2A") {
         CircuitNode::Capacitor(c) => c,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(avx.details.size, SizeCode::I2220);
     assert_eq!(avx.kind, CapacitorKind::MultiLayerChip(DielectricCode::X7R));
@@ -168,7 +168,7 @@ fn test_avx() {
 fn test_kemet() {
     let c = match make_kemet_ceramic_capacitor("C0603C104K5RACTU") {
         CircuitNode::Capacitor(c) => c,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(c.details.size, SizeCode::I0603);
     assert_eq!(c.kind, CapacitorKind::MultiLayerChip(DielectricCode::X7R));
@@ -201,7 +201,7 @@ fn test_yageo_cc_series() {
 fn as_cap(c: CircuitNode) -> Capacitor {
     match c {
         CircuitNode::Capacitor(c) => c,
-        _ => panic!()
+        _ => panic!(),
     }
 }
 
@@ -220,7 +220,7 @@ fn test_murata_grt_series() {
 fn test_panasonic_era_series() {
     let r = match make_panasonic_resistor("ERA8AEB201V") {
         CircuitNode::Resistor(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     // 'RES SMD 200 OHM 0.1% 1/4W 1206
     assert_eq!(r.details.size, SizeCode::I1206);
@@ -235,7 +235,7 @@ fn test_panasonic_era_series() {
 fn test_panasonic_erj_series() {
     let r = match make_panasonic_resistor("ERJ-3RQFR22V") {
         CircuitNode::Resistor(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     // 'Res Thick Film 0603 0.22 Ohm 1% 1/10W ±300ppm/°C Molded SMD Punched Carrier T/R
     assert_eq!(r.details.size, SizeCode::I0603);
@@ -270,14 +270,14 @@ fn test_chemi_con_hybrid_cap() {
 fn test_yageo_pth_resistors() {
     let r = match make_yageo_series_resistor("FMP100JR-52-15K") {
         CircuitNode::Resistor(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(r.tolerance, 5.);
     assert_eq!(r.power_watt, PowerWatt::new(1, 1));
     assert_eq!(r.value_ohms, 15e3);
     let r = match make_yageo_series_resistor("FMP100JR-52-10R") {
         CircuitNode::Resistor(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(r.tolerance, 5.);
     assert_eq!(r.power_watt, PowerWatt::new(1, 1));
@@ -288,7 +288,7 @@ fn test_yageo_pth_resistors() {
 fn test_green_led() {
     let d = match make_wurth_led("150060GS75000") {
         CircuitNode::Diode(d) => d,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(d.kind, DiodeKind::LED("Green".into()));
     assert_eq!(d.forward_drop_volts, 3.2);
@@ -301,7 +301,7 @@ fn test_green_led() {
 fn test_zldo_regulator() {
     let v = match make_zldo1117g_regulator("ZLDO1117G50TA") {
         CircuitNode::Regulator(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(v.input_max_voltage, 18.0);
     assert_eq!(v.output_nominal_voltage, 5.0);
@@ -312,7 +312,7 @@ fn test_zldo_regulator() {
     assert_eq!(v.details.pins[&4].kind, PinKind::PowerSource);
     let v = match make_zldo1117g_regulator("ZLDO1117G33TA") {
         CircuitNode::Regulator(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(v.input_max_voltage, 18.0);
     assert_eq!(v.output_nominal_voltage, 3.3);
@@ -361,7 +361,7 @@ fn test_ti_tps_regulator() {
 fn test_on_semi_regulators() {
     let v = match make_on_semi_ncv33375_regulator("NCV33375ST3.3T3G") {
         CircuitNode::Regulator(v) => v,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(v.input_max_voltage, 13.0);
     assert_eq!(v.output_nominal_voltage, 3.3);
@@ -376,7 +376,7 @@ fn test_on_semi_regulators() {
     assert_eq!(v.details.pins[&4].name, "GND");
     let v = match make_on_semi_ncv33375_regulator("NCV33375ST1.8T3G") {
         CircuitNode::Regulator(v) => v,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(v.input_max_voltage, 13.0);
     assert_eq!(v.output_nominal_voltage, 1.8);
@@ -395,7 +395,7 @@ fn test_on_semi_regulators() {
 fn test_microchip_regulators() {
     let v = match make_mcp_1799_regulator("MCP1799T-5002H/DB") {
         CircuitNode::Regulator(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(v.input_max_voltage, 45.0);
     assert_eq!(v.output_nominal_voltage, 5.0);
@@ -410,7 +410,7 @@ fn test_microchip_regulators() {
     assert_eq!(v.details.pins[&4].name, "GND_2");
     let v = match make_mcp_1799_regulator("MCP1799T-3302H/DB") {
         CircuitNode::Regulator(r) => r,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(v.input_max_voltage, 45.0);
     assert_eq!(v.output_nominal_voltage, 3.3);
@@ -429,7 +429,7 @@ fn test_microchip_regulators() {
 fn test_lt3092() {
     let u = match make_lt3092_current_source("LT3092EST#PBF") {
         CircuitNode::IntegratedCircuit(u) => u,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(u.pins.len(), 4);
     assert_eq!(u.pins[&1].kind, PinKind::Input);
@@ -446,7 +446,7 @@ fn test_lt3092() {
 fn test_brl() {
     let l = match make_ty_brl_series("BRL3225T101K") {
         CircuitNode::Inductor(i) => i,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(l.details.size, SizeCode::I1210);
     assert_eq!(l.details.pins.len(), 2);
@@ -461,7 +461,7 @@ fn test_brl() {
 fn test_xor() {
     let u = match make_lvc_one_gate("SN74LVC1G86DCK") {
         CircuitNode::Logic(l) => l,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(u.input_type, LogicSignalStandard::WideRange);
     assert_eq!(u.output_type, LogicSignalStandard::WideRange);
@@ -556,7 +556,7 @@ fn test_decoder() {
 fn test_multiplexer() {
     let u = match make_sn74_series("SN74HC151QDRQ1") {
         CircuitNode::Logic(l) => l,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(u.details.manufacturer.name, "TI");
     assert_eq!(u.details.manufacturer.part_number, "SN74HC151QDRQ1");
@@ -646,7 +646,7 @@ fn test_isolator() {
 fn test_ads8689() {
     let u = match make_ads868x("ADS8689IPW") {
         CircuitNode::IntegratedCircuit(u) => u,
-        _ => panic!("Wrong type returned")
+        _ => panic!("Wrong type returned"),
     };
     assert_eq!(
         u.pins.iter().map(|x| x.1.name.clone()).collect::<Vec<_>>(),
@@ -677,7 +677,7 @@ fn test_ads8689() {
 fn test_sullins_connector() {
     let j = match make_sullins_sbh11_header("SBH11-PBPC-D13-RA-BK") {
         CircuitNode::Connector(j) => j,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(j.manufacturer.name, "Sullins Connector Solutions");
     assert_eq!(j.pins.len(), 26);
@@ -691,7 +691,7 @@ fn test_sullins_connector() {
 fn test_molex_connector() {
     let j = match make_molex_55935_connector("0559350810") {
         CircuitNode::Connector(j) => j,
-        _ => panic!()
+        _ => panic!(),
     };
     assert_eq!(j.manufacturer.name, "Molex");
     assert_eq!(j.pins.len(), 8);
@@ -747,31 +747,15 @@ fn test_schematics() {
     for p in make_sample_library() {
         println!("SVG Generation for {:?}", p);
         match p {
-            CircuitNode::Capacitor(c) => {
-                make_svg(&c.details)
-            }
-            CircuitNode::Resistor(r) => {
-                make_svg(&r.details)
-            }
-            CircuitNode::Diode(d) => {
-                make_svg(&d.details)
-            }
-            CircuitNode::Regulator(v) => {
-                make_svg(&v.details)
-            }
-            CircuitNode::Inductor(i) => {
-                make_svg(&i.details)
-            }
-            CircuitNode::IntegratedCircuit(p) => {
-                make_svg(&p)
-            }
+            CircuitNode::Capacitor(c) => make_svgs(&c.details),
+            CircuitNode::Resistor(r) => make_svgs(&r.details),
+            CircuitNode::Diode(d) => make_svgs(&d.details),
+            CircuitNode::Regulator(v) => make_svgs(&v.details),
+            CircuitNode::Inductor(i) => make_svgs(&i.details),
+            CircuitNode::IntegratedCircuit(p) => make_svgs(&p),
             CircuitNode::Circuit(_) => {}
-            CircuitNode::Connector(j) => {
-                make_svg(&j)
-            }
-            CircuitNode::Logic(l) => {
-                make_svg(&l.details)
-            }
+            CircuitNode::Connector(j) => make_svgs(&j),
+            CircuitNode::Logic(l) => make_svgs(&l.details),
         }
     }
 }

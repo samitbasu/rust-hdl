@@ -1,6 +1,9 @@
 use crate::bom::Manufacturer;
-use crate::capacitors::{map_pf_to_label, map_three_digit_cap_to_uf, CapacitorKind, CapacitorTolerance, make_polarized_capacitor_outline};
-use crate::circuit::{Capacitor, PartDetails, CircuitNode};
+use crate::capacitors::{
+    make_polarized_capacitor_outline, map_pf_to_label, map_three_digit_cap_to_uf, CapacitorKind,
+    CapacitorTolerance,
+};
+use crate::circuit::{Capacitor, CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::EPin;
 use crate::smd::SizeCode;
@@ -88,7 +91,7 @@ pub fn make_nippon_hxd_capacitor(part_number: &str) -> CircuitNode {
     );
     CircuitNode::Capacitor(Capacitor {
         details: PartDetails {
-            label,
+            label: label.clone(),
             manufacturer: Manufacturer {
                 name: "United Chemi-Con".to_string(),
                 part_number: part_number.to_owned(),
@@ -97,13 +100,14 @@ pub fn make_nippon_hxd_capacitor(part_number: &str) -> CircuitNode {
             comment: "".to_string(),
             hide_pin_designators: true,
             pins: pin_list(vec![EPin::passive_pos(), EPin::passive_neg()]),
-            outline: make_polarized_capacitor_outline(),
+            outline: make_polarized_capacitor_outline(&label),
             suppliers: vec![],
             designator: Designator {
                 kind: DesignatorKind::Capacitor,
                 index: None,
             },
             size,
+            schematic_orientation: Default::default()
         },
         value_pf,
         kind: CapacitorKind::AluminumPolyLowESR(esr),

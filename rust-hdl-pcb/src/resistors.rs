@@ -1,11 +1,12 @@
 use crate::bom::Manufacturer;
 use crate::capacitors::make_unpolarized_capacitor;
-use crate::circuit::{Resistor, PartDetails, CircuitNode};
-use crate::smd::SizeCode;
-use crate::epin::{make_passive_pin_pair, EdgeLocation};
-use crate::utils::pin_list;
-use crate::glyph::{make_pin, make_line, make_label};
+use crate::circuit::{CircuitNode, PartDetails, Resistor};
 use crate::designator::{Designator, DesignatorKind};
+use crate::epin::{make_passive_pin_pair, EdgeLocation};
+use crate::glyph::{make_label, make_line, make_pin};
+use crate::smd::SizeCode;
+use crate::utils::pin_list;
+use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 
 pub type PowerWatt = num_rational::Rational32;
 
@@ -48,7 +49,7 @@ fn make_resistor_details(
     label: String,
     manufacturer: Manufacturer,
     description: String,
-    size: SizeCode
+    size: SizeCode,
 ) -> PartDetails {
     PartDetails {
         label: label.clone(),
@@ -60,14 +61,14 @@ fn make_resistor_details(
         outline: vec![
             make_pin(-100, 0, EdgeLocation::West, 100),
             make_pin(200, 0, EdgeLocation::East, 100),
-            make_line(-100,  0, -70,  30),
-            make_line(-70, 30,-10,-30),
-            make_line(-10,-30,50,30),
-            make_line(50,30,110,-30),
-            make_line(110,-30, 170,30),
+            make_line(-100, 0, -70, 30),
+            make_line(-70, 30, -10, -30),
+            make_line(-10, -30, 50, 30),
+            make_line(50, 30, 110, -30),
+            make_line(110, -30, 170, 30),
             make_line(170, 30, 200, 0),
-            make_label(-110, 40, "R?"),
-            make_label(-110, -140, &label),
+            make_label(-110, 40, "R?", BottomLeft),
+            make_label(-110, -40, &label, TopLeft),
         ],
         suppliers: vec![],
         designator: Designator {
@@ -75,10 +76,9 @@ fn make_resistor_details(
             index: None,
         },
         size,
+        schematic_orientation: Default::default()
     }
 }
-
-
 
 pub fn make_resistor(
     label: String,

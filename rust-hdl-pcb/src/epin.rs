@@ -30,7 +30,7 @@ pub enum PinKind {
     Unspecified,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum EdgeLocation {
     North,
     East,
@@ -38,10 +38,52 @@ pub enum EdgeLocation {
     West,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+impl EdgeLocation {
+    pub fn fliplr(&self) -> EdgeLocation {
+        match self {
+            EdgeLocation::North | EdgeLocation::South => *self,
+            EdgeLocation::East => EdgeLocation::West,
+            EdgeLocation::West => EdgeLocation::East
+        }
+    }
+    pub fn flipud(&self) -> EdgeLocation {
+        match self {
+            EdgeLocation::East | EdgeLocation::West => *self,
+            EdgeLocation::North => EdgeLocation::South,
+            EdgeLocation::South => EdgeLocation::North,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PinLocation {
     pub offset: i32,
     pub edge: EdgeLocation,
+}
+
+impl PinLocation {
+    pub fn fliplr(&self) -> Self {
+        PinLocation {
+            offset: {
+                match self.edge {
+                    EdgeLocation::East | EdgeLocation::West => self.offset,
+                    _ => -self.offset,
+                }
+            },
+            edge: self.edge.fliplr()
+        }
+    }
+    pub fn flipud(&self) -> Self {
+        PinLocation {
+            offset: {
+                match self.edge {
+                    EdgeLocation::South | EdgeLocation::North => self.offset,
+                    _ => -self.offset,
+                }
+            },
+            edge: self.edge.flipud()
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -60,10 +102,14 @@ impl EPin {
         }
     }
     pub fn old(name: &str, kind: PinKind) -> Self {
-        Self::new(name, kind, PinLocation {
-            offset: 0,
-            edge: EdgeLocation::North
-        })
+        Self::new(
+            name,
+            kind,
+            PinLocation {
+                offset: 0,
+                edge: EdgeLocation::North,
+            },
+        )
     }
     pub fn passive(location: PinLocation) -> Self {
         EPin {
@@ -78,7 +124,7 @@ impl EPin {
             name: "".to_string(),
             location: PinLocation {
                 offset: 0,
-                edge: EdgeLocation::West
+                edge: EdgeLocation::West,
             },
         }
     }
@@ -88,8 +134,8 @@ impl EPin {
             name: "".to_string(),
             location: PinLocation {
                 offset: 0,
-                edge: EdgeLocation::East
-            }
+                edge: EdgeLocation::East,
+            },
         }
     }
     pub fn is_named(&self, name: &str) -> bool {
@@ -109,16 +155,20 @@ pub fn make_passive_pin_pair() -> Vec<EPin> {
         EPin::passive(PinLocation {
             offset: 0,
             edge: EdgeLocation::East,
-        })
+        }),
     ]
 }
 
 #[macro_export]
 macro_rules! pin {
     ($name:expr, $kind:ident, $pos: expr, $edge: ident) => {
-        EPin::new($name, PinKind::$kind, PinLocation {
-            offset: $pos,
-            edge: EdgeLocation::$edge
-        })
-    }
+        EPin::new(
+            $name,
+            PinKind::$kind,
+            PinLocation {
+                offset: $pos,
+                edge: EdgeLocation::$edge,
+            },
+        )
+    };
 }

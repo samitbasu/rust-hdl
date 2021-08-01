@@ -1,25 +1,27 @@
 use crate::bom::Manufacturer;
-use crate::circuit::{PartDetails, CircuitNode};
+use crate::circuit::{CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, PinKind, PinLocation, EdgeLocation};
+use crate::epin::{EPin, EdgeLocation, PinKind, PinLocation};
+use crate::glyph::{make_ic_body, make_label, TextJustification};
+use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use std::collections::BTreeMap;
-use crate::glyph::{make_ic_body, make_label};
-use crate::pin;
 
 fn make_passive_pins(count: u32, start_y: i32, delta_y: i32) -> BTreeMap<u64, EPin> {
     pin_list(
         (0..count)
             .into_iter()
-            .map(|x| EPin::new(
-                &format!("{}", x + 1),
-                PinKind::Passive,
-                 PinLocation {
-                     offset: start_y - delta_y*(x as i32),
-                     edge: EdgeLocation::East,
-                 }
-            ))
+            .map(|x| {
+                EPin::new(
+                    &format!("{}", x + 1),
+                    PinKind::Passive,
+                    PinLocation {
+                        offset: start_y - delta_y * (x as i32),
+                        edge: EdgeLocation::East,
+                    },
+                )
+            })
             .collect(),
     )
 }
@@ -38,8 +40,8 @@ pub fn make_molex_55935_connector(part_number: &str) -> CircuitNode {
         pins: make_passive_pins(8, 300, 100),
         outline: vec![
             make_ic_body(-200, -500, 0, 400),
-            make_label(-200, 400, "J?"),
-            make_label(-200, -600, part_number)
+            make_label(-200, 400, "J?", TextJustification::BottomLeft),
+            make_label(-200, -500, part_number, TextJustification::TopLeft),
         ],
         suppliers: vec![],
         designator: Designator {
@@ -47,6 +49,7 @@ pub fn make_molex_55935_connector(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::Custom("PTH, Right Angle".into()),
+        schematic_orientation: Default::default()
     })
 }
 
@@ -69,6 +72,7 @@ pub fn make_sullins_sbh11_header(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::Custom("PTH, Right Angle".into()),
+        schematic_orientation: Default::default()
     })
 }
 
@@ -91,12 +95,12 @@ pub fn make_amphenol_10056845_header(part_number: &str) -> CircuitNode {
             pin!("5", Passive, -100, West),
             pin!("6", Passive, -100, East),
             pin!("7", Passive, -300, West),
-            pin!("8", Passive, -300, East)
+            pin!("8", Passive, -300, East),
         ]),
         outline: vec![
             make_ic_body(-200, -400, 300, 400),
-            make_label(-200, 400, "J?"),
-            make_label(-200, -500, part_number)
+            make_label(-200, 400, "J?", TextJustification::BottomLeft),
+            make_label(-200, -400, part_number, TextJustification::TopLeft),
         ],
         suppliers: vec![],
         designator: Designator {
@@ -104,5 +108,6 @@ pub fn make_amphenol_10056845_header(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::Custom("PTH, Right Angle".into()),
+        schematic_orientation: Default::default()
     })
 }

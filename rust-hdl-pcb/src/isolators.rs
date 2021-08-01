@@ -1,12 +1,12 @@
 use crate::bom::Manufacturer;
-use crate::circuit::{PartDetails, CircuitNode};
+use crate::circuit::{CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
+use crate::epin::{EdgeLocation, PinLocation};
+use crate::glyph::{make_ic_body, make_label, make_line, TextJustification};
+use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
-use crate::pin;
-use crate::glyph::{make_ic_body, make_line, make_label};
-use crate::epin::{EdgeLocation, PinLocation};
 
 pub fn make_iso7741edwrq1(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "ISO7741EDWRQ1");
@@ -42,8 +42,8 @@ pub fn make_iso7741edwrq1(part_number: &str) -> CircuitNode {
             make_ic_body(-600, -1100, 500, 1000),
             make_line(-100, 700, -100, -700),
             make_line(0, 700, 0, -700),
-            make_label(-600, 1000, "U?"),
-            make_label(-600, -1200, part_number),
+            make_label(-600, 1000, "U?", TextJustification::BottomLeft),
+            make_label(-600, -1100, part_number, TextJustification::TopLeft),
         ],
         suppliers: vec![],
         designator: Designator {
@@ -51,5 +51,6 @@ pub fn make_iso7741edwrq1(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::SOIC(16),
+        schematic_orientation: Default::default()
     })
 }

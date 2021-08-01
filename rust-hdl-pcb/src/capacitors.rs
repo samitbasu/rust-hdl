@@ -1,12 +1,12 @@
 use crate::bom::Manufacturer;
-use crate::circuit::{Capacitor, PartDetails, CircuitNode};
+use crate::circuit::{Capacitor, CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, EdgeLocation, PinLocation, make_passive_pin_pair};
+use crate::epin::{make_passive_pin_pair, EPin, EdgeLocation, PinLocation};
+use crate::glyph::{make_arc, make_label, make_line, make_pin, Glyph, TextJustification};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
-use crate::glyph::{make_pin, make_line, make_label, Glyph, make_arc};
 
 pub fn map_three_digit_cap_to_uf(uf: &str) -> f64 {
     let uf_tens = &uf[0..1].parse::<f64>().unwrap();
@@ -123,12 +123,12 @@ pub fn map_pf_to_label(value: f64) -> String {
 }
 
 /*
-    (arc (pt 170 0) (radius 99.963) (startAngle 135.852) (sweepAngle 89.47) (width 10))
-    (line (pt -10 60) (pt -10 20) (width 10) )
-    (line (pt -30 40) (pt 10 40) (width 10) )
+   (arc (pt 170 0) (radius 99.963) (startAngle 135.852) (sweepAngle 89.47) (width 10))
+   (line (pt -10 60) (pt -10 20) (width 10) )
+   (line (pt -30 40) (pt 10 40) (width 10) )
 
- */
-pub fn make_polarized_capacitor_outline() -> Vec<Glyph> {
+*/
+pub fn make_polarized_capacitor_outline(label: &str) -> Vec<Glyph> {
     vec![
         make_pin(0, 0, EdgeLocation::West, 100),
         make_pin(100, 0, EdgeLocation::East, 100),
@@ -137,7 +137,9 @@ pub fn make_polarized_capacitor_outline() -> Vec<Glyph> {
         make_line(70, 0, 100, 0),
         make_line(-10, 60, -10, 20),
         make_line(-30, 40, 10, 40),
-        make_arc(170, 0, 100.0, 135.0, 90.0)
+        make_arc(170, 0, 100.0, 135.0, 90.0),
+        make_label(-10, 80, "C?", TextJustification::BottomLeft),
+        make_label(-10, -80, label, TextJustification::TopLeft),
     ]
 }
 
@@ -145,7 +147,7 @@ pub fn make_unpolarized_capacitor(
     label: String,
     manufacturer: Manufacturer,
     description: String,
-    size: SizeCode
+    size: SizeCode,
 ) -> PartDetails {
     PartDetails {
         label: label.clone(),
@@ -161,8 +163,8 @@ pub fn make_unpolarized_capacitor(
             make_line(70, 70, 70, -70),
             make_line(30, 0, 0, 0),
             make_line(70, 0, 100, 0),
-            make_label(-10, 80, "C?"),
-            make_label(-10, -180, &label),
+            make_label(-10, 80, "C?", TextJustification::BottomLeft),
+            make_label(-10, -80, &label, TextJustification::TopLeft),
         ],
         suppliers: vec![],
         designator: Designator {
@@ -170,6 +172,7 @@ pub fn make_unpolarized_capacitor(
             index: None,
         },
         size,
+        schematic_orientation: Default::default()
     }
 }
 

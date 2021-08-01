@@ -1,12 +1,11 @@
 use crate::bom::Manufacturer;
-use crate::circuit::{PartDetails, CircuitNode};
+use crate::circuit::{CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, PinKind, PinLocation, EdgeLocation};
+use crate::epin::{EPin, EdgeLocation, PinKind, PinLocation};
+use crate::glyph::{make_ic_body, make_label, Glyph, TextJustification};
+use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
-use crate::pin;
-use crate::glyph::{Glyph, make_ic_body, make_label};
-
 
 pub fn make_ads868x(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("ADS868"));
@@ -41,8 +40,8 @@ pub fn make_ads868x(part_number: &str) -> CircuitNode {
         pins: pin_list(pins),
         outline: vec![
             make_ic_body(-800, -1400, 900, 1200),
-            make_label(-800, 1200, "U?"),
-            make_label(-800, -1500, part_number),
+            make_label(-800, 1200, "U?", TextJustification::BottomLeft),
+            make_label(-800, -1400, part_number, TextJustification::TopLeft),
         ],
         suppliers: vec![],
         designator: Designator {
@@ -50,5 +49,6 @@ pub fn make_ads868x(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::TSSOP(16),
+        schematic_orientation: Default::default()
     })
 }
