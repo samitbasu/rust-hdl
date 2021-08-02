@@ -3,11 +3,11 @@ use crate::circuit::{CircuitNode, Logic, LogicFunction, LogicSignalStandard, Par
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
 use crate::epin::{EdgeLocation, PinLocation};
+use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 use crate::glyph::{make_ic_body, make_label};
 use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
-use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 
 pub fn make_sn74hct138(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "SN74HCT138PWR");
@@ -47,7 +47,6 @@ pub fn make_sn74hct138(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::TSSOP(16),
-            schematic_orientation: Default::default()
         },
         drive_current_ma: 4.0,
         min_supply_voltage: 4.5,
@@ -98,7 +97,6 @@ pub fn make_sn74hct541(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::TSSOP(20),
-            schematic_orientation: Default::default()
         },
         drive_current_ma: 6.0,
         min_supply_voltage: 4.5,
@@ -148,7 +146,6 @@ pub fn make_sn74hc151(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::SOIC(16),
-            schematic_orientation: Default::default()
         },
         drive_current_ma: 6.0,
         min_supply_voltage: 2.0,

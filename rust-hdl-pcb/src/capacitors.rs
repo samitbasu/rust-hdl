@@ -1,7 +1,7 @@
 use crate::bom::Manufacturer;
 use crate::circuit::{Capacitor, CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{make_passive_pin_pair, EPin, EdgeLocation, PinLocation};
+use crate::epin::{make_passive_pin_pair, EdgeLocation};
 use crate::glyph::{make_arc, make_label, make_line, make_pin, Glyph, TextJustification};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
@@ -178,7 +178,6 @@ pub fn make_unpolarized_capacitor(
             index: None,
         },
         size,
-        schematic_orientation: Default::default()
     }
 }
 

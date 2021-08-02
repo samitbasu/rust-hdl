@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 use std::fs::File;
 
 use crate::bom::Manufacturer;
-use crate::circuit::{CircuitNode, Resistor};
+use crate::circuit::{CircuitNode};
 use crate::resistors::{
     make_resistor, map_resistance_letter_code_to_value, map_resistance_to_string, PowerWatt,
     ResistorKind,

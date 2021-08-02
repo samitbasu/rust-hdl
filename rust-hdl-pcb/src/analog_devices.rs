@@ -37,6 +37,5 @@ pub fn make_lt3092_current_source(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::SOT223,
-        schematic_orientation: Default::default()
     })
 }

@@ -68,7 +68,6 @@ pub fn make_kemet_t491_capacitor(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size,
-            schematic_orientation: Default::default()
         },
         value_pf,
         kind: CapacitorKind::Tantalum,

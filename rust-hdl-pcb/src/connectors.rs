@@ -49,7 +49,6 @@ pub fn make_molex_55935_connector(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::Custom("PTH, Right Angle".into()),
-        schematic_orientation: Default::default()
     })
 }
 
@@ -72,7 +71,6 @@ pub fn make_sullins_sbh11_header(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::Custom("PTH, Right Angle".into()),
-        schematic_orientation: Default::default()
     })
 }
 
@@ -108,6 +106,5 @@ pub fn make_amphenol_10056845_header(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::Custom("PTH, Right Angle".into()),
-        schematic_orientation: Default::default()
     })
 }

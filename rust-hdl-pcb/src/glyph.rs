@@ -1,4 +1,4 @@
-use crate::epin::{EdgeLocation, PinLocation};
+use crate::epin::{EdgeLocation};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Point {
@@ -38,9 +38,12 @@ impl Point {
         }
     }
     pub fn zero() -> Point {
+        Point { x: 0, y: 0 }
+    }
+    pub fn rot90(&self) -> Point {
         Point {
-            x: 0,
-            y: 0
+            x: -self.y,
+            y: self.x,
         }
     }
 }
@@ -91,6 +94,20 @@ impl Rect {
             p0: self.p0.flipud().min(self.p1.flipud()),
             p1: self.p0.flipud().max(self.p1.flipud()),
         }
+    }
+    pub fn rot90(&self) -> Rect {
+        Rect {
+            p0: self.p0.rot90().min(self.p1.rot90()),
+            p1: self.p0.rot90().max(self.p1.rot90()),
+        }
+    }
+    pub fn width(&self) -> i32 {
+        2*i32::max(self.p1.x.abs(), self.p0.x.abs())
+//        (self.p1.x - self.p0.x).abs()
+    }
+    pub fn height(&self) -> i32 {
+        2*i32::max(self.p1.y.abs(), self.p0.y.abs())
+//        (self.p1.y - self.p0.y).abs()
     }
 }
 
@@ -160,14 +177,14 @@ impl Text {
         Self {
             p0: self.p0.fliplr(),
             text: self.text.clone(),
-            justify: self.justify.fliplr()
+            justify: self.justify.fliplr(),
         }
     }
     pub fn flipud(&self) -> Text {
         Self {
             p0: self.p0.flipud(),
             text: self.text.clone(),
-            justify: self.justify.flipud()
+            justify: self.justify.flipud(),
         }
     }
 }
@@ -191,11 +208,10 @@ impl Pin {
         Pin {
             p0: self.p0.flipud(),
             location: self.location.flipud(),
-            length: self.length
+            length: self.length,
         }
     }
 }
-
 
 #[derive(Clone, Copy, Debug)]
 pub struct Arc {
@@ -210,16 +226,16 @@ impl Arc {
         Self {
             p0: self.p0.fliplr(),
             radius: self.radius,
-            start_angle: self.start_angle,
-            sweep_angle: self.sweep_angle,
+            start_angle: 180.0 - self.start_angle,
+            sweep_angle: -self.sweep_angle,
         }
     }
     pub fn flipud(&self) -> Self {
         Self {
             p0: self.p0.flipud(),
             radius: self.radius,
-            start_angle: self.start_angle,
-            sweep_angle: self.sweep_angle,
+            start_angle: -self.start_angle,
+            sweep_angle: -self.sweep_angle,
         }
     }
 }
@@ -236,88 +252,65 @@ pub enum Glyph {
 impl Glyph {
     pub fn fliplr(&self) -> Glyph {
         match self {
-            Glyph::OutlineRect(r) => {
-                Glyph::OutlineRect(r.fliplr())
-            }
-            Glyph::Line(l) => {
-                Glyph::Line(l.fliplr())
-            }
-            Glyph::Text(t) => {
-                Glyph::Text(t.fliplr())
-            }
-            Glyph::Pin(p) => {
-                Glyph::Pin(p.fliplr())
-            }
-            Glyph::Arc(a) => {
-                Glyph::Arc(a.fliplr())
-            }
+            Glyph::OutlineRect(r) => Glyph::OutlineRect(r.fliplr()),
+            Glyph::Line(l) => Glyph::Line(l.fliplr()),
+            Glyph::Text(t) => Glyph::Text(t.fliplr()),
+            Glyph::Pin(p) => Glyph::Pin(p.fliplr()),
+            Glyph::Arc(a) => Glyph::Arc(a.fliplr()),
         }
     }
     pub fn flipud(&self) -> Glyph {
         match self {
-            Glyph::OutlineRect(r) => {
-                Glyph::OutlineRect(r.flipud())
-            }
-            Glyph::Line(l) => {
-                Glyph::Line(l.flipud())
-            }
-            Glyph::Text(t) => {
-                Glyph::Text(t.flipud())
-            }
-            Glyph::Pin(p) => {
-                Glyph::Pin(p.flipud())
-            }
-            Glyph::Arc(a) => {
-                Glyph::Arc(a.flipud())
-            }
+            Glyph::OutlineRect(r) => Glyph::OutlineRect(r.flipud()),
+            Glyph::Line(l) => Glyph::Line(l.flipud()),
+            Glyph::Text(t) => Glyph::Text(t.flipud()),
+            Glyph::Pin(p) => Glyph::Pin(p.flipud()),
+            Glyph::Arc(a) => Glyph::Arc(a.flipud()),
         }
     }
-
 
     // These are fairly crude approximations...
     pub fn estimate_bounding_box(&self) -> Rect {
         match self {
-            Glyph::OutlineRect(r) => {
-                Rect {
-                    p0: r.p0 + Point::dx() * (-200) + Point::dy() * (-200),
-                    p1: r.p1 + Point::dx() * 200 + Point::dy() * 200,
-                }
+            Glyph::OutlineRect(r) => Rect {
+                p0: r.p0 + Point::dx() * (-200) + Point::dy() * (-200),
+                p1: r.p1 + Point::dx() * 200 + Point::dy() * 200,
             },
             Glyph::Line(l) => Rect {
                 p0: l.p0.min(l.p1),
                 p1: l.p0.max(l.p1),
             },
-            Glyph::Text(t) =>
-                {
-                    let mut tx = (t.text.len() * 55) as i32;
-                    let mut ty = 85;
-                    let mut dy = 0;
-                    match t.justify {
-                        TextJustification::BottomLeft => {}
-                        TextJustification::BottomRight => {
-                            tx = -tx;
-                        }
-                        TextJustification::TopLeft => {
-                            ty = -ty;
-                        }
-                        TextJustification::TopRight => {
-                            ty = -ty; tx = -tx;
-                        }
-                        TextJustification::MiddleLeft => {
-                            dy = -42;
-                        }
-                        TextJustification::MiddleRight => {
-                            dy = -42;
-                            tx = -tx;
-                        }
+            Glyph::Text(t) => {
+                let mut tx = (t.text.len() * 55) as i32;
+                let mut ty = 85;
+                let mut dy = 0;
+                match t.justify {
+                    TextJustification::BottomLeft => {}
+                    TextJustification::BottomRight => {
+                        tx = -tx;
                     }
-                    let p0 = t.p0 + Point::dy() * dy;
-                    let p1 = t.p0 + Point::dx() * tx + Point::dy() * ty;
-                    Rect {
-                        p0: p0.min(p1),
-                        p1: p0.max(p1),
+                    TextJustification::TopLeft => {
+                        ty = -ty;
                     }
-                },
+                    TextJustification::TopRight => {
+                        ty = -ty;
+                        tx = -tx;
+                    }
+                    TextJustification::MiddleLeft => {
+                        dy = -42;
+                    }
+                    TextJustification::MiddleRight => {
+                        dy = -42;
+                        tx = -tx;
+                    }
+                }
+                let p0 = t.p0 + Point::dy() * dy;
+                let p1 = t.p0 + Point::dx() * tx + Point::dy() * ty;
+                Rect {
+                    p0: p0.min(p1),
+                    p1: p0.max(p1),
+                }
+            }
             Glyph::Arc(a) => Rect {
                 p0: a.p0 + Point::dx() * (-a.radius as i32) + Point::dy() * (-a.radius as i32),
                 p1: a.p0 + Point::dx() * (a.radius as i32) + Point::dy() * (a.radius as i32),
@@ -349,7 +342,7 @@ pub fn estimate_bounding_box(glyphs: &Vec<Glyph>) -> Rect {
         return Rect {
             p0: Point::zero(),
             p1: Point::zero(),
-        }
+        };
     }
     let mut bbox = glyphs[0].estimate_bounding_box();
     for glyph in glyphs {

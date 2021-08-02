@@ -2,8 +2,8 @@ use crate::bom::Manufacturer;
 use crate::capacitors::map_three_digit_cap_to_pf;
 use crate::circuit::{CircuitNode, Inductor, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{make_passive_pin_pair, EPin, EdgeLocation};
-use crate::glyph::{make_arc, make_pin, make_label, TextJustification};
+use crate::epin::{make_passive_pin_pair, EdgeLocation};
+use crate::glyph::{make_arc, make_label, make_pin, TextJustification};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 
@@ -27,7 +27,10 @@ pub fn make_ty_brl_series(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "BRL3225T101K"); // Add others in the future...
     let dc_resistance_ohms = 2.5;
     let max_current_milliamps = 250.0;
-    let label = format!("{}uH {}mA {}R", value_microhenry, max_current_milliamps, dc_resistance_ohms);
+    let label = format!(
+        "{}uH {}mA {}R",
+        value_microhenry, max_current_milliamps, dc_resistance_ohms
+    );
     let mut outline = vec![
         make_pin(-200, 0, EdgeLocation::West, 100),
         make_pin(200, 0, EdgeLocation::East, 100),
@@ -41,9 +44,9 @@ pub fn make_ty_brl_series(part_number: &str) -> CircuitNode {
     let line1: String = label.split(" ").take(2).collect::<Vec<_>>().join(" ");
     let line2: String = label.split(" ").skip(2).collect::<Vec<_>>().join(" ");
     outline.extend(vec![
-       make_label(-200, 70, "L?", TextJustification::BottomLeft),
-       make_label(-300, -30, &line1, TextJustification::TopLeft),
-       make_label(-300, -130, &line2, TextJustification::TopLeft),
+        make_label(-200, 70, "L?", TextJustification::BottomLeft),
+        make_label(-300, -30, &line1, TextJustification::TopLeft),
+        make_label(-300, -130, &line2, TextJustification::TopLeft),
     ]);
     CircuitNode::Inductor(Inductor {
         details: PartDetails {
@@ -63,7 +66,6 @@ pub fn make_ty_brl_series(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size,
-            schematic_orientation: Default::default()
         },
         value_microhenry,
         tolerance,

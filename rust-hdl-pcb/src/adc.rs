@@ -2,7 +2,7 @@ use crate::bom::Manufacturer;
 use crate::circuit::{CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, EdgeLocation, PinKind, PinLocation};
-use crate::glyph::{make_ic_body, make_label, Glyph, TextJustification};
+use crate::glyph::{make_ic_body, make_label, TextJustification};
 use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
@@ -49,6 +49,5 @@ pub fn make_ads868x(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::TSSOP(16),
-        schematic_orientation: Default::default()
     })
 }

@@ -3,11 +3,11 @@ use crate::circuit::{CircuitNode, Logic, LogicFunction, LogicSignalStandard, Par
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
 use crate::epin::{EdgeLocation, PinLocation};
+use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 use crate::glyph::{make_ic_body, make_label};
 use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
-use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 
 pub fn make_sn74lvc1g125se7(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "74LVC1G125SE-7");
@@ -39,7 +39,6 @@ pub fn make_sn74lvc1g125se7(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::SOT353,
-            schematic_orientation: Default::default()
         },
         drive_current_ma: 24.0,
         min_supply_voltage: 1.65,
@@ -80,7 +79,6 @@ pub fn make_sn74lvc1g86dck(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::SC70,
-            schematic_orientation: Default::default()
         },
         drive_current_ma: 32.0,
         min_supply_voltage: 1.65,

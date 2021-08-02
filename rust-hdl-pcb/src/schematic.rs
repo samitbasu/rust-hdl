@@ -1,11 +1,10 @@
 use crate::adc::make_ads868x;
-use crate::circuit::{CircuitNode, PartDetails, SchematicRotation};
+use crate::circuit::{CircuitNode, PartDetails, PartInstance, SchematicRotation};
 use crate::epin::{EPin, EdgeLocation};
-use crate::glyph::{Glyph, Rect, estimate_bounding_box, TextJustification};
-use crate::isolators::make_iso7741edwrq1;
+use crate::glyph::{estimate_bounding_box, Glyph, Rect, TextJustification};
 use svg::node::element::path::Data;
-use svg::node::element::{Path, Group};
 use svg::node::element::Text;
+use svg::node::element::{Group, Path};
 use svg::Document;
 
 pub fn add_pins(mut doc: Group, part: &PartDetails) -> Group {
@@ -239,30 +238,23 @@ pub fn add_outline_to_path(doc: Group, g: &Glyph) -> Group {
                 .set("font-family", "monospace")
                 .set("font-size", 85);
             match t.justify {
-                TextJustification::BottomLeft |
-                TextJustification::BottomRight => {
+                TextJustification::BottomLeft | TextJustification::BottomRight => {
                     txt = txt.set("alignment-baseline", "bottom")
                 }
-                TextJustification::TopLeft |
-                TextJustification::TopRight => {
+                TextJustification::TopLeft | TextJustification::TopRight => {
                     txt = txt.set("alignment-baseline", "hanging")
                 }
-                TextJustification::MiddleLeft |
-                TextJustification::MiddleRight => {
+                TextJustification::MiddleLeft | TextJustification::MiddleRight => {
                     txt = txt.set("alignment-baseline", "middle")
                 }
             }
             match t.justify {
-                TextJustification::BottomLeft |
-                TextJustification::TopLeft |
-                TextJustification::MiddleLeft => {
-                    txt = txt.set("text-anchor", "begin")
-                }
-                TextJustification::BottomRight |
-                TextJustification::TopRight |
-                TextJustification::MiddleRight => {
-                    txt = txt.set("text-anchor", "end")
-                }
+                TextJustification::BottomLeft
+                | TextJustification::TopLeft
+                | TextJustification::MiddleLeft => txt = txt.set("text-anchor", "begin"),
+                TextJustification::BottomRight
+                | TextJustification::TopRight
+                | TextJustification::MiddleRight => txt = txt.set("text-anchor", "end"),
             }
             doc.add(txt)
         }
@@ -290,25 +282,57 @@ pub fn add_outline_to_path(doc: Group, g: &Glyph) -> Group {
 pub fn make_flip_lr_part(part: &PartDetails) -> PartDetails {
     let mut fpart = part.clone();
     fpart.outline = part.outline.iter().map(|x| x.fliplr()).collect();
-    fpart.pins = part.pins.iter().map(|x|
-        (*x.0, EPin::new(&x.1.name, x.1.kind, x.1.location.fliplr()))
-    ).collect();
+    fpart.pins = part
+        .pins
+        .iter()
+        .map(|x| (*x.0, EPin::new(&x.1.name, x.1.kind, x.1.location.fliplr())))
+        .collect();
     fpart
 }
 
 pub fn make_flip_ud_part(part: &PartDetails) -> PartDetails {
     let mut fpart = part.clone();
     fpart.outline = part.outline.iter().map(|x| x.flipud()).collect();
-    fpart.pins = part.pins.iter().map(|x|
-        (*x.0, EPin::new(&x.1.name, x.1.kind, x.1.location.flipud())))
+    fpart.pins = part
+        .pins
+        .iter()
+        .map(|x| (*x.0, EPin::new(&x.1.name, x.1.kind, x.1.location.flipud())))
         .collect();
     fpart
 }
 
-impl Into<Group> for &PartDetails {
+fn get_details_from_instance(x: &PartInstance) -> PartDetails {
+    let mut part = match &x.node {
+        CircuitNode::Capacitor(c) => &c.details,
+        CircuitNode::Resistor(r) => &r.details,
+        CircuitNode::Diode(d) => &d.details,
+        CircuitNode::Regulator(v) => &v.details,
+        CircuitNode::Inductor(l) => &l.details,
+        CircuitNode::IntegratedCircuit(u) => &u,
+        CircuitNode::Circuit(_) => {
+            unimplemented!()
+        }
+        CircuitNode::Connector(j) => &j,
+        CircuitNode::Logic(u) => &u.details,
+    }
+    .clone();
+
+    if x.schematic_orientation.flipped_lr {
+        part = make_flip_lr_part(&part);
+    }
+
+    if x.schematic_orientation.flipped_ud {
+        part = make_flip_ud_part(&part);
+    }
+
+    part
+}
+
+impl Into<Group> for &PartInstance {
     fn into(self) -> Group {
-        let part = self;
         let mut document = Group::new();
+
+        let part = get_details_from_instance(&self);
 
         for x in &part.outline {
             document = add_outline_to_path(document, x);
@@ -329,46 +353,105 @@ impl Into<Group> for &PartDetails {
                 .set("stroke-width", 5)
                 .set("d", data),
         );
-        if part.schematic_orientation.rotation == SchematicRotation::Vertical {
-            document = document.set("transform", "rotate(-90)");
-        }
+        let cx = (r.p0.x + r.p1.x)/2;
+        let cy = (r.p0.y + r.p1.y)/2;
+        let dx = self.schematic_orientation.center.x;
+        let dy = -self.schematic_orientation.center.y;
+        dbg!(cx);
+        dbg!(cy);
+        let transform = format!("{rot} translate({x},{y})",
+            x = dx,
+            y = dy,
+            rot = if self.schematic_orientation.rotation == SchematicRotation::Vertical {
+                format!("rotate(-90, {}, {})", dx, dy)
+            } else {
+                "".to_string()
+            }
+        );
+        document = document.set("transform", transform);
         document
     }
 }
 
+pub fn estimate_instance_bounding_box(instance: &PartInstance) -> Rect {
+    let part = get_details_from_instance(instance);
+    let mut r = estimate_bounding_box(&part.outline);
+    if instance.schematic_orientation.rotation == SchematicRotation::Vertical {
+        r = r.rot90();
+    }
+    r
+}
 
-fn write_to_svg(part: &PartDetails, name: &str) {
+
+pub fn write_circuit_to_svg(instances: &[&PartInstance], name: &str) {
+    let mut top_document = Document::new().set("viewBox", (-2000, -2000, 7000, 7000));
+    for instance in instances {
+        let part: Group = (*instance).into();
+        top_document = top_document.add(part);
+    }
+    svg::save(name, &top_document).unwrap();
+}
+
+
+fn write_to_svg(instance: &PartInstance, name: &str) {
+    let r = estimate_instance_bounding_box(instance);
     let mut top_document = Document::new().set("viewBox", (-2000, -2000, 4000, 4000));
-    let document: Group = part.into();
+    let document: Group = instance.into();
     top_document = top_document.add(document);
+    let data = Data::new()
+        .move_to((r.p0.x, -r.p0.y))
+        .line_to((r.p0.x, -r.p1.y))
+        .line_to((r.p1.x, -r.p1.y))
+        .line_to((r.p1.x, -r.p0.y))
+        .close();
+    top_document = top_document.add(
+        Path::new()
+            .set("fill", "none")
+            .set("stroke", "green")
+            .set("stroke-width", 2)
+            .set("d", data),
+    );
     svg::save(name, &top_document).unwrap();
 }
 
 // Color for the body of an IC: FFFDB0
 // Color for the schematic line: AE5E46
-pub fn make_svg(part: &PartDetails) {
-    write_to_svg(part, &format!("{}.svg", part.manufacturer.part_number.replace("/", "_")))
-}
 
 #[test]
 fn test_svg_of_part() {
-    let u = match make_ads868x("ADS8689IPW") {
-        CircuitNode::IntegratedCircuit(u) => u,
-        _ => panic!("Unexpected node"),
-    };
-    make_svg(&u);
+    let u = make_ads868x("ADS8689IPW");
+    let i: PartInstance = u.into();
+    write_to_svg(&i, "test.svg");
 }
 
-pub fn make_svgs(part: &PartDetails) {
-    let base = part.manufacturer.part_number.replace("/", "_");
-    write_to_svg(part, &format!("{}.svg", base));
-    write_to_svg(&make_flip_lr_part(part), &format!("{}_lr.svg", base));
-    write_to_svg(&make_flip_ud_part(part), &format!("{}_ud.svg", base));
-    write_to_svg(&make_flip_ud_part(&make_flip_lr_part(part)), &format!("{}_lr_ud.svg", base));
-    let mut part = part.clone();
+pub fn make_svgs(mut part: &mut PartInstance) {
+    let details = get_details_from_instance(&part);
+    let base = env!("CARGO_MANIFEST_DIR").to_owned()
+        + "/symbols/"
+        + &details.manufacturer.part_number.replace("/", "_");
+    write_to_svg(&part, &format!("{}.svg", base));
+    part.schematic_orientation.flipped_lr = true;
+    write_to_svg(&part, &format!("{}_lr.svg", base));
+    part.schematic_orientation.flipped_lr = false;
+    part.schematic_orientation.flipped_ud = true;
+    write_to_svg(&part, &format!("{}_ud.svg", base));
+    part.schematic_orientation.flipped_lr = true;
+    part.schematic_orientation.flipped_ud = true;
+    write_to_svg(&part, &format!("{}_lr_ud.svg", base));
     part.schematic_orientation.rotation = SchematicRotation::Vertical;
+    part.schematic_orientation.flipped_lr = false;
+    part.schematic_orientation.flipped_ud = false;
     write_to_svg(&part, &format!("{}_rot.svg", base));
-    write_to_svg(&make_flip_lr_part(&part), &format!("{}_rot_lr.svg", base));
-    write_to_svg(&make_flip_ud_part(&part), &format!("{}_rot_ud.svg", base));
-    write_to_svg(&make_flip_ud_part(&make_flip_lr_part(&part)), &format!("{}_rot_lr_ud.svg", base));
+    part.schematic_orientation.rotation = SchematicRotation::Vertical;
+    part.schematic_orientation.flipped_lr = true;
+    part.schematic_orientation.flipped_ud = false;
+    write_to_svg(&part, &format!("{}_rot_lr.svg", base));
+    part.schematic_orientation.rotation = SchematicRotation::Vertical;
+    part.schematic_orientation.flipped_lr = false;
+    part.schematic_orientation.flipped_ud = true;
+    write_to_svg(&part, &format!("{}_rot_ud.svg", base));
+    part.schematic_orientation.rotation = SchematicRotation::Vertical;
+    part.schematic_orientation.flipped_lr = true;
+    part.schematic_orientation.flipped_ud = true;
+    write_to_svg(&part, &format!("{}_rot_lr_ud.svg", base));
 }

@@ -2,13 +2,12 @@ use crate::adc::make_ads868x;
 use crate::analog_devices::make_lt3092_current_source;
 use crate::avx_caps::make_avx_capacitor;
 use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode};
-use crate::circuit::{Capacitor, CircuitNode, LogicFunction, LogicSignalStandard};
+use crate::circuit::{Capacitor, CircuitNode, LogicFunction, LogicSignalStandard, PartInstance};
 use crate::connectors::{
     make_amphenol_10056845_header, make_molex_55935_connector, make_sullins_sbh11_header,
 };
 use crate::diode::DiodeKind;
-use crate::epin::{EPin, PinKind};
-use crate::glyph::make_pin;
+use crate::epin::{PinKind};
 use crate::inductors::make_ty_brl_series;
 use crate::isolators::make_iso7741edwrq1;
 use crate::kemet_ceramic_caps::make_kemet_ceramic_capacitor;
@@ -22,7 +21,7 @@ use crate::murata_mlcc_caps::make_murata_capacitor;
 use crate::nippon_electrolytic_caps::make_nippon_hxd_capacitor;
 use crate::panasonic_era_resistors::make_panasonic_resistor;
 use crate::resistors::{PowerWatt, ResistorKind};
-use crate::schematic::{make_svg, make_flip_lr_part, make_flip_ud_part, make_svgs};
+use crate::schematic::{make_svgs};
 use crate::smd::SizeCode;
 use crate::sn74_series_logic::make_sn74_series;
 use crate::tdk_c_series::make_tdk_c_series_capacitor;
@@ -54,6 +53,7 @@ pub mod nippon_electrolytic_caps;
 pub mod panasonic_era_resistors;
 pub mod resistors;
 pub mod schematic;
+pub mod schematic_flexbox_layout;
 pub mod smd;
 pub mod sn74_series_logic;
 pub mod tdk_c_series;
@@ -63,6 +63,7 @@ pub mod utils;
 pub mod wurth_led;
 pub mod yageo_cc_caps;
 pub mod yageo_resistor_series;
+pub mod schematic_manual_layout;
 
 #[test]
 fn test_yageo_rc_68k() {
@@ -746,16 +747,30 @@ fn make_sample_library() -> Vec<CircuitNode> {
 fn test_schematics() {
     for p in make_sample_library() {
         println!("SVG Generation for {:?}", p);
-        match p {
-            CircuitNode::Capacitor(c) => make_svgs(&c.details),
-            CircuitNode::Resistor(r) => make_svgs(&r.details),
-            CircuitNode::Diode(d) => make_svgs(&d.details),
-            CircuitNode::Regulator(v) => make_svgs(&v.details),
-            CircuitNode::Inductor(i) => make_svgs(&i.details),
-            CircuitNode::IntegratedCircuit(p) => make_svgs(&p),
-            CircuitNode::Circuit(_) => {}
-            CircuitNode::Connector(j) => make_svgs(&j),
-            CircuitNode::Logic(l) => make_svgs(&l.details),
-        }
+        let mut i: PartInstance = p.into();
+        make_svgs(&mut i);
     }
+}
+
+#[test]
+fn test_composite_circuit() {
+    /*
+    let layout = LayoutEngine::new();
+    let in_resistor = make_yageo_series_resistor("RC1206FR-071KL");
+    let input_cap = make_murata_capacitor("GRT188R61H105KE13D").rot90();
+    let output_cap = make_yageo_cc_series_cap("CC0805KKX5R8BB106").rot90();
+    let v_reg = make_ti_tps_7b84_regulator("TPS7B8433QDCYRQ1");
+    let x = pin!("foo", PowerSink, 0, West);
+    let pins = vec![
+        pin!("+24V", PowerSink, 0, West),
+        pin!("GND", PowerReturn, 0, South),
+        pin!("+3V3", PowerSource, 0, East),
+    ];
+
+     */
+    /*
+    V - D - ! - L - ! - ! -
+        !   C       C   C
+        R - ! - L - ! - ! -
+     */
 }

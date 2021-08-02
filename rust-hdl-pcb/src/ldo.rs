@@ -3,11 +3,11 @@ use crate::circuit::{CircuitNode, PartDetails, Regulator};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
 use crate::epin::{EdgeLocation, PinLocation};
+use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 use crate::glyph::{make_ic_body, make_label};
 use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
-use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 
 pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("NCV33375ST"));
@@ -46,7 +46,6 @@ pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::SOT223,
-            schematic_orientation: Default::default()
         },
         input_min_voltage: 0.260 + voltage,
         input_max_voltage: 13.0,
@@ -89,7 +88,6 @@ pub fn make_mcp_1799_regulator(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::SOT223,
-            schematic_orientation: Default::default()
         },
         input_min_voltage: 0.3 + voltage,
         input_max_voltage: 45.0,
@@ -132,7 +130,6 @@ pub fn make_ti_tps_7b84_regulator(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::SOT223,
-            schematic_orientation: Default::default()
         },
         input_min_voltage: 0.3 + voltage,
         input_max_voltage: 42.0,
@@ -180,7 +177,6 @@ pub fn make_zldo1117g_regulator(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::SOT223,
-            schematic_orientation: Default::default()
         },
         input_min_voltage: 2.7 + voltage,
         input_max_voltage: 18.0,

@@ -1,12 +1,11 @@
 use crate::bom::Manufacturer;
-use crate::capacitors::make_unpolarized_capacitor;
 use crate::circuit::{CircuitNode, PartDetails, Resistor};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{make_passive_pin_pair, EdgeLocation};
+use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 use crate::glyph::{make_label, make_line, make_pin};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
-use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 
 pub type PowerWatt = num_rational::Rational32;
 
@@ -79,7 +78,6 @@ fn make_resistor_details(
             index: None,
         },
         size,
-        schematic_orientation: Default::default()
     }
 }
 

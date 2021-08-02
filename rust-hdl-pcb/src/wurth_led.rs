@@ -3,7 +3,7 @@ use crate::circuit::{CircuitNode, Diode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
 use crate::diode::DiodeKind;
 use crate::epin::{EPin, EdgeLocation};
-use crate::glyph::{make_line, make_pin, make_label, TextJustification};
+use crate::glyph::{make_label, make_line, make_pin, TextJustification};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 
@@ -45,7 +45,6 @@ pub fn make_wurth_led(part_number: &str) -> CircuitNode {
                 index: None,
             },
             size: SizeCode::I0603,
-            schematic_orientation: Default::default()
         },
         forward_drop_volts: 3.2,
         kind: DiodeKind::LED("Green".into()),

@@ -8,6 +8,7 @@ use crate::epin::EPin;
 use crate::glyph::{Glyph, Point};
 use crate::resistors::{PowerWatt, ResistorKind};
 use crate::smd::SizeCode;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SchematicRotation {
@@ -43,11 +44,19 @@ pub struct PartDetails {
     pub hide_pin_designators: bool,
     pub pins: BTreeMap<u64, EPin>,
     pub outline: Vec<Glyph>,
-    pub schematic_orientation: SchematicOrientation,
     pub suppliers: Vec<Supplier>,
     pub designator: Designator,
     pub size: SizeCode,
 }
+
+static GLOBAL_PART_COUNT: AtomicUsize = AtomicUsize::new(1);
+
+pub fn get_part_id() -> PartID {
+    PartID(GLOBAL_PART_COUNT.fetch_add(1, Ordering::SeqCst))
+}
+
+#[derive(Debug)]
+pub struct PartID(pub(crate) usize);
 
 #[derive(Clone, Debug)]
 pub struct Capacitor {
@@ -146,4 +155,28 @@ pub struct Circuit {
     pins: BTreeMap<u64, EPin>,
     nodes: Vec<CircuitNode>,
     net: Vec<Net>,
+}
+
+#[derive(Debug)]
+pub struct PartInstance {
+    pub node: CircuitNode,
+    pub schematic_orientation: SchematicOrientation,
+    pub id: PartID,
+}
+
+impl PartInstance {
+    pub fn rot90(mut self) -> Self {
+        self.schematic_orientation.rotation = SchematicRotation::Vertical;
+        self
+    }
+}
+
+impl From<CircuitNode> for PartInstance {
+    fn from(x: CircuitNode) -> Self {
+        PartInstance {
+            node: x,
+            schematic_orientation: SchematicOrientation::default(),
+            id: get_part_id(),
+        }
+    }
 }

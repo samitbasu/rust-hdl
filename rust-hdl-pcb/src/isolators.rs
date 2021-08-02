@@ -51,6 +51,5 @@ pub fn make_iso7741edwrq1(part_number: &str) -> CircuitNode {
             index: None,
         },
         size: SizeCode::SOIC(16),
-        schematic_orientation: Default::default()
     })
 }

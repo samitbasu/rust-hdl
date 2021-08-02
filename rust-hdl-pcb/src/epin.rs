@@ -43,7 +43,7 @@ impl EdgeLocation {
         match self {
             EdgeLocation::North | EdgeLocation::South => *self,
             EdgeLocation::East => EdgeLocation::West,
-            EdgeLocation::West => EdgeLocation::East
+            EdgeLocation::West => EdgeLocation::East,
         }
     }
     pub fn flipud(&self) -> EdgeLocation {
@@ -70,7 +70,7 @@ impl PinLocation {
                     _ => -self.offset,
                 }
             },
-            edge: self.edge.fliplr()
+            edge: self.edge.fliplr(),
         }
     }
     pub fn flipud(&self) -> Self {
@@ -81,7 +81,7 @@ impl PinLocation {
                     _ => -self.offset,
                 }
             },
-            edge: self.edge.flipud()
+            edge: self.edge.flipud(),
         }
     }
 }
