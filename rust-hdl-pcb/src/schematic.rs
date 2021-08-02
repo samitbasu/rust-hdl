@@ -1,21 +1,143 @@
 use crate::adc::make_ads868x;
-use crate::circuit::{CircuitNode, PartDetails, PartInstance, SchematicRotation};
+use crate::circuit::{CircuitNode, PartDetails, PartInstance, SchematicRotation, Circuit};
 use crate::epin::{EPin, EdgeLocation};
 use crate::glyph::{estimate_bounding_box, Glyph, Rect, TextJustification};
 use svg::node::element::path::Data;
 use svg::node::element::Text;
 use svg::node::element::{Group, Path};
 use svg::Document;
+use std::collections::BTreeMap;
 
-pub fn add_pins(mut doc: Group, part: &PartDetails) -> Group {
-    if part.outline.len() == 0 {
+const EM : i32 = 85;
+const CHAR_WIDTH : i32 = 55;
+const PORT_HALF_HEIGHT: i32 = 55;
+
+// Ugh... Need a proper graphix lib.
+fn add_ports(mut doc: Group,
+             outline: &[Glyph],
+             pins: &BTreeMap<u64, EPin>) -> Group {
+    if outline.len() == 0 {
         return doc;
     }
-    if let Glyph::OutlineRect(r) = &part.outline[0] {
-        for pin in &part.pins {
+    if let Glyph::OutlineRect(r) = &outline[0] {
+        for pin in pins {
             match pin.1.location.edge {
                 EdgeLocation::North => {
-                    if !part.hide_pin_designators {
+                    let tx = pin.1.location.offset;
+                    let ty = -r.p1.y + EM;
+                    let txt = Text::new()
+                        .add(svg::node::Text::new(&pin.1.name))
+                        .set("text-anchor", "end")
+                        .set("font-family", "monospace")
+                        .set("alignment-baseline", "middle")
+                        .set(
+                            "transform",
+                            format!("rotate(-90, {}, {}) translate({} {})", tx, ty, tx, ty),
+                        )
+                        .set("font-size", EM);
+                    doc = doc.add(txt);
+                }
+                EdgeLocation::West => {
+                    let ax = r.p0.x;
+                    let ay = -pin.1.location.offset;
+                    let txt = Text::new()
+                        .add(svg::node::Text::new(&pin.1.name))
+                        .set("x", ax - EM)
+                        .set("y", ay)
+                        .set("font-family", "monospace")
+                        .set("text-anchor", "end")
+                        .set("alignment-baseline", "middle")
+                        .set("font-size", EM);
+                    doc = doc.add(txt);
+                    let label_len = pin.1.name.len() as i32 + 2;
+                    let data = Data::new()
+                        .move_to((ax, ay - PORT_HALF_HEIGHT))
+                        .line_to((ax, ay + PORT_HALF_HEIGHT))
+                        .line_to((ax - label_len * CHAR_WIDTH, ay + PORT_HALF_HEIGHT))
+                        .line_to((ax - label_len * CHAR_WIDTH, ay - PORT_HALF_HEIGHT))
+                        .line_to((ax, ay - PORT_HALF_HEIGHT))
+                        .close();
+                    let path = Path::new()
+                        .set("fill", "none")
+                        .set("stroke", "black")
+                        .set("stroke-width", "10")
+                        .set("d", data);
+                    doc = doc.add(path);
+                }
+                EdgeLocation::South => {
+                    let ax = pin.1.location.offset;
+                    let ay = -r.p0.y;
+                    let txt = Text::new()
+                        .add(svg::node::Text::new(&pin.1.name))
+                        .set("text-anchor", "end")
+                        .set("font-family", "monospace")
+                        .set("alignment-baseline", "middle")
+                        .set(
+                            "transform",
+                            format!("rotate(-90, {}, {}) translate({} {})", ax, ay + EM, ax, ay + EM),
+                        )
+                        .set("font-size", EM);
+                    doc = doc.add(txt);
+                    let label_len = pin.1.name.len() as i32 + 2;
+                    let data = Data::new()
+                        .move_to((ax - PORT_HALF_HEIGHT, ay))
+                        .line_to((ax + PORT_HALF_HEIGHT, ay))
+                        .line_to((ax + PORT_HALF_HEIGHT, ay + label_len * CHAR_WIDTH))
+                        .line_to((ax - PORT_HALF_HEIGHT, ay + label_len * CHAR_WIDTH))
+                        .line_to((ax - PORT_HALF_HEIGHT, ay))
+                        .close();
+                    let path = Path::new()
+                        .set("fill", "none")
+                        .set("stroke", "black")
+                        .set("stroke-width", "10")
+                        .set("d", data);
+                    doc = doc.add(path);
+                }
+                EdgeLocation::East => {
+                    let ax = r.p1.x;
+                    let ay = -pin.1.location.offset;
+                    let txt = Text::new()
+                        .add(svg::node::Text::new(&pin.1.name))
+                        .set("x", ax + EM)
+                        .set("y", ay)
+                        .set("font-family", "monospace")
+                        .set("text-anchor", "begin")
+                        .set("alignment-baseline", "middle")
+                        .set("font-size", EM);
+                    doc = doc.add(txt);
+                    let label_len = pin.1.name.len() as i32 + 2;
+                    let data = Data::new()
+                        .move_to((ax, ay - PORT_HALF_HEIGHT))
+                        .line_to((ax, ay + PORT_HALF_HEIGHT))
+                        .line_to((ax + label_len * CHAR_WIDTH, ay + PORT_HALF_HEIGHT))
+                        .line_to((ax + label_len * CHAR_WIDTH, ay - PORT_HALF_HEIGHT))
+                        .line_to((ax, ay - PORT_HALF_HEIGHT))
+                        .close();
+                    let path = Path::new()
+                        .set("fill", "none")
+                        .set("stroke", "black")
+                        .set("stroke-width", "10")
+                        .set("d", data);
+                    doc = doc.add(path);
+                }
+            }
+        }
+    }
+    doc
+}
+
+fn add_pins(mut doc: Group,
+            outline: &[Glyph],
+            hide_pin_designators: bool,
+            pins: &BTreeMap<u64, EPin>) -> Group {
+    if outline.len() == 0 {
+        return doc;
+    }
+    if let Glyph::OutlineRect(r) = &outline[0] {
+        for pin in pins {
+            match pin.1.location.edge {
+                EdgeLocation::North => {
+                    if !hide_pin_designators {
                         let pn_x = pin.1.location.offset;
                         let pn_y = -(r.p0.y.max(r.p1.y));
                         let txt = Text::new()
@@ -35,11 +157,11 @@ pub fn add_pins(mut doc: Group, part: &PartDetails) -> Group {
                                     pn_y - 15
                                 ),
                             )
-                            .set("font-size", 85);
+                            .set("font-size", EM);
                         doc = doc.add(txt)
                     }
                     let tx = pin.1.location.offset;
-                    let ty = -r.p1.y + 85;
+                    let ty = -r.p1.y + EM;
                     let txt = Text::new()
                         .add(svg::node::Text::new(&pin.1.name))
                         .set("text-anchor", "end")
@@ -49,7 +171,7 @@ pub fn add_pins(mut doc: Group, part: &PartDetails) -> Group {
                             "transform",
                             format!("rotate(-90, {}, {}) translate({} {})", tx, ty, tx, ty),
                         )
-                        .set("font-size", 85);
+                        .set("font-size", EM);
                     doc = doc.add(txt);
                     let data = Data::new()
                         .move_to((pin.1.location.offset, -r.p1.y))
@@ -62,24 +184,24 @@ pub fn add_pins(mut doc: Group, part: &PartDetails) -> Group {
                     doc = doc.add(path);
                 }
                 EdgeLocation::West => {
-                    if !part.hide_pin_designators {
+                    if !hide_pin_designators {
                         let txt = Text::new()
                             .add(svg::node::Text::new(format!("{}", pin.0)))
-                            .set("x", r.p0.x - 85)
+                            .set("x", r.p0.x - EM)
                             .set("y", -pin.1.location.offset - 15)
                             .set("font-family", "monospace")
                             .set("text-anchor", "end")
-                            .set("font-size", 85);
+                            .set("font-size", EM);
                         doc = doc.add(txt);
                     }
                     let txt = Text::new()
                         .add(svg::node::Text::new(&pin.1.name))
-                        .set("x", r.p0.x + 85)
+                        .set("x", r.p0.x + EM)
                         .set("y", -pin.1.location.offset)
                         .set("font-family", "monospace")
                         .set("text-anchor", "begin")
                         .set("alignment-baseline", "middle")
-                        .set("font-size", 85);
+                        .set("font-size", EM);
                     doc = doc.add(txt);
                     let data = Data::new()
                         .move_to((r.p0.x, -pin.1.location.offset))
@@ -92,7 +214,7 @@ pub fn add_pins(mut doc: Group, part: &PartDetails) -> Group {
                     doc = doc.add(path);
                 }
                 EdgeLocation::South => {
-                    if !part.hide_pin_designators {
+                    if !hide_pin_designators {
                         let pn_x = pin.1.location.offset;
                         let pn_y = -(r.p0.y.min(r.p1.y));
                         let txt = Text::new()
@@ -108,15 +230,15 @@ pub fn add_pins(mut doc: Group, part: &PartDetails) -> Group {
                                     "rotate(-90, {}, {}) translate({} {})",
                                     pn_x,
                                     pn_y,
-                                    pn_x - 85,
+                                    pn_x - EM,
                                     pn_y - 15
                                 ),
                             )
-                            .set("font-size", 85);
+                            .set("font-size", EM);
                         doc = doc.add(txt)
                     }
                     let tx = pin.1.location.offset;
-                    let ty = -r.p0.y - 85;
+                    let ty = -r.p0.y - EM;
                     let txt = Text::new()
                         .add(svg::node::Text::new(&pin.1.name))
                         .set("text-anchor", "begin")
@@ -126,7 +248,7 @@ pub fn add_pins(mut doc: Group, part: &PartDetails) -> Group {
                             "transform",
                             format!("rotate(-90, {}, {}) translate({} {})", tx, ty, tx, ty),
                         )
-                        .set("font-size", 85);
+                        .set("font-size", EM);
                     doc = doc.add(txt);
                     let data = Data::new()
                         .move_to((pin.1.location.offset, -r.p0.y))
@@ -139,24 +261,24 @@ pub fn add_pins(mut doc: Group, part: &PartDetails) -> Group {
                     doc = doc.add(path);
                 }
                 EdgeLocation::East => {
-                    if !part.hide_pin_designators {
+                    if !hide_pin_designators {
                         let txt = Text::new()
                             .add(svg::node::Text::new(format!("{}", pin.0)))
-                            .set("x", r.p1.x + 85)
+                            .set("x", r.p1.x + EM)
                             .set("y", -pin.1.location.offset - 15)
                             .set("font-family", "monospace")
                             .set("text-anchor", "begin")
-                            .set("font-size", 85);
+                            .set("font-size", EM);
                         doc = doc.add(txt);
                     }
                     let txt = Text::new()
                         .add(svg::node::Text::new(&pin.1.name))
-                        .set("x", r.p1.x - 85)
+                        .set("x", r.p1.x - EM)
                         .set("y", -pin.1.location.offset)
                         .set("font-family", "monospace")
                         .set("text-anchor", "end")
                         .set("alignment-baseline", "middle")
-                        .set("font-size", 85);
+                        .set("font-size", EM);
                     doc = doc.add(txt);
                     let data = Data::new()
                         .move_to((r.p1.x, -pin.1.location.offset))
@@ -236,7 +358,7 @@ pub fn add_outline_to_path(doc: Group, g: &Glyph) -> Group {
                 .set("x", t.p0.x)
                 .set("y", -t.p0.y)
                 .set("font-family", "monospace")
-                .set("font-size", 85);
+                .set("font-size", EM);
             match t.justify {
                 TextJustification::BottomLeft | TextJustification::BottomRight => {
                     txt = txt.set("alignment-baseline", "bottom")
@@ -309,9 +431,6 @@ fn get_details_from_instance(x: &PartInstance) -> PartDetails {
         CircuitNode::Regulator(v) => &v.details,
         CircuitNode::Inductor(l) => &l.details,
         CircuitNode::IntegratedCircuit(u) => &u,
-        CircuitNode::Circuit(_) => {
-            unimplemented!()
-        }
         CircuitNode::Connector(j) => &j,
         CircuitNode::Logic(u) => &u.details,
     }
@@ -337,7 +456,10 @@ impl Into<Group> for &PartInstance {
         for x in &part.outline {
             document = add_outline_to_path(document, x);
         }
-        document = add_pins(document, &part);
+        document = add_pins(document,
+                            &part.outline,
+                            part.hide_pin_designators,
+                            &part.pins);
 
         let r = estimate_bounding_box(&part.outline);
         let data = Data::new()
@@ -382,13 +504,15 @@ pub fn estimate_instance_bounding_box(instance: &PartInstance) -> Rect {
     r
 }
 
-
-pub fn write_circuit_to_svg(instances: &[&PartInstance], name: &str) {
+pub fn write_circuit_to_svg(circuit: &Circuit, name: &str) {
     let mut top_document = Document::new().set("viewBox", (-2000, -2000, 7000, 7000));
-    for instance in instances {
-        let part: Group = (*instance).into();
-        top_document = top_document.add(part);
+    let mut top: Group = Group::new();
+    for instance in &circuit.nodes {
+        let part: Group = instance.into();
+        top = top.add(part);
     }
+    top = add_ports(top, &circuit.outline, &circuit.pins);
+    top_document = top_document.add(top);
     svg::save(name, &top_document).unwrap();
 }
 

@@ -158,5 +158,5 @@ fn test_flex_layout() {
         y: (c39_pos.y / PTS_PER_MIL).floor() as i32,
     };
     let circuit = vec![&in_resistor, &input_cap, &v_reg, &output_cap];
-    write_circuit_to_svg(&circuit, "test_circuit.svg");
+    //write_circuit_to_svg(&circuit, "test_circuit.svg");
 }

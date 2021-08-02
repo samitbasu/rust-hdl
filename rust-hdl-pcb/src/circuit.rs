@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::bom::{Manufacturer, Supplier};
 use crate::capacitors::{CapacitorKind, CapacitorTolerance};
@@ -9,6 +9,7 @@ use crate::glyph::{Glyph, Point};
 use crate::resistors::{PowerWatt, ResistorKind};
 use crate::smd::SizeCode;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use stretch::number::Number::Defined;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SchematicRotation {
@@ -55,7 +56,7 @@ pub fn get_part_id() -> PartID {
     PartID(GLOBAL_PART_COUNT.fetch_add(1, Ordering::SeqCst))
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
 pub struct PartID(pub(crate) usize);
 
 #[derive(Clone, Debug)]
@@ -130,11 +131,33 @@ pub struct Logic {
     pub function: LogicFunction,
 }
 
+#[derive(Clone, Debug, Copy)]
+pub struct PartPin {
+    part_id: PartID,
+    pin: u64,
+}
+
 #[derive(Clone, Debug)]
 pub struct Net {
-    source_pin: u64,
-    dest_pin: u64,
-    name: String,
+    pins: Vec<PartPin>,
+    name: Option<String>,
+}
+
+impl Net {
+    pub fn new(name: Option<&str>) -> Net {
+        Net {
+            pins: Default::default(),
+            name: name.map(|x| x.into()),
+        }
+    }
+    pub fn add(mut self, part: &PartInstance, index: u64) -> Self {
+        let pin = PartPin {
+            part_id: part.id.clone(),
+            pin: index
+        };
+        self.pins.push(pin);
+        self
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -145,16 +168,16 @@ pub enum CircuitNode {
     Regulator(Regulator),
     Inductor(Inductor),
     IntegratedCircuit(PartDetails),
-    Circuit(Box<Circuit>),
     Connector(PartDetails),
     Logic(Logic),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Circuit {
-    pins: BTreeMap<u64, EPin>,
-    nodes: Vec<CircuitNode>,
-    net: Vec<Net>,
+    pub pins: BTreeMap<u64, EPin>,
+    pub nodes: Vec<PartInstance>,
+    pub nets: Vec<Net>,
+    pub outline: Vec<Glyph>,
 }
 
 #[derive(Debug)]
