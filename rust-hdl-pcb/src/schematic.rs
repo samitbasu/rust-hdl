@@ -1,5 +1,5 @@
 use crate::adc::make_ads868x;
-use crate::circuit::{CircuitNode, PartDetails, PartInstance, SchematicRotation, Circuit};
+use crate::circuit::{CircuitNode, PartDetails, PartInstance, SchematicRotation, Circuit, PartPin, SchematicOrientation};
 use crate::epin::{EPin, EdgeLocation};
 use crate::glyph::{estimate_bounding_box, Glyph, Rect, TextJustification};
 use svg::node::element::path::Data;
@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 const EM : i32 = 85;
 const CHAR_WIDTH : i32 = 55;
 const PORT_HALF_HEIGHT: i32 = 55;
+const PIN_LENGTH: i32 = 200;
 
 // Ugh... Need a proper graphix lib.
 fn add_ports(mut doc: Group,
@@ -175,7 +176,7 @@ fn add_pins(mut doc: Group,
                     doc = doc.add(txt);
                     let data = Data::new()
                         .move_to((pin.1.location.offset, -r.p1.y))
-                        .line_to((pin.1.location.offset, -r.p1.y - 200));
+                        .line_to((pin.1.location.offset, -r.p1.y - PIN_LENGTH));
                     let path = Path::new()
                         .set("fill", "none")
                         .set("stroke", "black")
@@ -205,7 +206,7 @@ fn add_pins(mut doc: Group,
                     doc = doc.add(txt);
                     let data = Data::new()
                         .move_to((r.p0.x, -pin.1.location.offset))
-                        .line_to((r.p0.x - 200, -pin.1.location.offset));
+                        .line_to((r.p0.x - PIN_LENGTH, -pin.1.location.offset));
                     let path = Path::new()
                         .set("fill", "none")
                         .set("stroke", "black")
@@ -252,7 +253,7 @@ fn add_pins(mut doc: Group,
                     doc = doc.add(txt);
                     let data = Data::new()
                         .move_to((pin.1.location.offset, -r.p0.y))
-                        .line_to((pin.1.location.offset, -r.p0.y + 200));
+                        .line_to((pin.1.location.offset, -r.p0.y + PIN_LENGTH));
                     let path = Path::new()
                         .set("fill", "none")
                         .set("stroke", "black")
@@ -282,7 +283,7 @@ fn add_pins(mut doc: Group,
                     doc = doc.add(txt);
                     let data = Data::new()
                         .move_to((r.p1.x, -pin.1.location.offset))
-                        .line_to((r.p1.x + 200, -pin.1.location.offset));
+                        .line_to((r.p1.x + PIN_LENGTH, -pin.1.location.offset));
                     let path = Path::new()
                         .set("fill", "none")
                         .set("stroke", "black")
@@ -504,6 +505,60 @@ pub fn estimate_instance_bounding_box(instance: &PartInstance) -> Rect {
     r
 }
 
+fn map_pin_based_on_orientation(orient: &SchematicOrientation, x: i32, y: i32) -> (i32, i32) {
+    let cx = orient.center.x;
+    let cy = orient.center.y;
+    return match orient.rotation {
+        SchematicRotation::Horizontal => (x + cx, -(y + cy)),
+        SchematicRotation::Vertical => (-y + cx, -(x + cy))
+    }
+}
+
+fn map_pin_based_on_outline_and_orientation(pin: &EPin, r: &Rect, orientation: &SchematicOrientation, len: i32) -> (i32, i32) {
+    return match &pin.location.edge {
+        EdgeLocation::North =>
+            map_pin_based_on_orientation(&orientation,
+                                         pin.location.offset,
+                                         r.p1.y + len),
+        EdgeLocation::West =>
+            map_pin_based_on_orientation(&orientation,
+                                         r.p0.x - len,
+                                         pin.location.offset),
+        EdgeLocation::East =>
+            map_pin_based_on_orientation(&orientation,
+                                         r.p1.x + len,
+                                         pin.location.offset),
+        EdgeLocation::South =>
+            map_pin_based_on_orientation(&orientation,
+                                         pin.location.offset,
+                                         r.p0.y - len)
+    }
+}
+
+fn get_port_net_location(circuit: &Circuit, pin: &PartPin) -> (i32, i32) {
+    let orientation = SchematicOrientation::default();
+    if let Glyph::OutlineRect(r) = &circuit.outline[0] {
+        let pin = &circuit.pins[&pin.pin];
+        return map_pin_based_on_outline_and_orientation(pin, r, &orientation, 0);
+    }
+    panic!("Need an outline for the part!");
+}
+
+fn get_pin_net_location(circuit: &Circuit, pin: &PartPin) -> (i32, i32) {
+    for instance in &circuit.nodes {
+        if instance.id == pin.part_id {
+            let part = get_details_from_instance(instance);
+            let pin = &part.pins[&pin.pin];
+            if let Glyph::OutlineRect(r) = &part.outline[0] {
+                return map_pin_based_on_outline_and_orientation(pin, r, &instance.schematic_orientation, PIN_LENGTH);
+            } else {
+                panic!("No outline found for part!");
+            }
+        }
+    }
+    panic!("No pin found!")
+}
+
 pub fn write_circuit_to_svg(circuit: &Circuit, name: &str) {
     let mut top_document = Document::new().set("viewBox", (-2000, -2000, 7000, 7000));
     let mut top: Group = Group::new();
@@ -513,6 +568,50 @@ pub fn write_circuit_to_svg(circuit: &Circuit, name: &str) {
     }
     top = add_ports(top, &circuit.outline, &circuit.pins);
     top_document = top_document.add(top);
+    // Draw the nets
+    for net in &circuit.nets {
+        let mut pin_positions = net.pins
+            .iter()
+            .filter(|x| !x.is_port())
+            .map(|x| get_pin_net_location(&circuit, x)).collect::<Vec<_>>();
+        let mut port_positions = net.pins
+            .iter()
+            .filter(|x| x.is_port())
+            .map(|x| get_port_net_location(&circuit, x)).collect::<Vec<_>>();
+        pin_positions.append(&mut port_positions);
+        assert!(pin_positions.len() > 1);
+        let mut data = Data::new().move_to(pin_positions[0]);
+        let mut prev = pin_positions[0];
+        for p in pin_positions.iter().skip(1) {
+            let next = *p;
+            // Orthogonal moves only...
+            let dx = p.0 - prev.0;
+            let dy = p.1 - prev.1;
+            // Compute the midpoint
+            let mx = prev.0 + dx/2;
+            let my = prev.1 + dy/2;
+            // Y-dominant run...
+            if dy.abs() > dx.abs() {
+                data = data
+                    .line_to((prev.0, my))
+                    .line_to((p.0, my))
+                    .line_to((p.0, p.1))
+            } else {
+                data = data
+                    .line_to((mx, prev.1))
+                    .line_to((mx, p.1))
+                    .line_to((p.0, p.1))
+            }
+            prev = *p;
+        }
+        dbg!(&data);
+        let path = Path::new()
+            .set("fill", "none")
+            .set("stroke", "#000080")
+            .set("stroke-width", "10")
+            .set("d", data);
+        top_document = top_document.add(path);
+    }
     svg::save(name, &top_document).unwrap();
 }
 

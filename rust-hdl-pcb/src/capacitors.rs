@@ -2,7 +2,7 @@ use crate::bom::Manufacturer;
 use crate::circuit::{Capacitor, CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{make_passive_pin_pair, EdgeLocation};
-use crate::glyph::{make_arc, make_label, make_line, make_pin, Glyph, TextJustification};
+use crate::glyph::{make_arc, make_label, make_line, Glyph, TextJustification, make_ic_body};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use std::fmt::{Display, Formatter};
@@ -132,8 +132,7 @@ pub fn make_polarized_capacitor_outline(label: &str) -> Vec<Glyph> {
     let line1: String = label.split(" ").take(2).collect::<Vec<_>>().join(" ");
     let line2: String = label.split(" ").skip(2).collect::<Vec<_>>().join(" ");
     vec![
-        make_pin(0, 0, EdgeLocation::West, 200),
-        make_pin(100, 0, EdgeLocation::East, 200),
+        make_ic_body(-100, -70, 100, 70),
         make_line(30, 70, 30, -70),
         make_line(30, 0, 0, 0),
         make_line(70, 0, 100, 0),
@@ -162,8 +161,7 @@ pub fn make_unpolarized_capacitor(
         hide_pin_designators: true,
         pins: pin_list(make_passive_pin_pair()),
         outline: vec![
-            make_pin(0, 0, EdgeLocation::West, 200),
-            make_pin(100, 0, EdgeLocation::East, 200),
+            make_ic_body(0, -70, 100, 70),
             make_line(30, 70, 30, -70),
             make_line(70, 70, 70, -70),
             make_line(30, 0, 0, 0),

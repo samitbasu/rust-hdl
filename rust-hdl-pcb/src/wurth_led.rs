@@ -3,7 +3,7 @@ use crate::circuit::{CircuitNode, Diode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
 use crate::diode::DiodeKind;
 use crate::epin::{EPin, EdgeLocation};
-use crate::glyph::{make_label, make_line, make_pin, TextJustification};
+use crate::glyph::{make_label, make_line, TextJustification, make_ic_body};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 
@@ -22,8 +22,7 @@ pub fn make_wurth_led(part_number: &str) -> CircuitNode {
             hide_pin_designators: true,
             pins: pin_list(vec![EPin::passive_neg(), EPin::passive_pos()]),
             outline: vec![
-                make_pin(200, 0, EdgeLocation::East, 100),
-                make_pin(-100, 0, EdgeLocation::West, 100),
+                make_ic_body(-100, -70, 200, 200),
                 make_line(-100, 0, -50, 0),
                 make_line(-50, 70, -50, -70),
                 make_line(-50, -70, 70, 0),

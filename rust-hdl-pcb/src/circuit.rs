@@ -133,14 +133,20 @@ pub struct Logic {
 
 #[derive(Clone, Debug, Copy)]
 pub struct PartPin {
-    part_id: PartID,
-    pin: u64,
+    pub part_id: PartID,
+    pub pin: u64,
+}
+
+impl PartPin {
+    pub fn is_port(&self) -> bool {
+        self.part_id.0 == 0
+    }
 }
 
 #[derive(Clone, Debug)]
 pub struct Net {
-    pins: Vec<PartPin>,
-    name: Option<String>,
+    pub pins: Vec<PartPin>,
+    pub name: Option<String>,
 }
 
 impl Net {
@@ -153,6 +159,14 @@ impl Net {
     pub fn add(mut self, part: &PartInstance, index: u64) -> Self {
         let pin = PartPin {
             part_id: part.id.clone(),
+            pin: index
+        };
+        self.pins.push(pin);
+        self
+    }
+    pub fn add_port(mut self, index: u64) -> Self {
+        let pin = PartPin {
+            part_id: PartID(0),
             pin: index
         };
         self.pins.push(pin);

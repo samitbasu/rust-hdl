@@ -351,7 +351,7 @@ pub fn estimate_bounding_box(glyphs: &Vec<Glyph>) -> Rect {
     bbox
 }
 
-pub fn make_pin(x0: i32, y0: i32, location: EdgeLocation, len: i32) -> Glyph {
+fn make_pin(x0: i32, y0: i32, location: EdgeLocation, len: i32) -> Glyph {
     Glyph::Pin(Pin {
         p0: Point { x: x0, y: y0 },
         location,

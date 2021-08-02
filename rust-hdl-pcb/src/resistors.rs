@@ -3,7 +3,7 @@ use crate::circuit::{CircuitNode, PartDetails, Resistor};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{make_passive_pin_pair, EdgeLocation};
 use crate::glyph::TextJustification::{BottomLeft, TopLeft};
-use crate::glyph::{make_label, make_line, make_pin};
+use crate::glyph::{make_label, make_line, make_ic_body};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 
@@ -60,8 +60,7 @@ fn make_resistor_details(
         hide_pin_designators: true,
         pins: pin_list(make_passive_pin_pair()),
         outline: vec![
-            make_pin(-100, 0, EdgeLocation::West, 100),
-            make_pin(200, 0, EdgeLocation::East, 100),
+            make_ic_body(-100, -30, 200, 30),
             make_line(-100, 0, -70, 30),
             make_line(-70, 30, -10, -30),
             make_line(-10, -30, 50, 30),
