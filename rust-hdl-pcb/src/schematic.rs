@@ -5,7 +5,6 @@ use crate::circuit::{
 };
 use crate::epin::{EPin, EdgeLocation};
 use crate::glyph::{estimate_bounding_box, Glyph, Rect, TextJustification};
-use std::collections::BTreeMap;
 use svg::node::element::path::Data;
 use svg::node::element::Text;
 use svg::node::element::{Group, Path};
@@ -300,6 +299,7 @@ fn get_details_from_instance(x: &PartInstance) -> PartDetails {
         CircuitNode::Connector(j) => j,
         CircuitNode::Logic(u) => &u.details,
         CircuitNode::Port(p) => p,
+        CircuitNode::Junction(j) => j,
     }
     .clone();
 
