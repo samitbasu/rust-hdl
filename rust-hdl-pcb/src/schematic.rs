@@ -10,6 +10,9 @@ use svg::node::element::path::Data;
 use svg::node::element::Text;
 use svg::node::element::{Group, Path};
 use svg::Document;
+use std::collections::BTreeMap;
+use std::fs;
+use std::path;
 
 const EM: i32 = 85;
 const PIN_LENGTH: i32 = 200;
@@ -509,6 +512,11 @@ pub fn make_svgs(mut part: &mut PartInstance) {
     let base = env!("CARGO_MANIFEST_DIR").to_owned()
         + "/symbols/"
         + &details.manufacturer.part_number.replace("/", "_");
+    let base_path = std::path::Path::new( &base);
+    let base_dir = base_path.parent().unwrap();
+    if !base_dir.exists() {
+        fs::create_dir_all(base_dir);
+    }
     write_to_svg(&part, &format!("{}.svg", base));
     part.schematic_orientation.flipped_lr = true;
     write_to_svg(&part, &format!("{}_lr.svg", base));

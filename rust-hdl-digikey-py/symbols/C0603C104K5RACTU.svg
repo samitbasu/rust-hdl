@@ -1,0 +1,14 @@
+<svg viewBox="-2000 -2000 4000 4000" xmlns="http://www.w3.org/2000/svg">
+<path d="M0,0 L-100,0" fill="none" stroke="black" stroke-width="10"/>
+<path d="M100,0 L200,0" fill="none" stroke="black" stroke-width="10"/>
+<path d="M30,-70 L30,70" fill="none" stroke="#0433FF" stroke-width="10"/>
+<path d="M70,-70 L70,70" fill="none" stroke="#0433FF" stroke-width="10"/>
+<path d="M30,0 L0,0" fill="none" stroke="#0433FF" stroke-width="10"/>
+<path d="M70,0 L100,0" fill="none" stroke="#0433FF" stroke-width="10"/>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-10" y="-95">
+C?
+</text>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-10" y="165">
+100nF 10% 50V X7R
+</text>
+</svg>

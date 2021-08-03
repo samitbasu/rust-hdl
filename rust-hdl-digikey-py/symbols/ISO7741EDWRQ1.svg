@@ -1,0 +1,123 @@
+<svg viewBox="-2000 -2000 4000 4000" xmlns="http://www.w3.org/2000/svg">
+<path d="M-600,1100 L-600,-1000 L500,-1000 L500,1100 z" fill="#FFFDB0" stroke="#AE5E46" stroke-width="5"/>
+<path d="M-100,-700 L-100,700" fill="none" stroke="#0433FF" stroke-width="10"/>
+<path d="M0,-700 L0,700" fill="none" stroke="#0433FF" stroke-width="10"/>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-600" y="-1015">
+U?
+</text>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-600" y="1185">
+ISO7741EDWRQ1
+</text>
+<text font-size="85" text-anchor="end" x="-685" y="-815">
+1
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-515" y="-800">
+VCC1
+</text>
+<path d="M-600,-800 L-800,-800" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="end" x="-685" y="885">
+2
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-515" y="900">
+GND1_1
+</text>
+<path d="M-600,900 L-800,900" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="end" x="-685" y="-315">
+3
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-515" y="-300">
+INA
+</text>
+<path d="M-600,-300 L-800,-300" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="end" x="-685" y="-115">
+4
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-515" y="-100">
+INB
+</text>
+<path d="M-600,-100 L-800,-100" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="end" x="-685" y="85">
+5
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-515" y="100">
+INC
+</text>
+<path d="M-600,100 L-800,100" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="end" x="-685" y="285">
+6
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-515" y="300">
+OUTD
+</text>
+<path d="M-600,300 L-800,300" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="end" x="-685" y="-615">
+7
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-515" y="-600">
+EN1
+</text>
+<path d="M-600,-600 L-800,-600" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="end" x="-685" y="685">
+8
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-515" y="700">
+GND1_2
+</text>
+<path d="M-600,700 L-800,700" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="585" y="685">
+9
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="415" y="700">
+GND2_2
+</text>
+<path d="M500,700 L700,700" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="585" y="-615">
+10
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="415" y="-600">
+EN2
+</text>
+<path d="M500,-600 L700,-600" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="585" y="285">
+11
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="415" y="300">
+IND
+</text>
+<path d="M500,300 L700,300" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="585" y="85">
+12
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="415" y="100">
+OUTC
+</text>
+<path d="M500,100 L700,100" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="585" y="-115">
+13
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="415" y="-100">
+OUTB
+</text>
+<path d="M500,-100 L700,-100" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="585" y="-315">
+14
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="415" y="-300">
+OUTA
+</text>
+<path d="M500,-300 L700,-300" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="585" y="885">
+15
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="415" y="900">
+GND2_1
+</text>
+<path d="M500,900 L700,900" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="585" y="-815">
+16
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="415" y="-800">
+VCC2
+</text>
+<path d="M500,-800 L700,-800" fill="none" stroke="black" stroke-width="10"/>
+</svg>

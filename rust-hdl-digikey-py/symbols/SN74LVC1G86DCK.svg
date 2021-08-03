@@ -1,0 +1,44 @@
+<svg viewBox="-2000 -2000 4000 4000" xmlns="http://www.w3.org/2000/svg">
+<path d="M-500,500 L-500,-500 L600,-500 L600,500 z" fill="#FFFDB0" stroke="#AE5E46" stroke-width="5"/>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-500" y="-515">
+V?
+</text>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-500" y="585">
+SN74LVC1G86DCK
+</text>
+<text font-size="85" text-anchor="end" x="-585" y="-115">
+1
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-415" y="-100">
+A
+</text>
+<path d="M-500,-100 L-700,-100" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="end" x="-585" y="85">
+2
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-415" y="100">
+B
+</text>
+<path d="M-500,100 L-700,100" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="685" y="285">
+3
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="515" y="300">
+GND
+</text>
+<path d="M600,300 L800,300" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="685" y="-15">
+4
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="515" y="0">
+Y
+</text>
+<path d="M600,0 L800,0" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="685" y="-315">
+5
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="515" y="-300">
+VCC
+</text>
+<path d="M600,-300 L800,-300" fill="none" stroke="black" stroke-width="10"/>
+</svg>

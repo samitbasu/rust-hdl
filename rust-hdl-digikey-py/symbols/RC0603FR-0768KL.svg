@@ -1,0 +1,16 @@
+<svg viewBox="-2000 -2000 4000 4000" xmlns="http://www.w3.org/2000/svg">
+<path d="M-100,0 L-200,0" fill="none" stroke="black" stroke-width="10"/>
+<path d="M200,0 L300,0" fill="none" stroke="black" stroke-width="10"/>
+<path d="M-100,0 L-70,-30" fill="none" stroke="#0433FF" stroke-width="10"/>
+<path d="M-70,-30 L-10,30" fill="none" stroke="#0433FF" stroke-width="10"/>
+<path d="M-10,30 L50,-30" fill="none" stroke="#0433FF" stroke-width="10"/>
+<path d="M50,-30 L110,30" fill="none" stroke="#0433FF" stroke-width="10"/>
+<path d="M110,30 L170,-30" fill="none" stroke="#0433FF" stroke-width="10"/>
+<path d="M170,-30 L200,0" fill="none" stroke="#0433FF" stroke-width="10"/>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-110" y="-55">
+R?
+</text>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-110" y="125">
+68K 1% 1/10W
+</text>
+</svg>
