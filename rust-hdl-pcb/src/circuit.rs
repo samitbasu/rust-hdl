@@ -199,6 +199,7 @@ pub enum CircuitNode {
     Connector(PartDetails),
     Logic(Logic),
     Port(PartDetails),
+    //Junction(PartDetails),
 }
 
 #[derive(Debug)]

@@ -23,18 +23,19 @@ fn test_manual_layout() {
 
     let in_power_port = place(
         make_port("+VIN", PinKind::PowerSink),
-        -400,
-        -400,
+        -800,
+        200,
         Horizontal,
     );
     let out_power_port = place(
         make_port("+3V3_OUT", PinKind::PowerSource),
-        4000,
-        -400,
+        4800,
+        200,
         Horizontal,
     )
     .flip_lr();
-    let gnd_port = place(make_port("GND", PinKind::PowerReturn), 2000, -600, Vertical);
+    let gnd_port = place(make_port("GND", PinKind::PowerReturn),
+                         2300, -1200, Vertical);
     let in_resistor = place(
         make_yageo_series_resistor("RC1206FR-071KL"),
         0,
