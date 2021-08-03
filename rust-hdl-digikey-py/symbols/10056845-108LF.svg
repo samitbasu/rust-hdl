@@ -1,0 +1,41 @@
+<svg viewBox="-2000 -2000 4000 4000" xmlns="http://www.w3.org/2000/svg">
+<path d="M-200,400 L-200,-400 L300,-400 L300,400 z" fill="#FFFDB0" stroke="#AE5E46" stroke-width="5"/>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-200" y="-415">
+J?
+</text>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-200" y="485">
+10056845-108LF
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-115" y="-300">
+1
+</text>
+<path d="M-200,-300 L-400,-300" fill="none" stroke="black" stroke-width="10"/>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="215" y="-300">
+2
+</text>
+<path d="M300,-300 L500,-300" fill="none" stroke="black" stroke-width="10"/>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-115" y="-100">
+3
+</text>
+<path d="M-200,-100 L-400,-100" fill="none" stroke="black" stroke-width="10"/>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="215" y="-100">
+4
+</text>
+<path d="M300,-100 L500,-100" fill="none" stroke="black" stroke-width="10"/>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-115" y="100">
+5
+</text>
+<path d="M-200,100 L-400,100" fill="none" stroke="black" stroke-width="10"/>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="215" y="100">
+6
+</text>
+<path d="M300,100 L500,100" fill="none" stroke="black" stroke-width="10"/>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-115" y="300">
+7
+</text>
+<path d="M-200,300 L-400,300" fill="none" stroke="black" stroke-width="10"/>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="215" y="300">
+8
+</text>
+<path d="M300,300 L500,300" fill="none" stroke="black" stroke-width="10"/>
+</svg>
