@@ -37,6 +37,7 @@ pub fn make_ads868x(part_number: &str) -> CircuitNode {
         description: "16-bit high-speed single supply SAR ADC".to_string(),
         comment: "".to_string(),
         hide_pin_designators: false,
+        hide_part_outline: false,
         pins: pin_list(pins),
         outline: vec![
             make_ic_body(-800, -1400, 900, 1200),

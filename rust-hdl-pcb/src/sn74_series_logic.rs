@@ -35,6 +35,7 @@ pub fn make_sn74hct138(part_number: &str) -> CircuitNode {
             description: "3-to-8 Decoder/Demux".to_string(),
             comment: "".to_string(),
             hide_pin_designators: false,
+            hide_part_outline: false,
             pins: pin_list(pinset),
             outline: vec![
                 make_ic_body(-600, -900, 600, 1000),
@@ -85,6 +86,7 @@ pub fn make_sn74hct541(part_number: &str) -> CircuitNode {
             description: "Octal Buffer and Line Driver, 3-State outputs".to_string(),
             comment: "".to_string(),
             hide_pin_designators: false,
+            hide_part_outline: false,
             pins: pin_list(pinset),
             outline: vec![
                 make_ic_body(-700, -1200, 600, 1000),
@@ -134,6 +136,7 @@ pub fn make_sn74hc151(part_number: &str) -> CircuitNode {
             description: "8-Line to 1-Line Multiplexer".to_string(),
             comment: "".to_string(),
             hide_pin_designators: false,
+            hide_part_outline: false,
             pins: pin_list(pins),
             outline: vec![
                 make_ic_body(-500, -700, 400, 1200),

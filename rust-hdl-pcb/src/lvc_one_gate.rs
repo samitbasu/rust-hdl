@@ -21,6 +21,7 @@ pub fn make_sn74lvc1g125se7(part_number: &str) -> CircuitNode {
             description: "Single Buffer Gate with 3-state output".to_string(),
             comment: "".to_string(),
             hide_pin_designators: false,
+            hide_part_outline: false,
             pins: pin_list(vec![
                 pin!("~OE", InputInverted, 200, West),
                 pin!("A", Input, 0, West),
@@ -61,6 +62,7 @@ pub fn make_sn74lvc1g86dck(part_number: &str) -> CircuitNode {
             description: "Single 2-input XOR Gate".to_string(),
             comment: "".to_string(),
             hide_pin_designators: false,
+            hide_part_outline: false,
             pins: pin_list(vec![
                 pin!("A", Input, 100, West),
                 pin!("B", Input, -100, West),

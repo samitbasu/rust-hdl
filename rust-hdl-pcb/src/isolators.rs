@@ -37,6 +37,7 @@ pub fn make_iso7741edwrq1(part_number: &str) -> CircuitNode {
         description: "Quad Channel Digital Isolator - Automotive Grade 0".to_string(),
         comment: "".to_string(),
         hide_pin_designators: false,
+        hide_part_outline: false,
         pins: pin_list(pins),
         outline: vec![
             make_ic_body(-600, -1100, 500, 1000),

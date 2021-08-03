@@ -1,6 +1,6 @@
 use crate::epin::EdgeLocation;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point {
     pub x: i32,
     pub y: i32,
@@ -77,6 +77,15 @@ pub struct Rect {
 }
 
 impl Rect {
+    pub fn empty() -> Self {
+        Rect {
+            p0: Point::zero(),
+            p1: Point::zero(),
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        self.p0 == Point::zero() && self.p1 == Point::zero()
+    }
     pub fn union(&self, other: Rect) -> Rect {
         Rect {
             p0: self.p0.min(other.p0),
@@ -190,6 +199,28 @@ impl Text {
 }
 
 #[derive(Clone, Copy, Debug)]
+pub struct Circle {
+    pub p0: Point,
+    pub radius: f64,
+}
+
+impl Circle {
+    pub fn fliplr(&self) -> Self {
+        Self {
+            p0: self.p0.fliplr(),
+            radius: self.radius
+        }
+    }
+    pub fn flipud(&self) -> Self {
+        Self {
+            p0: self.p0.flipud(),
+            radius: self.radius
+        }
+    }
+}
+
+
+#[derive(Clone, Copy, Debug)]
 pub struct Arc {
     pub p0: Point,
     pub radius: f64,
@@ -222,6 +253,7 @@ pub enum Glyph {
     Line(Line),
     Text(Text),
     Arc(Arc),
+    Circle(Circle),
 }
 
 impl Glyph {
@@ -231,6 +263,7 @@ impl Glyph {
             Glyph::Line(l) => Glyph::Line(l.fliplr()),
             Glyph::Text(t) => Glyph::Text(t.fliplr()),
             Glyph::Arc(a) => Glyph::Arc(a.fliplr()),
+            Glyph::Circle(c) => Glyph::Circle(c.fliplr()),
         }
     }
     pub fn flipud(&self) -> Glyph {
@@ -239,6 +272,7 @@ impl Glyph {
             Glyph::Line(l) => Glyph::Line(l.flipud()),
             Glyph::Text(t) => Glyph::Text(t.flipud()),
             Glyph::Arc(a) => Glyph::Arc(a.flipud()),
+            Glyph::Circle(c) => Glyph::Circle(c.flipud()),
         }
     }
 
@@ -288,6 +322,10 @@ impl Glyph {
                 p0: a.p0 + Point::dx() * (-a.radius as i32) + Point::dy() * (-a.radius as i32),
                 p1: a.p0 + Point::dx() * (a.radius as i32) + Point::dy() * (a.radius as i32),
             },
+            Glyph::Circle(a) => Rect {
+                p0: a.p0 + Point::dx() * (-a.radius as i32) + Point::dy() * (-a.radius as i32),
+                p1: a.p0 + Point::dx() * (a.radius as i32) + Point::dy() * (a.radius as i32),
+            }
         }
     }
 }

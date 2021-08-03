@@ -27,7 +27,8 @@ pub fn make_port(name: &str, kind: PinKind) -> CircuitNode {
         },
         description: "".to_string(),
         comment: "".to_string(),
-        hide_pin_designators: false,
+        hide_pin_designators: true,
+        hide_part_outline: false,
         pins: pin_list(vec![pin]),
         outline: vec![Glyph::OutlineRect(Rect {
             p0: Point {

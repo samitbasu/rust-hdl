@@ -55,6 +55,7 @@ pub fn make_ty_brl_series(part_number: &str) -> CircuitNode {
             description: "".to_string(),
             comment: "".to_string(),
             hide_pin_designators: true,
+            hide_part_outline: true,
             pins: pin_list(make_passive_pin_pair()),
             outline,
             suppliers: vec![],

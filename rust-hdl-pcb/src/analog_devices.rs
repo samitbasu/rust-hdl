@@ -20,6 +20,7 @@ pub fn make_lt3092_current_source(part_number: &str) -> CircuitNode {
         description: "Programmable Current Source/Limiter".to_string(),
         comment: "".to_string(),
         hide_pin_designators: false,
+        hide_part_outline: false,
         pins: pin_list(vec![
             pin!("SET", Input, -100, West),
             pin!("OUT_1", PowerSource, -100, East),

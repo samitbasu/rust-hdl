@@ -29,6 +29,7 @@ pub fn make_on_semi_ncv33375_regulator(part_number: &str) -> CircuitNode {
             description: "300mA LDO Automotive, 13V input range".to_string(),
             comment: "".to_string(),
             hide_pin_designators: false,
+            hide_part_outline: false,
             pins: pin_list(vec![
                 pin!("VIN", PowerSink, 200, West),
                 pin!("ON/OFF", Input, -100, West),
@@ -71,6 +72,7 @@ pub fn make_mcp_1799_regulator(part_number: &str) -> CircuitNode {
             description: "80mA LDO Automotive, 45V input range".to_string(),
             comment: "".to_string(),
             hide_pin_designators: false,
+            hide_part_outline: false,
             pins: pin_list(vec![
                 pin!("VIN", PowerSink, 100, West),
                 pin!("GND_1", PowerReturn, -200, West),
@@ -113,6 +115,7 @@ pub fn make_ti_tps_7b84_regulator(part_number: &str) -> CircuitNode {
             description: "150mA LDO, 40V input range".to_string(),
             comment: "".to_string(),
             hide_pin_designators: false,
+            hide_part_outline: false,
             pins: pin_list(vec![
                 pin!("IN", PowerSink, 200, West),
                 pin!("EN", Input, -100, West),
@@ -160,6 +163,7 @@ pub fn make_zldo1117g_regulator(part_number: &str) -> CircuitNode {
             description: "1A LDO, 18V input range".to_string(),
             comment: "".to_string(),
             hide_pin_designators: false,
+            hide_part_outline: false,
             pins: pin_list(vec![
                 pin!("GND", PowerReturn, 0, South),
                 pin!("Vout_1", PowerSource, 300, East),

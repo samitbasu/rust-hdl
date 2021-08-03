@@ -37,6 +37,7 @@ pub fn make_molex_55935_connector(part_number: &str) -> CircuitNode {
         description: "Connector Shrouded Header 8 pos, 2mm RA Thru-Hole MicroClasp".to_string(),
         comment: "".to_string(),
         hide_pin_designators: true,
+        hide_part_outline: false,
         pins: make_passive_pins(8, 300, 100),
         outline: vec![
             make_ic_body(-200, -500, 0, 400),
@@ -63,6 +64,7 @@ pub fn make_sullins_sbh11_header(part_number: &str) -> CircuitNode {
         description: "Connector/Header 26 Pos, 2.54mm, Right Angle".to_string(),
         comment: "".to_string(),
         hide_pin_designators: true,
+        hide_part_outline: false,
         pins: make_passive_pins(26, 1200, 100),
         outline: vec![make_ic_body(-200, -1400, 0, 1300)],
         suppliers: vec![],
@@ -85,6 +87,7 @@ pub fn make_amphenol_10056845_header(part_number: &str) -> CircuitNode {
         description: "Connector/Header 8 Pos, 2.54mm, Right Angle".to_string(),
         comment: "".to_string(),
         hide_pin_designators: true,
+        hide_part_outline: false,
         pins: pin_list(vec![
             pin!("1", Passive, 300, West),
             pin!("2", Passive, 300, East),

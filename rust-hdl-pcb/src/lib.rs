@@ -65,6 +65,7 @@ pub mod utils;
 pub mod wurth_led;
 pub mod yageo_cc_caps;
 pub mod yageo_resistor_series;
+pub mod junction;
 
 #[test]
 fn test_yageo_rc_68k() {

@@ -99,6 +99,7 @@ pub fn make_nippon_hxd_capacitor(part_number: &str) -> CircuitNode {
             description,
             comment: "".to_string(),
             hide_pin_designators: true,
+            hide_part_outline: true,
             pins: pin_list(vec![EPin::passive_pos(), EPin::passive_neg()]),
             outline: make_polarized_capacitor_outline(&label),
             suppliers: vec![],

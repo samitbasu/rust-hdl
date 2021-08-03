@@ -20,6 +20,7 @@ pub fn make_wurth_led(part_number: &str) -> CircuitNode {
             description: "Green 520nm LED Indication - Discrete 3.2V".to_string(),
             comment: "".to_string(),
             hide_pin_designators: true,
+            hide_part_outline: true,
             pins: pin_list(vec![EPin::passive_neg(), EPin::passive_pos()]),
             outline: vec![
                 make_ic_body(-100, -70, 200, 200),

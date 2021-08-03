@@ -6,7 +6,7 @@ use crate::circuit::{
 use crate::epin::{EPin, EdgeLocation};
 use crate::glyph::{estimate_bounding_box, Glyph, Rect, TextJustification};
 use svg::node::element::path::Data;
-use svg::node::element::Text;
+use svg::node::element::{Text, Circle};
 use svg::node::element::{Group, Path};
 use svg::Document;
 use std::collections::BTreeMap;
@@ -26,6 +26,9 @@ fn add_pins(
         return doc;
     }
     if let Glyph::OutlineRect(r) = &outline[0] {
+        if r.is_empty() {
+            return doc;
+        }
         for pin in pins {
             match pin.1.location.edge {
                 EdgeLocation::North => {
@@ -188,22 +191,20 @@ fn add_pins(
     doc
 }
 
-pub fn add_outline_to_path(doc: Group, g: &Glyph) -> Group {
+pub fn add_outline_to_path(doc: Group, g: &Glyph, hide_outline: bool) -> Group {
     match g {
         Glyph::OutlineRect(r) => {
-            let data = Data::new()
-                .move_to((r.p0.x, -r.p0.y))
-                .line_to((r.p0.x, -r.p1.y))
-                .line_to((r.p1.x, -r.p1.y))
-                .line_to((r.p1.x, -r.p0.y))
-                .close();
-            doc.add(
-                Path::new()
-                    .set("fill", "#FFFDB0")
-                    .set("stroke", "#AE5E46")
-                    .set("stroke-width", 5)
-                    .set("d", data),
-            )
+            if hide_outline {
+                doc
+            } else {
+                doc.add(
+                    Path::new()
+                        .set("fill", "#FFFDB0")
+                        .set("stroke", "#AE5E46")
+                        .set("stroke-width", 5)
+                        .set("d", make_rect_into_data(r)),
+                )
+            }
         }
         Glyph::Line(l) => {
             let data = Data::new()
@@ -262,6 +263,14 @@ pub fn add_outline_to_path(doc: Group, g: &Glyph) -> Group {
                     .set("stroke-width", 10)
                     .set("d", data),
             )
+        },
+        Glyph::Circle(a) => {
+            doc.add(
+                Circle::new()
+                    .set("cx", a.p0.x)
+                    .set("cy", -a.p0.y)
+                    .set("r", a.radius)
+            )
         }
     }
 }
@@ -314,55 +323,60 @@ fn get_details_from_instance(x: &PartInstance) -> PartDetails {
     part
 }
 
-impl Into<Group> for &PartInstance {
-    fn into(self) -> Group {
-        let mut document = Group::new();
+fn make_rect_into_data(r: &Rect) -> Data {
+    Data::new()
+        .move_to((r.p0.x, -r.p0.y))
+        .line_to((r.p0.x, -r.p1.y))
+        .line_to((r.p1.x, -r.p1.y))
+        .line_to((r.p1.x, -r.p0.y))
+        .close()
+}
 
-        let part = get_details_from_instance(&self);
+fn make_group_from_part_instance(instance: &PartInstance) -> Group {
+    let mut document = Group::new();
 
-        for x in &part.outline {
-            document = add_outline_to_path(document, x);
-        }
-        document = add_pins(
-            document,
-            &part.outline,
-            part.hide_pin_designators,
-            &part.pins,
-        );
+    let part = get_details_from_instance(instance);
 
-        let r = estimate_bounding_box(&part.outline);
-        let data = Data::new()
-            .move_to((r.p0.x, -r.p0.y))
-            .line_to((r.p0.x, -r.p1.y))
-            .line_to((r.p1.x, -r.p1.y))
-            .line_to((r.p1.x, -r.p0.y))
-            .close();
-        document = document.add(
-            Path::new()
-                .set("fill", "none")
-                .set("stroke", "red")
-                .set("stroke-width", 5)
-                .set("d", data),
-        );
-        let cx = (r.p0.x + r.p1.x) / 2;
-        let cy = (r.p0.y + r.p1.y) / 2;
-        let dx = self.schematic_orientation.center.x;
-        let dy = -self.schematic_orientation.center.y;
-        dbg!(cx);
-        dbg!(cy);
-        let transform = format!(
-            "{rot} translate({x},{y})",
-            x = dx,
-            y = dy,
-            rot = if self.schematic_orientation.rotation == SchematicRotation::Vertical {
-                format!("rotate(-90, {}, {})", dx, dy)
-            } else {
-                "".to_string()
-            }
-        );
-        document = document.set("transform", transform);
-        document
+    for x in &part.outline {
+        document = add_outline_to_path(document, x, part.hide_part_outline);
     }
+    document = add_pins(
+        document,
+        &part.outline,
+        part.hide_pin_designators,
+        &part.pins,
+    );
+
+    /*
+    let r = estimate_bounding_box(&part.outline);
+    let data = Data::new()
+        .move_to((r.p0.x, -r.p0.y))
+        .line_to((r.p0.x, -r.p1.y))
+        .line_to((r.p1.x, -r.p1.y))
+        .line_to((r.p1.x, -r.p0.y))
+        .close();
+    document = document.add(
+        Path::new()
+            .set("fill", "none")
+            .set("stroke", "red")
+            .set("stroke-width", 5)
+            .set("d", data),
+    );
+    */
+    let dx = instance.schematic_orientation.center.x;
+    let dy = -instance.schematic_orientation.center.y;
+    let transform = format!(
+        "{rot} translate({x},{y})",
+        x = dx,
+        y = dy,
+        rot = if instance.schematic_orientation.rotation == SchematicRotation::Vertical {
+            format!("rotate(-90, {}, {})", dx, dy)
+        } else {
+            "".to_string()
+        }
+    );
+    document = document.set("transform", transform);
+    document
 }
 
 pub fn estimate_instance_bounding_box(instance: &PartInstance) -> Rect {
@@ -410,15 +424,17 @@ fn get_pin_net_location(circuit: &Circuit, pin: &PartPin) -> (i32, i32) {
         if instance.id == pin.part_id {
             let part = get_details_from_instance(instance);
             let pin = &part.pins[&pin.pin];
-            if let Glyph::OutlineRect(r) = &part.outline[0] {
-                return map_pin_based_on_outline_and_orientation(
+            return if let Glyph::OutlineRect(r) = &part.outline[0] {
+                map_pin_based_on_outline_and_orientation(
                     pin,
                     r,
                     &instance.schematic_orientation,
                     PIN_LENGTH,
-                );
+                )
             } else {
-                panic!("No outline found for part!");
+                // Parts without an outline rect are just virtual...
+                (instance.schematic_orientation.center.x,
+                 -instance.schematic_orientation.center.y)
             }
         }
     }
@@ -429,49 +445,28 @@ pub fn write_circuit_to_svg(circuit: &Circuit, name: &str) {
     let mut top_document = Document::new().set("viewBox", (-2000, -2000, 7000, 7000));
     let mut top: Group = Group::new();
     for instance in &circuit.nodes {
-        let part: Group = instance.into();
+        let part = make_group_from_part_instance(instance);
         top = top.add(part);
     }
     //    top = add_ports(top, &circuit.outline, &circuit.pins);
     top_document = top_document.add(top);
     // Draw the nets
     for net in &circuit.nets {
-        let pin_positions = net
-            .pins
-            .iter()
-            .map(|x| get_pin_net_location(&circuit, x))
-            .collect::<Vec<_>>();
-        assert!(pin_positions.len() > 1);
-        let mut data = Data::new().move_to(pin_positions[0]);
-        let mut prev = pin_positions[0];
-        for p in pin_positions.iter().skip(1) {
-            // Orthogonal moves only...
-            let dx = p.0 - prev.0;
-            let dy = p.1 - prev.1;
-            // Compute the midpoint
-            let mx = prev.0 + dx / 2;
-            let my = prev.1 + dy / 2;
-            // Y-dominant run...
-            if dy.abs() > dx.abs() {
-                data = data
-                    .line_to((prev.0, my))
-                    .line_to((p.0, my))
-                    .line_to((p.0, p.1))
-            } else {
-                data = data
-                    .line_to((mx, prev.1))
-                    .line_to((mx, p.1))
-                    .line_to((p.0, p.1))
+        for wire in &net.logical_wires {
+            let start = get_pin_net_location(&circuit, &wire.start);
+            let end = get_pin_net_location(&circuit, &wire.end);
+            let mut data = Data::new().move_to(start);
+            for pos in &wire.waypoints {
+                data = data.line_to((pos.0, -pos.1))
             }
-            prev = *p;
+            data = data.line_to(end);
+            let path = Path::new()
+                .set("fill", "none")
+                .set("stroke", "#000080")
+                .set("stroke-width", "10")
+                .set("d", data);
+            top_document = top_document.add(path);
         }
-        dbg!(&data);
-        let path = Path::new()
-            .set("fill", "none")
-            .set("stroke", "#000080")
-            .set("stroke-width", "10")
-            .set("d", data);
-        top_document = top_document.add(path);
     }
     svg::save(name, &top_document).unwrap();
 }
@@ -479,20 +474,14 @@ pub fn write_circuit_to_svg(circuit: &Circuit, name: &str) {
 fn write_to_svg(instance: &PartInstance, name: &str) {
     let r = estimate_instance_bounding_box(instance);
     let mut top_document = Document::new().set("viewBox", (-2000, -2000, 4000, 4000));
-    let document: Group = instance.into();
+    let document = make_group_from_part_instance(instance);
     top_document = top_document.add(document);
-    let data = Data::new()
-        .move_to((r.p0.x, -r.p0.y))
-        .line_to((r.p0.x, -r.p1.y))
-        .line_to((r.p1.x, -r.p1.y))
-        .line_to((r.p1.x, -r.p0.y))
-        .close();
     top_document = top_document.add(
         Path::new()
             .set("fill", "none")
             .set("stroke", "green")
             .set("stroke-width", 2)
-            .set("d", data),
+            .set("d", make_rect_into_data(&r)),
     );
     svg::save(name, &top_document).unwrap();
 }

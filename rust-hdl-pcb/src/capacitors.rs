@@ -159,6 +159,7 @@ pub fn make_unpolarized_capacitor(
         description,
         comment: "".to_string(),
         hide_pin_designators: true,
+        hide_part_outline: true,
         pins: pin_list(make_passive_pin_pair()),
         outline: vec![
             make_ic_body(0, -70, 100, 70),

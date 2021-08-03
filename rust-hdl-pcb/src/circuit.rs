@@ -42,6 +42,7 @@ pub struct PartDetails {
     pub description: String,
     pub comment: String,
     pub hide_pin_designators: bool,
+    pub hide_part_outline: bool,
     pub pins: BTreeMap<u64, EPin>,
     pub outline: Vec<Glyph>,
     pub suppliers: Vec<Supplier>,
@@ -137,53 +138,42 @@ pub struct PartPin {
 }
 
 #[derive(Clone, Debug)]
-pub enum LogicalTracePoint {
-    Part(PartPin),
-    Node(usize),
-}
-
-#[derive(Clone, Debug)]
-pub struct LogicalTrace {
-    pub start: LogicalTracePoint,
+pub struct LogicalWire {
+    pub start: PartPin,
     pub waypoints: Vec<(i32, i32)>,
-    pub end: LogicalTracePoint,
+    pub end: PartPin,
 }
 
 #[derive(Clone, Debug)]
 pub struct Net {
-    pub pins: Vec<PartPin>,
-    pub logical_nodes: Vec<(i32, i32)>,
-    pub logical: Vec<LogicalTrace>,
+    pub logical_wires: Vec<LogicalWire>,
     pub name: Option<String>,
 }
 
 impl Net {
     pub fn new(name: Option<&str>) -> Net {
         Net {
-            pins: Default::default(),
-            logical_nodes: vec![],
-            logical: vec![],
+            logical_wires: vec![],
             name: name.map(|x| x.into()),
         }
     }
-    pub fn add(mut self, part: &PartInstance, index: u64) -> Self {
-        let pin = PartPin {
-            part_id: part.id.clone(),
-            pin: index,
-        };
-        self.pins.push(pin);
-        self
+    pub fn add(mut self, from_part: &PartInstance, from_index: u64, to_part: &PartInstance, to_index: u64) -> Self {
+        self.add_via(from_part, from_index, to_part, to_index, vec![])
     }
-    pub fn add_port(mut self, index: u64) -> Self {
-        let pin = PartPin {
-            part_id: PartID(0),
-            pin: index,
+    pub fn add_via(mut self, from_part: &PartInstance, from_index: u64, to_part: &PartInstance, to_index: u64, via: Vec<(i32, i32)>) -> Self {
+        let from_pin = PartPin {
+            part_id: from_part.id.clone(),
+            pin: from_index,
         };
-        self.pins.push(pin);
-        self
-    }
-    pub fn add_logical_node(mut self, pos: (i32, i32)) -> Self {
-        self.logical_nodes.push(pos);
+        let to_pin = PartPin {
+            part_id: to_part.id.clone(),
+            pin: to_index,
+        };
+        self.logical_wires.push(LogicalWire {
+            start: from_pin,
+            waypoints: via,
+            end: to_pin
+        });
         self
     }
 }
