@@ -1,4 +1,4 @@
-use crate::epin::{EdgeLocation};
+use crate::epin::EdgeLocation;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Point {
@@ -102,12 +102,12 @@ impl Rect {
         }
     }
     pub fn width(&self) -> i32 {
-        2*i32::max(self.p1.x.abs(), self.p0.x.abs())
-//        (self.p1.x - self.p0.x).abs()
+        2 * i32::max(self.p1.x.abs(), self.p0.x.abs())
+        //        (self.p1.x - self.p0.x).abs()
     }
     pub fn height(&self) -> i32 {
-        2*i32::max(self.p1.y.abs(), self.p0.y.abs())
-//        (self.p1.y - self.p0.y).abs()
+        2 * i32::max(self.p1.y.abs(), self.p0.y.abs())
+        //        (self.p1.y - self.p0.y).abs()
     }
 }
 
@@ -190,30 +190,6 @@ impl Text {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct Pin {
-    pub p0: Point,
-    pub location: EdgeLocation,
-    pub length: i32,
-}
-
-impl Pin {
-    pub fn fliplr(&self) -> Pin {
-        Pin {
-            p0: self.p0.fliplr(),
-            location: self.location.fliplr(),
-            length: self.length,
-        }
-    }
-    pub fn flipud(&self) -> Pin {
-        Pin {
-            p0: self.p0.flipud(),
-            location: self.location.flipud(),
-            length: self.length,
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
 pub struct Arc {
     pub p0: Point,
     pub radius: f64,
@@ -245,7 +221,6 @@ pub enum Glyph {
     OutlineRect(Rect),
     Line(Line),
     Text(Text),
-    Pin(Pin),
     Arc(Arc),
 }
 
@@ -255,7 +230,6 @@ impl Glyph {
             Glyph::OutlineRect(r) => Glyph::OutlineRect(r.fliplr()),
             Glyph::Line(l) => Glyph::Line(l.fliplr()),
             Glyph::Text(t) => Glyph::Text(t.fliplr()),
-            Glyph::Pin(p) => Glyph::Pin(p.fliplr()),
             Glyph::Arc(a) => Glyph::Arc(a.fliplr()),
         }
     }
@@ -264,7 +238,6 @@ impl Glyph {
             Glyph::OutlineRect(r) => Glyph::OutlineRect(r.flipud()),
             Glyph::Line(l) => Glyph::Line(l.flipud()),
             Glyph::Text(t) => Glyph::Text(t.flipud()),
-            Glyph::Pin(p) => Glyph::Pin(p.flipud()),
             Glyph::Arc(a) => Glyph::Arc(a.flipud()),
         }
     }
@@ -315,24 +288,6 @@ impl Glyph {
                 p0: a.p0 + Point::dx() * (-a.radius as i32) + Point::dy() * (-a.radius as i32),
                 p1: a.p0 + Point::dx() * (a.radius as i32) + Point::dy() * (a.radius as i32),
             },
-            Glyph::Pin(p) => match &p.location {
-                EdgeLocation::East => Rect {
-                    p0: p.p0,
-                    p1: p.p0 + Point::dx() * p.length,
-                },
-                EdgeLocation::West => Rect {
-                    p0: p.p0 + Point::dx() * (-p.length),
-                    p1: p.p0,
-                },
-                EdgeLocation::North => Rect {
-                    p0: p.p0,
-                    p1: p.p0 + Point::dy() * p.length,
-                },
-                EdgeLocation::South => Rect {
-                    p0: p.p0 + Point::dy() * (-p.length),
-                    p1: p.p0,
-                },
-            },
         }
     }
 }
@@ -349,14 +304,6 @@ pub fn estimate_bounding_box(glyphs: &Vec<Glyph>) -> Rect {
         bbox = bbox.union(glyph.estimate_bounding_box());
     }
     bbox
-}
-
-fn make_pin(x0: i32, y0: i32, location: EdgeLocation, len: i32) -> Glyph {
-    Glyph::Pin(Pin {
-        p0: Point { x: x0, y: y0 },
-        location,
-        length: len,
-    })
 }
 
 pub fn make_line(x0: i32, y0: i32, x1: i32, y1: i32) -> Glyph {

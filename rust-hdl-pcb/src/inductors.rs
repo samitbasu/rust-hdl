@@ -2,8 +2,8 @@ use crate::bom::Manufacturer;
 use crate::capacitors::map_three_digit_cap_to_pf;
 use crate::circuit::{CircuitNode, Inductor, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{make_passive_pin_pair, EdgeLocation};
-use crate::glyph::{make_arc, make_label, TextJustification, make_ic_body};
+use crate::epin::make_passive_pin_pair;
+use crate::glyph::{make_arc, make_ic_body, make_label, TextJustification};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 
@@ -31,9 +31,7 @@ pub fn make_ty_brl_series(part_number: &str) -> CircuitNode {
         "{}uH {}mA {}R",
         value_microhenry, max_current_milliamps, dc_resistance_ohms
     );
-    let mut outline = vec![
-        make_ic_body(-200, 0, 200, 50),
-    ];
+    let mut outline = vec![make_ic_body(-200, 0, 200, 50)];
     outline.extend(
         (0..=3)
             .into_iter()

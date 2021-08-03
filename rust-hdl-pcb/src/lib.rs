@@ -7,7 +7,7 @@ use crate::connectors::{
     make_amphenol_10056845_header, make_molex_55935_connector, make_sullins_sbh11_header,
 };
 use crate::diode::DiodeKind;
-use crate::epin::{PinKind};
+use crate::epin::PinKind;
 use crate::inductors::make_ty_brl_series;
 use crate::isolators::make_iso7741edwrq1;
 use crate::kemet_ceramic_caps::make_kemet_ceramic_capacitor;
@@ -21,7 +21,7 @@ use crate::murata_mlcc_caps::make_murata_capacitor;
 use crate::nippon_electrolytic_caps::make_nippon_hxd_capacitor;
 use crate::panasonic_era_resistors::make_panasonic_resistor;
 use crate::resistors::{PowerWatt, ResistorKind};
-use crate::schematic::{make_svgs};
+use crate::schematic::make_svgs;
 use crate::smd::SizeCode;
 use crate::sn74_series_logic::make_sn74_series;
 use crate::tdk_c_series::make_tdk_c_series_capacitor;
@@ -51,9 +51,11 @@ pub mod lvc_one_gate;
 pub mod murata_mlcc_caps;
 pub mod nippon_electrolytic_caps;
 pub mod panasonic_era_resistors;
+pub mod port;
 pub mod resistors;
 pub mod schematic;
 pub mod schematic_flexbox_layout;
+pub mod schematic_manual_layout;
 pub mod smd;
 pub mod sn74_series_logic;
 pub mod tdk_c_series;
@@ -63,7 +65,6 @@ pub mod utils;
 pub mod wurth_led;
 pub mod yageo_cc_caps;
 pub mod yageo_resistor_series;
-pub mod schematic_manual_layout;
 
 #[test]
 fn test_yageo_rc_68k() {

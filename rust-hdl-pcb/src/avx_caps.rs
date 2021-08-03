@@ -2,7 +2,7 @@ use crate::bom::Manufacturer;
 use crate::capacitors::{
     make_mlcc, map_pf_to_label, map_three_digit_cap_to_pf, CapacitorTolerance, DielectricCode,
 };
-use crate::circuit::{CircuitNode};
+use crate::circuit::CircuitNode;
 use crate::smd::SizeCode;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {

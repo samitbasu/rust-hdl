@@ -1,7 +1,7 @@
 use stretch::geometry::{Point, Size};
 use stretch::node::Node;
-use stretch::Stretch;
 use stretch::style::{Dimension, FlexDirection, JustifyContent, Style};
+use stretch::Stretch;
 
 use crate::circuit::PartInstance;
 use crate::ldo::make_ti_tps_7b84_regulator;

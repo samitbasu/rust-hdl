@@ -1,9 +1,9 @@
 use crate::bom::Manufacturer;
 use crate::circuit::{CircuitNode, PartDetails, Resistor};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{make_passive_pin_pair, EdgeLocation};
+use crate::epin::make_passive_pin_pair;
 use crate::glyph::TextJustification::{BottomLeft, TopLeft};
-use crate::glyph::{make_label, make_line, make_ic_body};
+use crate::glyph::{make_ic_body, make_label, make_line};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 

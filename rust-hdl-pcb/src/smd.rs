@@ -18,6 +18,7 @@ pub struct PTHResistor {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum SizeCode {
+    Virtual,
     I0075,
     I0100,
     I0201,
@@ -66,6 +67,7 @@ impl FromStr for SizeCode {
             "3025" => SizeCode::I3025,
             "SOT223" => SizeCode::SOT223,
             "SOT353" => SizeCode::SOT353,
+            "Virtual" => SizeCode::Virtual,
             _ => SizeCode::Custom(s.to_owned()),
         })
     }
@@ -97,6 +99,7 @@ impl Display for SizeCode {
             SizeCode::SOIC(n) => format!("SOIC-{}", n).fmt(f),
             SizeCode::PTHResistor(_p) => "PTH".fmt(f),
             SizeCode::Custom(s) => s.fmt(f),
+            SizeCode::Virtual => "Virtual".fmt(f),
         }
     }
 }

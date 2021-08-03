@@ -1,8 +1,8 @@
 use crate::bom::Manufacturer;
 use crate::circuit::{Capacitor, CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{make_passive_pin_pair, EdgeLocation};
-use crate::glyph::{make_arc, make_label, make_line, Glyph, TextJustification, make_ic_body};
+use crate::epin::make_passive_pin_pair;
+use crate::glyph::{make_arc, make_ic_body, make_label, make_line, Glyph, TextJustification};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 use std::fmt::{Display, Formatter};

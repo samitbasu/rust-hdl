@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use crate::bom::{Manufacturer, Supplier};
 use crate::capacitors::{CapacitorKind, CapacitorTolerance};
@@ -9,7 +9,6 @@ use crate::glyph::{Glyph, Point};
 use crate::resistors::{PowerWatt, ResistorKind};
 use crate::smd::SizeCode;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use stretch::number::Number::Defined;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SchematicRotation {
@@ -137,15 +136,24 @@ pub struct PartPin {
     pub pin: u64,
 }
 
-impl PartPin {
-    pub fn is_port(&self) -> bool {
-        self.part_id.0 == 0
-    }
+#[derive(Clone, Debug)]
+pub enum LogicalTracePoint {
+    Part(PartPin),
+    Node(usize),
+}
+
+#[derive(Clone, Debug)]
+pub struct LogicalTrace {
+    pub start: LogicalTracePoint,
+    pub waypoints: Vec<(i32, i32)>,
+    pub end: LogicalTracePoint,
 }
 
 #[derive(Clone, Debug)]
 pub struct Net {
     pub pins: Vec<PartPin>,
+    pub logical_nodes: Vec<(i32, i32)>,
+    pub logical: Vec<LogicalTrace>,
     pub name: Option<String>,
 }
 
@@ -153,13 +161,15 @@ impl Net {
     pub fn new(name: Option<&str>) -> Net {
         Net {
             pins: Default::default(),
+            logical_nodes: vec![],
+            logical: vec![],
             name: name.map(|x| x.into()),
         }
     }
     pub fn add(mut self, part: &PartInstance, index: u64) -> Self {
         let pin = PartPin {
             part_id: part.id.clone(),
-            pin: index
+            pin: index,
         };
         self.pins.push(pin);
         self
@@ -167,9 +177,13 @@ impl Net {
     pub fn add_port(mut self, index: u64) -> Self {
         let pin = PartPin {
             part_id: PartID(0),
-            pin: index
+            pin: index,
         };
         self.pins.push(pin);
+        self
+    }
+    pub fn add_logical_node(mut self, pos: (i32, i32)) -> Self {
+        self.logical_nodes.push(pos);
         self
     }
 }
@@ -184,14 +198,13 @@ pub enum CircuitNode {
     IntegratedCircuit(PartDetails),
     Connector(PartDetails),
     Logic(Logic),
+    Port(PartDetails),
 }
 
 #[derive(Debug)]
 pub struct Circuit {
-    pub pins: BTreeMap<u64, EPin>,
     pub nodes: Vec<PartInstance>,
     pub nets: Vec<Net>,
-    pub outline: Vec<Glyph>,
 }
 
 #[derive(Debug)]
@@ -204,6 +217,14 @@ pub struct PartInstance {
 impl PartInstance {
     pub fn rot90(mut self) -> Self {
         self.schematic_orientation.rotation = SchematicRotation::Vertical;
+        self
+    }
+    pub fn flip_lr(mut self) -> Self {
+        self.schematic_orientation.flipped_lr = !self.schematic_orientation.flipped_lr;
+        self
+    }
+    pub fn flip_ud(mut self) -> Self {
+        self.schematic_orientation.flipped_ud = !self.schematic_orientation.flipped_ud;
         self
     }
 }
