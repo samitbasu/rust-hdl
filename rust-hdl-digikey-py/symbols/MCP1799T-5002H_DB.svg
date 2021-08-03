@@ -1,0 +1,37 @@
+<svg viewBox="-2000 -2000 4000 4000" xmlns="http://www.w3.org/2000/svg">
+<path d="M-400,300 L-400,-200 L500,-200 L500,300 z" fill="#FFFDB0" stroke="#AE5E46" stroke-width="5"/>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-400" y="-215">
+V?
+</text>
+<text alignment-baseline="top" font-size="85" text-anchor="begin" x="-400" y="385">
+MCP1799T-5002H/DB
+</text>
+<text font-size="85" text-anchor="end" x="-485" y="-115">
+1
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-315" y="-100">
+VIN
+</text>
+<path d="M-400,-100 L-600,-100" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="end" x="-485" y="185">
+2
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="begin" x="-315" y="200">
+GND_1
+</text>
+<path d="M-400,200 L-600,200" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="585" y="-115">
+3
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="415" y="-100">
+VOUT
+</text>
+<path d="M500,-100 L700,-100" fill="none" stroke="black" stroke-width="10"/>
+<text font-size="85" text-anchor="begin" x="585" y="185">
+4
+</text>
+<text alignment-baseline="middle" font-size="85" text-anchor="end" x="415" y="200">
+GND_2
+</text>
+<path d="M500,200 L700,200" fill="none" stroke="black" stroke-width="10"/>
+</svg>
