@@ -253,9 +253,10 @@ pub fn add_outline_to_path(doc: Group, g: &Glyph, hide_outline: bool) -> Group {
                 + a.radius * f64::cos(a.start_angle.to_radians() + a.sweep_angle.to_radians());
             let p2y = a.p0.y as f64
                 + a.radius * f64::sin(a.start_angle.to_radians() + a.sweep_angle.to_radians());
+            let sweep_flag = if a.sweep_angle < 0.0 { 0 } else { 1 };
             let data = Data::new()
                 .move_to((p1x, p1y))
-                .elliptical_arc_to((a.radius, a.radius, 0.0, 0, 1, p2x, p2y));
+                .elliptical_arc_to((a.radius, a.radius, 0.0, 0, sweep_flag, p2x, p2y));
             doc.add(
                 Path::new()
                     .set("fill", "none")
