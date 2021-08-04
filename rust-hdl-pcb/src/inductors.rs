@@ -35,7 +35,7 @@ pub fn make_ty_brl_series(part_number: &str) -> CircuitNode {
     outline.extend(
         (0..=3)
             .into_iter()
-            .map(|x| make_arc(-150 + x * 100, 0, 50.0, 179.9, -179.9))
+            .map(|x| make_arc(-150 + x * 100, 0, 50.0, -179.9, 179.9))
             .collect::<Vec<_>>(),
     );
     let line1: String = label.split(" ").take(2).collect::<Vec<_>>().join(" ");

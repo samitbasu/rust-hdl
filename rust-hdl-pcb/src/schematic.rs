@@ -11,7 +11,6 @@ use svg::node::element::{Group, Path};
 use svg::Document;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path;
 
 const EM: i32 = 85;
 const PIN_LENGTH: i32 = 200;
@@ -191,6 +190,20 @@ fn add_pins(
     doc
 }
 
+// Adapted from https://stackoverflow.com/questions/21816286/svg-arc-how-to-determine-sweep-and-larg-arc-flags-given-start-end-via-point
+fn angle (a: (f64,f64), b: (f64,f64), c: (f64,f64)) -> f64 {
+    let pi = std::f64::consts::PI;
+    ( f64::atan2( c.1 - b.1 , c.0 - b.0 )
+        - f64::atan2( a.1 - b.1 ,a.0 - b.0 )
+        + 3.0 * pi )
+        %( 2.0 * pi ) - pi
+}
+
+fn find_sweep_flag (start: (f64,f64), via: (f64,f64), end: (f64,f64)) -> i32 {
+    return if angle(end, start, via) > 0.0 { 0 } else { 1 };
+}
+
+
 pub fn add_outline_to_path(doc: Group, g: &Glyph, hide_outline: bool) -> Group {
     match g {
         Glyph::OutlineRect(r) => {
@@ -250,13 +263,18 @@ pub fn add_outline_to_path(doc: Group, g: &Glyph, hide_outline: bool) -> Group {
             let p1x = a.p0.x as f64 + a.radius * f64::cos(a.start_angle.to_radians());
             let p1y = a.p0.y as f64 + a.radius * f64::sin(a.start_angle.to_radians());
             let p2x = a.p0.x as f64
-                + a.radius * f64::cos(a.start_angle.to_radians() + a.sweep_angle.to_radians());
+                + a.radius * f64::cos(a.start_angle.to_radians() + a.sweep_angle.to_radians() / 2.0);
             let p2y = a.p0.y as f64
+                + a.radius * f64::sin(a.start_angle.to_radians() + a.sweep_angle.to_radians() / 2.0);
+            let p3x = a.p0.x as f64
+                + a.radius * f64::cos(a.start_angle.to_radians() + a.sweep_angle.to_radians());
+            let p3y = a.p0.y as f64
                 + a.radius * f64::sin(a.start_angle.to_radians() + a.sweep_angle.to_radians());
-            let sweep_flag = if a.sweep_angle < 0.0 { 0 } else { 1 };
+            let sweep_flag = find_sweep_flag((p1x, p1y), (p2x, p2y), (p3x , p3y));
+            let large_arc_flag = if f64::abs(a.sweep_angle) > 180.0 { 1 } else { 0 };
             let data = Data::new()
                 .move_to((p1x, p1y))
-                .elliptical_arc_to((a.radius, a.radius, 0.0, 0, sweep_flag, p2x, p2y));
+                .elliptical_arc_to((a.radius, a.radius, 0.0, large_arc_flag, sweep_flag, p3x, p3y));
             doc.add(
                 Path::new()
                     .set("fill", "none")
@@ -264,6 +282,30 @@ pub fn add_outline_to_path(doc: Group, g: &Glyph, hide_outline: bool) -> Group {
                     .set("stroke-width", 10)
                     .set("d", data),
             )
+                /*
+                //useful for debugging arcs/ellipses
+                .add(Circle::new()
+                .set("cx", p1x)
+                .set("cy", p1y)
+                .set("r", 10)
+                .set("fill", "#00FF00")
+                .set("stroke", "#00FF00")
+                .set("stroke-width", 10))
+                .add(Circle::new()
+                    .set("cx", p2x)
+                    .set("cy", p2y)
+                    .set("r", 10)
+                    .set("fill", "#FF3399")
+                    .set("stroke", "#FF3399")
+                    .set("stroke-width", 10))
+                .add(Circle::new()
+                    .set("cx", p3x)
+                    .set("cy", p3y)
+                    .set("r", 10)
+                    .set("fill", "#FF3300")
+                    .set("stroke", "#FF3300")
+                    .set("stroke-width", 10))
+*/
         },
         Glyph::Circle(a) => {
             doc.add(
@@ -505,7 +547,7 @@ pub fn make_svgs(mut part: &mut PartInstance) {
     let base_path = std::path::Path::new( &base);
     let base_dir = base_path.parent().unwrap();
     if !base_dir.exists() {
-        fs::create_dir_all(base_dir);
+        fs::create_dir_all(base_dir).expect("failed to create symbols directory");
     }
     write_to_svg(&part, &format!("{}.svg", base));
     part.schematic_orientation.flipped_lr = true;
