@@ -1,4 +1,18 @@
+use std::collections::BTreeMap;
+use std::fmt::{Display, Formatter};
+
 use enum_iterator::IntoEnumIterator;
+
+use crate::bom::Manufacturer;
+use crate::circuit::{CircuitNode, PartDetails, Regulator};
+use crate::designator::{Designator, DesignatorKind};
+use crate::epin::{EdgeLocation, PinKind, PinLocation};
+use crate::epin::EPin;
+use crate::glyph::{make_ic_body, make_label};
+use crate::glyph::TextJustification::{BottomLeft, TopLeft};
+use crate::pin;
+use crate::smd::SizeCode;
+use crate::utils::pin_list;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum InputType {
@@ -6,6 +20,17 @@ pub enum InputType {
     Nominal12,
     Nominal24,
     Nominal48,
+}
+
+impl Display for InputType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InputType::Nominal05 => "5V nom".fmt(f),
+            InputType::Nominal12 => "12V nom".fmt(f),
+            InputType::Nominal24 => "24V nom".fmt(f),
+            InputType::Nominal48 => "48V nom".fmt(f),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -16,10 +41,30 @@ pub enum OutputType {
     Regulated24,
 }
 
+impl Display for OutputType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OutputType::Regulated5 => "5V".fmt(f),
+            OutputType::Regulated12 => "12V".fmt(f),
+            OutputType::Regulated15 => "15V".fmt(f),
+            OutputType::Regulated24 => "24V".fmt(f),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SecondaryOutputType {
     RegulatedNeg12,
     RegulatedNeg15,
+}
+
+impl Display for SecondaryOutputType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SecondaryOutputType::RegulatedNeg12 => "-12V".fmt(f),
+            SecondaryOutputType::RegulatedNeg15 => "-15V".fmt(f),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -188,4 +233,52 @@ fn test_details_for_order_codes() {
             }
         }
     }
+}
+
+
+fn map_part_number_to_ordercode(part_number: &str) -> OrderCode {
+    for code in OrderCode::into_enum_iter() {
+        let code_name = format!("{:?}", code).replace("_", "-");
+        if code_name.eq(part_number) {
+            return code
+        }
+    }
+    panic!("Unknown part number for TMR1 power supply");
+}
+
+// TODO - generalize this family...
+pub fn make_traco_tmr1_regulator(part_number: &str) -> CircuitNode {
+    assert_eq!(part_number, "TMR1-2415");
+    let mut pins = BTreeMap::<u64,EPin>::new();
+    pins.insert(1, pin!("-VIN", PowerReturn, -100, West));
+    pins.insert(2, pin!("+VIN", PowerSink, 200, West));
+    pins.insert(4, pin!("+Vout", PowerSource, 200, East));
+    pins.insert(6, pin!("-Vout", PowerReturn, -100, East));
+    CircuitNode::Regulator(Regulator {
+
+        details: PartDetails {
+            label: part_number.to_string(),
+            manufacturer: Manufacturer {
+                name: "Traco Power".to_string(),
+                part_number: part_number.into(),
+            },
+            description: "Traco TMR1 Series DC-DC Isolated module 18-36V input, 24V output".into(),
+            comment: "".to_string(),
+            hide_pin_designators: false,
+            hide_part_outline: false,
+            pins,
+            outline: vec![
+                make_ic_body(-500, -200, 500, 300),
+                make_label(-500, 300, "V?", BottomLeft),
+                make_label(-500, -200, part_number, TopLeft),
+            ],
+            suppliers: vec![],
+            designator: Designator { kind: DesignatorKind::Resistor, index: None },
+            size: SizeCode::Custom("TMR1-2415".into())
+        },
+        input_min_voltage: 18.0,
+        input_max_voltage: 36.0,
+        output_nominal_voltage: 24.0,
+        output_max_current_ma: 42.0
+    })
 }

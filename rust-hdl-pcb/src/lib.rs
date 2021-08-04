@@ -29,6 +29,7 @@ use crate::tdk_cga_series::make_tdk_cga_capacitor;
 use crate::wurth_led::make_wurth_led;
 use crate::yageo_cc_caps::make_yageo_cc_series_cap;
 use crate::yageo_resistor_series::make_yageo_series_resistor;
+use crate::traco_power_tmr1_series::make_traco_tmr1_regulator;
 
 pub mod adc;
 pub mod analog_devices;
@@ -742,6 +743,7 @@ fn make_sample_library() -> Vec<CircuitNode> {
         make_nippon_hxd_capacitor("HHXD500ARA101MJA0G"),
         make_ty_brl_series("BRL3225T101K"),
         make_wurth_led("150060GS75000"),
+        make_traco_tmr1_regulator("TMR1-2415")
     ]
 }
 
