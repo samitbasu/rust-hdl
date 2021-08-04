@@ -4,14 +4,13 @@ use crate::circuit::{
     SchematicRotation,
 };
 use crate::epin::{EPin, EdgeLocation};
-use crate::glyph::{estimate_bounding_box, Glyph, Rect, TextJustification, Point};
+use crate::glyph::{estimate_bounding_box, Glyph, Rect, TextJustification};
 use svg::node::element::path::Data;
 use svg::node::element::{Text, Circle};
 use svg::node::element::{Group, Path};
 use svg::Document;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path;
 
 const EM: i32 = 85;
 const PIN_LENGTH: i32 = 200;
@@ -194,8 +193,8 @@ fn add_pins(
 // Adapted from https://stackoverflow.com/questions/21816286/svg-arc-how-to-determine-sweep-and-larg-arc-flags-given-start-end-via-point
 fn angle (a: (f64,f64), b: (f64,f64), c: (f64,f64)) -> f64 {
     let pi = std::f64::consts::PI;
-    ( f64::atan2(( c.1 - b.1 ) ,( c.0 - b.0 ) )
-        - f64::atan2(( a.1 - b.1 ) ,( a.0 - b.0 ) )
+    ( f64::atan2( c.1 - b.1 , c.0 - b.0 )
+        - f64::atan2( a.1 - b.1 ,a.0 - b.0 )
         + 3.0 * pi )
         %( 2.0 * pi ) - pi
 }
@@ -548,7 +547,7 @@ pub fn make_svgs(mut part: &mut PartInstance) {
     let base_path = std::path::Path::new( &base);
     let base_dir = base_path.parent().unwrap();
     if !base_dir.exists() {
-        fs::create_dir_all(base_dir);
+        fs::create_dir_all(base_dir).expect("failed to create symbols directory");
     }
     write_to_svg(&part, &format!("{}.svg", base));
     part.schematic_orientation.flipped_lr = true;
