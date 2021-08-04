@@ -4,7 +4,7 @@ use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
 use crate::epin::{EdgeLocation, PinLocation};
 use crate::glyph::TextJustification::{BottomLeft, TopLeft};
-use crate::glyph::{make_ic_body, make_label};
+use crate::glyph::{make_ic_body, make_label, make_arc, make_line};
 use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
@@ -31,7 +31,7 @@ pub fn make_sn74lvc1g125se7(part_number: &str) -> CircuitNode {
             ]),
             outline: vec![
                 make_ic_body(-400, -400, 400, 400),
-                make_label(-400, 400, "V?", BottomLeft),
+                make_label(-400, 400, "U?", BottomLeft),
                 make_label(-400, -400, part_number, TopLeft),
             ],
             suppliers: vec![],
@@ -51,7 +51,7 @@ pub fn make_sn74lvc1g125se7(part_number: &str) -> CircuitNode {
 }
 
 pub fn make_sn74lvc1g86dck(part_number: &str) -> CircuitNode {
-    assert_eq!(part_number, "SN74LVC1G86DCK");
+    assert_eq!(part_number, "SN74LVC1G86DCKR");
     CircuitNode::Logic(Logic {
         details: PartDetails {
             label: part_number.into(),
@@ -72,8 +72,17 @@ pub fn make_sn74lvc1g86dck(part_number: &str) -> CircuitNode {
             ]),
             outline: vec![
                 make_ic_body(-500, -500, 600, 500),
-                make_label(-500, 500, "V?", BottomLeft),
+                make_label(-500, 500, "U?", BottomLeft),
                 make_label(-500, -500, part_number, TopLeft),
+                make_arc(-560, 0, 400.0, 330.0, 60.0),
+                make_arc(-490, 0, 400.0, 330.0, 60.0),
+                make_line(-140, 200, 0, 200),
+                make_line(-140, -200, 0, -200),
+                make_arc(0, 180, 380.0, 270.0, 60.0),
+                make_arc(0, -180, 380.0, 30.0, 60.0),
+                make_line(-270, 100, -180, 100),
+                make_line(-270, -100, -180, -100),
+                make_line(330, 0, 400, 0),
             ],
             suppliers: vec![],
             designator: Designator {
