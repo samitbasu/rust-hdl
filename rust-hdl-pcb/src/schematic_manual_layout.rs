@@ -40,19 +40,24 @@ fn test_manual_layout() {
     layout.set_part("star_2", orient().center(3500, 200));
     layout.set_part("star_3", orient().center(2300, -800));
      */
-    let vup_net = Net::new("+VIN").add(&in_power_port, 1, &in_resistor, 1);
+    let vup_net = Net::new("+VIN")
+        .add(&in_power_port, 1)
+        .add(&in_resistor, 1);
     let vin_net = Net::new("vin1")
-        .add(&in_resistor, 2, &input_cap, 2)
-        .add(&v_reg, 1, &input_cap, 2)
-        .add(&v_reg, 2, &v_reg, 1);
+        .add(&in_resistor, 2)
+        .add(&input_cap, 2)
+        .add(&v_reg, 1)
+        .add(&v_reg, 2);
     let gnd_net = Net::new("GND")
-        .add(&input_cap, 1, &v_reg, 4)
-        .add(&v_reg, 4, &gnd_port, 1)
-        .add(&gnd_port, 1, &output_cap, 1);
+        .add(&input_cap, 1)
+        .add(&v_reg, 4)
+        .add(&gnd_port, 1)
+        .add(&output_cap, 1);
     let vout_net =
         Net::new("+3v3")
-            .add(&out_power_port, 1, &v_reg, 3)
-            .add(&output_cap, 2, &v_reg, 3);
+            .add(&out_power_port, 1)
+            .add(&v_reg, 3)
+            .add(&output_cap, 2);
     layout.set_net("+VIN", vec![MoveToPort(1), LineToPort(2)]);
     layout.set_net(
         "vin1",
@@ -64,7 +69,7 @@ fn test_manual_layout() {
             MoveToCoords(900, 200),
             LineToPort(3),
             Junction,
-            LineToPort(5),
+            LineToPort(4),
         ],
     );
     layout.set_net(
@@ -75,10 +80,10 @@ fn test_manual_layout() {
             LineToCoords(2300, -800),
             Junction,
             LineToPort(2),
-            LineToPort(4),
+            LineToPort(3),
             MoveToCoords(2300, -800),
             LineToCoords(3500, -800),
-            LineToPort(6),
+            LineToPort(4),
         ],
     );
     layout.set_net(

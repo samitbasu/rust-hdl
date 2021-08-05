@@ -106,33 +106,26 @@ pub struct PartPin {
 
 #[derive(Clone, Debug)]
 pub struct Net {
-    pub logical_wires: Vec<(PartPin, PartPin)>,
+    pub pins: Vec<PartPin>,
     pub name: String,
 }
 
 impl Net {
     pub fn new(name: &str) -> Net {
         Net {
-            logical_wires: vec![],
+            pins: vec![],
             name: name.into(),
         }
     }
     pub fn add(
         mut self,
         from_part: &PartInstance,
-        from_index: u64,
-        to_part: &PartInstance,
-        to_index: u64,
-    ) -> Self {
+        from_index: u64) -> Self {
         let from_pin = PartPin {
             part_id: from_part.id.clone(),
             pin: from_index,
         };
-        let to_pin = PartPin {
-            part_id: to_part.id.clone(),
-            pin: to_index,
-        };
-        self.logical_wires.push((from_pin, to_pin));
+        self.pins.push(from_pin);
         self
     }
 }

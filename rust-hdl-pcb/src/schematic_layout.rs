@@ -86,9 +86,9 @@ pub struct SchematicLayout {
 
 pub fn make_rat_layout(num_ports: usize) -> Vec<NetLayoutCmd> {
     let mut ret = vec![];
-    for i in 0..num_ports / 2 {
-        ret.push(NetLayoutCmd::MoveToPort(2 * i + 1));
-        ret.push(NetLayoutCmd::LineToPort(2 * i + 2));
+    ret.push(NetLayoutCmd::MoveToPort(0));
+    for i in 1..num_ports {
+        ret.push(NetLayoutCmd::LineToPort(i));
     }
     ret
 }
