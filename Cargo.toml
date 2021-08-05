@@ -7,5 +7,6 @@ members = [
     "rust-hdl-widgets",
     "rust-hdl-synth",
     "rust-hdl-alchitry-cu",
-    "rust-hdl-pcb"
+    "rust-hdl-pcb",
+    "rust-hdl-schem-layout"
 ]
