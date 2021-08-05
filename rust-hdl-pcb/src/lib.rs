@@ -57,7 +57,7 @@ pub mod panasonic_era_resistors;
 pub mod port;
 pub mod resistors;
 pub mod schematic;
-mod schematic_layout;
+pub mod schematic_layout;
 pub mod schematic_manual_layout;
 pub mod smd;
 pub mod sn74_series_logic;
