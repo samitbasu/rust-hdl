@@ -208,17 +208,16 @@ impl Circle {
     pub fn fliplr(&self) -> Self {
         Self {
             p0: self.p0.fliplr(),
-            radius: self.radius
+            radius: self.radius,
         }
     }
     pub fn flipud(&self) -> Self {
         Self {
             p0: self.p0.flipud(),
-            radius: self.radius
+            radius: self.radius,
         }
     }
 }
-
 
 #[derive(Clone, Copy, Debug)]
 pub struct Arc {
@@ -325,7 +324,7 @@ impl Glyph {
             Glyph::Circle(a) => Rect {
                 p0: a.p0 + Point::dx() * (-a.radius as i32) + Point::dy() * (-a.radius as i32),
                 p1: a.p0 + Point::dx() * (a.radius as i32) + Point::dy() * (a.radius as i32),
-            }
+            },
         }
     }
 }

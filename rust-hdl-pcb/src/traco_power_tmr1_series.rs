@@ -6,10 +6,10 @@ use enum_iterator::IntoEnumIterator;
 use crate::bom::Manufacturer;
 use crate::circuit::{CircuitNode, PartDetails, Regulator};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EdgeLocation, PinKind, PinLocation};
 use crate::epin::EPin;
-use crate::glyph::{make_ic_body, make_label};
+use crate::epin::{EdgeLocation, PinKind, PinLocation};
 use crate::glyph::TextJustification::{BottomLeft, TopLeft};
+use crate::glyph::{make_ic_body, make_label};
 use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
@@ -235,12 +235,11 @@ fn test_details_for_order_codes() {
     }
 }
 
-
 fn map_part_number_to_ordercode(part_number: &str) -> OrderCode {
     for code in OrderCode::into_enum_iter() {
         let code_name = format!("{:?}", code).replace("_", "-");
         if code_name.eq(part_number) {
-            return code
+            return code;
         }
     }
     panic!("Unknown part number for TMR1 power supply");
@@ -249,13 +248,12 @@ fn map_part_number_to_ordercode(part_number: &str) -> OrderCode {
 // TODO - generalize this family...
 pub fn make_traco_tmr1_regulator(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "TMR1-2415");
-    let mut pins = BTreeMap::<u64,EPin>::new();
+    let mut pins = BTreeMap::<u64, EPin>::new();
     pins.insert(1, pin!("-VIN", PowerReturn, -100, West));
     pins.insert(2, pin!("+VIN", PowerSink, 200, West));
     pins.insert(4, pin!("+Vout", PowerSource, 200, East));
     pins.insert(6, pin!("-Vout", PowerReturn, -100, East));
     CircuitNode::Regulator(Regulator {
-
         details: PartDetails {
             label: part_number.to_string(),
             manufacturer: Manufacturer {
@@ -273,12 +271,15 @@ pub fn make_traco_tmr1_regulator(part_number: &str) -> CircuitNode {
                 make_label(-500, -200, part_number, TopLeft),
             ],
             suppliers: vec![],
-            designator: Designator { kind: DesignatorKind::Resistor, index: None },
-            size: SizeCode::Custom("TMR1-2415".into())
+            designator: Designator {
+                kind: DesignatorKind::Resistor,
+                index: None,
+            },
+            size: SizeCode::Custom("TMR1-2415".into()),
         },
         input_min_voltage: 18.0,
         input_max_voltage: 36.0,
         output_nominal_voltage: 24.0,
-        output_max_current_ma: 42.0
+        output_max_current_ma: 42.0,
     })
 }

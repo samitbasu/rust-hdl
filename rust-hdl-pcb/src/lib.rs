@@ -2,7 +2,9 @@ use crate::adc::make_ads868x;
 use crate::analog_devices::make_lt3092_current_source;
 use crate::avx_caps::make_avx_capacitor;
 use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode};
-use crate::circuit::{Capacitor, CircuitNode, LogicFunction, LogicSignalStandard, PartInstance};
+use crate::circuit::{
+    instance, Capacitor, CircuitNode, LogicFunction, LogicSignalStandard, PartInstance,
+};
 use crate::connectors::{
     make_amphenol_10056845_header, make_molex_55935_connector, make_sullins_sbh11_header,
 };
@@ -26,10 +28,10 @@ use crate::smd::SizeCode;
 use crate::sn74_series_logic::make_sn74_series;
 use crate::tdk_c_series::make_tdk_c_series_capacitor;
 use crate::tdk_cga_series::make_tdk_cga_capacitor;
+use crate::traco_power_tmr1_series::make_traco_tmr1_regulator;
 use crate::wurth_led::make_wurth_led;
 use crate::yageo_cc_caps::make_yageo_cc_series_cap;
 use crate::yageo_resistor_series::make_yageo_series_resistor;
-use crate::traco_power_tmr1_series::make_traco_tmr1_regulator;
 
 pub mod adc;
 pub mod analog_devices;
@@ -55,7 +57,7 @@ pub mod panasonic_era_resistors;
 pub mod port;
 pub mod resistors;
 pub mod schematic;
-pub mod schematic_flexbox_layout;
+mod schematic_layout;
 pub mod schematic_manual_layout;
 pub mod smd;
 pub mod sn74_series_logic;
@@ -66,7 +68,6 @@ pub mod utils;
 pub mod wurth_led;
 pub mod yageo_cc_caps;
 pub mod yageo_resistor_series;
-pub mod junction;
 
 #[test]
 fn test_yageo_rc_68k() {
@@ -731,7 +732,7 @@ fn make_sample_library() -> Vec<CircuitNode> {
         make_ti_tps_7b84_regulator("TPS7B8450QDCYRQ1"),
         make_mcp_1799_regulator("MCP1799T-5002H/DB"),
         make_lt3092_current_source("LT3092EST#PBF"),
-        make_lvc_one_gate("SN74LVC1G86DCK"),
+        make_lvc_one_gate("SN74LVC1G86DCKR"),
         make_sn74_series("SN74HCT541PWR"),
         make_sn74_series("SN74HCT138PWR"),
         make_sn74_series("SN74HC151QDRQ1"),
@@ -743,7 +744,7 @@ fn make_sample_library() -> Vec<CircuitNode> {
         make_nippon_hxd_capacitor("HHXD500ARA101MJA0G"),
         make_ty_brl_series("BRL3225T101K"),
         make_wurth_led("150060GS75000"),
-        make_traco_tmr1_regulator("TMR1-2415")
+        make_traco_tmr1_regulator("TMR1-2415"),
     ]
 }
 
@@ -751,7 +752,7 @@ fn make_sample_library() -> Vec<CircuitNode> {
 fn test_schematics() {
     for p in make_sample_library() {
         println!("SVG Generation for {:?}", p);
-        let mut i: PartInstance = p.into();
+        let mut i = instance(p, "p1");
         make_svgs(&mut i);
     }
 }

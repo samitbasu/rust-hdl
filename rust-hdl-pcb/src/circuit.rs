@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::bom::{Manufacturer, Supplier};
 use crate::capacitors::{CapacitorKind, CapacitorTolerance};
@@ -7,33 +8,8 @@ use crate::diode::DiodeKind;
 use crate::epin::EPin;
 use crate::glyph::{Glyph, Point};
 use crate::resistors::{PowerWatt, ResistorKind};
+use crate::schematic_layout::{SchematicOrientation, SchematicRotation};
 use crate::smd::SizeCode;
-use std::sync::atomic::{AtomicUsize, Ordering};
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum SchematicRotation {
-    Horizontal,
-    Vertical,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct SchematicOrientation {
-    pub rotation: SchematicRotation,
-    pub flipped_lr: bool,
-    pub flipped_ud: bool,
-    pub center: Point,
-}
-
-impl Default for SchematicOrientation {
-    fn default() -> Self {
-        Self {
-            rotation: SchematicRotation::Horizontal,
-            flipped_lr: false,
-            flipped_ud: false,
-            center: Point::zero(),
-        }
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct PartDetails {
@@ -49,15 +25,6 @@ pub struct PartDetails {
     pub designator: Designator,
     pub size: SizeCode,
 }
-
-static GLOBAL_PART_COUNT: AtomicUsize = AtomicUsize::new(1);
-
-pub fn get_part_id() -> PartID {
-    PartID(GLOBAL_PART_COUNT.fetch_add(1, Ordering::SeqCst))
-}
-
-#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
-pub struct PartID(pub(crate) usize);
 
 #[derive(Clone, Debug)]
 pub struct Capacitor {
@@ -131,36 +98,32 @@ pub struct Logic {
     pub function: LogicFunction,
 }
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug)]
 pub struct PartPin {
-    pub part_id: PartID,
+    pub part_id: String,
     pub pin: u64,
 }
 
 #[derive(Clone, Debug)]
-pub struct LogicalWire {
-    pub start: PartPin,
-    pub waypoints: Vec<(i32, i32)>,
-    pub end: PartPin,
-}
-
-#[derive(Clone, Debug)]
 pub struct Net {
-    pub logical_wires: Vec<LogicalWire>,
-    pub name: Option<String>,
+    pub logical_wires: Vec<(PartPin, PartPin)>,
+    pub name: String,
 }
 
 impl Net {
-    pub fn new(name: Option<&str>) -> Net {
+    pub fn new(name: &str) -> Net {
         Net {
             logical_wires: vec![],
-            name: name.map(|x| x.into()),
+            name: name.into(),
         }
     }
-    pub fn add(mut self, from_part: &PartInstance, from_index: u64, to_part: &PartInstance, to_index: u64) -> Self {
-        self.add_via(from_part, from_index, to_part, to_index, vec![])
-    }
-    pub fn add_via(mut self, from_part: &PartInstance, from_index: u64, to_part: &PartInstance, to_index: u64, via: Vec<(i32, i32)>) -> Self {
+    pub fn add(
+        mut self,
+        from_part: &PartInstance,
+        from_index: u64,
+        to_part: &PartInstance,
+        to_index: u64,
+    ) -> Self {
         let from_pin = PartPin {
             part_id: from_part.id.clone(),
             pin: from_index,
@@ -169,11 +132,7 @@ impl Net {
             part_id: to_part.id.clone(),
             pin: to_index,
         };
-        self.logical_wires.push(LogicalWire {
-            start: from_pin,
-            waypoints: via,
-            end: to_pin
-        });
+        self.logical_wires.push((from_pin, to_pin));
         self
     }
 }
@@ -189,7 +148,6 @@ pub enum CircuitNode {
     Connector(PartDetails),
     Logic(Logic),
     Port(PartDetails),
-    Junction(PartDetails),
 }
 
 #[derive(Debug)]
@@ -201,31 +159,21 @@ pub struct Circuit {
 #[derive(Debug)]
 pub struct PartInstance {
     pub node: CircuitNode,
-    pub schematic_orientation: SchematicOrientation,
-    pub id: PartID,
+    pub id: String,
 }
 
-impl PartInstance {
-    pub fn rot90(mut self) -> Self {
-        self.schematic_orientation.rotation = SchematicRotation::Vertical;
-        self
-    }
-    pub fn flip_lr(mut self) -> Self {
-        self.schematic_orientation.flipped_lr = !self.schematic_orientation.flipped_lr;
-        self
-    }
-    pub fn flip_ud(mut self) -> Self {
-        self.schematic_orientation.flipped_ud = !self.schematic_orientation.flipped_ud;
-        self
+pub fn instance(x: CircuitNode, name: &str) -> PartInstance {
+    PartInstance {
+        node: x,
+        id: name.into(),
     }
 }
 
-impl From<CircuitNode> for PartInstance {
-    fn from(x: CircuitNode) -> Self {
+impl CircuitNode {
+    pub fn instance(self, name: &str) -> PartInstance {
         PartInstance {
-            node: x,
-            schematic_orientation: SchematicOrientation::default(),
-            id: get_part_id(),
+            node: self,
+            id: name.into(),
         }
     }
 }

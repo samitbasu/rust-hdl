@@ -1,16 +1,18 @@
-use crate::adc::make_ads868x;
-use crate::circuit::{
-    Circuit, CircuitNode, PartDetails, PartInstance, PartPin, SchematicOrientation,
-    SchematicRotation,
-};
-use crate::epin::{EPin, EdgeLocation};
-use crate::glyph::{estimate_bounding_box, Glyph, Rect, TextJustification};
-use svg::node::element::path::Data;
-use svg::node::element::{Text, Circle};
-use svg::node::element::{Group, Path};
-use svg::Document;
 use std::collections::BTreeMap;
 use std::fs;
+
+use svg::node::element::path::Data;
+use svg::node::element::{Circle, Text};
+use svg::node::element::{Group, Path};
+use svg::Document;
+
+use crate::adc::make_ads868x;
+use crate::circuit::{instance, Circuit, CircuitNode, PartDetails, PartInstance, PartPin};
+use crate::epin::{EPin, EdgeLocation};
+use crate::glyph::{estimate_bounding_box, Glyph, Rect, TextJustification};
+use crate::schematic_layout::{
+    make_rat_layout, NetLayoutCmd, SchematicLayout, SchematicOrientation, SchematicRotation,
+};
 
 const EM: i32 = 85;
 const PIN_LENGTH: i32 = 200;
@@ -191,18 +193,15 @@ fn add_pins(
 }
 
 // Adapted from https://stackoverflow.com/questions/21816286/svg-arc-how-to-determine-sweep-and-larg-arc-flags-given-start-end-via-point
-fn angle (a: (f64,f64), b: (f64,f64), c: (f64,f64)) -> f64 {
+fn angle(a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> f64 {
     let pi = std::f64::consts::PI;
-    ( f64::atan2( c.1 - b.1 , c.0 - b.0 )
-        - f64::atan2( a.1 - b.1 ,a.0 - b.0 )
-        + 3.0 * pi )
-        %( 2.0 * pi ) - pi
+    (f64::atan2(c.1 - b.1, c.0 - b.0) - f64::atan2(a.1 - b.1, a.0 - b.0) + 3.0 * pi) % (2.0 * pi)
+        - pi
 }
 
-fn find_sweep_flag (start: (f64,f64), via: (f64,f64), end: (f64,f64)) -> i32 {
+fn find_sweep_flag(start: (f64, f64), via: (f64, f64), end: (f64, f64)) -> i32 {
     return if angle(end, start, via) > 0.0 { 0 } else { 1 };
 }
-
 
 pub fn add_outline_to_path(doc: Group, g: &Glyph, hide_outline: bool) -> Group {
     match g {
@@ -263,18 +262,30 @@ pub fn add_outline_to_path(doc: Group, g: &Glyph, hide_outline: bool) -> Group {
             let p1x = a.p0.x as f64 + a.radius * f64::cos(a.start_angle.to_radians());
             let p1y = a.p0.y as f64 + a.radius * f64::sin(a.start_angle.to_radians());
             let p2x = a.p0.x as f64
-                + a.radius * f64::cos(a.start_angle.to_radians() + a.sweep_angle.to_radians() / 2.0);
+                + a.radius
+                    * f64::cos(a.start_angle.to_radians() + a.sweep_angle.to_radians() / 2.0);
             let p2y = a.p0.y as f64
-                + a.radius * f64::sin(a.start_angle.to_radians() + a.sweep_angle.to_radians() / 2.0);
+                + a.radius
+                    * f64::sin(a.start_angle.to_radians() + a.sweep_angle.to_radians() / 2.0);
             let p3x = a.p0.x as f64
                 + a.radius * f64::cos(a.start_angle.to_radians() + a.sweep_angle.to_radians());
             let p3y = a.p0.y as f64
                 + a.radius * f64::sin(a.start_angle.to_radians() + a.sweep_angle.to_radians());
-            let sweep_flag = find_sweep_flag((p1x, p1y), (p2x, p2y), (p3x , p3y));
-            let large_arc_flag = if f64::abs(a.sweep_angle) > 180.0 { 1 } else { 0 };
-            let data = Data::new()
-                .move_to((p1x, p1y))
-                .elliptical_arc_to((a.radius, a.radius, 0.0, large_arc_flag, sweep_flag, p3x, p3y));
+            let sweep_flag = find_sweep_flag((p1x, p1y), (p2x, p2y), (p3x, p3y));
+            let large_arc_flag = if f64::abs(a.sweep_angle) > 180.0 {
+                1
+            } else {
+                0
+            };
+            let data = Data::new().move_to((p1x, p1y)).elliptical_arc_to((
+                a.radius,
+                a.radius,
+                0.0,
+                large_arc_flag,
+                sweep_flag,
+                p3x,
+                p3y,
+            ));
             doc.add(
                 Path::new()
                     .set("fill", "none")
@@ -282,39 +293,37 @@ pub fn add_outline_to_path(doc: Group, g: &Glyph, hide_outline: bool) -> Group {
                     .set("stroke-width", 10)
                     .set("d", data),
             )
-                /*
-                //useful for debugging arcs/ellipses
-                .add(Circle::new()
-                .set("cx", p1x)
-                .set("cy", p1y)
-                .set("r", 10)
-                .set("fill", "#00FF00")
-                .set("stroke", "#00FF00")
-                .set("stroke-width", 10))
-                .add(Circle::new()
-                    .set("cx", p2x)
-                    .set("cy", p2y)
-                    .set("r", 10)
-                    .set("fill", "#FF3399")
-                    .set("stroke", "#FF3399")
-                    .set("stroke-width", 10))
-                .add(Circle::new()
-                    .set("cx", p3x)
-                    .set("cy", p3y)
-                    .set("r", 10)
-                    .set("fill", "#FF3300")
-                    .set("stroke", "#FF3300")
-                    .set("stroke-width", 10))
-*/
-        },
-        Glyph::Circle(a) => {
-            doc.add(
-                Circle::new()
-                    .set("cx", a.p0.x)
-                    .set("cy", -a.p0.y)
-                    .set("r", a.radius)
-            )
+            /*
+                            //useful for debugging arcs/ellipses
+                            .add(Circle::new()
+                            .set("cx", p1x)
+                            .set("cy", p1y)
+                            .set("r", 10)
+                            .set("fill", "#00FF00")
+                            .set("stroke", "#00FF00")
+                            .set("stroke-width", 10))
+                            .add(Circle::new()
+                                .set("cx", p2x)
+                                .set("cy", p2y)
+                                .set("r", 10)
+                                .set("fill", "#FF3399")
+                                .set("stroke", "#FF3399")
+                                .set("stroke-width", 10))
+                            .add(Circle::new()
+                                .set("cx", p3x)
+                                .set("cy", p3y)
+                                .set("r", 10)
+                                .set("fill", "#FF3300")
+                                .set("stroke", "#FF3300")
+                                .set("stroke-width", 10))
+            */
         }
+        Glyph::Circle(a) => doc.add(
+            Circle::new()
+                .set("cx", a.p0.x)
+                .set("cy", -a.p0.y)
+                .set("r", a.radius),
+        ),
     }
 }
 
@@ -340,7 +349,7 @@ pub fn make_flip_ud_part(part: &PartDetails) -> PartDetails {
     fpart
 }
 
-fn get_details_from_instance(x: &PartInstance) -> PartDetails {
+fn get_details_from_instance(x: &PartInstance, l: &SchematicLayout) -> PartDetails {
     let mut part = match &x.node {
         CircuitNode::Capacitor(c) => &c.details,
         CircuitNode::Resistor(r) => &r.details,
@@ -351,15 +360,15 @@ fn get_details_from_instance(x: &PartInstance) -> PartDetails {
         CircuitNode::Connector(j) => j,
         CircuitNode::Logic(u) => &u.details,
         CircuitNode::Port(p) => p,
-        CircuitNode::Junction(j) => j,
     }
     .clone();
 
-    if x.schematic_orientation.flipped_lr {
+    let layout = l.part(&x.id);
+    if layout.flipped_lr {
         part = make_flip_lr_part(&part);
     }
 
-    if x.schematic_orientation.flipped_ud {
+    if layout.flipped_ud {
         part = make_flip_ud_part(&part);
     }
 
@@ -375,10 +384,10 @@ fn make_rect_into_data(r: &Rect) -> Data {
         .close()
 }
 
-fn make_group_from_part_instance(instance: &PartInstance) -> Group {
+fn make_group_from_part_instance(instance: &PartInstance, layout: &SchematicLayout) -> Group {
     let mut document = Group::new();
 
-    let part = get_details_from_instance(instance);
+    let part = get_details_from_instance(instance, layout);
 
     for x in &part.outline {
         document = add_outline_to_path(document, x, part.hide_part_outline);
@@ -390,29 +399,14 @@ fn make_group_from_part_instance(instance: &PartInstance) -> Group {
         &part.pins,
     );
 
-    /*
-    let r = estimate_bounding_box(&part.outline);
-    let data = Data::new()
-        .move_to((r.p0.x, -r.p0.y))
-        .line_to((r.p0.x, -r.p1.y))
-        .line_to((r.p1.x, -r.p1.y))
-        .line_to((r.p1.x, -r.p0.y))
-        .close();
-    document = document.add(
-        Path::new()
-            .set("fill", "none")
-            .set("stroke", "red")
-            .set("stroke-width", 5)
-            .set("d", data),
-    );
-    */
-    let dx = instance.schematic_orientation.center.x;
-    let dy = -instance.schematic_orientation.center.y;
+    let schematic_orientation = layout.part(&instance.id);
+    let dx = schematic_orientation.center.0;
+    let dy = -schematic_orientation.center.1;
     let transform = format!(
         "{rot} translate({x},{y})",
         x = dx,
         y = dy,
-        rot = if instance.schematic_orientation.rotation == SchematicRotation::Vertical {
+        rot = if schematic_orientation.rotation == SchematicRotation::Vertical {
             format!("rotate(-90, {}, {})", dx, dy)
         } else {
             "".to_string()
@@ -422,18 +416,19 @@ fn make_group_from_part_instance(instance: &PartInstance) -> Group {
     document
 }
 
-pub fn estimate_instance_bounding_box(instance: &PartInstance) -> Rect {
-    let part = get_details_from_instance(instance);
+pub fn estimate_instance_bounding_box(instance: &PartInstance, layout: &SchematicLayout) -> Rect {
+    let part = get_details_from_instance(instance, layout);
     let mut r = estimate_bounding_box(&part.outline);
-    if instance.schematic_orientation.rotation == SchematicRotation::Vertical {
+    let schematic_orientation = layout.part(&instance.id);
+    if schematic_orientation.rotation == SchematicRotation::Vertical {
         r = r.rot90();
     }
     r
 }
 
 fn map_pin_based_on_orientation(orient: &SchematicOrientation, x: i32, y: i32) -> (i32, i32) {
-    let cx = orient.center.x;
-    let cy = orient.center.y;
+    let cx = orient.center.0;
+    let cy = orient.center.1;
     return match orient.rotation {
         SchematicRotation::Horizontal => (x + cx, -(y + cy)),
         SchematicRotation::Vertical => (-y + cx, -(x + cy)),
@@ -462,62 +457,95 @@ fn map_pin_based_on_outline_and_orientation(
     };
 }
 
-fn get_pin_net_location(circuit: &Circuit, pin: &PartPin) -> (i32, i32) {
+fn get_pin_net_location(circuit: &Circuit, layout: &SchematicLayout, pin: &PartPin) -> (i32, i32) {
     for instance in &circuit.nodes {
         if instance.id == pin.part_id {
-            let part = get_details_from_instance(instance);
+            let part = get_details_from_instance(instance, layout);
+            let schematic_orientation = layout.part(&instance.id);
             let pin = &part.pins[&pin.pin];
             return if let Glyph::OutlineRect(r) = &part.outline[0] {
-                map_pin_based_on_outline_and_orientation(
-                    pin,
-                    r,
-                    &instance.schematic_orientation,
-                    PIN_LENGTH,
-                )
+                map_pin_based_on_outline_and_orientation(pin, r, &schematic_orientation, PIN_LENGTH)
             } else {
                 // Parts without an outline rect are just virtual...
-                (instance.schematic_orientation.center.x,
-                 -instance.schematic_orientation.center.y)
-            }
+                (
+                    schematic_orientation.center.0,
+                    -schematic_orientation.center.1,
+                )
+            };
         }
     }
     panic!("No pin found!")
 }
 
-pub fn write_circuit_to_svg(circuit: &Circuit, name: &str) {
+pub fn write_circuit_to_svg(circuit: &Circuit, layout: &SchematicLayout, name: &str) {
     let mut top_document = Document::new().set("viewBox", (-2000, -2000, 7000, 7000));
     let mut top: Group = Group::new();
     for instance in &circuit.nodes {
-        let part = make_group_from_part_instance(instance);
+        let part = make_group_from_part_instance(instance, layout);
         top = top.add(part);
     }
     //    top = add_ports(top, &circuit.outline, &circuit.pins);
     top_document = top_document.add(top);
     // Draw the nets
     for net in &circuit.nets {
+        // Build the port definitions
+        let mut ports = vec![];
         for wire in &net.logical_wires {
-            let start = get_pin_net_location(&circuit, &wire.start);
-            let end = get_pin_net_location(&circuit, &wire.end);
-            let mut data = Data::new().move_to(start);
-            for pos in &wire.waypoints {
-                data = data.line_to((pos.0, -pos.1))
-            }
-            data = data.line_to(end);
-            let path = Path::new()
-                .set("fill", "none")
-                .set("stroke", "#000080")
-                .set("stroke-width", "10")
-                .set("d", data);
-            top_document = top_document.add(path);
+            let start = get_pin_net_location(&circuit, layout, &wire.0);
+            let end = get_pin_net_location(&circuit, layout, &wire.1);
+            ports.push(start);
+            ports.push(end);
         }
+        // Now walk the layout
+        let mut net_layout = layout.net(&net.name);
+        if net_layout.len() == 0 {
+            net_layout = make_rat_layout(ports.len());
+        }
+        let mut data = Data::new();
+        let mut lp = (0, 0);
+        for cmd in net_layout {
+            match cmd {
+                NetLayoutCmd::MoveToPort(n) => {
+                    data = data.move_to(ports[n - 1]);
+                    lp = ports[n - 1];
+                }
+                NetLayoutCmd::LineToPort(n) => {
+                    data = data.line_to(ports[n - 1]);
+                    lp = ports[n - 1];
+                }
+                NetLayoutCmd::MoveToCoords(x, y) => {
+                    data = data.move_to((x, -y));
+                    lp = (x, -y);
+                }
+                NetLayoutCmd::LineToCoords(x, y) => {
+                    data = data.line_to((x, -y));
+                    lp = (x, -y);
+                }
+                NetLayoutCmd::Junction => {
+                    top_document = top_document.add(
+                        Circle::new()
+                            .set("cx", lp.0)
+                            .set("cy", lp.1)
+                            .set("r", 35)
+                            .set("fill", "black"),
+                    );
+                }
+            }
+        }
+        let path = Path::new()
+            .set("fill", "none")
+            .set("stroke", "#000080")
+            .set("stroke-width", "10")
+            .set("d", data);
+        top_document = top_document.add(path);
     }
     svg::save(name, &top_document).unwrap();
 }
 
-fn write_to_svg(instance: &PartInstance, name: &str) {
-    let r = estimate_instance_bounding_box(instance);
+fn write_to_svg(instance: &PartInstance, layout: &SchematicLayout, name: &str) {
+    let r = estimate_instance_bounding_box(instance, &layout);
     let mut top_document = Document::new().set("viewBox", (-2000, -2000, 4000, 4000));
-    let document = make_group_from_part_instance(instance);
+    let document = make_group_from_part_instance(instance, &layout);
     top_document = top_document.add(document);
     top_document = top_document.add(
         Path::new()
@@ -535,43 +563,82 @@ fn write_to_svg(instance: &PartInstance, name: &str) {
 #[test]
 fn test_svg_of_part() {
     let u = make_ads868x("ADS8689IPW");
-    let i: PartInstance = u.into();
-    write_to_svg(&i, "test.svg");
+    let i: PartInstance = instance(u, "p1");
+    let l = SchematicLayout::default();
+    write_to_svg(&i, &l, "test.svg");
 }
 
 pub fn make_svgs(mut part: &mut PartInstance) {
-    let details = get_details_from_instance(&part);
+    let mut layout = SchematicLayout::default();
+    let details = get_details_from_instance(&part, &layout);
     let base = env!("CARGO_MANIFEST_DIR").to_owned()
         + "/symbols/"
         + &details.manufacturer.part_number.replace("/", "_");
-    let base_path = std::path::Path::new( &base);
+    let base_path = std::path::Path::new(&base);
     let base_dir = base_path.parent().unwrap();
     if !base_dir.exists() {
         fs::create_dir_all(base_dir).expect("failed to create symbols directory");
     }
-    write_to_svg(&part, &format!("{}.svg", base));
-    part.schematic_orientation.flipped_lr = true;
-    write_to_svg(&part, &format!("{}_lr.svg", base));
-    part.schematic_orientation.flipped_lr = false;
-    part.schematic_orientation.flipped_ud = true;
-    write_to_svg(&part, &format!("{}_ud.svg", base));
-    part.schematic_orientation.flipped_lr = true;
-    part.schematic_orientation.flipped_ud = true;
-    write_to_svg(&part, &format!("{}_lr_ud.svg", base));
-    part.schematic_orientation.rotation = SchematicRotation::Vertical;
-    part.schematic_orientation.flipped_lr = false;
-    part.schematic_orientation.flipped_ud = false;
-    write_to_svg(&part, &format!("{}_rot.svg", base));
-    part.schematic_orientation.rotation = SchematicRotation::Vertical;
-    part.schematic_orientation.flipped_lr = true;
-    part.schematic_orientation.flipped_ud = false;
-    write_to_svg(&part, &format!("{}_rot_lr.svg", base));
-    part.schematic_orientation.rotation = SchematicRotation::Vertical;
-    part.schematic_orientation.flipped_lr = false;
-    part.schematic_orientation.flipped_ud = true;
-    write_to_svg(&part, &format!("{}_rot_ud.svg", base));
-    part.schematic_orientation.rotation = SchematicRotation::Vertical;
-    part.schematic_orientation.flipped_lr = true;
-    part.schematic_orientation.flipped_ud = true;
-    write_to_svg(&part, &format!("{}_rot_lr_ud.svg", base));
+    write_to_svg(&part, &layout, &format!("{}.svg", base));
+    layout.set_part(
+        &part.id,
+        SchematicOrientation {
+            flipped_lr: true,
+            ..Default::default()
+        },
+    );
+    write_to_svg(&part, &layout, &format!("{}_lr.svg", base));
+    layout.set_part(
+        &part.id,
+        SchematicOrientation {
+            flipped_ud: true,
+            ..Default::default()
+        },
+    );
+    write_to_svg(&part, &layout, &format!("{}_ud.svg", base));
+    layout.set_part(
+        &part.id,
+        SchematicOrientation {
+            flipped_lr: true,
+            flipped_ud: true,
+            ..Default::default()
+        },
+    );
+    write_to_svg(&part, &layout, &format!("{}_lr_ud.svg", base));
+    layout.set_part(
+        &part.id,
+        SchematicOrientation {
+            rotation: SchematicRotation::Vertical,
+            ..Default::default()
+        },
+    );
+    write_to_svg(&part, &layout, &format!("{}_rot.svg", base));
+    layout.set_part(
+        &part.id,
+        SchematicOrientation {
+            rotation: SchematicRotation::Vertical,
+            flipped_lr: true,
+            ..Default::default()
+        },
+    );
+    write_to_svg(&part, &layout, &format!("{}_rot_lr.svg", base));
+    layout.set_part(
+        &part.id,
+        SchematicOrientation {
+            rotation: SchematicRotation::Vertical,
+            flipped_ud: true,
+            ..Default::default()
+        },
+    );
+    write_to_svg(&part, &layout, &format!("{}_rot_ud.svg", base));
+    layout.set_part(
+        &part.id,
+        SchematicOrientation {
+            rotation: SchematicRotation::Vertical,
+            flipped_lr: true,
+            flipped_ud: true,
+            ..Default::default()
+        },
+    );
+    write_to_svg(&part, &layout, &format!("{}_rot_lr_ud.svg", base));
 }
