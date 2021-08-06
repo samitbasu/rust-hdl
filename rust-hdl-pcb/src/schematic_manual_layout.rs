@@ -32,9 +32,7 @@ fn test_manual_layout() {
     layout.set_part("input_cap", orient().center(900, -200).vert());
     layout.set_part("v_reg", orient().center(2300, 0));
     layout.set_part("output_cap", orient().center(3500, -200).vert());
-    let vup_net = Net::new("+VIN")
-        .add(&in_power_port, 1)
-        .add(&in_resistor, 1);
+    let vup_net = Net::new("+VIN").add(&in_power_port, 1).add(&in_resistor, 1);
     let vin_net = Net::new("vin1")
         .add(&in_resistor, 2)
         .add(&input_cap, 2)
@@ -45,11 +43,10 @@ fn test_manual_layout() {
         .add(&v_reg, 4)
         .add(&gnd_port, 1)
         .add(&output_cap, 1);
-    let vout_net =
-        Net::new("+3v3")
-            .add(&out_power_port, 1)
-            .add(&v_reg, 3)
-            .add(&output_cap, 2);
+    let vout_net = Net::new("+3v3")
+        .add(&out_power_port, 1)
+        .add(&v_reg, 3)
+        .add(&output_cap, 2);
     layout.set_net("+VIN", vec![MoveToPort(1), LineToPort(2)]);
     layout.set_net(
         "vin1",
@@ -104,4 +101,6 @@ fn test_manual_layout() {
     write_circuit_to_svg(&circuit, &layout, "test_circuit_manual.svg");
     let layout_yaml = serde_yaml::to_string(&layout).unwrap();
     println!("Layout: {}", layout_yaml);
+    let circuit = serde_json::to_string(&circuit).unwrap();
+    println!("Circuit: {}", circuit);
 }

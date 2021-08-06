@@ -489,9 +489,11 @@ pub fn write_circuit_to_svg(circuit: &Circuit, layout: &SchematicLayout, name: &
     // Draw the nets
     for net in &circuit.nets {
         // Build the port definitions
-        let ports =
-            net.pins.iter().map(|x| get_pin_net_location(&circuit, layout, x))
-                .collect::<Vec<_>>();
+        let ports = net
+            .pins
+            .iter()
+            .map(|x| get_pin_net_location(&circuit, layout, x))
+            .collect::<Vec<_>>();
         // Now walk the layout
         let mut net_layout = layout.net(&net.name);
         if net_layout.len() == 0 {

@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[derive(Clone, Copy, Debug)]
 pub struct InputRange {
     minimum: Option<f64>,
@@ -11,7 +13,7 @@ pub struct OutputRange {
     max_current_ma: Option<f64>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum PinKind {
     Input,
     InputInverted,
@@ -30,7 +32,7 @@ pub enum PinKind {
     Unspecified,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum EdgeLocation {
     North,
     East,
@@ -55,7 +57,7 @@ impl EdgeLocation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PinLocation {
     pub offset: i32,
     pub edge: EdgeLocation,
@@ -86,7 +88,7 @@ impl PinLocation {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct EPin {
     pub kind: PinKind,
     pub name: String,

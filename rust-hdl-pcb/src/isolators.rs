@@ -46,11 +46,6 @@ pub fn make_iso7741edwrq1(part_number: &str) -> CircuitNode {
             make_label(-600, 1000, "U?", TextJustification::BottomLeft),
             make_label(-600, -1100, part_number, TextJustification::TopLeft),
         ],
-        suppliers: vec![],
-        designator: Designator {
-            kind: DesignatorKind::IntegratedCircuit,
-            index: None,
-        },
         size: SizeCode::SOIC(16),
     })
 }

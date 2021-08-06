@@ -1,14 +1,15 @@
+use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use std::string::ParseError;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TolerancedDim {
     pub nominal_mm: f64,
     pub tolerance_mm: f64,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PTHResistor {
     pub body_length: TolerancedDim,
     pub body_diameter: TolerancedDim,
@@ -16,7 +17,7 @@ pub struct PTHResistor {
     pub lead_diameter: TolerancedDim,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum SizeCode {
     Virtual,
     I0075,

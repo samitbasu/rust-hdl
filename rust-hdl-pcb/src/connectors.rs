@@ -1,12 +1,13 @@
+use std::collections::BTreeMap;
+
 use crate::bom::Manufacturer;
 use crate::circuit::{CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, EdgeLocation, PinKind, PinLocation};
+use crate::epin::{EdgeLocation, EPin, PinKind, PinLocation};
 use crate::glyph::{make_ic_body, make_label, TextJustification};
 use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
-use std::collections::BTreeMap;
 
 fn make_passive_pins(count: u32, start_y: i32, delta_y: i32) -> BTreeMap<u64, EPin> {
     pin_list(
@@ -44,11 +45,6 @@ pub fn make_molex_55935_connector(part_number: &str) -> CircuitNode {
             make_label(-200, 400, "J?", TextJustification::BottomLeft),
             make_label(-200, -500, part_number, TextJustification::TopLeft),
         ],
-        suppliers: vec![],
-        designator: Designator {
-            kind: DesignatorKind::Connector,
-            index: None,
-        },
         size: SizeCode::Custom("PTH, Right Angle".into()),
     })
 }
@@ -67,11 +63,6 @@ pub fn make_sullins_sbh11_header(part_number: &str) -> CircuitNode {
         hide_part_outline: false,
         pins: make_passive_pins(26, 1200, 100),
         outline: vec![make_ic_body(-200, -1400, 0, 1300)],
-        suppliers: vec![],
-        designator: Designator {
-            kind: DesignatorKind::Connector,
-            index: None,
-        },
         size: SizeCode::Custom("PTH, Right Angle".into()),
     })
 }
@@ -103,11 +94,6 @@ pub fn make_amphenol_10056845_header(part_number: &str) -> CircuitNode {
             make_label(-200, 400, "J?", TextJustification::BottomLeft),
             make_label(-200, -400, part_number, TextJustification::TopLeft),
         ],
-        suppliers: vec![],
-        designator: Designator {
-            kind: DesignatorKind::Connector,
-            index: None,
-        },
         size: SizeCode::Custom("PTH, Right Angle".into()),
     })
 }

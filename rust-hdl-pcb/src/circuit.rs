@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use serde::{Deserialize, Serialize};
+
 use crate::bom::{Manufacturer, Supplier};
 use crate::capacitors::{CapacitorKind, CapacitorTolerance};
 use crate::designator::Designator;
@@ -11,7 +13,7 @@ use crate::resistors::{PowerWatt, ResistorKind};
 use crate::schematic_layout::{SchematicOrientation, SchematicRotation};
 use crate::smd::SizeCode;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PartDetails {
     pub label: String,
     pub manufacturer: Manufacturer,
@@ -21,12 +23,10 @@ pub struct PartDetails {
     pub hide_part_outline: bool,
     pub pins: BTreeMap<u64, EPin>,
     pub outline: Vec<Glyph>,
-    pub suppliers: Vec<Supplier>,
-    pub designator: Designator,
     pub size: SizeCode,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Capacitor {
     pub details: PartDetails,
     pub value_pf: f64,
@@ -35,7 +35,7 @@ pub struct Capacitor {
     pub tolerance: CapacitorTolerance,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Resistor {
     pub details: PartDetails,
     pub value_ohms: f64,
@@ -45,7 +45,7 @@ pub struct Resistor {
     pub tempco: Option<f64>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Inductor {
     pub details: PartDetails,
     pub value_microhenry: f64,
@@ -54,14 +54,14 @@ pub struct Inductor {
     pub max_current_milliamps: f64,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Diode {
     pub details: PartDetails,
     pub forward_drop_volts: f64,
     pub kind: DiodeKind,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Regulator {
     pub details: PartDetails,
     pub input_min_voltage: f64,
@@ -70,7 +70,7 @@ pub struct Regulator {
     pub output_max_current_ma: f64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum LogicSignalStandard {
     CMOS3V3,
     TTL,
@@ -79,7 +79,7 @@ pub enum LogicSignalStandard {
     TriState5v0,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum LogicFunction {
     XOR,
     Buffer,
@@ -87,7 +87,7 @@ pub enum LogicFunction {
     Multiplexer,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Logic {
     pub details: PartDetails,
     pub drive_current_ma: f64,
@@ -98,13 +98,13 @@ pub struct Logic {
     pub function: LogicFunction,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PartPin {
     pub part_id: String,
     pub pin: u64,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Net {
     pub pins: Vec<PartPin>,
     pub name: String,
@@ -117,10 +117,7 @@ impl Net {
             name: name.into(),
         }
     }
-    pub fn add(
-        mut self,
-        from_part: &PartInstance,
-        from_index: u64) -> Self {
+    pub fn add(mut self, from_part: &PartInstance, from_index: u64) -> Self {
         let from_pin = PartPin {
             part_id: from_part.id.clone(),
             pin: from_index,
@@ -130,7 +127,7 @@ impl Net {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum CircuitNode {
     Capacitor(Capacitor),
     Resistor(Resistor),
@@ -143,13 +140,13 @@ pub enum CircuitNode {
     Port(PartDetails),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Circuit {
     pub nodes: Vec<PartInstance>,
     pub nets: Vec<Net>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PartInstance {
     pub node: CircuitNode,
     pub id: String,

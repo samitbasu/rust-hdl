@@ -270,11 +270,6 @@ pub fn make_traco_tmr1_regulator(part_number: &str) -> CircuitNode {
                 make_label(-500, 300, "V?", BottomLeft),
                 make_label(-500, -200, part_number, TopLeft),
             ],
-            suppliers: vec![],
-            designator: Designator {
-                kind: DesignatorKind::Resistor,
-                index: None,
-            },
             size: SizeCode::Custom("TMR1-2415".into()),
         },
         input_min_voltage: 18.0,

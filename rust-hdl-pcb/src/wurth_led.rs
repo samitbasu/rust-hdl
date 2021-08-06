@@ -39,11 +39,6 @@ pub fn make_wurth_led(part_number: &str) -> CircuitNode {
                 make_label(-200, 220, "D?", TextJustification::BottomLeft),
                 make_label(-200, -90, part_number, TextJustification::TopLeft),
             ],
-            suppliers: vec![],
-            designator: Designator {
-                kind: DesignatorKind::Diode,
-                index: None,
-            },
             size: SizeCode::I0603,
         },
         forward_drop_volts: 3.2,

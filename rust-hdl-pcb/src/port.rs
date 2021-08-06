@@ -1,7 +1,7 @@
 use crate::bom::Manufacturer;
 use crate::circuit::{CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, EdgeLocation, PinKind, PinLocation};
+use crate::epin::{EdgeLocation, EPin, PinKind, PinLocation};
 use crate::glyph::{Glyph, Point, Rect};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
@@ -40,11 +40,6 @@ pub fn make_port(name: &str, kind: PinKind) -> CircuitNode {
                 y: PORT_HALF_HEIGHT,
             },
         })],
-        suppliers: vec![],
-        designator: Designator {
-            kind: DesignatorKind::Resistor,
-            index: None,
-        },
         size: SizeCode::Virtual,
     })
 }

@@ -3,7 +3,7 @@ use crate::analog_devices::make_lt3092_current_source;
 use crate::avx_caps::make_avx_capacitor;
 use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode};
 use crate::circuit::{
-    instance, Capacitor, CircuitNode, LogicFunction, LogicSignalStandard, PartInstance,
+    Capacitor, CircuitNode, instance, LogicFunction, LogicSignalStandard, PartInstance,
 };
 use crate::connectors::{
     make_amphenol_10056845_header, make_molex_55935_connector, make_sullins_sbh11_header,
@@ -759,6 +759,7 @@ fn test_schematics() {
 
 #[test]
 fn test_composite_circuit() {
+
     /*
     let layout = LayoutEngine::new();
     let in_resistor = make_yageo_series_resistor("RC1206FR-071KL");

@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use crate::epin::EdgeLocation;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Point {
     pub x: i32,
     pub y: i32,
@@ -70,7 +72,7 @@ impl std::ops::Add<Point> for Point {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Rect {
     pub p0: Point,
     pub p1: Point,
@@ -120,7 +122,7 @@ impl Rect {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Line {
     pub p0: Point,
     pub p1: Point,
@@ -141,7 +143,7 @@ impl Line {
     }
 }
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, Serialize, Deserialize)]
 pub enum TextJustification {
     BottomLeft,
     BottomRight,
@@ -174,7 +176,7 @@ impl TextJustification {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Text {
     pub p0: Point,
     pub text: String,
@@ -198,7 +200,7 @@ impl Text {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Circle {
     pub p0: Point,
     pub radius: f64,
@@ -219,7 +221,7 @@ impl Circle {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Arc {
     pub p0: Point,
     pub radius: f64,
@@ -246,7 +248,7 @@ impl Arc {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Glyph {
     OutlineRect(Rect),
     Line(Line),

@@ -1,4 +1,6 @@
-#[derive(Clone, Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Suppliers {
     DigiKey,
     Mouser,
@@ -11,7 +13,7 @@ pub struct Supplier {
     pub url: url::Url,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Manufacturer {
     pub name: String,
     pub part_number: String,

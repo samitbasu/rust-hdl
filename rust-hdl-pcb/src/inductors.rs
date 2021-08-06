@@ -58,11 +58,6 @@ pub fn make_ty_brl_series(part_number: &str) -> CircuitNode {
             hide_part_outline: true,
             pins: pin_list(make_passive_pin_pair()),
             outline,
-            suppliers: vec![],
-            designator: Designator {
-                kind: DesignatorKind::Inductor,
-                index: None,
-            },
             size,
         },
         value_microhenry,

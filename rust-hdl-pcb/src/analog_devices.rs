@@ -1,9 +1,9 @@
 use crate::bom::Manufacturer;
 use crate::circuit::{CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
+use crate::epin::{EPin, PinKind};
 use crate::epin::EdgeLocation;
 use crate::epin::PinLocation;
-use crate::epin::{EPin, PinKind};
 use crate::glyph::{make_ic_body, make_label, TextJustification};
 use crate::pin;
 use crate::smd::SizeCode;
@@ -32,11 +32,6 @@ pub fn make_lt3092_current_source(part_number: &str) -> CircuitNode {
             make_label(-400, 300, "U?", TextJustification::BottomLeft),
             make_label(-400, -200, part_number, TextJustification::TopLeft),
         ],
-        suppliers: vec![],
-        designator: Designator {
-            kind: DesignatorKind::IntegratedCircuit,
-            index: None,
-        },
         size: SizeCode::SOT223,
     })
 }

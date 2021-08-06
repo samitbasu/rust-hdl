@@ -1,12 +1,15 @@
+use std::fmt::{Display, Formatter};
+use std::str::FromStr;
+
+use serde::{Deserialize, Serialize};
+
 use crate::bom::Manufacturer;
 use crate::circuit::{Capacitor, CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::make_passive_pin_pair;
-use crate::glyph::{make_arc, make_ic_body, make_label, make_line, Glyph, TextJustification};
+use crate::glyph::{Glyph, make_arc, make_ic_body, make_label, make_line, TextJustification};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
-use std::fmt::{Display, Formatter};
-use std::str::FromStr;
 
 pub fn map_three_digit_cap_to_uf(uf: &str) -> f64 {
     let uf_tens = &uf[0..1].parse::<f64>().unwrap();
@@ -32,7 +35,7 @@ pub fn map_three_digit_cap_to_pf(pf: &str) -> f64 {
     };
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DielectricCode {
     X5R,
     X7R,
@@ -67,14 +70,14 @@ impl Display for DielectricCode {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum CapacitorKind {
     MultiLayerChip(DielectricCode),
     Tantalum,
     AluminumPolyLowESR(i32),
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum CapacitorTolerance {
     TenthPF,
     QuarterPF,
@@ -171,11 +174,6 @@ pub fn make_unpolarized_capacitor(
             make_label(-200, -80, &line1, TextJustification::TopLeft),
             make_label(-200, -180, &line2, TextJustification::TopLeft),
         ],
-        suppliers: vec![],
-        designator: Designator {
-            kind: DesignatorKind::Capacitor,
-            index: None,
-        },
         size,
     }
 }

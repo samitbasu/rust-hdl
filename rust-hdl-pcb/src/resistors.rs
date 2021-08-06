@@ -6,10 +6,11 @@ use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 use crate::glyph::{make_ic_body, make_label, make_line};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
+use serde::{Deserialize, Serialize};
 
 pub type PowerWatt = num_rational::Rational32;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum ResistorKind {
     ThinFilmChip,
     ThickFilmChip,
@@ -72,11 +73,6 @@ fn make_resistor_details(
             make_label(-110, -40, &line1, TopLeft),
             make_label(-110, -140, &line2, TopLeft),
         ],
-        suppliers: vec![],
-        designator: Designator {
-            kind: DesignatorKind::Resistor,
-            index: None,
-        },
         size,
     }
 }

@@ -44,11 +44,6 @@ pub fn make_ads868x(part_number: &str) -> CircuitNode {
             make_label(-800, 1200, "U?", TextJustification::BottomLeft),
             make_label(-800, -1400, part_number, TextJustification::TopLeft),
         ],
-        suppliers: vec![],
-        designator: Designator {
-            kind: DesignatorKind::IntegratedCircuit,
-            index: None,
-        },
         size: SizeCode::TSSOP(16),
     })
 }

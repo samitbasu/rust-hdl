@@ -3,8 +3,8 @@ use crate::circuit::{CircuitNode, Logic, LogicFunction, LogicSignalStandard, Par
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
 use crate::epin::{EdgeLocation, PinLocation};
-use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 use crate::glyph::{make_arc, make_ic_body, make_label, make_line};
+use crate::glyph::TextJustification::{BottomLeft, TopLeft};
 use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
@@ -34,11 +34,6 @@ pub fn make_sn74lvc1g125se7(part_number: &str) -> CircuitNode {
                 make_label(-400, 400, "U?", BottomLeft),
                 make_label(-400, -400, part_number, TopLeft),
             ],
-            suppliers: vec![],
-            designator: Designator {
-                kind: DesignatorKind::Resistor,
-                index: None,
-            },
             size: SizeCode::SOT353,
         },
         drive_current_ma: 24.0,
@@ -84,11 +79,6 @@ pub fn make_sn74lvc1g86dck(part_number: &str) -> CircuitNode {
                 make_line(-270, -100, -180, -100),
                 make_line(330, 0, 400, 0),
             ],
-            suppliers: vec![],
-            designator: Designator {
-                kind: DesignatorKind::IntegratedCircuit,
-                index: None,
-            },
             size: SizeCode::SC70,
         },
         drive_current_ma: 32.0,
