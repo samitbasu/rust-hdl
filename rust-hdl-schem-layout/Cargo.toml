@@ -8,3 +8,5 @@ edition = "2018"
 [dependencies]
 eframe = "0.13.1"
 epi = "0.13.0"
+rust-hdl-pcb = {path="../rust-hdl-pcb"}
+serde_json = "^1"

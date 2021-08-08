@@ -3,7 +3,7 @@ use crate::analog_devices::make_lt3092_current_source;
 use crate::avx_caps::make_avx_capacitor;
 use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode};
 use crate::circuit::{
-    Capacitor, CircuitNode, instance, LogicFunction, LogicSignalStandard, PartInstance,
+    instance, Capacitor, CircuitNode, LogicFunction, LogicSignalStandard, PartInstance,
 };
 use crate::connectors::{
     make_amphenol_10056845_header, make_molex_55935_connector, make_sullins_sbh11_header,

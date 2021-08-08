@@ -1,7 +1,7 @@
 use crate::bom::Manufacturer;
 use crate::capacitors::{
-    CapacitorKind, CapacitorTolerance, make_polarized_capacitor_outline, map_pf_to_label,
-    map_three_digit_cap_to_pf,
+    make_polarized_capacitor_outline, map_pf_to_label, map_three_digit_cap_to_pf, CapacitorKind,
+    CapacitorTolerance,
 };
 use crate::circuit::{Capacitor, CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};

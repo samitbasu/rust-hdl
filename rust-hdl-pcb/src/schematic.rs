@@ -349,7 +349,7 @@ pub fn make_flip_ud_part(part: &PartDetails) -> PartDetails {
     fpart
 }
 
-fn get_details_from_instance(x: &PartInstance, l: &SchematicLayout) -> PartDetails {
+pub fn get_details_from_instance(x: &PartInstance, l: &SchematicLayout) -> PartDetails {
     let mut part = match &x.node {
         CircuitNode::Capacitor(c) => &c.details,
         CircuitNode::Resistor(r) => &r.details,

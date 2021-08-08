@@ -8,6 +8,15 @@ pub struct Point {
     pub y: i32,
 }
 
+impl Into<Point> for (i32, i32) {
+    fn into(self) -> Point {
+        Point {
+            x: self.0,
+            y: self.1
+        }
+    }
+}
+
 impl Point {
     pub fn fliplr(&self) -> Point {
         Point {

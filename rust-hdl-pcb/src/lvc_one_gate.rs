@@ -3,8 +3,8 @@ use crate::circuit::{CircuitNode, Logic, LogicFunction, LogicSignalStandard, Par
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::{EPin, PinKind};
 use crate::epin::{EdgeLocation, PinLocation};
-use crate::glyph::{make_arc, make_ic_body, make_label, make_line};
 use crate::glyph::TextJustification::{BottomLeft, TopLeft};
+use crate::glyph::{make_arc, make_ic_body, make_label, make_line};
 use crate::pin;
 use crate::smd::SizeCode;
 use crate::utils::pin_list;

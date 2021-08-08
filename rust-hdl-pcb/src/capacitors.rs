@@ -7,7 +7,7 @@ use crate::bom::Manufacturer;
 use crate::circuit::{Capacitor, CircuitNode, PartDetails};
 use crate::designator::{Designator, DesignatorKind};
 use crate::epin::make_passive_pin_pair;
-use crate::glyph::{Glyph, make_arc, make_ic_body, make_label, make_line, TextJustification};
+use crate::glyph::{make_arc, make_ic_body, make_label, make_line, Glyph, TextJustification};
 use crate::smd::SizeCode;
 use crate::utils::pin_list;
 
