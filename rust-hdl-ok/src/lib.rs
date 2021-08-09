@@ -1,6 +1,7 @@
 #![allow(non_camel_case_types)]
 
 pub mod ucf_gen;
+pub mod synth;
 
 use rust_hdl_core::prelude::*;
 use rust_hdl_core::constraint::Timing::Periodic;
