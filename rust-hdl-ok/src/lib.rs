@@ -1,11 +1,11 @@
+#![allow(non_camel_case_types)]
+
 pub mod ucf_gen;
 
 use rust_hdl_core::prelude::*;
 use rust_hdl_core::constraint::Timing::Periodic;
-use rust_hdl_core::logic::logic_connect_fn;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_core::ast::BlackBox;
-use rust_hdl_widgets::prelude::*;
 use crate::ucf_gen::generate_ucf;
 use rust_hdl_widgets::pulser::Pulser;
 use std::time::Duration;
