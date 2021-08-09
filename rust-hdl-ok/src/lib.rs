@@ -85,14 +85,14 @@ impl okHostInterface {
 }
 
 #[derive(Clone, Debug, LogicBlock)]
-pub struct okHost {
+pub struct OpalKellyHost {
     pub hi: okHostInterface,
     pub ok1: Signal<Out, Bits<31>, MHz48>,
     pub ok2: Signal<In, Bits<17>, MHz48>,
     pub ti_clk: Signal<Out, Clock, MHz48>,
 }
 
-impl Logic for okHost {
+impl Logic for OpalKellyHost {
     fn update(&mut self) {
     }
     fn connect(&mut self) {
@@ -108,8 +108,7 @@ impl Logic for okHost {
         Verilog::Blackbox(
             BlackBox {
                 code: r#"
-(* blackbox *)
-module okHost
+module OpalKellyHost
 	(
 	input  wire [7:0]  hi_sig_in,
 	output wire [1:0]  hi_sig_out,
@@ -119,15 +118,24 @@ module okHost
 	output wire [30:0] ok1,
 	input  wire [16:0] ok2
 	);
+
+    (* blackbox *)
+	okHost host(.hi_in(hi_sig_in),
+	            .hi_out(hi_sig_out),
+	            .hi_inout(hi_sig_inout),
+	            .hi_aa(hi_sig_aa),
+	            .ti_clk(ti_clk),
+	            .ok1(ok1),
+	            .ok2(ok2));
 endmodule
            "#.into(),
-                name: "okHost".into()
+                name: "OpalKellyHost".into()
             }
         )
     }
 }
 
-impl Default for okHost {
+impl Default for OpalKellyHost {
     fn default() -> Self {
         let hi = okHostInterface::xem_6010();
         Self {
@@ -142,7 +150,7 @@ impl Default for okHost {
 #[derive(LogicBlock)]
 pub struct OKTest1 {
     pub hi: okHostInterface,
-    pub ok_host: okHost,
+    pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>, Async>,
     pub pulser: Pulser<MHz48>,
 }
@@ -156,7 +164,7 @@ impl OKTest1 {
     pub fn new() -> Self {
         Self {
             hi: okHostInterface::xem_6010(),
-            ok_host: okHost::default(),
+            ok_host: OpalKellyHost::default(),
             led: xem_6010_leds(),
             pulser: Pulser::new(1.0, Duration::from_millis(500))
         }
