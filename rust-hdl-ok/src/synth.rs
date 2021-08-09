@@ -39,7 +39,7 @@ project close
         assets = assets.join(" ")).unwrap();
     let output = Command::new("xtclsh")
         .current_dir(dir.clone())
-        .arg(dir.clone().join("top.tcl"))
+        .arg("top.tcl")
         .output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();

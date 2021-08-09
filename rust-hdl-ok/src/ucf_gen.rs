@@ -49,7 +49,7 @@ impl Probe for UCFGenerator {
                     Constraint::Timing(t) => {
                         let timing = match t {
                             Timing::Periodic(p) => {
-                                format!("{prefix} TNM_NET={net}; TIMESPEC {ts} = PERIOD {net} {period} ns HIGH {duty}%;",
+                                format!("{prefix} TNM_NET={net}; TIMESPEC {ts} = PERIOD {net} {period} ns HIGH {duty}%",
                                     prefix=prefix,
                                     net=p.net,
                                     ts=format!("TS_{}", p.net),
@@ -79,5 +79,5 @@ impl Probe for UCFGenerator {
 pub fn generate_ucf<U: Block>(uut: &U) -> String {
     let mut ucf = UCFGenerator::default();
     uut.accept("top", &mut ucf);
-    ucf.ucf.join(";\n") + "\n"
+    ucf.ucf.join(";\n") + ";\n"
 }
