@@ -22,6 +22,7 @@ pub fn xem_6010_leds() -> Signal<Out, Bits<8>, Async> {
         .enumerate()
     {
         x.add_location(ndx, name);
+        x.add_signal_type(ndx, SignalType::LowVoltageCMOS_3v3);
     }
     x
 }
