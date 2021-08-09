@@ -97,6 +97,11 @@ impl Logic for okHost {
     }
     fn connect(&mut self) {
         self.ok1.connect();
+        self.ok2.connect();
+        self.hi.sig_in.connect();
+        self.hi.sig_out.connect();
+        self.hi.sig_inout.connect();
+        self.hi.sig_aa.connect();
         self.ti_clk.connect();
     }
     fn hdl(&self) -> Verilog {
@@ -178,7 +183,12 @@ impl Logic for OKTest1 {
 #[test]
 fn test_ok_host_synthesizable() {
     let mut uut = OKTest1::new();
+    uut.hi.sig_in.connect();
+    uut.hi.sig_out.connect();
+    uut.hi.sig_inout.connect();
+    uut.hi.sig_aa.connect();
     uut.connect_all();
+    check_connected(&uut);
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
     let ucf = generate_ucf(&uut);
