@@ -3,11 +3,18 @@ use num_bigint::BigUint;
 use std::fmt::{Display, Formatter, LowerHex};
 
 #[derive(Debug, Clone)]
+pub struct BlackBox {
+    pub code: String,
+    pub name: String,
+}
+
+
+#[derive(Debug, Clone)]
 pub enum Verilog {
     Empty,
     Combinatorial(VerilogBlock),
     Custom(String),
-    Blackbox(String),
+    Blackbox(BlackBox),
 }
 
 impl Default for Verilog {
@@ -31,6 +38,7 @@ pub enum VerilogStatement {
     Match(VerilogMatch),
     Loop(VerilogLoop),
     Comment(String),
+    Link(String),
 }
 
 #[derive(Debug, Clone)]

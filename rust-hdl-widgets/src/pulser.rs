@@ -1,6 +1,6 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::shot::Shot;
-use rust_hdl_widgets::strobe::Strobe;
+use crate::strobe::Strobe;
+use crate::shot::Shot;
 use std::time::Duration;
 
 #[derive(LogicBlock)]

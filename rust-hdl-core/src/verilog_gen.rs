@@ -16,6 +16,7 @@ struct LoopVariable {
 pub struct VerilogCodeGenerator {
     io: CodeWriter,
     loops: Vec<LoopVariable>,
+    links: Vec<String>,
 }
 
 impl VerilogCodeGenerator {
@@ -23,6 +24,7 @@ impl VerilogCodeGenerator {
         Self {
             io: CodeWriter::new(),
             loops: vec![],
+            links: vec![],
         }
     }
 
@@ -74,7 +76,17 @@ impl ToString for VerilogCodeGenerator {
 pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
     let mut gen = VerilogCodeGenerator::new();
     gen.visit_block(code);
-    format!("always @(*) {}", gen.to_string())
+    let links = gen.links.iter()
+        .map(|x| x.replace("link!(", "")
+            .replace(")", "")
+            .replace(",", "=")
+            .replace("self.", "")
+            .replace(".", "_")
+        )
+        .map(|x| format!("assign {};", x))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!("always @(*) {}\n{}", gen.to_string(), links)
 }
 
 impl VerilogVisitor for VerilogCodeGenerator {
@@ -155,6 +167,10 @@ impl VerilogVisitor for VerilogCodeGenerator {
 
     fn visit_literal(&mut self, v: &VerilogLiteral) {
         self.io.write(v.to_string());
+    }
+
+    fn visit_link(&mut self, l: &str) {
+        self.links.push(l.into());
     }
 
     fn visit_case(&mut self, c: &VerilogCase) {

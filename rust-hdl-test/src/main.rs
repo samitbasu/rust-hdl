@@ -1,8 +1,9 @@
+use std::fs::File;
+
 use rust_hdl_core::prelude::*;
 use rust_hdl_macros::LogicBlock;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::strobe::Strobe;
-use std::fs::File;
 
 mod alchitry_cu_icepll;
 mod alchitry_cu_pulser;
@@ -13,7 +14,6 @@ mod alchitry_cu_pwm_vec_srom;
 mod base_tests;
 mod fifo;
 mod nested_ports;
-mod pulser;
 mod pwm;
 mod rom;
 mod snore;

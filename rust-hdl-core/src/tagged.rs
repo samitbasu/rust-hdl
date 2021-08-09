@@ -40,6 +40,16 @@ impl<T: Synth, F: Domain> Tagged<T, F> {
     }
 }
 
+impl<F: Domain, const N: usize> Tagged<Bits<N>, F> {
+    pub fn any(self) -> bool {self.0.any()}
+    pub fn all(self) -> bool {self.0.all()}
+}
+
+impl<F: Domain> Tagged<bool, F> {
+    pub fn any(self) -> bool {self.0}
+    pub fn all(self) -> bool {self.0}
+}
+
 impl<T: Synth + BitAnd<bool, Output = T>, F: Domain> BitAnd<bool> for Tagged<T, F> {
     type Output = Tagged<T, F>;
 

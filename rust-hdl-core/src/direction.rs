@@ -13,6 +13,10 @@ pub struct Out {}
 #[derive(Default, Clone, Debug)]
 pub struct Local {}
 
+#[derive(Default, Clone, Debug)]
+pub struct InOut {}
+
+
 impl Direction for In {
     const KIND: AtomKind = AtomKind::InputParameter;
 }
@@ -23,4 +27,8 @@ impl Direction for Out {
 
 impl Direction for Local {
     const KIND: AtomKind = AtomKind::LocalSignal;
+}
+
+impl Direction for InOut {
+    const KIND: AtomKind = AtomKind::InOutParameter;
 }

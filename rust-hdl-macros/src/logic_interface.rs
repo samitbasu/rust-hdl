@@ -3,6 +3,8 @@ use crate::common::{get_connect_all, get_has_changed, get_update_all, TS};
 use quote::quote;
 use syn::Result;
 
+
+
 pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<TS> {
     let fields = get_field_names(input)?;
     let update_all = get_update_all(fields.clone())?;

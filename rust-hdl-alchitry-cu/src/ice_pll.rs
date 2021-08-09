@@ -16,7 +16,7 @@
 //  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
 
-use rust_hdl_core::ast::VerilogLiteral;
+use rust_hdl_core::ast::{VerilogLiteral, BlackBox};
 use rust_hdl_core::prelude::*;
 
 #[derive(Clone, Default, Debug)]
@@ -212,7 +212,8 @@ impl Logic for ICEPLL40Core {
 
     fn hdl(&self) -> Verilog {
         Verilog::Blackbox(
-            r#"
+            BlackBox {
+                code: r#"
 (* blackbox *)
 module SB_PLL40_CORE (
     input   REFERENCECLK,
@@ -243,8 +244,9 @@ parameter ENABLE_ICEGATE = 1'b0;
 parameter TEST_MODE = 1'b0;
 parameter EXTERNAL_DIVIDE_FACTOR = 1;
 endmodule
-            "#
-            .into(),
+            "#.into(),
+                name: "SB_PLL40_CORE".into(),
+            }
         )
     }
 }

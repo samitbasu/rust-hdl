@@ -45,6 +45,7 @@ fn verilog_atom_name(x: &AtomKind) -> &str {
         AtomKind::StubOutputSignal => "wire",
         AtomKind::Constant => "localparam",
         AtomKind::LocalSignal => "wire",
+        AtomKind::InOutParameter => "inout",
     }
 }
 
@@ -113,6 +114,7 @@ impl Probe for ModuleDefines {
         let top_level = self.path.to_string();
         self.path.push(name);
         self.namespace.reset();
+        println!("Add submodule: top_level {} name {} kind {}", top_level, name, &self.path.to_string());
         self.add_submodule(&top_level, name, &self.path.to_string());
         self.add_code(&self.path.to_string(), node.hdl());
     }
@@ -238,18 +240,33 @@ impl ModuleDefines {
                     io.add("\n// Sub module instances");
                     for child in submodules {
                         let entry = self.details.get(&child.kind).unwrap();
-                        if !matches!(entry.code, Verilog::Blackbox(_)) {
-                            let child_args = entry
-                                .atoms
-                                .iter()
-                                .filter(|x| {
-                                    x.kind == AtomKind::InputParameter
-                                        || x.kind == AtomKind::OutputParameter
-                                })
-                                .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
-                                .collect::<Vec<_>>()
-                                .join(",");
-                            io.add(format!("{} {}({});", child.kind, child.name, child_args))
+                        match &entry.code {
+                            Verilog::Blackbox(b) => {
+                                let child_args = entry
+                                    .atoms
+                                    .iter()
+                                    .filter(|x| {
+                                        x.kind == AtomKind::InputParameter
+                                            || x.kind == AtomKind::OutputParameter
+                                    })
+                                    .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
+                                    .collect::<Vec<_>>()
+                                    .join(",");
+                                io.add(format!("{} {}({});", &b.name, child.name, child_args))
+                            }
+                            _ => {
+                                let child_args = entry
+                                    .atoms
+                                    .iter()
+                                    .filter(|x| {
+                                        x.kind == AtomKind::InputParameter
+                                            || x.kind == AtomKind::OutputParameter
+                                    })
+                                    .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
+                                    .collect::<Vec<_>>()
+                                    .join(",");
+                                io.add(format!("{} {}({});", child.kind, child.name, child_args))
+                            }
                         }
                     }
                 }
@@ -273,7 +290,7 @@ impl ModuleDefines {
             .filter(|x| matches!(x.1.code, Verilog::Blackbox(_)))
             .for_each(|k| {
                 if let Verilog::Blackbox(b) = &k.1.code {
-                    io.add(b)
+                    io.add(&b.code)
                 }
             });
         io.to_string()

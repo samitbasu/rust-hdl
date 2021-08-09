@@ -55,6 +55,10 @@ pub trait VerilogVisitor {
         // Terminal
     }
 
+    fn visit_link(&mut self, _c: &str) {
+        // Terminal
+    }
+
     fn visit_case(&mut self, c: &VerilogCase) {
         walk_case(self, c);
     }
@@ -196,6 +200,9 @@ pub fn walk_statement<V: VerilogVisitor + ?Sized>(visitor: &mut V, s: &VerilogSt
         }
         VerilogStatement::Loop(l) => {
             visitor.visit_loop(l);
+        }
+        VerilogStatement::Link(l) => {
+            visitor.visit_link(l);
         }
     }
 }

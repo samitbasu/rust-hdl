@@ -5,7 +5,7 @@ use crate::ast::VerilogLiteral;
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
 use crate::clock::{Clock, Domain};
-use crate::constraint::{Constraint, PinConstraint};
+use crate::constraint::{Constraint, PinConstraint, SignalType};
 use crate::direction::{Direction, In, Out};
 use crate::logic::Logic;
 use crate::probe::Probe;
@@ -44,6 +44,12 @@ impl<D: Direction, T: Synth, F: Domain> Signal<D, T, F> {
         self.constraints.push(PinConstraint {
             index,
             constraint: Constraint::Location(location.to_owned()),
+        });
+    }
+    pub fn add_signal_type(&mut self, index: usize, signal: SignalType) {
+        self.constraints.push(PinConstraint {
+            index,
+            constraint: Constraint::Kind(signal)
         });
     }
 }
