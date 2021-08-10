@@ -5,19 +5,19 @@ use rust_hdl_macros::LogicBlock;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::strobe::Strobe;
 
-mod alchitry_cu_icepll;
-mod alchitry_cu_pulser;
-mod alchitry_cu_pulser_pll;
-mod alchitry_cu_pwm;
-mod alchitry_cu_pwm_vec;
-mod alchitry_cu_pwm_vec_srom;
-mod base_tests;
-mod fifo;
-mod nested_ports;
-mod pwm;
-mod rom;
-mod snore;
-mod sync_rom;
+pub mod alchitry_cu_icepll;
+pub mod alchitry_cu_pulser;
+pub mod alchitry_cu_pulser_pll;
+pub mod alchitry_cu_pwm;
+pub mod alchitry_cu_pwm_vec;
+pub mod alchitry_cu_pwm_vec_srom;
+pub mod base_tests;
+pub mod fifo;
+pub mod nested_ports;
+pub mod pwm;
+pub mod rom;
+pub mod snore;
+pub mod sync_rom;
 
 make_domain!(Mhz1, 1_000_000);
 
@@ -65,8 +65,3 @@ fn test_strobe() {
         .unwrap();
 }
 
-fn main() {
-    let x: Strobe<Mhz1, 16> = rust_hdl_widgets::strobe::Strobe::new(1.0);
-    let y = x.hdl();
-    println!("{:?}", y);
-}
