@@ -120,7 +120,6 @@ module OpalKellyHost
 	input  wire [16:0] ok2
 	);
 
-    (* blackbox *)
 	okHost host(.hi_in(hi_sig_in),
 	            .hi_out(hi_sig_out),
 	            .hi_inout(hi_sig_inout),
@@ -128,6 +127,17 @@ module OpalKellyHost
 	            .ti_clk(ti_clk),
 	            .ok1(ok1),
 	            .ok2(ok2));
+endmodule
+
+(* blackbox *)
+module okHost(
+    input  wire [7:0]  hi_in,
+	output wire [1:0]  hi_out,
+	inout  wire [15:0] hi_inout,
+	inout  wire        hi_aa,
+	output wire        ti_clk,
+	output wire [30:0] ok1,
+	input  wire [16:0] ok2);
 endmodule
            "#.into(),
                 name: "OpalKellyHost".into()
