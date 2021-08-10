@@ -169,3 +169,9 @@ impl<D: Direction, T: Synth, F: Domain> Default for Signal<D, T, F> {
         }
     }
 }
+
+#[macro_export]
+macro_rules! link {
+    ($from: expr, $to: expr) => {
+    }
+}
