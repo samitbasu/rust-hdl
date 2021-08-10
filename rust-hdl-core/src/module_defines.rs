@@ -240,34 +240,25 @@ impl ModuleDefines {
                     io.add("\n// Sub module instances");
                     for child in submodules {
                         let entry = self.details.get(&child.kind).unwrap();
+                        let submodule_kind =
                         match &entry.code {
                             Verilog::Blackbox(b) => {
-                                let child_args = entry
-                                    .atoms
-                                    .iter()
-                                    .filter(|x| {
-                                        x.kind == AtomKind::InputParameter
-                                            || x.kind == AtomKind::OutputParameter
-                                    })
-                                    .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
-                                    .collect::<Vec<_>>()
-                                    .join(",");
-                                io.add(format!("{} {}({});", &b.name, child.name, child_args))
+                                &b.name
                             }
                             _ => {
-                                let child_args = entry
-                                    .atoms
-                                    .iter()
-                                    .filter(|x| {
-                                        x.kind == AtomKind::InputParameter
-                                            || x.kind == AtomKind::OutputParameter
-                                    })
-                                    .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
-                                    .collect::<Vec<_>>()
-                                    .join(",");
-                                io.add(format!("{} {}({});", child.kind, child.name, child_args))
+                                &child.kind
                             }
-                        }
+                        };
+                        let child_args = entry
+                            .atoms
+                            .iter()
+                            .filter(|x| {
+                                x.kind.is_parameter()
+                            })
+                            .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
+                            .collect::<Vec<_>>()
+                            .join(",");
+                        io.add(format!("{} {}({});", submodule_kind, child.name, child_args))
                     }
                 }
                 match &module_details.code {

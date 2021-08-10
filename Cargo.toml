@@ -8,6 +8,7 @@ members = [
     "rust-hdl-synth",
     "rust-hdl-alchitry-cu",
     "rust-hdl-pcb",
+    "rust-hdl-ok-frontpanel-sys",
 #    "rust-hdl-schem-layout",
     "rust-hdl-ok",
 ]

@@ -1,13 +1,12 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
-use rust_hdl_ok::*;
 use std::time::Duration;
 
-const FRONTPANEL_DIR: &str = "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM6010-LX45";
+use rust_hdl_core::prelude::*;
+use rust_hdl_ok::prelude::*;
+use rust_hdl_widgets::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010Blinky {
-    pub hi: okHostInterface,
+    pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>, Async>,
     pub pulser: Pulser<MHz48>,
@@ -16,7 +15,7 @@ pub struct OpalKellyXEM6010Blinky {
 impl OpalKellyXEM6010Blinky {
     pub fn new() -> Self {
         Self {
-            hi: okHostInterface::xem_6010(),
+            hi: OpalKellyHostInterface::xem_6010(),
             ok_host: OpalKellyHost::default(),
             led: xem_6010_leds(),
             pulser: Pulser::new(1.0, Duration::from_millis(500))
@@ -41,23 +40,6 @@ impl Logic for OpalKellyXEM6010Blinky {
     }
 }
 
-#[cfg(test)]
-fn synth_obj<U: Block>(uut: U, dir: &str) {
-    check_connected(&uut);
-    let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
-    let ucf = rust_hdl_ok::ucf_gen::generate_ucf(&uut);
-    println!("{}", ucf);
-    rust_hdl_synth::yosys_validate("vlog", &vlog).unwrap();
-    rust_hdl_ok::synth::generate_bitstream_xem_6010(uut, dir, &[
-        "okLibrary.v",
-        "okCoreHarness.ngc",
-        "okWireIn.ngc",
-        "TFIFO64x8a_64x8b.ngc",
-        "okWireOut.ngc"
-    ], FRONTPANEL_DIR);
-}
-
 #[test]
 fn test_opalkelly_xem_6010_blinky() {
     let mut uut = OpalKellyXEM6010Blinky::new();
@@ -66,5 +48,5 @@ fn test_opalkelly_xem_6010_blinky() {
     uut.hi.sig_inout.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    synth_obj(uut, "opalkelly_xem_6010_blinky");
+    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_blinky");
 }

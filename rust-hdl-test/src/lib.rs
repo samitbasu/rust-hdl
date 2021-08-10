@@ -20,6 +20,8 @@ pub mod snore;
 pub mod sync_rom;
 pub mod opalkelly_xem_6010_blinky;
 pub mod opalkelly_xem_6010_wave;
+pub mod ok_tools;
+pub mod opalkelly_xem_6010_wire;
 
 make_domain!(Mhz1, 1_000_000);
 

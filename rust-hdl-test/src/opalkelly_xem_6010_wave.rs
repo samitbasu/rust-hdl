@@ -1,10 +1,14 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok::{okHostInterface, OpalKellyHost, MHz48, xem_6010_leds};
+use rust_hdl_ok::MHz48;
+use rust_hdl_ok::ok_hi::OpalKellyHostInterface;
+use rust_hdl_ok::ok_host::OpalKellyHost;
+use rust_hdl_ok::pins::xem_6010_leds;
+
 use crate::alchitry_cu_pwm_vec_srom::FaderWithSyncROM;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010Wave {
-    pub hi: okHostInterface,
+    pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>, Async>,
     pub local: Signal<Local, Bits<8>, Async>,
@@ -47,7 +51,7 @@ impl Default for OpalKellyXEM6010Wave {
             FaderWithSyncROM::new(128),
         ];
         Self {
-            hi: okHostInterface::xem_6010(),
+            hi: OpalKellyHostInterface::xem_6010(),
             ok_host: Default::default(),
             local: Signal::default(),
             faders,
@@ -64,5 +68,5 @@ fn test_opalkelly_xem_6010_wave() {
     uut.hi.sig_inout.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    synth_obj(uut, "opalkelly_xem_6010_wave");
+    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_wave");
 }

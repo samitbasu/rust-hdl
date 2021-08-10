@@ -274,7 +274,7 @@ fn hdl_cast(cast: &syn::ExprCast) -> Result<TS> {
 
 fn hdl_call(call: &syn::ExprCall) -> Result<TS> {
     let funcname = quote!(#call).to_string();
-    if funcname.starts_with("bit_cast") {
+    if funcname.starts_with("bit_cast") || funcname.starts_with("tagged_bit_cast") {
         hdl_compute(&call.args[0])
     } else if funcname.starts_with("all_true") {
         let arg = hdl_compute(&call.args[0])?;
@@ -414,7 +414,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                 Box::new(#target))
             }))
         }
-        "val" | "into" | "raw" => {
+        "val" | "into" | "raw" | "to_async" => {
             let receiver = method.receiver.as_ref();
             hdl_compute(receiver)
         }

@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::bits::bit_cast;
 use crate::bits::Bits;
-use crate::clock::{Clock, Domain};
+use crate::clock::{Clock, Domain, Async};
 use crate::prelude::Synth;
 use std::cmp::Ordering;
 use std::ops::{Add, BitAnd, Not, Sub};
@@ -25,6 +25,12 @@ impl<F: Domain, const N: usize> From<u32> for Tagged<Bits<N>, F> {
 impl<F: Domain, const N: usize> From<u8> for Tagged<Bits<N>, F> {
     fn from(x: u8) -> Self {
         Tagged(x.into(), PhantomData)
+    }
+}
+
+impl<F: Domain, const N: usize> Tagged<Bits<N>, F> {
+    pub fn to_async(&self) -> Tagged<Bits<N>, Async> {
+        Tagged(self.0.into(), PhantomData)
     }
 }
 

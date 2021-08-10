@@ -1,5 +1,6 @@
 pub use crate::ast::Verilog;
 pub use crate::ast::VerilogLiteral;
+pub use crate::ast::BlackBox;
 pub use crate::atom::{Atom, AtomKind};
 pub use crate::bits::clog2;
 pub use crate::bits::{Bit, Bits};
@@ -12,6 +13,7 @@ pub use crate::clock::Domain;
 pub use crate::clock::NANOS_PER_FEMTO;
 pub use crate::constant::Constant;
 pub use crate::constraint::{Constraint, PeriodicTiming, PinConstraint, SignalType, Timing};
+pub use crate::constraint::Timing::*;
 pub use crate::direction::{In, Local, Out, InOut};
 pub use crate::logic::Logic;
 pub use crate::make_domain;
