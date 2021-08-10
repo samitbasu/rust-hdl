@@ -114,7 +114,12 @@ impl Probe for ModuleDefines {
         let top_level = self.path.to_string();
         self.path.push(name);
         self.namespace.reset();
-        println!("Add submodule: top_level {} name {} kind {}", top_level, name, &self.path.to_string());
+        println!(
+            "Add submodule: top_level {} name {} kind {}",
+            top_level,
+            name,
+            &self.path.to_string()
+        );
         self.add_submodule(&top_level, name, &self.path.to_string());
         self.add_code(&self.path.to_string(), node.hdl());
     }
@@ -240,25 +245,21 @@ impl ModuleDefines {
                     io.add("\n// Sub module instances");
                     for child in submodules {
                         let entry = self.details.get(&child.kind).unwrap();
-                        let submodule_kind =
-                        match &entry.code {
-                            Verilog::Blackbox(b) => {
-                                &b.name
-                            }
-                            _ => {
-                                &child.kind
-                            }
+                        let submodule_kind = match &entry.code {
+                            Verilog::Blackbox(b) => &b.name,
+                            _ => &child.kind,
                         };
                         let child_args = entry
                             .atoms
                             .iter()
-                            .filter(|x| {
-                                x.kind.is_parameter()
-                            })
+                            .filter(|x| x.kind.is_parameter())
                             .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
                             .collect::<Vec<_>>()
                             .join(",");
-                        io.add(format!("{} {}({});", submodule_kind, child.name, child_args))
+                        io.add(format!(
+                            "{} {}({});",
+                            submodule_kind, child.name, child_args
+                        ))
                     }
                 }
                 match &module_details.code {

@@ -10,13 +10,14 @@ use rust_hdl_widgets::pulser::Pulser;
 
 use crate::ucf_gen::generate_ucf;
 
-pub mod ucf_gen;
-pub mod synth;
 pub mod ok_hi;
-pub mod pins;
 pub mod ok_host;
+pub mod ok_trigger;
 pub mod ok_wire;
+pub mod pins;
 pub mod prelude;
+pub mod synth;
+pub mod ucf_gen;
 
 make_domain!(MHz48, 48_000_000);
 
@@ -29,8 +30,7 @@ pub struct OKTest1 {
 }
 
 macro_rules! link {
-    ($from: expr, $to: expr) => {
-    }
+    ($from: expr, $to: expr) => {};
 }
 
 impl OKTest1 {
@@ -39,7 +39,7 @@ impl OKTest1 {
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: OpalKellyHost::default(),
             led: pins::xem_6010_leds(),
-            pulser: Pulser::new(1.0, Duration::from_millis(500))
+            pulser: Pulser::new(1.0, Duration::from_millis(500)),
         }
     }
 }

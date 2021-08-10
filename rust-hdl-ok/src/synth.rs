@@ -1,9 +1,9 @@
-use rust_hdl_core::prelude::*;
 use crate::ucf_gen::generate_ucf;
-use std::path::PathBuf;
-use std::fs::{remove_dir_all, create_dir, File, copy};
-use std::process::{Command};
+use rust_hdl_core::prelude::*;
+use std::fs::{copy, create_dir, remove_dir_all, File};
 use std::io::Write;
+use std::path::PathBuf;
+use std::process::Command;
 
 fn filter_blackbox_directives(t: &str) -> String {
     let mut in_black_box = false;
@@ -46,8 +46,12 @@ stuff
     assert!(q.contains("stuff"));
 }
 
-
-pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, assets: &[&str], asset_dir: &str) {
+pub fn generate_bitstream_xem_6010<U: Block>(
+    mut uut: U,
+    prefix: &str,
+    assets: &[&str],
+    asset_dir: &str,
+) {
     uut.connect_all();
     check_connected(&uut);
     let verilog_text = filter_blackbox_directives(&generate_verilog(&uut));
@@ -66,7 +70,8 @@ pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, assets: &
         copy(source, dest).unwrap();
     }
     let mut tcl_file = File::create(dir.clone().join("top.tcl")).unwrap();
-    write!(tcl_file,
+    write!(
+        tcl_file,
         "\
 project new top.xise
 project set family Spartan6
@@ -78,11 +83,14 @@ project set top top
 process run \"Generate Programming File\" -force rerun_all
 project close
 ",
-        assets = assets.join(" ")).unwrap();
+        assets = assets.join(" ")
+    )
+    .unwrap();
     let output = Command::new("xtclsh")
         .current_dir(dir.clone())
         .arg("top.tcl")
-        .output().unwrap();
+        .output()
+        .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
     let mut out_file = File::create(dir.clone().join("top.out")).unwrap();

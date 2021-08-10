@@ -1,7 +1,7 @@
-use rust_hdl_widgets::pulser::Pulser;
 use rust_hdl_alchitry_cu::pins::Mhz100;
 use rust_hdl_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_core::prelude::*;
+use rust_hdl_widgets::pulser::Pulser;
 use std::time::Duration;
 
 #[derive(LogicBlock)]

@@ -1,8 +1,8 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok::MHz48;
 use rust_hdl_ok::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok::ok_host::OpalKellyHost;
 use rust_hdl_ok::pins::xem_6010_leds;
+use rust_hdl_ok::MHz48;
 
 use crate::alchitry_cu_pwm_vec_srom::FaderWithSyncROM;
 
@@ -28,7 +28,8 @@ impl Logic for OpalKellyXEM6010Wave {
         }
         self.local.next = 0x00_u8.into();
         for i in 0_usize..8_usize {
-            self.local.next = self.local
+            self.local.next = self
+                .local
                 .val()
                 .raw()
                 .replace_bit(i, !self.faders[i].active.val().raw())

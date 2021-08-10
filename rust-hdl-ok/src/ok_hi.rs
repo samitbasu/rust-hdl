@@ -15,34 +15,31 @@ impl OpalKellyHostInterface {
         let mut hi_in = Signal::default();
         for (ndx, name) in ["Y12", "AB20", "AB7", "AB8", "AA4", "AB4", "Y3", "AB3"]
             .iter()
-            .enumerate() {
+            .enumerate()
+        {
             hi_in.add_location(ndx, name);
             hi_in.add_signal_type(ndx, SignalType::LowVoltageCMOS_3v3);
         }
         hi_in.add_constraint(PinConstraint {
             index: 0,
-            constraint: Constraint::Timing(
-                Periodic(PeriodicTiming {
-                    net: "okHostClk".into(),
-                    period_nanoseconds: 20.83,
-                    duty_cycle: 50.0,
-                })
-            )
+            constraint: Constraint::Timing(Periodic(PeriodicTiming {
+                net: "okHostClk".into(),
+                period_nanoseconds: 20.83,
+                duty_cycle: 50.0,
+            })),
         });
         let mut hi_out = Signal::default();
         for (ndx, name) in ["Y19", "AA8"].iter().enumerate() {
-            hi_out
-                .add_location(ndx, name);
-            hi_out
-                .add_signal_type(ndx, SignalType::LowVoltageCMOS_3v3);
+            hi_out.add_location(ndx, name);
+            hi_out.add_signal_type(ndx, SignalType::LowVoltageCMOS_3v3);
         }
         let mut hi_inout = Signal::default();
         for (ndx, name) in [
             "AB12", "AA12", "Y13", "AB18", "AA18", "V15", "AB2", "AA2", "Y7", "Y4", "W4", "AB6",
             "AA6", "U13", "U14", "AA20",
         ]
-            .iter()
-            .enumerate()
+        .iter()
+        .enumerate()
         {
             hi_inout.add_location(ndx, name);
             hi_inout.add_signal_type(ndx, SignalType::LowVoltageCMOS_3v3);

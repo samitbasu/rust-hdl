@@ -1,8 +1,8 @@
 #![allow(non_snake_case, non_camel_case_types, non_upper_case_globals, unused)]
 
-use std::{thread, time};
 use std::ffi::{CStr, CString};
 use std::num::Wrapping;
+use std::{thread, time};
 
 //use rand::Rng;
 
@@ -20,11 +20,9 @@ pub struct OkError {
 impl OkError {
     pub fn make_result(val: i32) -> Result<(), OkError> {
         if val == ok_ErrorCode_ok_NoError {
-            return Result::Ok(())
+            return Result::Ok(());
         } else {
-            return Result::Err(OkError {
-                code: val
-            })
+            return Result::Err(OkError { code: val });
         }
     }
 }
@@ -39,12 +37,12 @@ impl Drop for OkHandle {
 impl OkHandle {
     pub fn new() -> OkHandle {
         OkHandle {
-            hnd: unsafe { okFrontPanel_Construct() }
+            hnd: unsafe { okFrontPanel_Construct() },
         }
     }
 
     pub fn destruct(&self) {
-        unsafe{okFrontPanel_Destruct(self.hnd)}
+        unsafe { okFrontPanel_Destruct(self.hnd) }
     }
     pub fn open(&self) -> Result<(), OkError> {
         let s = CString::new("").expect("Unable to create C String");
@@ -53,11 +51,13 @@ impl OkHandle {
 
     pub fn open_with_serial(&self, serial: &str) -> Result<(), OkError> {
         let s = CString::new(serial).expect("Unable to create C String");
-        OkError::make_result(unsafe {okFrontPanel_OpenBySerial(self.hnd, s.as_ptr())})
+        OkError::make_result(unsafe { okFrontPanel_OpenBySerial(self.hnd, s.as_ptr()) })
     }
 
     pub fn close(&self) {
-        unsafe { okFrontPanel_Close(self.hnd); }
+        unsafe {
+            okFrontPanel_Close(self.hnd);
+        }
     }
 
     pub fn rust_string(buffer: &[u8]) -> String {
@@ -69,9 +69,12 @@ impl OkHandle {
             }
         }
         ret.push(0_u8);
-        CStr::from_bytes_with_nul(&ret).unwrap().to_str().unwrap().to_string()
+        CStr::from_bytes_with_nul(&ret)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string()
     }
-
 
     pub fn get_board_model(&self) -> String {
         let model = unsafe { okFrontPanel_GetBoardModel(self.hnd) };
@@ -131,9 +134,7 @@ impl OkHandle {
         if ecode == ok_ErrorCode_ok_NoError {
             Ok(val as u16)
         } else {
-            Err(OkError {
-                code: ecode
-            })
+            Err(OkError { code: ecode })
         }
     }
 
@@ -158,7 +159,9 @@ impl OkHandle {
     }
 
     pub fn update_trigger_outs(&self) {
-        unsafe { okFrontPanel_UpdateTriggerOuts(self.hnd); }
+        unsafe {
+            okFrontPanel_UpdateTriggerOuts(self.hnd);
+        }
     }
 
     pub fn is_triggered(&self, addr: i32, mask: i32) -> bool {
@@ -172,69 +175,77 @@ impl OkHandle {
 
     pub fn write_to_pipe_in(&self, addr: i32, data: &[u8]) -> Result<(), OkError> {
         let cnt = unsafe {
-            okFrontPanel_WriteToPipeIn(self.hnd, addr,
-                                       data.len() as _,
-                                       data.as_ptr() as _)
+            okFrontPanel_WriteToPipeIn(self.hnd, addr, data.len() as _, data.as_ptr() as _)
         } as usize;
         if cnt == data.len() {
             Ok(())
         } else {
-            Err(OkError{
-                code: -1,
-            })
+            Err(OkError { code: -1 })
         }
     }
 
-    pub fn write_to_block_pipe_in(&self, addr: i32, blocksize: i32, data: &[u8]) -> Result<(), OkError> {
+    pub fn write_to_block_pipe_in(
+        &self,
+        addr: i32,
+        blocksize: i32,
+        data: &[u8],
+    ) -> Result<(), OkError> {
         let cnt = unsafe {
-            okFrontPanel_WriteToBlockPipeIn(self.hnd, addr,
-                                            blocksize,
-                                            data.len() as _,
-                                            data.as_ptr() as _)
+            okFrontPanel_WriteToBlockPipeIn(
+                self.hnd,
+                addr,
+                blocksize,
+                data.len() as _,
+                data.as_ptr() as _,
+            )
         } as usize;
         if cnt == data.len() {
             Ok(())
         } else {
-            println!("Error: Write of cnt = {} not equal to data len = {}", cnt, data.len());
-            Err(OkError{
-                code: -1,
-            })
+            println!(
+                "Error: Write of cnt = {} not equal to data len = {}",
+                cnt,
+                data.len()
+            );
+            Err(OkError { code: -1 })
         }
     }
 
     pub fn read_from_pipe_out(&self, addr: i32, data: &mut [u8]) -> Result<(), OkError> {
         let cnt = unsafe {
-            okFrontPanel_ReadFromPipeOut(self.hnd, addr,
-                                         data.len() as _,
-                                         data.as_mut_ptr())
+            okFrontPanel_ReadFromPipeOut(self.hnd, addr, data.len() as _, data.as_mut_ptr())
         } as usize;
         if cnt == data.len() {
             Ok(())
         } else {
-            Err(OkError{
-                code: -1,
-            })
+            Err(OkError { code: -1 })
         }
     }
 
-    pub fn read_from_block_pipe_out(&self, addr: i32, blocksize: i32, data: &mut [u8]) -> Result<(), OkError> {
+    pub fn read_from_block_pipe_out(
+        &self,
+        addr: i32,
+        blocksize: i32,
+        data: &mut [u8],
+    ) -> Result<(), OkError> {
         let cnt = unsafe {
-            okFrontPanel_ReadFromBlockPipeOut(self.hnd, addr,
-                                              blocksize,
-                                              data.len() as _,
-                                              data.as_mut_ptr())
+            okFrontPanel_ReadFromBlockPipeOut(
+                self.hnd,
+                addr,
+                blocksize,
+                data.len() as _,
+                data.as_mut_ptr(),
+            )
         } as usize;
         if cnt == data.len() {
             Ok(())
         } else {
-            Err(OkError{
-                code: -1,
-            })
+            Err(OkError { code: -1 })
         }
     }
 
     pub fn reset_fpga(&self) -> Result<(), OkError> {
-        let code = unsafe {okFrontPanel_ResetFPGA(self.hnd)};
+        let code = unsafe { okFrontPanel_ResetFPGA(self.hnd) };
         OkError::make_result(code)
     }
 }

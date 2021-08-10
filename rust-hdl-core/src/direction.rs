@@ -16,7 +16,6 @@ pub struct Local {}
 #[derive(Default, Clone, Debug)]
 pub struct InOut {}
 
-
 impl Direction for In {
     const KIND: AtomKind = AtomKind::InputParameter;
 }

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::ast::VerilogLiteral;
 use crate::bits::{Bit, Bits};
-use crate::clock::{Clock};
+use crate::clock::Clock;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum VCDValue {

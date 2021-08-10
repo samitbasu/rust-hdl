@@ -1,25 +1,24 @@
-use rust_hdl_core::prelude::*;
 use crate::MHz48;
+use rust_hdl_core::prelude::*;
 
 #[derive(Clone, Debug, Default, LogicBlock)]
-pub struct OpalKellyWireOut<const N: u8> {
+pub struct WireOut<const N: u8> {
     pub ok1: Signal<In, Bits<31>, MHz48>,
     pub ok2: Signal<Out, Bits<17>, MHz48>,
     pub datain: Signal<In, Bits<16>, MHz48>,
 }
 
-impl<const N: u8> Logic for OpalKellyWireOut<N> {
-    fn update(&mut self) {
-    }
+impl<const N: u8> Logic for WireOut<N> {
+    fn update(&mut self) {}
     fn connect(&mut self) {
-        assert!(N>=0x20 && N<0x40);
+        assert!(N >= 0x20 && N < 0x40);
         self.ok2.connect();
     }
     fn hdl(&self) -> Verilog {
-        let name = format!("OpalKellyWireOut_{:x}", N);
-        Verilog::Blackbox(BlackBox
-        {
-            code: format!(r#"
+        let name = format!("WireOut_{:x}", N);
+        Verilog::Blackbox(BlackBox {
+            code: format!(
+                r#"
 module {}
     (
     input wire [30:0] ok1,
@@ -40,30 +39,32 @@ module okWireOut(
     input wire [7:0] ep_addr,
     input wire [15:0] ep_datain
 );
-endmodule  "#, name, VerilogLiteral::from(N)),
+endmodule  "#,
+                name,
+                VerilogLiteral::from(N)
+            ),
             name,
         })
     }
 }
 
 #[derive(Clone, Debug, Default, LogicBlock)]
-pub struct OpalKellyWireIn<const N: u8> {
+pub struct WireIn<const N: u8> {
     pub ok1: Signal<In, Bits<31>, MHz48>,
     pub dataout: Signal<Out, Bits<16>, MHz48>,
 }
 
-impl<const N: u8> Logic for OpalKellyWireIn<N> {
-    fn update(&mut self) {
-    }
+impl<const N: u8> Logic for WireIn<N> {
+    fn update(&mut self) {}
     fn connect(&mut self) {
-        assert!(N<0x20);
+        assert!(N < 0x20);
         self.dataout.connect();
     }
     fn hdl(&self) -> Verilog {
-        let name = format!("OpalKellyWireIn_{:x}", N);
-        Verilog::Blackbox(
-            BlackBox {
-                code: format!(r#"
+        let name = format!("WireIn_{:x}", N);
+        Verilog::Blackbox(BlackBox {
+            code: format!(
+                r#"
 module {}
     (
     input wire [30:0] ok1,
@@ -81,9 +82,11 @@ module okWireIn(
     input wire [7:0] ep_addr,
     output wire [15:0] ep_dataout
 );
-endmodule  "#, name, VerilogLiteral::from(N)),
+endmodule  "#,
                 name,
-            }
-        )
+                VerilogLiteral::from(N)
+            ),
+            name,
+        })
     }
 }

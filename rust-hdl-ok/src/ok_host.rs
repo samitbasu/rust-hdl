@@ -1,7 +1,7 @@
 use rust_hdl_core::prelude::*;
 
-use crate::MHz48;
 use crate::ok_hi::OpalKellyHostInterface;
+use crate::MHz48;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct OpalKellyHost {
@@ -12,8 +12,7 @@ pub struct OpalKellyHost {
 }
 
 impl Logic for OpalKellyHost {
-    fn update(&mut self) {
-    }
+    fn update(&mut self) {}
     fn connect(&mut self) {
         self.ok1.connect();
         self.ok2.connect();
@@ -24,9 +23,8 @@ impl Logic for OpalKellyHost {
         self.ti_clk.connect();
     }
     fn hdl(&self) -> Verilog {
-        Verilog::Blackbox(
-            BlackBox {
-                code: r#"
+        Verilog::Blackbox(BlackBox {
+            code: r#"
 module OpalKellyHost
 	(
 	input  wire [7:0]  hi_sig_in,
@@ -57,10 +55,10 @@ module okHost(
 	output wire [30:0] ok1,
 	input  wire [16:0] ok2);
 endmodule
-           "#.into(),
-                name: "OpalKellyHost".into()
-            }
-        )
+           "#
+            .into(),
+            name: "OpalKellyHost".into(),
+        })
     }
 }
 

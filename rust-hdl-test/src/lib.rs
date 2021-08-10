@@ -14,14 +14,14 @@ pub mod alchitry_cu_pwm_vec_srom;
 pub mod base_tests;
 pub mod fifo;
 pub mod nested_ports;
+pub mod ok_tools;
+pub mod opalkelly_xem_6010_blinky;
+pub mod opalkelly_xem_6010_wave;
+pub mod opalkelly_xem_6010_wire;
 pub mod pwm;
 pub mod rom;
 pub mod snore;
 pub mod sync_rom;
-pub mod opalkelly_xem_6010_blinky;
-pub mod opalkelly_xem_6010_wave;
-pub mod ok_tools;
-pub mod opalkelly_xem_6010_wire;
 
 make_domain!(Mhz1, 1_000_000);
 
@@ -68,4 +68,3 @@ fn test_strobe() {
     sim.run_traced(uut, 100_000, File::create("strobe.vcd").unwrap())
         .unwrap();
 }
-

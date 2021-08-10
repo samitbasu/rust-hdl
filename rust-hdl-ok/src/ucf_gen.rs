@@ -39,9 +39,15 @@ impl Probe for UCFGenerator {
                             SignalType::LowVoltageCMOS_1v8 => "LVCMOS18",
                             SignalType::LowVoltageCMOS_3v3 => "LVCMOS33",
                             SignalType::StubSeriesTerminatedLogic_II => "SSTL18_II",
-                            SignalType::DifferentialStubSeriesTerminatedLogic_II => "DIFF_SSTL18_II",
-                            SignalType::StubSeriesTerminatedLogic_II_No_Termination => "SSTL18_II | IN_TERM=NONE",
-                            SignalType::DifferentialStubSeriesTerminatedLogic_II_No_Termination => "DIFF_SSTL18_II | IN_TERM=NONE",
+                            SignalType::DifferentialStubSeriesTerminatedLogic_II => {
+                                "DIFF_SSTL18_II"
+                            }
+                            SignalType::StubSeriesTerminatedLogic_II_No_Termination => {
+                                "SSTL18_II | IN_TERM=NONE"
+                            }
+                            SignalType::DifferentialStubSeriesTerminatedLogic_II_No_Termination => {
+                                "DIFF_SSTL18_II | IN_TERM=NONE"
+                            }
                             SignalType::Custom(c) => c,
                         };
                         self.ucf.push(format!("{} IOSTANDARD={}", prefix, name))
@@ -56,9 +62,7 @@ impl Probe for UCFGenerator {
                                     period = p.period_nanoseconds,
                                     duty = p.duty_cycle)
                             }
-                            Timing::Custom(c) => {
-                                c.to_string()
-                            }
+                            Timing::Custom(c) => c.to_string(),
                         };
                         self.ucf.push(timing);
                     }
@@ -74,7 +78,6 @@ impl Probe for UCFGenerator {
         self.path.pop();
     }
 }
-
 
 pub fn generate_ucf<U: Block>(uut: &U) -> String {
     let mut ucf = UCFGenerator::default();

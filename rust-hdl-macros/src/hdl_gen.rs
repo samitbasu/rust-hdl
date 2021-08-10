@@ -407,6 +407,12 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                rust_hdl_core::ast::VerilogExpression::IndexReplace(Box::new(#receiver), Box::new(#index), Box::new(#value))
             }))
         }
+        "all" => {
+            let target = hdl_compute(method.receiver.as_ref())?;
+            Ok(quote!({
+                rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::All, Box::new(#target))
+            }))
+        }
         "any" => {
             let target = hdl_compute(method.receiver.as_ref())?;
             Ok(quote!({
@@ -479,11 +485,9 @@ fn hdl_macro(x: &syn::ExprMacro) -> Result<TS> {
                 quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())),
             )
         }
-        "link" => {
-            Ok(
-                quote!(rust_hdl_core::ast::VerilogStatement::Link(#invocation_as_string.to_string().replace(" ", ""))),
-            )
-        }
+        "link" => Ok(
+            quote!(rust_hdl_core::ast::VerilogStatement::Link(#invocation_as_string.to_string().replace(" ", ""))),
+        ),
         _ => Err(syn::Error::new(
             x.span(),
             "Unsupported macro invocation in HDL",

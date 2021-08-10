@@ -49,7 +49,7 @@ impl<D: Direction, T: Synth, F: Domain> Signal<D, T, F> {
     pub fn add_signal_type(&mut self, index: usize, signal: SignalType) {
         self.constraints.push(PinConstraint {
             index,
-            constraint: Constraint::Kind(signal)
+            constraint: Constraint::Kind(signal),
         });
     }
 }
@@ -172,6 +172,5 @@ impl<D: Direction, T: Synth, F: Domain> Default for Signal<D, T, F> {
 
 #[macro_export]
 macro_rules! link {
-    ($from: expr, $to: expr) => {
-    }
+    ($from: expr, $to: expr) => {};
 }

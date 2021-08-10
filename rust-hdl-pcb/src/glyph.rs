@@ -12,7 +12,7 @@ impl Into<Point> for (i32, i32) {
     fn into(self) -> Point {
         Point {
             x: self.0,
-            y: self.1
+            y: self.1,
         }
     }
 }

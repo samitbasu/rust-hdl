@@ -8,7 +8,6 @@ pub struct BlackBox {
     pub name: String,
 }
 
-
 #[derive(Debug, Clone)]
 pub enum Verilog {
     Empty,

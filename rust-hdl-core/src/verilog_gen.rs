@@ -76,13 +76,16 @@ impl ToString for VerilogCodeGenerator {
 pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
     let mut gen = VerilogCodeGenerator::new();
     gen.visit_block(code);
-    let links = gen.links.iter()
-        .map(|x| x.replace("link!(", "")
-            .replace(")", "")
-            .replace(",", "=")
-            .replace("self.", "")
-            .replace(".", "_")
-        )
+    let links = gen
+        .links
+        .iter()
+        .map(|x| {
+            x.replace("link!(", "")
+                .replace(")", "")
+                .replace(",", "=")
+                .replace("self.", "")
+                .replace(".", "_")
+        })
         .map(|x| format!("assign {};", x))
         .collect::<Vec<_>>()
         .join("\n");
