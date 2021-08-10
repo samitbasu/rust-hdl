@@ -44,7 +44,7 @@ fn verilog_atom_name(x: &AtomKind) -> &str {
         AtomKind::StubInputSignal => "reg",
         AtomKind::StubOutputSignal => "wire",
         AtomKind::Constant => "localparam",
-        AtomKind::LocalSignal => "wire",
+        AtomKind::LocalSignal => "reg",
         AtomKind::InOutParameter => "inout",
     }
 }
