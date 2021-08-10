@@ -5,7 +5,7 @@ use crate::bits::Bits;
 use crate::clock::{Clock, Domain, Async};
 use crate::prelude::Synth;
 use std::cmp::Ordering;
-use std::ops::{Add, BitAnd, Not, Sub};
+use std::ops::{Add, BitAnd, Not, Sub, BitOr};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub struct Tagged<T: Synth, F: Domain>(pub T, pub PhantomData<F>);
@@ -71,6 +71,13 @@ impl<T: Synth + BitAnd<T, Output = T>, F: Domain> BitAnd<Tagged<T, F>> for Tagge
         Tagged(self.0 & rhs.0, PhantomData)
     }
 }
+
+impl<T: Synth + BitOr<T, Output = T>, F: Domain> BitOr<Tagged<T, F>> for Tagged<T, F> {
+    type Output = Tagged<T, F>;
+
+    fn bitor(self, rhs: Tagged<T, F>) -> Self::Output { Tagged(self.0 | rhs.0, PhantomData) }
+}
+
 
 impl<F: Domain, const N: usize> Add<Tagged<bool, F>> for Tagged<Bits<N>, F> {
     type Output = Tagged<Bits<N>, F>;
