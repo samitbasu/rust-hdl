@@ -32,4 +32,7 @@ pub use crate::tagged::Tagged;
 pub use crate::vcd_probe::{write_vcd_change, write_vcd_dump, write_vcd_header};
 pub use crate::verilog_gen::VerilogCodeGenerator;
 pub use crate::verilog_visitor::VerilogVisitor;
+pub use crate::wait_clock_cycle;
+pub use crate::wait_clock_false;
+pub use crate::wait_clock_true;
 pub use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface};

@@ -234,6 +234,9 @@ impl<T> Sim<T> {
             circuit: x,
         })?;
         let t = self.from_sim.recv()?;
+        if let TriggerType::Time(t0) = t.kind {
+            self.time = t0;
+        }
         Ok(t.circuit)
     }
     pub fn clock(&mut self, delta: u64, x: T) -> Result<T> {
@@ -268,4 +271,31 @@ impl<T> Sim<T> {
     pub fn time(&self) -> u64 {
         self.time
     }
+}
+
+#[macro_export]
+macro_rules! wait_clock_true {
+    ($sim: ident, $clock: ident, $me: expr) => {
+        $me = $sim.watch(|x| x.$clock.val().raw().0, $me)?
+    };
+}
+
+#[macro_export]
+macro_rules! wait_clock_false {
+    ($sim: ident, $clock: ident, $me: expr) => {
+        $me = $sim.watch(|x| !x.$clock.val().raw().0, $me)?
+    };
+}
+
+#[macro_export]
+macro_rules! wait_clock_cycle {
+    ($sim: ident, $clock: ident, $me: expr) => {
+        if $me.$clock.val().raw().0 {
+            wait_clock_false!($sim, $clock, $me);
+            wait_clock_true!($sim, $clock, $me);
+        } else {
+            wait_clock_true!($sim, $clock, $me);
+            wait_clock_false!($sim, $clock, $me);
+        }
+    };
 }

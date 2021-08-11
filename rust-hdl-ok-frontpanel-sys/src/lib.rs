@@ -249,3 +249,11 @@ impl OkHandle {
         OkError::make_result(code)
     }
 }
+
+pub fn make_u16_buffer(data: &[u8]) -> Vec<u16> {
+    let mut ret = vec![];
+    for i in (0..data.len()).step_by(2) {
+        ret.push(((data[i] as u16) | ((data[i + 1] as u16) << 8)) as u16);
+    }
+    ret
+}

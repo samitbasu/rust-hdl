@@ -12,6 +12,7 @@ use crate::ucf_gen::generate_ucf;
 
 pub mod ok_hi;
 pub mod ok_host;
+pub mod ok_pipe;
 pub mod ok_trigger;
 pub mod ok_wire;
 pub mod pins;

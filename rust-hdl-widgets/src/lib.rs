@@ -2,6 +2,7 @@ pub mod dff;
 pub mod prelude;
 pub mod pulser;
 pub mod pwm;
+pub mod ram;
 pub mod rom;
 pub mod shot;
 pub mod strobe;

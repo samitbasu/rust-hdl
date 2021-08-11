@@ -23,6 +23,8 @@ pub fn synth_obj<U: Block>(uut: U, dir: &str) {
             "okWireOut.ngc",
             "okTriggerIn.ngc",
             "okTriggerOut.ngc",
+            "okPipeIn.ngc",
+            "okPipeOut.ngc",
         ],
         FRONTPANEL_DIR,
     );
