@@ -47,3 +47,49 @@ endmodule
         })
     }
 }
+
+#[derive(Clone, Debug, Default, LogicBlock)]
+pub struct PipeOut<const N: u8> {
+    pub ok1: Signal<In, Bits<31>, MHz48>,
+    pub ok2: Signal<Out, Bits<17>, MHz48>,
+    pub read: Signal<Out, Bit, MHz48>,
+    pub datain: Signal<In, Bits<16>, MHz48>,
+}
+
+impl<const N: u8> Logic for PipeOut<N> {
+    fn update(&mut self) {}
+    fn connect(&mut self) {
+        assert!(N >= 0xA0 && N < 0xC0);
+        self.ok2.connect();
+        self.read.connect();
+    }
+    fn hdl(&self) -> Verilog {
+        let name = format!("PipeOut_{:x}", N);
+        Verilog::Blackbox(BlackBox {
+            code: format!(
+                r#"
+module {}
+    (input wire [30:0]  ok1,
+     output wire [16:0] ok2,
+     output wire        read,
+     input wire [15:0] datain);
+
+     okPipeOut mod(.ok1(ok1), .ok2(ok2), .ep_read(read), .ep_datain(datain), .ep_addr({:x}));
+endmodule
+
+(* blackbox *)
+module okPipeOut(ok1, ok2, ep_addr, ep_read, ep_datain);
+	input  [30:0] ok1;
+	output [16:0] ok2;
+	input  [7:0]  ep_addr;
+	output        ep_read;
+	input  [15:0] ep_datain;
+endmodule
+                "#,
+                name,
+                VerilogLiteral::from(N)
+            ),
+            name,
+        })
+    }
+}

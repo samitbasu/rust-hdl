@@ -1,9 +1,10 @@
 use crate::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok::ok_pipe::PipeIn;
+use rust_hdl_ok::ok_pipe::{PipeIn, PipeOut};
 use rust_hdl_ok::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
 use rust_hdl_widgets::prelude::*;
+use rust_hdl_widgets::ram::RAM;
 use std::num::Wrapping;
 
 #[derive(LogicBlock)]
@@ -85,5 +86,88 @@ fn test_opalkelly_xem_6010_pipe_in_runtime() -> Result<(), OkError> {
     let fpga_sum = hnd.get_wire_out(0x20);
     println!("CPU sum {:x}, FPGA sum {:x}", cpu_sum, fpga_sum);
     assert_eq!(cpu_sum, fpga_sum);
+    Ok(())
+}
+
+#[derive(LogicBlock)]
+pub struct OpalKellyXEM6010PipeRAMTest {
+    pub hi: OpalKellyHostInterface,
+    pub ok_host: OpalKellyHost,
+    pub ram: RAM<Bits<8>, Bits<16>, MHz48, MHz48>,
+    pub i_pipe: PipeIn<0x80>,
+    pub o_pipe: PipeOut<0xA0>,
+    pub read_address: DFF<Bits<8>, MHz48>,
+    pub write_address: DFF<Bits<8>, MHz48>,
+}
+
+impl OpalKellyXEM6010PipeRAMTest {
+    fn new() -> Self {
+        Self {
+            hi: OpalKellyHostInterface::xem_6010(),
+            ok_host: Default::default(),
+            ram: RAM::new(Default::default()),
+            i_pipe: Default::default(),
+            o_pipe: Default::default(),
+            read_address: Default::default(),
+            write_address: Default::default(),
+        }
+    }
+}
+
+impl Logic for OpalKellyXEM6010PipeRAMTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        // Interface connections
+        self.ok_host.hi.sig_in.next = self.hi.sig_in.val();
+        self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
+        link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
+        link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+
+        // Clock connections
+        self.read_address.clk.next = self.ok_host.ti_clk.val();
+        self.write_address.clk.next = self.ok_host.ti_clk.val();
+        self.ram.read_clock.next = self.ok_host.ti_clk.val();
+        self.ram.write_clock.next = self.ok_host.ti_clk.val();
+
+        // Bus connections
+        self.i_pipe.ok1.next = self.ok_host.ok1.val();
+        self.o_pipe.ok1.next = self.ok_host.ok1.val();
+        self.ok_host.ok2.next = self.i_pipe.ok2.val() | self.o_pipe.ok2.val();
+
+        // Data connections
+        self.ram.read_address.next = self.read_address.q.val();
+        self.ram.write_address.next = self.write_address.q.val();
+        self.o_pipe.datain.next = self.ram.read_data.val();
+        self.ram.write_data.next = self.i_pipe.dataout.val();
+        self.ram.write_enable.next = self.i_pipe.write.val();
+
+        // Advance the address counters
+        self.write_address.d.next = self.write_address.q.val() + self.i_pipe.write.val();
+        self.read_address.d.next = self.read_address.q.val() + self.o_pipe.read.val();
+    }
+}
+
+#[test]
+fn test_opalkelly_xem_6010_pipe_ram() {
+    let mut uut = OpalKellyXEM6010PipeRAMTest::new();
+    uut.hi.sig_inout.connect();
+    uut.hi.sig_in.connect();
+    uut.hi.sig_out.connect();
+    uut.hi.sig_aa.connect();
+    uut.connect_all();
+    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_pipe_ram");
+}
+
+#[test]
+fn test_opalkelly_xem_6010_pipe_ram_runtime() -> Result<(), OkError> {
+    let hnd = ok_test_prelude("opalkelly_xem_6010_pipe_ram/top.bit")?;
+    let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
+    hnd.write_to_pipe_in(0x80, &data)?;
+    let mut out = vec![0_u8; 512];
+    hnd.read_from_pipe_out(0xa0, &mut out)?;
+    assert_eq!(data, out);
+    let mut out2 = vec![0_u8; 512];
+    hnd.read_from_pipe_out(0xa0, &mut out2)?;
+    assert_eq!(data, out2);
     Ok(())
 }
