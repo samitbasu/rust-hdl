@@ -1,5 +1,8 @@
 use crate::MHz48;
 use rust_hdl_core::prelude::*;
+use crate::top_wrap;
+use rust_hdl_synth::yosys_validate;
+
 
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct TriggerOut<D: Domain, const N: u8> {
@@ -52,6 +55,17 @@ endmodule  "#,
     }
 }
 
+#[test]
+fn test_trigger_out() {
+    top_wrap!(TriggerOut<MHz48, 0x60>, Wrapper);
+    let mut uut: Wrapper = Default::default();
+    uut.uut.ok1.connect();
+    uut.uut.clk.connect();
+    uut.uut.trigger.connect();
+    yosys_validate("trigout", &generate_verilog(&uut)).unwrap();
+}
+
+
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct TriggerIn<D: Domain, const N: u8> {
     pub ok1: Signal<In, Bits<31>, MHz48>,
@@ -97,4 +111,13 @@ endmodule  "#,
             name,
         })
     }
+}
+
+#[test]
+fn test_trigger_in() {
+    top_wrap!(TriggerIn<MHz48, 0x40>, Wrapper);
+    let mut uut: Wrapper = Default::default();
+    uut.uut.ok1.connect();
+    uut.uut.clk.connect();
+    yosys_validate("trigin", &generate_verilog(&uut)).unwrap();
 }

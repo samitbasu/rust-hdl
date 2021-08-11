@@ -5,3 +5,4 @@ pub use crate::pins::*;
 pub use crate::synth::*;
 pub use crate::ucf_gen::*;
 pub use crate::MHz48;
+pub use crate::top_wrap;

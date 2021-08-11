@@ -100,3 +100,16 @@ project close
     assert!(stdout.contains(r#"Process "Generate Programming File" completed successfully"#));
     assert!(stdout.contains(r#"All constraints were met."#));
 }
+
+#[macro_export]
+macro_rules! top_wrap {
+    ($kind: ty, $name: ident) => {
+        #[derive(LogicBlock, Default)]
+        struct $name {
+            uut: $kind
+        }
+        impl Logic for $name {
+            fn update(&mut self) {}
+        }
+    }
+}

@@ -1,5 +1,7 @@
 use crate::MHz48;
 use rust_hdl_core::prelude::*;
+use crate::top_wrap;
+use rust_hdl_synth::yosys_validate;
 
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct WireOut<const N: u8> {
@@ -48,6 +50,15 @@ endmodule  "#,
     }
 }
 
+#[test]
+fn test_wire_out_synth() {
+    top_wrap!(WireOut<0x20>, Wrapper);
+    let mut uut : Wrapper = Default::default();
+    uut.uut.ok1.connect();
+    uut.uut.datain.connect();
+    yosys_validate("wire_out", &generate_verilog(&uut)).unwrap();
+}
+
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct WireIn<const N: u8> {
     pub ok1: Signal<In, Bits<31>, MHz48>,
@@ -89,4 +100,12 @@ endmodule  "#,
             name,
         })
     }
+}
+
+#[test]
+fn test_wire_in_synth() {
+    top_wrap!(WireIn<0x02>, Wrapper);
+    let mut uut : Wrapper = Default::default();
+    uut.uut.ok1.connect();
+    yosys_validate("wire_in", &generate_verilog(&uut)).unwrap();
 }
