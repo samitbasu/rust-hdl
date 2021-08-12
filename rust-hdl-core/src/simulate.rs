@@ -20,6 +20,8 @@ pub fn simulate<B: Block>(uut: &mut B, max_iters: usize) -> bool {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SimError {
     SimTerminated,
+    MaxTimeReached,
+    SimHalted,
 }
 
 impl From<RecvError> for SimError {
@@ -41,6 +43,7 @@ enum TriggerType<T> {
     Time(u64),
     Function(Box<dyn Fn(&T) -> bool + Send>),
     Clock(u64),
+    Halt,
 }
 
 struct Message<T> {
@@ -72,6 +75,7 @@ struct NextTime {
     time: u64,
     idx: usize,
     clocks_only: bool,
+    halted: bool,
 }
 
 impl<T: Send + 'static + Block> Simulation<T> {
@@ -143,6 +147,14 @@ impl<T: Send + 'static + Block> Simulation<T> {
         let mut only_clock_waiters = true;
         for worker in self.workers.iter() {
             match &worker.kind {
+                TriggerType::Halt => {
+                    return NextTime {
+                        halted: true,
+                        time: !0,
+                        idx: !0,
+                        clocks_only: false,
+                    }
+                }
                 TriggerType::Never => {}
                 TriggerType::Time(t) => {
                     only_clock_waiters = false;
@@ -171,6 +183,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
             time: min_time,
             idx: min_idx,
             clocks_only: only_clock_waiters,
+            halted: false,
         }
     }
     fn terminate(&mut self) {
@@ -195,6 +208,9 @@ impl<T: Send + 'static + Block> Simulation<T> {
             x = self.dispatch(next.idx, x)?;
         }
         self.terminate();
+        if self.time >= max_time {
+            return Err(SimError::MaxTimeReached);
+        }
         Ok(())
     }
     pub fn run_traced<W: Write>(&mut self, mut x: T, max_time: u64, trace: W) -> Result<()> {
@@ -205,10 +221,12 @@ impl<T: Send + 'static + Block> Simulation<T> {
             x = self.dispatch(id, x)?;
         }
         vcd = write_vcd_dump(vcd, &x);
+        let mut halted = false;
         // Next run until we have no one else waiting
         while self.time < max_time {
             let next = self.scan_workers(&x);
-            if next.time == !0 || next.clocks_only {
+            if next.time == !0 || next.clocks_only || next.halted {
+                halted = next.halted;
                 break;
             }
             self.time = next.time;
@@ -217,6 +235,12 @@ impl<T: Send + 'static + Block> Simulation<T> {
             vcd = write_vcd_change(vcd, &x);
         }
         self.terminate();
+        if self.time >= max_time {
+            return Err(SimError::MaxTimeReached);
+        }
+        if halted {
+            return Err(SimError::SimHalted);
+        }
         Ok(())
     }
 }
@@ -267,6 +291,13 @@ impl<T> Sim<T> {
             circuit: x,
         })?;
         Ok(())
+    }
+    pub fn halt(&self, x: T) -> Result<()> {
+        self.to_sim.send(Message {
+            kind: TriggerType::Halt,
+            circuit: x,
+        })?;
+        Err(SimError::SimHalted)
     }
     pub fn time(&self) -> u64 {
         self.time

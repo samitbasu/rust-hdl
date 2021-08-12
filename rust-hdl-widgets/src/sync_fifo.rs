@@ -20,20 +20,22 @@ pub struct SyncFIFO<D: Synth, T: Domain, const N: usize, const BlockSize: u32> {
     pub full: Signal<Out, Bit, T>,
     pub almost_full: Signal<Out, Bit, T>,
     pub overflow: Signal<Out, Bit, T>,
+    // Internal RAM and address registers
     ram: RAM<Bits<N>, D, T, T>,
     write_address: DFF<Bits<N>, T>,
     write_address_delayed: DFF<Bits<N>, T>,
     read_address: DFF<Bits<N>, T>,
-    //
+    // Constant sizes
     fifo_size: Constant<Bits<32>>,
     block_size: Constant<Bits<32>>,
-    //
+    // Local signals (temps)
     write_ptr: Signal<Local, Bits<32>, T>,
     read_ptr: Signal<Local, Bits<32>, T>,
     fill_level: Signal<Local, Bits<32>, T>,
     free_space: Signal<Local, Bits<32>, T>,
     write_ready: Signal<Local, Bit, T>,
     read_ready: Signal<Local, Bit, T>,
+    // Error flags are latching...
     dff_overflow: DFF<Bit, T>,
     dff_underflow: DFF<Bit, T>,
 }

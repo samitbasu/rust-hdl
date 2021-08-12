@@ -20,6 +20,39 @@ impl Logic for SyncFIFOTest {
 }
 
 #[test]
+fn test_fifo_can_be_filled() {
+    let mut uut = SyncFIFOTest::default();
+    uut.clock.connect();
+    uut.fifo.read.connect();
+    uut.fifo.data_in.connect();
+    uut.fifo.write.connect();
+    uut.connect_all();
+    yosys_validate("fifo", &generate_verilog(&uut)).unwrap();
+    let mut sim = Simulation::new();
+    let rdata = (0..16)
+        .map(|_| Bits::<16>::from(rand::random::<u16>()))
+        .collect::<Vec<_>>();
+    sim.add_clock(5, |x: &mut SyncFIFOTest| x.clock.next = !x.clock.val());
+    sim.add_testbench(move |mut sim: Sim<SyncFIFOTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for sample in &rdata {
+            x.fifo.data_in.next = (*sample).into();
+            x.fifo.write.next = true.into();
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo.write.next = false.into();
+        }
+        if x.fifo.overflow.val().raw() {
+            return sim.halt(x);
+        }
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.run_traced(uut, 10_000, std::fs::File::create("fifo_fill.vcd").unwrap())
+        .unwrap();
+}
+
+#[test]
 fn test_fifo_works() {
     let mut uut = SyncFIFOTest::default();
     uut.clock.connect();
