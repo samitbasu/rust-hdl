@@ -4,6 +4,7 @@ use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
 use crate::code_writer::CodeWriter;
 use crate::named_path::NamedPath;
+use crate::prelude::check_connected;
 use crate::probe::Probe;
 use crate::verilog_gen::verilog_combinatorial;
 use std::collections::BTreeMap;
@@ -291,6 +292,7 @@ impl ModuleDefines {
 
 pub fn generate_verilog<U: Block>(uut: &U) -> String {
     let mut defines = ModuleDefines::default();
+    check_connected(uut);
     uut.accept("top", &mut defines);
     defines.defines()
 }

@@ -134,6 +134,11 @@ impl<const N: usize> Bits<N> {
         N
     }
 
+    // Warning!! this can overflow
+    pub fn count() -> usize {
+        1 << N
+    }
+
     #[inline(always)]
     pub fn get_bit(&self, index: usize) -> bool {
         assert!(index < N);

@@ -14,7 +14,7 @@ use crate::tagged::Tagged;
 
 static GLOBAL_THREAD_COUNT: AtomicUsize = AtomicUsize::new(1);
 
-fn get_signal_id() -> usize {
+pub fn get_signal_id() -> usize {
     GLOBAL_THREAD_COUNT.fetch_add(1, Ordering::SeqCst)
 }
 

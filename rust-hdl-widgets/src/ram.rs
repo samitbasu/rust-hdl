@@ -2,7 +2,7 @@ use rust_hdl_core::prelude::*;
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
-#[derive(LogicBlock)]
+#[derive(LogicBlock, Default)]
 pub struct RAM<A: Synth + Ord, D: Synth, R: Domain, W: Domain> {
     pub read_address: Signal<In, A, R>,
     pub read_clock: Signal<In, Clock, R>,

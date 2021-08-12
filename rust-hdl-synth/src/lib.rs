@@ -56,3 +56,16 @@ pub fn yosys_validate(prefix: &str, translation: &str) -> Result<(), SynthError>
     }
     Ok(())
 }
+
+#[macro_export]
+macro_rules! top_wrap {
+    ($kind: ty, $name: ident) => {
+        #[derive(LogicBlock, Default)]
+        struct $name {
+            uut: $kind,
+        }
+        impl Logic for $name {
+            fn update(&mut self) {}
+        }
+    };
+}

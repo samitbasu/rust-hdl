@@ -1,6 +1,5 @@
 use crate::MHz48;
 use rust_hdl_core::prelude::*;
-use crate::top_wrap;
 use rust_hdl_synth::yosys_validate;
 
 #[derive(Clone, Debug, Default, LogicBlock)]
@@ -52,10 +51,13 @@ endmodule  "#,
 
 #[test]
 fn test_wire_out_synth() {
+    use rust_hdl_synth::top_wrap;
+
     top_wrap!(WireOut<0x20>, Wrapper);
-    let mut uut : Wrapper = Default::default();
+    let mut uut: Wrapper = Default::default();
     uut.uut.ok1.connect();
     uut.uut.datain.connect();
+    uut.connect_all();
     yosys_validate("wire_out", &generate_verilog(&uut)).unwrap();
 }
 
@@ -104,8 +106,11 @@ endmodule  "#,
 
 #[test]
 fn test_wire_in_synth() {
+    use rust_hdl_synth::top_wrap;
+
     top_wrap!(WireIn<0x02>, Wrapper);
-    let mut uut : Wrapper = Default::default();
+    let mut uut: Wrapper = Default::default();
     uut.uut.ok1.connect();
+    uut.connect_all();
     yosys_validate("wire_in", &generate_verilog(&uut)).unwrap();
 }

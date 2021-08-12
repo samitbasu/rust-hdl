@@ -2,7 +2,6 @@ use rust_hdl_core::prelude::*;
 
 use crate::ok_hi::OpalKellyHostInterface;
 use crate::MHz48;
-use crate::top_wrap;
 use rust_hdl_synth::yosys_validate;
 
 #[derive(Clone, Debug, LogicBlock)]
@@ -78,9 +77,12 @@ impl Default for OpalKellyHost {
 
 #[test]
 fn test_host_interface_synthesizes() {
+    use rust_hdl_synth::top_wrap;
+
     top_wrap!(OpalKellyHost, Wrapper);
     let mut uut: Wrapper = Default::default();
     uut.uut.ok2.connect();
     uut.uut.hi.sig_in.connect();
+    uut.connect_all();
     yosys_validate("okhi", &generate_verilog(&uut)).unwrap();
 }
