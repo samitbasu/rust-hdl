@@ -14,10 +14,15 @@ pub mod alchitry_cu_pwm_vec_srom;
 pub mod base_tests;
 pub mod fifo;
 pub mod nested_ports;
+#[cfg(feature = "fpga_hw_test")]
 pub mod ok_tools;
+#[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_blinky;
+#[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_pipe;
+#[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_wave;
+#[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_wire;
 pub mod pwm;
 pub mod ram;

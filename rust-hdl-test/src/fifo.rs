@@ -3,6 +3,7 @@ use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_widgets::sync_fifo::SyncFIFO;
+use rust_hdl_widgets::synchronizer::{SyncReceiver, SyncSender};
 
 make_domain!(Mhz1, 1_000_000);
 
@@ -155,5 +156,51 @@ fn test_fifo_works() {
         Ok(())
     });
     sim.run_traced(uut, 100_000, std::fs::File::create("fifo.vcd").unwrap())
+        .unwrap();
+}
+
+make_domain!(Mhz2, 2_000_000);
+
+#[derive(LogicBlock, Default)]
+struct SyncVecTest {
+    pub clock1: Signal<In, Clock, Mhz1>,
+    pub clock2: Signal<In, Clock, Mhz2>,
+    pub sender: SyncSender<Mhz1, Mhz2, Bits<8>>,
+    pub recv: SyncReceiver<Mhz1, Mhz2, Bits<8>>,
+}
+
+impl Logic for SyncVecTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.sender.clock.next = self.clock1.val();
+        self.recv.clock.next = self.clock2.val();
+        self.sender.ack_in.next = self.recv.ack_out.val();
+        self.recv.flag_in.next = self.sender.flag_out.val();
+        self.recv.sig_cross.next = self.sender.sig_cross.val();
+    }
+}
+
+#[test]
+fn test_sync_vec() {
+    let mut uut = SyncVecTest::default();
+    uut.clock1.connect();
+    uut.sender.sig_in.connect();
+    uut.clock2.connect();
+    uut.connect_all();
+    yosys_validate("sync", &generate_verilog(&uut)).unwrap();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut SyncVecTest| x.clock2.next = !x.clock2.val());
+    sim.add_clock(10, |x: &mut SyncVecTest| x.clock1.next = !x.clock1.val());
+    sim.add_testbench(move |mut sim: Sim<SyncVecTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock1, x);
+        for i in 0..150 {
+            x.sender.sig_in.next = (i as u32).into();
+            wait_clock_cycle!(sim, clock1, x);
+        }
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.run_traced(uut, 100_000, std::fs::File::create("vsync.vcd").unwrap())
         .unwrap();
 }

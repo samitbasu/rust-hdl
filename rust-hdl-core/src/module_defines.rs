@@ -102,7 +102,11 @@ impl ModuleDefines {
             })
             .filter(|x| x.discriminant.len() != 0)
             .collect::<Vec<_>>();
-        entry.enums.extend(enum_values.into_iter())
+        for x in enum_values {
+            if !entry.enums.contains(&x) {
+                entry.enums.push(x);
+            }
+        }
     }
     fn add_code(&mut self, module: &str, code: Verilog) {
         let entry = self.details.entry(module.into()).or_default();
@@ -169,6 +173,8 @@ impl Probe for ModuleDefines {
         }
         if signal.is_enum() {
             self.add_enum(&module_path, signal);
+            let parent_name = self.path.parent();
+            self.add_enum(&parent_name, signal);
         }
         self.add_atom(&module_path, param);
     }
@@ -229,8 +235,9 @@ impl ModuleDefines {
                     io.add("\n// Enums");
                     module_details.enums.iter().for_each(|x| {
                         io.add(format!(
-                            "localparam {}_{} = {}",
-                            x.type_name, x.discriminant, x.value
+                            "localparam {} = {};",
+                            x.discriminant.replace("::", "_"),
+                            x.value
                         ))
                     });
                 }

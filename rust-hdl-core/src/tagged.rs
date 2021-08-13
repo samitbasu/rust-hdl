@@ -16,6 +16,12 @@ impl<T: Synth, F: Domain> Default for Tagged<T, F> {
     }
 }
 
+impl<F: Domain, T: Synth> From<T> for Tagged<T, F> {
+    fn from(x: T) -> Self {
+        Tagged(x, PhantomData)
+    }
+}
+
 impl<F: Domain, const N: usize> From<u32> for Tagged<Bits<N>, F> {
     fn from(x: u32) -> Self {
         Tagged(x.into(), PhantomData)
@@ -191,17 +197,20 @@ impl<T: Synth + Not<Output = T>, F: Domain> Not for Tagged<T, F> {
     }
 }
 
+/*
 impl<F: Domain> From<bool> for Tagged<bool, F> {
     fn from(x: bool) -> Self {
         Tagged(x, PhantomData)
     }
 }
 
+
 impl<F: Domain, const N: usize> From<Bits<N>> for Tagged<Bits<N>, F> {
     fn from(x: Bits<N>) -> Self {
         Tagged(x, PhantomData)
     }
 }
+ */
 
 impl<T: Synth, F: Domain> PartialEq<T> for Tagged<T, F> {
     fn eq(&self, other: &T) -> bool {
@@ -227,8 +236,10 @@ impl<T: Synth + PartialOrd, F: Domain> PartialOrd<T> for Tagged<T, F> {
     }
 }
 
+/*
 impl<F: Domain> From<Clock> for Tagged<Clock, F> {
     fn from(x: Clock) -> Self {
         Tagged(x, PhantomData)
     }
 }
+*/

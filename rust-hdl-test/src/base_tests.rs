@@ -1,3 +1,14 @@
+use rust_hdl_core::prelude::*;
+
+#[derive(Copy, Clone, Debug, PartialEq, LogicState)]
+enum FooState {
+    Init,
+    Start,
+    Running,
+    Paused,
+    Stopped,
+}
+
 #[cfg(test)]
 mod tests {
     use rust_hdl_alchitry_cu::pins::Mhz100;
@@ -90,12 +101,6 @@ mod tests {
             Running,
             Paused,
             Stopped,
-        }
-
-        impl<D: Domain> Into<Tagged<MyState, D>> for MyState {
-            fn into(self) -> Tagged<MyState, D> {
-                Tagged(self, PhantomData)
-            }
         }
 
         impl Default for MyState {
