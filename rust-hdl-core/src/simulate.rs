@@ -330,3 +330,13 @@ macro_rules! wait_clock_cycle {
         }
     };
 }
+
+#[macro_export]
+macro_rules! sim_assert {
+    ($sim: ident, $test: expr, $circuit: ident) => {
+        if !($test) {
+            println!("HALT {}", stringify!($test));
+            return $sim.halt($circuit);
+        }
+    };
+}

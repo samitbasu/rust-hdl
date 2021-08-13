@@ -23,6 +23,7 @@ pub use crate::module_defines::ModuleDefines;
 pub use crate::named_path::NamedPath;
 pub use crate::probe::Probe;
 pub use crate::signal::Signal;
+pub use crate::sim_assert;
 pub use crate::simulate::simulate;
 pub use crate::simulate::{Sim, Simulation};
 pub use crate::synth::Synth;

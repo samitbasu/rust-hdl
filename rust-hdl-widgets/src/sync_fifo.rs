@@ -73,7 +73,7 @@ impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Default
             fifo_size: Constant::new(Bits::<N>::count().into()),
             block_size: Constant::new(Blocksize.into()),
             fifo_address_mask: Constant::new(((1_u32 << (N)) - 1).into()),
-            fifo_ptr_mask: Constant::new(((1_u32 << (N+1)) - 1).into()),
+            fifo_ptr_mask: Constant::new(((1_u32 << (N + 1)) - 1).into()),
             fill_level: Default::default(),
             free_space: Default::default(),
             is_full: Default::default(),
@@ -112,23 +112,28 @@ impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Logic
         self.ram.write_enable.next = false.into();
         // Calculate the empty field - this is used to determine if we
         // can read
-        self.is_empty.next = (self.read_address.q.val() == self.write_address.q.val()).into();
+        self.is_empty.next =
+            (self.read_address.q.val() == self.write_address_delayed.q.val()).into();
         // Calculate the is full field.  If the FIFO is not empty, and
         // the lower N bits of the addresses agree, the FIFO is full
-        self.is_full.next = !self.is_empty.val() &
-            ((self.read_address.q.val() & self.fifo_address_mask.val()) ==
-                (self.write_address.q.val() & self.fifo_address_mask.val()));
+        self.is_full.next = !self.is_empty.val()
+            & ((self.read_address.q.val() & self.fifo_address_mask.val())
+                == (self.write_address.q.val() & self.fifo_address_mask.val()));
         // Compute the fill level - we add N first, since we are subtracting.  And
         // we mask out the lower N bits, since we are ignoring the wrap levels.
         // Note that if the FIFO is empty, this calculation will give the wrong
         // answer, so we need to check the is_empty flag (which uses all N+1 bits).
-        self.fill_level.next = ((self.write_address.q.val() & self.fifo_address_mask.val())
-            + self.fifo_size.val() - (self.read_address.q.val() & self.fifo_address_mask.val()));
-        if self.is_empty.val().any() {
-            self.fill_level.next = 0_u32.into();
+        self.fill_level.next = ((self.write_address_delayed.q.val()
+            & self.fifo_address_mask.val())
+            + self.fifo_size.val()
+            - (self.read_address.q.val() & self.fifo_address_mask.val()))
+            & self.fifo_address_mask.val();
+        if self.is_full.val().any() {
+            self.fill_level.next = self.fifo_size.val().into();
         }
         // The free space is simply N-fill level
-        self.free_space.next = self.fifo_size.val() - self.fill_level.val();
+        self.free_space.next =
+            (self.fifo_size.val() - self.fill_level.val()) & self.fifo_ptr_mask.val();
         // Compute the almost full signal
         self.almost_full.next = (self.free_space.val() < self.block_size.val()).into();
         // Compute the almost empty signal
@@ -138,18 +143,18 @@ impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Logic
         self.empty.next = self.is_empty.val();
 
         // Connect our write address register to the RAM write address
-        self.ram.write_address.next = tagged_bit_cast::<_, N, 32>(self.write_address.q.val() &
-            self.fifo_address_mask.val());
-        self.ram.read_address.next = tagged_bit_cast::<_, N, 32>(self.read_address.q.val() &
-            self.fifo_address_mask.val());
+        self.ram.write_address.next =
+            tagged_bit_cast::<_, N, 32>(self.write_address.q.val() & self.fifo_address_mask.val());
+        self.ram.read_address.next =
+            tagged_bit_cast::<_, N, 32>(self.read_address.q.val() & self.fifo_address_mask.val());
         self.ram.write_data.next = self.data_in.val();
         self.data_out.next = self.ram.read_data.val();
 
         // Assign the enable for the write based on the outside
         // request and our availability to write
         if (self.write.val() & !self.is_full.val()).any() {
-            self.write_address.d.next = (self.write_address.q.val() + 1_u32) &
-                self.fifo_ptr_mask.val();
+            self.write_address.d.next =
+                (self.write_address.q.val() + 1_u32) & self.fifo_ptr_mask.val();
             self.ram.write_enable.next = true.into();
         } else {
             self.write_address.d.next = self.write_address.q.val();
@@ -159,8 +164,13 @@ impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Logic
         // Assign the read advance based on the outside request
         // and our availability to read.
         if (self.read.val() & !self.is_empty.val()).any() {
-            self.read_address.d.next = (self.read_address.q.val() + 1_u32) &
-                self.fifo_ptr_mask.val();
+            self.read_address.d.next =
+                (self.read_address.q.val() + 1_u32) & self.fifo_ptr_mask.val();
+            // We "forward" by a cycle so that we don't loose a cycle waiting for the
+            // update to propogate through the flip flop.
+            self.ram.read_address.next = tagged_bit_cast::<_, N, 32>(
+                (self.read_address.q.val() + 1_u32) & self.fifo_address_mask.val(),
+            );
         } else {
             self.read_address.d.next = self.read_address.q.val();
         }
