@@ -8,3 +8,4 @@ pub mod shot;
 pub mod strobe;
 pub mod sync_fifo;
 pub mod sync_rom;
+pub mod synchronizer;
