@@ -3,14 +3,14 @@ use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_widgets::sync_fifo::SyncFIFO;
-use rust_hdl_widgets::synchronizer::{SyncReceiver, SyncSender};
+use rust_hdl_widgets::synchronizer::{SyncReceiver, SyncSender, VectorSynchronizer};
 
 make_domain!(Mhz1, 1_000_000);
 
 #[derive(LogicBlock, Default)]
 struct SyncFIFOTest {
     pub clock: Signal<In, Clock, Mhz1>,
-    pub fifo: SyncFIFO<Bits<16>, Mhz1, 4, 4>,
+    pub fifo: SyncFIFO<Bits<16>, Mhz1, 4, 5, 4>,
 }
 
 impl Logic for SyncFIFOTest {
@@ -186,17 +186,32 @@ fn test_sync_vec() {
     uut.clock1.connect();
     uut.sender.sig_in.connect();
     uut.clock2.connect();
+    uut.sender.send.connect();
     uut.connect_all();
     yosys_validate("sync", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut SyncVecTest| x.clock2.next = !x.clock2.val());
-    sim.add_clock(10, |x: &mut SyncVecTest| x.clock1.next = !x.clock1.val());
+    sim.add_clock(9, |x: &mut SyncVecTest| x.clock1.next = !x.clock1.val());
     sim.add_testbench(move |mut sim: Sim<SyncVecTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock1, x);
         for i in 0..150 {
             x.sender.sig_in.next = (i as u32).into();
+            x.sender.send.next = true.into();
             wait_clock_cycle!(sim, clock1, x);
+            x.sender.send.next = false.into();
+            x = sim.watch(|x| !x.sender.busy.val().any(), x)?;
+        }
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.add_testbench(move |mut sim: Sim<SyncVecTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock2, x);
+        for i in 0..150 {
+            x = sim.watch(|x| x.recv.update.val().any(), x)?;
+            sim_assert!(sim, x.recv.sig_out.val().eq(&i), x);
+            wait_clock_cycle!(sim, clock2, x);
         }
         sim.done(x)?;
         Ok(())
@@ -204,3 +219,47 @@ fn test_sync_vec() {
     sim.run_traced(uut, 100_000, std::fs::File::create("vsync.vcd").unwrap())
         .unwrap();
 }
+
+#[test]
+fn test_vector_synchronizer() {
+    rust_hdl_synth::top_wrap!(VectorSynchronizer<Mhz1, Mhz2, Bits<8>>, TestCircuit);
+    let mut dev: TestCircuit = Default::default();
+    dev.uut.clock_in.connect();
+    dev.uut.clock_out.connect();
+    dev.uut.send.connect();
+    dev.uut.sig_in.connect();
+    dev.connect_all();
+    yosys_validate("vsync", &generate_verilog(&dev)).unwrap();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut TestCircuit| x.uut.clock_out.next = !x.uut.clock_out.val());
+    sim.add_clock(9, |x: &mut TestCircuit| x.uut.clock_in.next = !x.uut.clock_in.val());
+    sim.add_testbench(move |mut sim: Sim<TestCircuit>| {
+        let mut x = sim.init()?;
+        x = sim.watch(|x| x.uut.clock_in.val().raw().0, x)?;
+        for i in 0..150 {
+            x.uut.sig_in.next = (i as u32).into();
+            x.uut.send.next = true.into();
+            x = sim.watch(|x| !x.uut.clock_in.val().raw().0, x)?;
+            x = sim.watch(|x| x.uut.clock_in.val().raw().0, x)?;
+            x.uut.send.next = false.into();
+            x = sim.watch(|x| !x.uut.busy.val().any(), x)?;
+        }
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.add_testbench(move |mut sim: Sim<TestCircuit>| {
+        let mut x = sim.init()?;
+        x = sim.watch(|x| x.uut.clock_out.val().raw().0, x)?;
+        for i in 0..150 {
+            x = sim.watch(|x| x.uut.update.val().any(), x)?;
+            sim_assert!(sim, x.uut.sig_out.val().eq(&i), x);
+            x = sim.watch(|x| !x.uut.clock_out.val().raw().0, x)?;
+            x = sim.watch(|x| x.uut.clock_out.val().raw().0, x)?;
+        }
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.run_traced(dev, 100_000, std::fs::File::create("vsync.vcd").unwrap())
+        .unwrap();
+}
+

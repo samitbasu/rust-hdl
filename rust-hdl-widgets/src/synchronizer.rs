@@ -41,7 +41,7 @@ fn sync_is_synthesizable() {
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
 pub enum SyncSenderState {
-    Sample,
+    Idle,
     WaitAck,
     WaitDone,
 }
@@ -53,6 +53,8 @@ pub struct SyncSender<F: Domain, X: Domain, T: Synth> {
     pub sig_cross: Signal<Out, T, F>,
     pub flag_out: Signal<Out, Bit, F>,
     pub ack_in: Signal<In, Bit, X>,
+    pub busy: Signal<Out, Bit, F>,
+    pub send: Signal<In, Bit, F>,
     hold: DFF<T, F>,
     state: DFF<SyncSenderState, F>,
     sync: BitSynchronizer<X, F>,
@@ -74,14 +76,17 @@ impl<F: Domain, X: Domain, T: Synth> Logic for SyncSender<F, X, T> {
 
         // State machine
         self.state.d.next = self.state.q.val();
-        println!("Current state {:?}", self.state.q.val().raw());
+        self.busy.next = true.into();
         match self.state.q.val().raw() {
-            SyncSenderState::Sample => {
-                // Sample the input signal
-                self.hold.d.next = self.sig_in.val();
-                // Indicate that the output is valid
-                self.flag_out.next = true.into();
-                self.state.d.next = SyncSenderState::WaitAck.into();
+            SyncSenderState::Idle => {
+                self.busy.next = false.into();
+                if self.send.val().any() {
+                    // Sample the input signal
+                    self.hold.d.next = self.sig_in.val();
+                    self.state.d.next = SyncSenderState::WaitAck.into();
+                    // Indicate that the output is valid
+                    self.flag_out.next = true.into();
+                }
             }
             SyncSenderState::WaitAck => {
                 self.flag_out.next = true.into();
@@ -92,7 +97,10 @@ impl<F: Domain, X: Domain, T: Synth> Logic for SyncSender<F, X, T> {
             }
             SyncSenderState::WaitDone => {
                 if !self.sync.sig_out.val().any() {
-                    self.state.d.next = SyncSenderState::Sample.into();
+                    self.hold.d.next = self.sig_in.val();
+                    // Indicate that the output is valid
+                    self.flag_out.next = true.into();
+                    self.state.d.next = SyncSenderState::Idle.into();
                 }
             }
         }
@@ -124,7 +132,9 @@ pub struct SyncReceiver<F: Domain, X: Domain, T: Synth> {
     pub sig_cross: Signal<In, T, F>,
     pub flag_in: Signal<In, Bit, F>,
     pub ack_out: Signal<Out, Bit, X>,
+    pub update: Signal<Out, Bit, X>,
     hold: DFF<T, X>,
+    update_delay: DFF<Bit, X>,
     state: DFF<SyncReceiverState, X>,
     sync: BitSynchronizer<F, X>,
 }
@@ -135,6 +145,7 @@ impl<F: Domain, X: Domain, T: Synth> Logic for SyncReceiver<F, X, T> {
         self.state.clk.next = self.clock.val();
         self.sync.clock.next = self.clock.val();
         self.hold.clk.next = self.clock.val();
+        self.update_delay.clk.next = self.clock.val();
 
         self.hold.d.next = self.hold.q.val();
         self.sig_out.next = self.hold.q.val();
@@ -142,6 +153,8 @@ impl<F: Domain, X: Domain, T: Synth> Logic for SyncReceiver<F, X, T> {
         self.sync.sig_in.next = self.flag_in.val();
 
         self.state.d.next = self.state.q.val();
+        self.update.next = self.update_delay.q.val();
+        self.update_delay.d.next = false.into();
         match self.state.q.val().raw() {
             SyncReceiverState::WaitSteady => {
                 if self.sync.sig_out.val().any() {
@@ -151,8 +164,9 @@ impl<F: Domain, X: Domain, T: Synth> Logic for SyncReceiver<F, X, T> {
             }
             SyncReceiverState::WaitDone => {
                 if !self.sync.sig_out.val().any() {
-                    self.hold.d.next = self.sig_cross.val().raw().into();
                     self.ack_out.next = false.into();
+                    self.update_delay.d.next = true.into();
+                    self.hold.d.next = self.sig_cross.val().raw().into();
                     self.state.d.next = SyncReceiverState::WaitSteady.into();
                 } else {
                     self.ack_out.next = true.into();
@@ -172,4 +186,52 @@ fn sync_receiver_is_synthesizable() {
     dev.connect_all();
     println!("{}", generate_verilog(&dev));
     yosys_validate("sync_recv", &generate_verilog(&dev)).unwrap();
+}
+
+#[derive(LogicBlock, Default)]
+pub struct VectorSynchronizer<F: Domain, X: Domain, T: Synth> {
+    // The input interface...
+    pub clock_in: Signal<In, Clock, F>,
+    pub sig_in: Signal<In, T, F>,
+    pub busy: Signal<Out, Bit, F>,
+    pub send: Signal<In, Bit, F>,
+    // The output interface...
+    pub clock_out: Signal<In, Clock, X>,
+    pub sig_out: Signal<Out, T, X>,
+    pub update: Signal<Out, Bit, X>,
+    // The two pieces of the synchronizer
+    sender: SyncSender<F, X, T>,
+    recv: SyncReceiver<F, X, T>,
+}
+
+impl<F: Domain, X: Domain, T: Synth> Logic for VectorSynchronizer<F, X, T> {
+    #[hdl_gen]
+    fn update(&mut self) {
+        // Clocks...
+        self.sender.clock.next = self.clock_in.val();
+        self.recv.clock.next = self.clock_out.val();
+        // Wire the inputs..
+        self.sender.sig_in.next = self.sig_in.val();
+        self.busy.next = self.sender.busy.val();
+        self.sender.send.next = self.send.val();
+        // Wire the outputs..
+        self.sig_out.next = self.recv.sig_out.val();
+        self.update.next = self.recv.update.val();
+        // Cross wire the two parts
+        self.recv.sig_cross.next = self.sender.sig_cross.val();
+        self.recv.flag_in.next = self.sender.flag_out.val();
+        self.sender.ack_in.next = self.recv.ack_out.val();
+    }
+}
+
+#[test]
+fn test_vec_sync_synthesizable() {
+    rust_hdl_synth::top_wrap!(VectorSynchronizer<MHz1, MHz1, Bits<8>>, Wrapper);
+    let mut dev: Wrapper = Default::default();
+    dev.uut.clock_in.connect();
+    dev.uut.sig_in.connect();
+    dev.uut.send.connect();
+    dev.uut.clock_out.connect();
+    dev.connect_all();
+    yosys_validate("vsync", &generate_verilog(&dev)).unwrap();
 }

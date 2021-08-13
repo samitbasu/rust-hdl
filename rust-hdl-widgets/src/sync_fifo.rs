@@ -5,7 +5,7 @@ use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
 
 #[derive(LogicBlock)]
-pub struct SyncFIFO<D: Synth, T: Domain, const N: usize, const BlockSize: u32> {
+pub struct SyncFIFO<D: Synth, T: Domain, const N: usize, const NP1: usize, const BlockSize: u32> {
     // Clock interface
     pub clock: Signal<In, Clock, T>,
     // FIFO Read interface
@@ -22,27 +22,20 @@ pub struct SyncFIFO<D: Synth, T: Domain, const N: usize, const BlockSize: u32> {
     pub overflow: Signal<Out, Bit, T>,
     // Internal RAM and address registers
     ram: RAM<Bits<N>, D, T, T>,
-    // These should be N+1 bits, but Rust does not
-    // currently allow manipulation of const generics.
-    // So we assume the largest FIFO you will instantiate
-    // is < 4GB.  I assume that the synthesis software
-    // will remove the unused extra bits (hence the masks).
-    write_address: DFF<Bits<32>, T>,
-    write_address_delayed: DFF<Bits<32>, T>,
-    read_address: DFF<Bits<32>, T>,
+    write_address: DFF<Bits<NP1>, T>,
+    write_address_delayed: DFF<Bits<NP1>, T>,
+    read_address: DFF<Bits<NP1>, T>,
     // Constant sizes
     // This is the total number of elements the FIFO can store
-    fifo_size: Constant<Bits<32>>,
+    fifo_size: Constant<Bits<NP1>>,
     // This is the size of the "almost" block.  I.e., if
     // there are fewer than block_size spaces, it is "almost full"
-    block_size: Constant<Bits<32>>,
+    block_size: Constant<Bits<NP1>>,
     // This is the mask for the bottom N bits of the address
-    fifo_address_mask: Constant<Bits<32>>,
-    // This is the mask for the bottom N+1 bits of the address
-    fifo_ptr_mask: Constant<Bits<32>>,
+    fifo_address_mask: Constant<Bits<NP1>>,
     // Local signals (temps)
-    fill_level: Signal<Local, Bits<32>, T>,
-    free_space: Signal<Local, Bits<32>, T>,
+    fill_level: Signal<Local, Bits<NP1>, T>,
+    free_space: Signal<Local, Bits<NP1>, T>,
     is_full: Signal<Local, Bit, T>,
     is_empty: Signal<Local, Bit, T>,
     // Error flags are latching...
@@ -50,10 +43,12 @@ pub struct SyncFIFO<D: Synth, T: Domain, const N: usize, const BlockSize: u32> {
     dff_underflow: DFF<Bit, T>,
 }
 
-impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Default
-    for SyncFIFO<D, T, N, Blocksize>
+impl<D: Synth, T: Domain, const N: usize, const NP1: usize, const Blocksize: u32> Default
+    for SyncFIFO<D, T, N, NP1, Blocksize>
 {
     fn default() -> Self {
+        assert_eq!(N+1, NP1);
+        assert!(NP1 < 32);
         Self {
             clock: Default::default(),
             read: Default::default(),
@@ -73,7 +68,6 @@ impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Default
             fifo_size: Constant::new(Bits::<N>::count().into()),
             block_size: Constant::new(Blocksize.into()),
             fifo_address_mask: Constant::new(((1_u32 << (N)) - 1).into()),
-            fifo_ptr_mask: Constant::new(((1_u32 << (N + 1)) - 1).into()),
             fill_level: Default::default(),
             free_space: Default::default(),
             is_full: Default::default(),
@@ -90,8 +84,8 @@ impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Default
 // http://www.sunburst-design.com/papers/CummingsSNUG2002SJ_FIFO1.pdf
 // That modification allows you to fill the FIFO all the way
 // since you have 2 different conditions for full and empty.
-impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Logic
-    for SyncFIFO<D, T, N, Blocksize>
+impl<D: Synth, T: Domain, const N: usize, const NP1: usize, const Blocksize: u32> Logic
+    for SyncFIFO<D, T, N, NP1, Blocksize>
 {
     #[hdl_gen]
     fn update(&mut self) {
@@ -132,8 +126,7 @@ impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Logic
             self.fill_level.next = self.fifo_size.val().into();
         }
         // The free space is simply N-fill level
-        self.free_space.next =
-            (self.fifo_size.val() - self.fill_level.val()) & self.fifo_ptr_mask.val();
+        self.free_space.next = (self.fifo_size.val() - self.fill_level.val());
         // Compute the almost full signal
         self.almost_full.next = (self.free_space.val() < self.block_size.val()).into();
         // Compute the almost empty signal
@@ -144,17 +137,16 @@ impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Logic
 
         // Connect our write address register to the RAM write address
         self.ram.write_address.next =
-            tagged_bit_cast::<_, N, 32>(self.write_address.q.val() & self.fifo_address_mask.val());
+            tagged_bit_cast::<_, N, NP1>(self.write_address.q.val() & self.fifo_address_mask.val());
         self.ram.read_address.next =
-            tagged_bit_cast::<_, N, 32>(self.read_address.q.val() & self.fifo_address_mask.val());
+            tagged_bit_cast::<_, N, NP1>(self.read_address.q.val() & self.fifo_address_mask.val());
         self.ram.write_data.next = self.data_in.val();
         self.data_out.next = self.ram.read_data.val();
 
         // Assign the enable for the write based on the outside
         // request and our availability to write
         if (self.write.val() & !self.is_full.val()).any() {
-            self.write_address.d.next =
-                (self.write_address.q.val() + 1_u32) & self.fifo_ptr_mask.val();
+            self.write_address.d.next = self.write_address.q.val() + 1_u32;
             self.ram.write_enable.next = true.into();
         } else {
             self.write_address.d.next = self.write_address.q.val();
@@ -164,11 +156,10 @@ impl<D: Synth, T: Domain, const N: usize, const Blocksize: u32> Logic
         // Assign the read advance based on the outside request
         // and our availability to read.
         if (self.read.val() & !self.is_empty.val()).any() {
-            self.read_address.d.next =
-                (self.read_address.q.val() + 1_u32) & self.fifo_ptr_mask.val();
+            self.read_address.d.next = self.read_address.q.val() + 1_u32;
             // We "forward" by a cycle so that we don't loose a cycle waiting for the
             // update to propogate through the flip flop.
-            self.ram.read_address.next = tagged_bit_cast::<_, N, 32>(
+            self.ram.read_address.next = tagged_bit_cast::<_, N, NP1>(
                 (self.read_address.q.val() + 1_u32) & self.fifo_address_mask.val(),
             );
         } else {
@@ -189,7 +180,7 @@ make_domain!(MHz1, 1_000_000);
 
 #[test]
 fn fifo_is_synthesizable() {
-    rust_hdl_synth::top_wrap!(SyncFIFO<Bits<8>, MHz1, 4, 1>, Wrapper);
+    rust_hdl_synth::top_wrap!(SyncFIFO<Bits<8>, MHz1, 4, 5, 1>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.clock.connect();
     dev.uut.read.connect();
