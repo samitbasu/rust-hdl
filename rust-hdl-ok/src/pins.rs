@@ -1,6 +1,6 @@
 use rust_hdl_core::prelude::*;
 
-pub fn xem_6010_leds() -> Signal<Out, Bits<8>, Async> {
+pub fn xem_6010_leds() -> Signal<Out, Bits<8>> {
     let mut x = Signal::default();
     for (ndx, name) in [
         "Y17", "AB17", "AA14", "AB14", "AA16", "AB16", "AA10", "AB10",

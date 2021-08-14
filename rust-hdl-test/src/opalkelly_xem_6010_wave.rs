@@ -24,16 +24,14 @@ impl Logic for OpalKellyXEM6010Wave {
         link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
         for i in 0_usize..8_usize {
             self.faders[i].clock.next = self.ok_host.ti_clk.val();
-            self.faders[i].enable.next = true.into();
+            self.faders[i].enable.next = true;
         }
         self.local.next = 0x00_u8.into();
         for i in 0_usize..8_usize {
             self.local.next = self
                 .local
                 .val()
-                .raw()
-                .replace_bit(i, !self.faders[i].active.val().raw())
-                .into();
+                .replace_bit(i, !self.faders[i].active.val());
         }
         self.led.next = self.local.val();
     }

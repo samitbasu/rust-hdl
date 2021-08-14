@@ -1,12 +1,10 @@
-use crate::MHz48;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
 
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct WireOut<const N: u8> {
-    pub ok1: Signal<In, Bits<31>, MHz48>,
-    pub ok2: Signal<Out, Bits<17>, MHz48>,
-    pub datain: Signal<In, Bits<16>, MHz48>,
+    pub ok1: Signal<In, Bits<31>>,
+    pub ok2: Signal<Out, Bits<17>>,
+    pub datain: Signal<In, Bits<16>>,
 }
 
 impl<const N: u8> Logic for WireOut<N> {
@@ -58,13 +56,13 @@ fn test_wire_out_synth() {
     uut.uut.ok1.connect();
     uut.uut.datain.connect();
     uut.connect_all();
-    yosys_validate("wire_out", &generate_verilog(&uut)).unwrap();
+    rust_hdl_synth::yosys_validate("wire_out", &generate_verilog(&uut)).unwrap();
 }
 
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct WireIn<const N: u8> {
-    pub ok1: Signal<In, Bits<31>, MHz48>,
-    pub dataout: Signal<Out, Bits<16>, MHz48>,
+    pub ok1: Signal<In, Bits<31>>,
+    pub dataout: Signal<Out, Bits<16>>,
 }
 
 impl<const N: u8> Logic for WireIn<N> {
@@ -112,5 +110,5 @@ fn test_wire_in_synth() {
     let mut uut: Wrapper = Default::default();
     uut.uut.ok1.connect();
     uut.connect_all();
-    yosys_validate("wire_in", &generate_verilog(&uut)).unwrap();
+    rust_hdl_synth::yosys_validate("wire_in", &generate_verilog(&uut)).unwrap();
 }

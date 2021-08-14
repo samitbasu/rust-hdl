@@ -1,23 +1,24 @@
-use rust_hdl_alchitry_cu::pins::Mhz100;
 use rust_hdl_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::pulser::Pulser;
 use std::time::Duration;
 
+const MHZ100: u64 = 100_000_000;
+
 #[derive(LogicBlock)]
 pub struct AlchitryCuPulser {
-    pulser: Pulser<Mhz100>,
-    clock: Signal<In, Clock, Mhz100>,
-    leds: Signal<Out, Bits<8>, Async>,
+    pulser: Pulser<MHZ100>,
+    clock: Signal<In, Clock>,
+    leds: Signal<Out, Bits<8>>,
 }
 
 impl Logic for AlchitryCuPulser {
     #[hdl_gen]
     fn update(&mut self) {
-        self.pulser.enable.next = true.into();
+        self.pulser.enable.next = true;
         self.pulser.clock.next = self.clock.val();
         self.leds.next = 0x00_u32.into();
-        if self.pulser.pulse.val().raw() {
+        if self.pulser.pulse.val() {
             self.leds.next = 0xAA_u32.into();
         }
     }

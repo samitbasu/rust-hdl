@@ -1,5 +1,6 @@
 use rust_hdl_core::prelude::*;
 
+#[allow(dead_code)]
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
 enum FooState {
     Init,
@@ -10,14 +11,13 @@ enum FooState {
 }
 
 #[cfg(test)]
+#[allow(dead_code)]
 mod tests {
-    use rust_hdl_alchitry_cu::pins::Mhz100;
     use rust_hdl_core::prelude::*;
     use rust_hdl_macros::hdl_gen;
     use rust_hdl_macros::LogicBlock;
     use rust_hdl_widgets::dff::DFF;
     use rust_hdl_widgets::strobe::Strobe;
-    use std::marker::PhantomData;
 
     #[derive(Copy, Clone, Debug, PartialEq)]
     enum MyState {
@@ -70,10 +70,9 @@ mod tests {
 
     #[test]
     fn test_visit_version() {
-        make_domain!(F, 100);
-        let mut uut: Strobe<F, 32> = Strobe::new(10.0);
+        let mut uut: Strobe<100, 32> = Strobe::new(10.0);
         // Simulate 100 clock cycles
-        uut.enable.next = true.into();
+        uut.enable.next = true;
         println!("Starting");
         uut.clock.connect();
         uut.enable.connect();
@@ -81,11 +80,11 @@ mod tests {
         check_connected(&uut);
         let mut strobe_count = 0;
         for clock in 0..10_000_000 {
-            uut.clock.next = Clock(clock % 2 == 0).into();
+            uut.clock.next = (clock % 2 == 0).into();
             if !simulate(&mut uut, 10) {
                 panic!("Logic did not converge");
             }
-            if uut.strobe.val().raw() {
+            if uut.strobe.val() {
                 strobe_count += 1;
             }
         }
@@ -145,9 +144,9 @@ mod tests {
 
         #[derive(Clone, Debug, LogicBlock)]
         struct StateMachine {
-            pub clock: Signal<In, Clock, Async>,
-            pub advance: Signal<In, Bit, Async>,
-            state: DFF<MyState, Async>,
+            pub clock: Signal<In, Clock>,
+            pub advance: Signal<In, Bit>,
+            state: DFF<MyState>,
         }
 
         impl StateMachine {
@@ -165,13 +164,13 @@ mod tests {
             fn update(&mut self) {
                 self.state.clk.next = self.clock.val();
 
-                if self.advance.val().raw() {
-                    match self.state.q.val().raw() {
-                        MyState::Init => self.state.d.next = MyState::Start.into(),
-                        MyState::Start => self.state.d.next = MyState::Running.into(),
-                        MyState::Running => self.state.d.next = MyState::Paused.into(),
-                        MyState::Paused => self.state.d.next = MyState::Stopped.into(),
-                        MyState::Stopped => self.state.d.next = MyState::Init.into(),
+                if self.advance.val() {
+                    match self.state.q.val() {
+                        MyState::Init => self.state.d.next = MyState::Start,
+                        MyState::Start => self.state.d.next = MyState::Running,
+                        MyState::Running => self.state.d.next = MyState::Paused,
+                        MyState::Paused => self.state.d.next = MyState::Stopped,
+                        MyState::Stopped => self.state.d.next = MyState::Init,
                     }
                 }
             }
@@ -185,7 +184,7 @@ mod tests {
         check_connected(&uut);
         for clock in 0..10 {
             uut.clock.next = Clock(clock % 2 == 0).into();
-            uut.advance.next = true.into();
+            uut.advance.next = true;
             if !simulate(&mut uut, 10) {
                 panic!("Logic did not converge");
             }
@@ -196,14 +195,16 @@ mod tests {
 
     #[test]
     fn test_write_modules() {
+        const MHZ100: u64 = 100_000_000;
+
         #[derive(Clone, Debug, LogicBlock)]
         struct StrobePair {
-            pub clock: Signal<In, Clock, Mhz100>,
-            pub enable: Signal<In, Bit, Mhz100>,
-            a_strobe: Strobe<Mhz100, 32>,
-            b_strobe: Strobe<Mhz100, 32>,
+            pub clock: Signal<In, Clock>,
+            pub enable: Signal<In, Bit>,
+            a_strobe: Strobe<MHZ100, 32>,
+            b_strobe: Strobe<MHZ100, 32>,
             increment: Constant<Bits<6>>,
-            local: Signal<Local, Bit, Mhz100>,
+            local: Signal<Local, Bit>,
         }
 
         impl StrobePair {
@@ -245,14 +246,14 @@ mod tests {
     fn test_async() {
         #[derive(LogicBlock, Clone, Default)]
         struct Semaphore {
-            pub push: Signal<In, Bit, Mhz100>,
-            pub pop: Signal<In, Bit, Mhz100>,
-            pub clk: Signal<In, Clock, Mhz100>,
-            pub empty: Signal<Out, Bit, Mhz100>,
-            pub full: Signal<Out, Bit, Mhz100>,
-            will_read: Signal<Local, Bit, Mhz100>,
-            will_write: Signal<Local, Bit, Mhz100>,
-            count: DFF<Bits<4>, Mhz100>,
+            pub push: Signal<In, Bit>,
+            pub pop: Signal<In, Bit>,
+            pub clk: Signal<In, Clock>,
+            pub empty: Signal<Out, Bit>,
+            pub full: Signal<Out, Bit>,
+            will_read: Signal<Local, Bit>,
+            will_write: Signal<Local, Bit>,
+            count: DFF<Bits<4>>,
         }
 
         impl Logic for Semaphore {
@@ -264,9 +265,9 @@ mod tests {
                 self.will_read.next = !self.empty.val() & self.pop.val();
                 self.will_write.next = !self.full.val() & self.push.val();
 
-                if (self.will_read.val() & !self.will_write.val()).raw() {
+                if self.will_read.val() & !self.will_write.val() {
                     self.count.d.next = self.count.q.val() - 1_u32;
-                } else if (self.will_write.val() & !self.will_read.val()).raw() {
+                } else if self.will_write.val() & !self.will_read.val() {
                     self.count.d.next = self.count.q.val() + 1_u32;
                 }
 
@@ -316,10 +317,12 @@ mod tests {
     }
      */
 
+    const MHZ100: u64 = 100_000_000;
+
     #[derive(LogicBlock)]
     struct Circuit {
-        x: Signal<In, Bits<32>, Mhz100>,
-        pub strobe: Strobe<Mhz100, 32>,
+        x: Signal<In, Bits<32>>,
+        pub strobe: Strobe<MHZ100, 32>,
     }
 
     impl Logic for Circuit {

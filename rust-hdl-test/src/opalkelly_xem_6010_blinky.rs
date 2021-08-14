@@ -31,8 +31,8 @@ impl Logic for OpalKellyXEM6010Blinky {
         link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
         link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
         self.pulser.clock.next = self.ok_host.ti_clk.val();
-        self.pulser.enable.next = true.into();
-        if self.pulser.pulse.val().any() {
+        self.pulser.enable.next = true;
+        if self.pulser.pulse.val() {
             self.led.next = 0xFF_u8.into();
         } else {
             self.led.next = 0x00_u8.into();

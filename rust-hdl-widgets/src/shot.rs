@@ -4,19 +4,19 @@ use rust_hdl_macros::{hdl_gen, LogicBlock};
 use std::time::Duration;
 
 #[derive(Clone, Debug, LogicBlock)]
-pub struct Shot<F: Domain, const N: usize> {
-    pub trigger: Signal<In, Bit, F>,
-    pub active: Signal<Out, Bit, F>,
-    pub clock: Signal<In, Clock, F>,
+pub struct Shot<const FREQ: u64, const N: usize> {
+    pub trigger: Signal<In, Bit>,
+    pub active: Signal<Out, Bit>,
+    pub clock: Signal<In, Clock>,
     duration: Constant<Bits<N>>,
-    counter: DFF<Bits<N>, F>,
-    state: DFF<Bit, F>,
+    counter: DFF<Bits<N>>,
+    state: DFF<Bit>,
 }
 
-impl<F: Domain, const N: usize> Shot<F, N> {
+impl<const FREQ: u64, const N: usize> Shot<FREQ, N> {
     pub fn new(duration: Duration) -> Self {
         let duration_nanos = duration.as_nanos() as f64 * NANOS_PER_FEMTO; // duration in femtos
-        let clock_period_nanos = freq_hz_to_period_femto(F::FREQ as f64);
+        let clock_period_nanos = freq_hz_to_period_femto(FREQ as f64);
         let clocks = (duration_nanos / clock_period_nanos).floor() as u64;
         assert!(clocks < (1_u64 << N));
         Self {
@@ -30,22 +30,22 @@ impl<F: Domain, const N: usize> Shot<F, N> {
     }
 }
 
-impl<F: Domain, const N: usize> Logic for Shot<F, N> {
+impl<const FREQ: u64, const N: usize> Logic for Shot<FREQ, N> {
     #[hdl_gen]
     fn update(&mut self) {
         self.counter.clk.next = self.clock.val();
         self.state.clk.next = self.clock.val();
         self.counter.d.next = self.counter.q.val();
-        if self.state.q.val().raw() {
+        if self.state.q.val() {
             self.counter.d.next = self.counter.q.val() + 1_u32;
         }
         self.state.d.next = self.state.q.val();
-        if !self.state.q.val().raw() && self.trigger.val().raw() {
-            self.state.d.next = true.into();
+        if !self.state.q.val() && self.trigger.val() {
+            self.state.d.next = true;
             self.counter.d.next = 0_u32.into();
         }
-        if self.state.q.val().raw() && (self.counter.q.val() == self.duration.val()) {
-            self.state.d.next = false.into();
+        if self.state.q.val() && (self.counter.q.val() == self.duration.val()) {
+            self.state.d.next = false;
         }
         self.active.next = self.state.q.val();
     }

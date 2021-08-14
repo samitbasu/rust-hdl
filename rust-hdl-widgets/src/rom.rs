@@ -1,16 +1,15 @@
 use rust_hdl_core::prelude::*;
 use std::collections::BTreeMap;
-use std::marker::PhantomData;
 
 #[derive(LogicBlock)]
-pub struct ROM<A: Synth + Ord, D: Synth, F: Domain> {
-    pub address: Signal<In, A, F>,
-    pub data: Signal<Out, D, F>,
-    _sim: BTreeMap<A, D>,
+pub struct ROM<D: Synth, const N: usize> {
+    pub address: Signal<In, Bits<N>>,
+    pub data: Signal<Out, D>,
+    _sim: BTreeMap<Bits<N>, D>,
 }
 
-impl<A: Synth + Ord, D: Synth, F: Domain> ROM<A, D, F> {
-    pub fn new(values: BTreeMap<A, D>) -> Self {
+impl<D: Synth, const N: usize> ROM<D, N> {
+    pub fn new(values: BTreeMap<Bits<N>, D>) -> Self {
         Self {
             address: Signal::default(),
             data: Signal::new_with_default(D::default()),
@@ -19,15 +18,9 @@ impl<A: Synth + Ord, D: Synth, F: Domain> ROM<A, D, F> {
     }
 }
 
-impl<A: Synth + Ord, D: Synth, F: Domain> Logic for ROM<A, D, F> {
+impl<D: Synth, const N: usize> Logic for ROM<D, N> {
     fn update(&mut self) {
-        self.data.next = Tagged(
-            *self
-                ._sim
-                .get(&self.address.val().raw())
-                .unwrap_or(&D::default()),
-            PhantomData,
-        );
+        self.data.next = *self._sim.get(&self.address.val()).unwrap_or(&D::default());
     }
 
     fn connect(&mut self) {

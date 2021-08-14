@@ -6,7 +6,7 @@ use std::fs::File;
 
 #[derive(LogicBlock)]
 struct ROMTest {
-    rom: ROM<Bits<4>, Bits<4>, Async>,
+    rom: ROM<Bits<4>, 4>,
 }
 
 impl ROMTest {

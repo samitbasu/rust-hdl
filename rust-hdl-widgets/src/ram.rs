@@ -1,52 +1,30 @@
 use rust_hdl_core::prelude::*;
 use std::collections::BTreeMap;
-use std::marker::PhantomData;
 
-#[derive(LogicInterface)]
-pub struct RAMRead<A: Synth + Ord, D: Synth, R: Domain> {
-    pub address: Signal<In, A, R>,
-    pub clock: Signal<In, Clock, R>,
-    pub data: Signal<Out, D, R>,
+#[derive(LogicInterface, Default)]
+pub struct RAMRead<D: Synth, const N: usize> {
+    pub address: Signal<In, Bits<N>>,
+    pub clock: Signal<In, Clock>,
+    pub data: Signal<Out, D>,
 }
 
-impl<A: Synth + Ord, D: Synth, R: Domain> Default for RAMRead<A, D, R> {
-    fn default() -> Self {
-        Self {
-            address: Default::default(),
-            clock: Default::default(),
-            data: Default::default(),
-        }
-    }
-}
-
-#[derive(LogicInterface)]
-pub struct RAMWrite<A: Synth + Ord, D: Synth, W: Domain> {
-    pub address: Signal<In, A, W>,
-    pub clock: Signal<In, Clock, W>,
-    pub data: Signal<In, D, W>,
-    pub enable: Signal<In, bool, W>,
-}
-
-impl<A: Synth + Ord, D: Synth, W: Domain> Default for RAMWrite<A, D, W> {
-    fn default() -> Self {
-        Self {
-            address: Default::default(),
-            clock: Default::default(),
-            data: Default::default(),
-            enable: Default::default(),
-        }
-    }
+#[derive(LogicInterface, Default)]
+pub struct RAMWrite<D: Synth, const N: usize> {
+    pub address: Signal<In, Bits<N>>,
+    pub clock: Signal<In, Clock>,
+    pub data: Signal<In, D>,
+    pub enable: Signal<In, bool>,
 }
 
 #[derive(LogicBlock, Default)]
-pub struct RAM<A: Synth + Ord, D: Synth, R: Domain, W: Domain> {
-    pub read: RAMRead<A, D, R>,
-    pub write: RAMWrite<A, D, W>,
-    _sim: BTreeMap<A, D>,
+pub struct RAM<D: Synth, const N: usize> {
+    pub read: RAMRead<D, N>,
+    pub write: RAMWrite<D, N>,
+    _sim: BTreeMap<Bits<N>, D>,
 }
 
-impl<A: Synth + Ord, D: Synth, R: Domain, W: Domain> RAM<A, D, R, W> {
-    pub fn new(values: BTreeMap<A, D>) -> Self {
+impl<D: Synth, const N: usize> RAM<D, N> {
+    pub fn new(values: BTreeMap<Bits<N>, D>) -> Self {
         Self {
             read: Default::default(),
             write: Default::default(),
@@ -55,20 +33,17 @@ impl<A: Synth + Ord, D: Synth, R: Domain, W: Domain> RAM<A, D, R, W> {
     }
 }
 
-impl<A: Synth + Ord, D: Synth, R: Domain, W: Domain> Logic for RAM<A, D, R, W> {
+impl<D: Synth, const N: usize> Logic for RAM<D, N> {
     fn update(&mut self) {
         if self.read.clock.pos_edge() {
-            self.read.data.next = Tagged(
-                *self
-                    ._sim
-                    .get(&self.read.address.val().raw())
-                    .unwrap_or(&D::default()),
-                PhantomData,
-            );
+            self.read.data.next = *self
+                ._sim
+                .get(&self.read.address.val())
+                .unwrap_or(&D::default());
         }
-        if self.write.clock.pos_edge() && self.write.enable.val().raw() {
+        if self.write.clock.pos_edge() && self.write.enable.val() {
             self._sim
-                .insert(self.write.address.val().raw(), self.write.data.val().raw());
+                .insert(self.write.address.val(), self.write.data.val());
         }
     }
 
@@ -108,7 +83,7 @@ always @(posedge write_clock) begin
 end
             ",
             D = D::BITS - 1,
-            Acount = (1 << A::BITS) - 1,
+            Acount = (1 << N) - 1,
             init = init
         ))
     }

@@ -1,17 +1,16 @@
 use rust_hdl_core::prelude::*;
 use std::collections::BTreeMap;
-use std::marker::PhantomData;
 
 #[derive(LogicBlock)]
-pub struct SyncROM<A: Synth + Ord, D: Synth, F: Domain> {
-    pub address: Signal<In, A, F>,
-    pub clock: Signal<In, Clock, F>,
-    pub data: Signal<Out, D, F>,
-    _sim: BTreeMap<A, D>,
+pub struct SyncROM<D: Synth, const N: usize> {
+    pub address: Signal<In, Bits<N>>,
+    pub clock: Signal<In, Clock>,
+    pub data: Signal<Out, D>,
+    _sim: BTreeMap<Bits<N>, D>,
 }
 
-impl<A: Synth + Ord, D: Synth, F: Domain> SyncROM<A, D, F> {
-    pub fn new(values: BTreeMap<A, D>) -> Self {
+impl<D: Synth, const N: usize> SyncROM<D, N> {
+    pub fn new(values: BTreeMap<Bits<N>, D>) -> Self {
         Self {
             address: Signal::default(),
             data: Signal::new_with_default(D::default()),
@@ -21,16 +20,10 @@ impl<A: Synth + Ord, D: Synth, F: Domain> SyncROM<A, D, F> {
     }
 }
 
-impl<A: Synth + Ord, D: Synth, F: Domain> Logic for SyncROM<A, D, F> {
+impl<D: Synth, const N: usize> Logic for SyncROM<D, N> {
     fn update(&mut self) {
         if self.clock.pos_edge() {
-            self.data.next = Tagged(
-                *self
-                    ._sim
-                    .get(&self.address.val().raw())
-                    .unwrap_or(&D::default()),
-                PhantomData,
-            );
+            self.data.next = *self._sim.get(&self.address.val()).unwrap_or(&D::default());
         }
     }
 
@@ -63,7 +56,7 @@ always @(posedge clock) begin
    data <= mem[address];
 end",
             D = D::BITS - 1,
-            Acount = (1 << A::BITS) - 1,
+            Acount = (1 << N) - 1,
             init = init
         ))
     }

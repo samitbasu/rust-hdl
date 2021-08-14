@@ -1,28 +1,28 @@
 use rust_hdl_alchitry_cu::ice_pll::ICE40PLLBlock;
-use rust_hdl_alchitry_cu::pins::Mhz100;
 use rust_hdl_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::pulser::Pulser;
 use std::time::Duration;
 
-make_domain!(Mhz25, 25_000_000);
+const MHZ100: u64 = 100_000_000;
+const MHZ25: u64 = 25_000_000;
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPulserPLL {
-    pulser: Pulser<Mhz25>,
-    clock: Signal<In, Clock, Mhz100>,
-    leds: Signal<Out, Bits<8>, Async>,
-    pll: ICE40PLLBlock<Mhz100, Mhz25>,
+    pulser: Pulser<MHZ25>,
+    clock: Signal<In, Clock>,
+    leds: Signal<Out, Bits<8>>,
+    pll: ICE40PLLBlock<MHZ100, MHZ25>,
 }
 
 impl Logic for AlchitryCuPulserPLL {
     #[hdl_gen]
     fn update(&mut self) {
-        self.pulser.enable.next = true.into();
+        self.pulser.enable.next = true;
         self.pll.clock_in.next = self.clock.val();
         self.pulser.clock.next = self.pll.clock_out.val();
         self.leds.next = 0x00_u8.into();
-        if self.pulser.pulse.val().raw() {
+        if self.pulser.pulse.val() {
             self.leds.next = 0xAA_u8.into();
         }
     }

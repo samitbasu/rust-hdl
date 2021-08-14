@@ -30,11 +30,11 @@ pub mod rom;
 pub mod snore;
 pub mod sync_rom;
 
-make_domain!(Mhz1, 1_000_000);
+const MHZ1: u64 = 1_000_000;
 
 #[derive(LogicBlock)]
 struct UUT {
-    strobe: Strobe<Mhz1, 32>,
+    strobe: Strobe<MHZ1, 32>,
 }
 
 impl Logic for UUT {
@@ -47,7 +47,7 @@ impl Logic for UUT {
 
 #[test]
 fn test_strobe_as_verilog() {
-    let mut uut: Strobe<Mhz1, 32> = Strobe::new(10.0);
+    let mut uut: Strobe<MHZ1, 32> = Strobe::new(10.0);
     uut.enable.connect();
     uut.clock.connect();
     uut.connect_all();
@@ -63,8 +63,8 @@ fn test_strobe() {
     sim.add_clock(5, |x: &mut UUT| x.strobe.clock.next = !x.strobe.clock.val());
     sim.add_testbench(|mut sim: Sim<UUT>| {
         let mut x = sim.init()?;
-        x.strobe.enable.next = true.into();
-        x = sim.wait(10_000_000, x)?;
+        x.strobe.enable.next = true;
+        x = sim.wait(10_000, x)?;
         sim.done(x)?;
         Ok(())
     });

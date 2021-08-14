@@ -6,20 +6,19 @@ use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::*;
 
 use crate::snore;
-use rust_hdl_alchitry_cu::pins::Mhz100;
 
 #[derive(LogicBlock)]
-pub struct Fader<F: Domain> {
-    pub clock: Signal<In, Clock, F>,
-    pub active: Signal<Out, Bit, F>,
-    pub enable: Signal<In, Bit, F>,
-    strobe: Strobe<F, 32>,
-    pwm: PulseWidthModulator<F, 6>,
-    rom: ROM<Bits<8>, Bits<6>, F>,
-    counter: DFF<Bits<8>, F>,
+pub struct Fader<const FREQ: u64> {
+    pub clock: Signal<In, Clock>,
+    pub active: Signal<Out, Bit>,
+    pub enable: Signal<In, Bit>,
+    strobe: Strobe<FREQ, 32>,
+    pwm: PulseWidthModulator<6>,
+    rom: ROM<Bits<6>, 8>,
+    counter: DFF<Bits<8>>,
 }
 
-impl<F: Domain> Fader<F> {
+impl<const FREQ: u64> Fader<FREQ> {
     pub fn new(phase: u32) -> Self {
         let rom = (0..256_u32)
             .map(|x| (Bits::<8>::from(x), snore::snore(x + phase)))
@@ -36,7 +35,7 @@ impl<F: Domain> Fader<F> {
     }
 }
 
-impl<F: Domain> Logic for Fader<F> {
+impl<const FREQ: u64> Logic for Fader<FREQ> {
     #[hdl_gen]
     fn update(&mut self) {
         self.strobe.clock.next = self.clock.val();
@@ -52,36 +51,31 @@ impl<F: Domain> Logic for Fader<F> {
 }
 
 #[derive(LogicBlock)]
-pub struct AlchitryCuPWMVec<F: Domain, const P: usize> {
-    clock: Signal<In, Clock, F>,
-    leds: Signal<Out, Bits<8>, Async>,
-    local: Signal<Local, Bits<8>, Async>,
-    faders: [Fader<F>; 8],
+pub struct AlchitryCuPWMVec<const FREQ: u64, const P: usize> {
+    clock: Signal<In, Clock>,
+    leds: Signal<Out, Bits<8>>,
+    local: Signal<Local, Bits<8>>,
+    faders: [Fader<FREQ>; 8],
 }
 
-impl<F: Domain, const P: usize> Logic for AlchitryCuPWMVec<F, P> {
+impl<const FREQ: u64, const P: usize> Logic for AlchitryCuPWMVec<FREQ, P> {
     #[hdl_gen]
     fn update(&mut self) {
         for i in 0_usize..8_usize {
             self.faders[i].clock.next = self.clock.val();
-            self.faders[i].enable.next = true.into();
+            self.faders[i].enable.next = true;
         }
         self.local.next = 0x00_u8.into();
         for i in 0_usize..8_usize {
-            self.local.next = self
-                .local
-                .val()
-                .raw()
-                .replace_bit(i, self.faders[i].active.val().raw())
-                .into();
+            self.local.next = self.local.val().replace_bit(i, self.faders[i].active.val());
         }
         self.leds.next = self.local.val();
     }
 }
 
-impl<const P: usize> Default for AlchitryCuPWMVec<Mhz100, P> {
+impl<const FREQ: u64, const P: usize> Default for AlchitryCuPWMVec<FREQ, P> {
     fn default() -> Self {
-        let faders: [Fader<Mhz100>; 8] = [
+        let faders: [Fader<FREQ>; 8] = [
             Fader::new(0),
             Fader::new(18),
             Fader::new(36),
@@ -102,7 +96,7 @@ impl<const P: usize> Default for AlchitryCuPWMVec<Mhz100, P> {
 
 #[test]
 fn test_pwm_vec_synthesizes() {
-    let mut uut: AlchitryCuPWMVec<Mhz100, 6> = AlchitryCuPWMVec::default();
+    let mut uut: AlchitryCuPWMVec<100_000_000, 6> = AlchitryCuPWMVec::default();
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);

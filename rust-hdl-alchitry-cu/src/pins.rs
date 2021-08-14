@@ -1,15 +1,13 @@
 use rust_hdl_core::prelude::*;
 
-make_domain!(Mhz100, 100_000_000);
-
-pub fn clock() -> Signal<In, Clock, Mhz100> {
+pub fn clock() -> Signal<In, Clock> {
     let mut x = Signal::default();
     x.add_location(0, "P7");
     x.connect();
     x
 }
 
-pub fn leds() -> Signal<Out, Bits<8>, Async> {
+pub fn leds() -> Signal<Out, Bits<8>> {
     let mut x = Signal::default();
     for (ndx, uname) in ["J11", "K11", "K12", "K14", "L12", "L14", "M12", "N14"]
         .iter()

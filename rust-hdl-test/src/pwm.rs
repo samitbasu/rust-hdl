@@ -3,12 +3,10 @@ use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::pwm::PulseWidthModulator;
 use std::fs::File;
 
-make_domain!(Mhz1, 1_000_000);
-
 #[derive(LogicBlock)]
 struct PWMTest {
-    pub clock: Signal<In, Clock, Mhz1>,
-    pub pwm: PulseWidthModulator<Mhz1, 8>,
+    pub clock: Signal<In, Clock>,
+    pub pwm: PulseWidthModulator<8>,
 }
 
 impl Default for PWMTest {
@@ -24,7 +22,7 @@ impl Logic for PWMTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.pwm.clock.next = self.clock.val();
-        self.pwm.enable.next = true.into();
+        self.pwm.enable.next = true;
         self.pwm.threshold.next = 32_u32.into();
     }
 }
@@ -42,7 +40,7 @@ fn test_pwm_circuit() {
         let mut accum = 0;
         for _ndx in 0..256 {
             x = sim.wait(10, x)?;
-            if x.pwm.active.val().raw() {
+            if x.pwm.active.val() {
                 accum += 1;
             }
         }

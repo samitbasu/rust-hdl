@@ -1,14 +1,11 @@
 use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::ram::RAM;
-use std::collections::BTreeMap;
-
-make_domain!(Mhz1, 1_000_000);
 
 #[derive(LogicBlock)]
 struct RAMTest {
-    pub clock: Signal<In, Clock, Mhz1>,
-    pub ram: RAM<Bits<5>, Bits<16>, Mhz1, Mhz1>,
+    pub clock: Signal<In, Clock>,
+    pub ram: RAM<Bits<16>, 5>,
 }
 
 impl RAMTest {
@@ -36,9 +33,10 @@ fn test_synthesis_ram() {
     uut.ram.write.data.connect();
     uut.ram.write.address.connect();
     uut.ram.read.address.connect();
+    uut.connect_all();
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
-    yosys_validate("ram", &vlog).unwrap();
+    yosys_validate("ram_2", &vlog).unwrap();
 }
 
 #[test]
@@ -63,7 +61,7 @@ fn test_ram_works() {
         for sample in rdata.iter().enumerate() {
             x.ram.write.address.next = (sample.0 as u32).into();
             x.ram.write.data.next = (*sample.1).into();
-            x.ram.write.enable.next = true.into();
+            x.ram.write.enable.next = true;
             wait_clock_cycle!(sim, clock, x);
         }
         x.ram.write.enable.next = false.into();
@@ -71,7 +69,7 @@ fn test_ram_works() {
         for sample in rdata.iter().enumerate() {
             x.ram.read.address.next = (sample.0 as u32).into();
             wait_clock_cycle!(sim, clock, x);
-            assert_eq!(x.ram.read.data.val().raw(), *sample.1);
+            assert_eq!(x.ram.read.data.val(), *sample.1);
         }
         sim.done(x)?;
         Ok(())

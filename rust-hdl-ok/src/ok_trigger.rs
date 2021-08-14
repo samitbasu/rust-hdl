@@ -1,16 +1,14 @@
-use crate::MHz48;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
 
 #[derive(Clone, Debug, Default, LogicBlock)]
-pub struct TriggerOut<D: Domain, const N: u8> {
-    pub ok1: Signal<In, Bits<31>, MHz48>,
-    pub ok2: Signal<Out, Bits<17>, MHz48>,
-    pub clk: Signal<In, Clock, D>,
-    pub trigger: Signal<In, Bits<16>, D>,
+pub struct TriggerOut<const N: u8> {
+    pub ok1: Signal<In, Bits<31>>,
+    pub ok2: Signal<Out, Bits<17>>,
+    pub clk: Signal<In, Clock>,
+    pub trigger: Signal<In, Bits<16>>,
 }
 
-impl<D: Domain, const N: u8> Logic for TriggerOut<D, N> {
+impl<const N: u8> Logic for TriggerOut<N> {
     fn update(&mut self) {}
     fn connect(&mut self) {
         assert!(N >= 60 && N < 0x80);
@@ -57,7 +55,7 @@ endmodule  "#,
 fn test_trigger_out() {
     use rust_hdl_synth::top_wrap;
 
-    top_wrap!(TriggerOut<MHz48, 0x60>, Wrapper);
+    top_wrap!(TriggerOut<0x60>, Wrapper);
     let mut uut: Wrapper = Default::default();
     uut.uut.ok1.connect();
     uut.uut.clk.connect();
@@ -67,13 +65,13 @@ fn test_trigger_out() {
 }
 
 #[derive(Clone, Debug, Default, LogicBlock)]
-pub struct TriggerIn<D: Domain, const N: u8> {
-    pub ok1: Signal<In, Bits<31>, MHz48>,
-    pub clk: Signal<In, Clock, D>,
-    pub trigger: Signal<Out, Bits<16>, D>,
+pub struct TriggerIn<const N: u8> {
+    pub ok1: Signal<In, Bits<31>>,
+    pub clk: Signal<In, Clock>,
+    pub trigger: Signal<Out, Bits<16>>,
 }
 
-impl<D: Domain, const N: u8> Logic for TriggerIn<D, N> {
+impl<const N: u8> Logic for TriggerIn<N> {
     fn update(&mut self) {}
     fn connect(&mut self) {
         assert!(N >= 0x40 && N < 0x60);
@@ -117,10 +115,10 @@ endmodule  "#,
 fn test_trigger_in() {
     use rust_hdl_synth::top_wrap;
 
-    top_wrap!(TriggerIn<MHz48, 0x40>, Wrapper);
+    top_wrap!(TriggerIn<0x40>, Wrapper);
     let mut uut: Wrapper = Default::default();
     uut.uut.ok1.connect();
     uut.uut.clk.connect();
     uut.connect_all();
-    yosys_validate("trigin", &generate_verilog(&uut)).unwrap();
+    rust_hdl_synth::yosys_validate("trigin", &generate_verilog(&uut)).unwrap();
 }

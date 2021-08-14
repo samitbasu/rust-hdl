@@ -1,15 +1,13 @@
 use rust_hdl_core::prelude::*;
 
 use crate::ok_hi::OpalKellyHostInterface;
-use crate::MHz48;
-use rust_hdl_synth::yosys_validate;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct OpalKellyHost {
     pub hi: OpalKellyHostInterface,
-    pub ok1: Signal<Out, Bits<31>, MHz48>,
-    pub ok2: Signal<In, Bits<17>, MHz48>,
-    pub ti_clk: Signal<Out, Clock, MHz48>,
+    pub ok1: Signal<Out, Bits<31>>,
+    pub ok2: Signal<In, Bits<17>>,
+    pub ti_clk: Signal<Out, Clock>,
 }
 
 impl Logic for OpalKellyHost {
@@ -84,5 +82,5 @@ fn test_host_interface_synthesizes() {
     uut.uut.ok2.connect();
     uut.uut.hi.sig_in.connect();
     uut.connect_all();
-    yosys_validate("okhi", &generate_verilog(&uut)).unwrap();
+    rust_hdl_synth::yosys_validate("okhi", &generate_verilog(&uut)).unwrap();
 }

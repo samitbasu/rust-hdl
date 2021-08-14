@@ -1,15 +1,13 @@
-use crate::MHz48;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
 
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct BTPipeIn<const N: u8> {
-    pub ok1: Signal<In, Bits<31>, MHz48>,
-    pub ok2: Signal<Out, Bits<17>, MHz48>,
-    pub write: Signal<Out, bool, MHz48>,
-    pub blockstrobe: Signal<Out, bool, MHz48>,
-    pub dataout: Signal<Out, Bits<16>, MHz48>,
-    pub ready: Signal<In, bool, MHz48>,
+    pub ok1: Signal<In, Bits<31>>,
+    pub ok2: Signal<Out, Bits<17>>,
+    pub write: Signal<Out, bool>,
+    pub blockstrobe: Signal<Out, bool>,
+    pub dataout: Signal<Out, Bits<16>>,
+    pub ready: Signal<In, bool>,
 }
 
 impl<const N: u8> Logic for BTPipeIn<N> {
@@ -67,15 +65,15 @@ fn test_bt_pipein_synthesizes() {
     uut.uut.ok1.connect();
     uut.uut.ready.connect();
     uut.connect_all();
-    yosys_validate("btpipein", &generate_verilog(&uut)).unwrap();
+    rust_hdl_synth::yosys_validate("btpipein", &generate_verilog(&uut)).unwrap();
 }
 
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct PipeIn<const N: u8> {
-    pub ok1: Signal<In, Bits<31>, MHz48>,
-    pub ok2: Signal<Out, Bits<17>, MHz48>,
-    pub write: Signal<Out, bool, MHz48>,
-    pub dataout: Signal<Out, Bits<16>, MHz48>,
+    pub ok1: Signal<In, Bits<31>>,
+    pub ok2: Signal<Out, Bits<17>>,
+    pub write: Signal<Out, bool>,
+    pub dataout: Signal<Out, Bits<16>>,
 }
 
 impl<const N: u8> Logic for PipeIn<N> {
@@ -125,15 +123,15 @@ fn test_pipein_synthesizes() {
     let mut uut: Wrapper = Default::default();
     uut.uut.ok1.connect();
     uut.connect_all();
-    yosys_validate("pipein", &generate_verilog(&uut)).unwrap();
+    rust_hdl_synth::yosys_validate("pipein", &generate_verilog(&uut)).unwrap();
 }
 
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct PipeOut<const N: u8> {
-    pub ok1: Signal<In, Bits<31>, MHz48>,
-    pub ok2: Signal<Out, Bits<17>, MHz48>,
-    pub read: Signal<Out, Bit, MHz48>,
-    pub datain: Signal<In, Bits<16>, MHz48>,
+    pub ok1: Signal<In, Bits<31>>,
+    pub ok2: Signal<Out, Bits<17>>,
+    pub read: Signal<Out, Bit>,
+    pub datain: Signal<In, Bits<16>>,
 }
 
 impl<const N: u8> Logic for PipeOut<N> {
@@ -188,12 +186,12 @@ fn test_pipeout_synthesizes() {
 
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct BTPipeOut<const N: u8> {
-    pub ok1: Signal<In, Bits<31>, MHz48>,
-    pub ok2: Signal<Out, Bits<17>, MHz48>,
-    pub read: Signal<Out, Bit, MHz48>,
-    pub blockstrobe: Signal<Out, Bit, MHz48>,
-    pub datain: Signal<In, Bits<16>, MHz48>,
-    pub ready: Signal<In, Bit, MHz48>,
+    pub ok1: Signal<In, Bits<31>>,
+    pub ok2: Signal<Out, Bits<17>>,
+    pub read: Signal<Out, Bit>,
+    pub blockstrobe: Signal<Out, Bit>,
+    pub datain: Signal<In, Bits<16>>,
+    pub ready: Signal<In, Bit>,
 }
 
 impl<const N: u8> Logic for BTPipeOut<N> {
@@ -252,5 +250,5 @@ fn test_btpipeout_synthesizes() {
     uut.uut.datain.connect();
     uut.uut.ready.connect();
     uut.connect_all();
-    yosys_validate("btpipeout", &generate_verilog(&uut)).unwrap();
+    rust_hdl_synth::yosys_validate("btpipeout", &generate_verilog(&uut)).unwrap();
 }

@@ -1,13 +1,11 @@
 use rust_hdl_core::prelude::*;
 
-use crate::MHz48;
-
 #[derive(Clone, Debug, LogicInterface)]
 pub struct OpalKellyHostInterface {
-    pub sig_in: Signal<In, Bits<8>, MHz48>,
-    pub sig_out: Signal<Out, Bits<2>, MHz48>,
-    pub sig_inout: Signal<InOut, Bits<16>, MHz48>,
-    pub sig_aa: Signal<InOut, Bit, MHz48>,
+    pub sig_in: Signal<In, Bits<8>>,
+    pub sig_out: Signal<Out, Bits<2>>,
+    pub sig_inout: Signal<InOut, Bits<16>>,
+    pub sig_aa: Signal<InOut, Bit>,
 }
 
 impl OpalKellyHostInterface {

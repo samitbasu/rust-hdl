@@ -2,15 +2,15 @@ use crate::dff::DFF;
 use rust_hdl_core::prelude::*;
 
 #[derive(LogicBlock)]
-pub struct PulseWidthModulator<F: Domain, const N: usize> {
-    pub enable: Signal<In, Bit, F>,
-    pub threshold: Signal<In, Bits<N>, F>,
-    pub clock: Signal<In, Clock, F>,
-    pub active: Signal<Out, Bit, F>,
-    counter: DFF<Bits<N>, F>,
+pub struct PulseWidthModulator<const N: usize> {
+    pub enable: Signal<In, Bit>,
+    pub threshold: Signal<In, Bits<N>>,
+    pub clock: Signal<In, Clock>,
+    pub active: Signal<Out, Bit>,
+    counter: DFF<Bits<N>>,
 }
 
-impl<F: Domain, const N: usize> Default for PulseWidthModulator<F, N> {
+impl<const N: usize> Default for PulseWidthModulator<N> {
     fn default() -> Self {
         Self {
             enable: Signal::default(),
@@ -22,7 +22,7 @@ impl<F: Domain, const N: usize> Default for PulseWidthModulator<F, N> {
     }
 }
 
-impl<F: Domain, const N: usize> Logic for PulseWidthModulator<F, N> {
+impl<const N: usize> Logic for PulseWidthModulator<N> {
     #[hdl_gen]
     fn update(&mut self) {
         self.counter.clk.next = self.clock.val();

@@ -5,10 +5,7 @@ use std::time::Duration;
 use ok_hi::OpalKellyHostInterface;
 use ok_host::OpalKellyHost;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::pulser::Pulser;
-
-use crate::ucf_gen::generate_ucf;
 
 pub mod ok_hi;
 pub mod ok_host;
@@ -20,14 +17,14 @@ pub mod prelude;
 pub mod synth;
 pub mod ucf_gen;
 
-make_domain!(MHz48, 48_000_000);
+const MHZ48: u64 = 48_000_000;
 
 #[derive(LogicBlock)]
 pub struct OKTest1 {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
-    pub led: Signal<Out, Bits<8>, Async>,
-    pub pulser: Pulser<MHz48>,
+    pub led: Signal<Out, Bits<8>>,
+    pub pulser: Pulser<MHZ48>,
 }
 
 macro_rules! link {
@@ -53,8 +50,8 @@ impl Logic for OKTest1 {
         link!(self.hi.sig_out, self.ok_host.hi.sig_out);
         link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
         self.pulser.clock.next = self.ok_host.ti_clk.val();
-        self.pulser.enable.next = true.into();
-        if self.pulser.pulse.val().any() {
+        self.pulser.enable.next = true;
+        if self.pulser.pulse.val() {
             self.led.next = 0xFF_u8.into();
         } else {
             self.led.next = 0x00_u8.into();
@@ -73,7 +70,7 @@ fn test_ok_host_synthesizable() {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
-    let ucf = generate_ucf(&uut);
+    let ucf = crate::ucf_gen::generate_ucf(&uut);
     println!("{}", ucf);
-    yosys_validate("vlog", &vlog).unwrap();
+    rust_hdl_synth::yosys_validate("vlog", &vlog).unwrap();
 }
