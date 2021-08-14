@@ -1,4 +1,6 @@
 pub mod dff;
+pub mod fifo_components;
+pub mod fifo_if;
 pub mod prelude;
 pub mod pulser;
 pub mod pwm;

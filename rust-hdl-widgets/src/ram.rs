@@ -2,28 +2,54 @@ use rust_hdl_core::prelude::*;
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
+#[derive(LogicInterface)]
+pub struct RAMRead<A: Synth + Ord, D: Synth, R: Domain> {
+    pub address: Signal<In, A, R>,
+    pub clock: Signal<In, Clock, R>,
+    pub data: Signal<Out, D, R>,
+}
+
+impl<A: Synth + Ord, D: Synth, R: Domain> Default for RAMRead<A, D, R> {
+    fn default() -> Self {
+        Self {
+            address: Default::default(),
+            clock: Default::default(),
+            data: Default::default(),
+        }
+    }
+}
+
+#[derive(LogicInterface)]
+pub struct RAMWrite<A: Synth + Ord, D: Synth, W: Domain> {
+    pub address: Signal<In, A, W>,
+    pub clock: Signal<In, Clock, W>,
+    pub data: Signal<In, D, W>,
+    pub enable: Signal<In, bool, W>,
+}
+
+impl<A: Synth + Ord, D: Synth, W: Domain> Default for RAMWrite<A, D, W> {
+    fn default() -> Self {
+        Self {
+            address: Default::default(),
+            clock: Default::default(),
+            data: Default::default(),
+            enable: Default::default(),
+        }
+    }
+}
+
 #[derive(LogicBlock, Default)]
 pub struct RAM<A: Synth + Ord, D: Synth, R: Domain, W: Domain> {
-    pub read_address: Signal<In, A, R>,
-    pub read_clock: Signal<In, Clock, R>,
-    pub read_data: Signal<Out, D, R>,
-    pub write_address: Signal<In, A, W>,
-    pub write_clock: Signal<In, Clock, W>,
-    pub write_data: Signal<In, D, W>,
-    pub write_enable: Signal<In, bool, W>,
+    pub read: RAMRead<A, D, R>,
+    pub write: RAMWrite<A, D, W>,
     _sim: BTreeMap<A, D>,
 }
 
 impl<A: Synth + Ord, D: Synth, R: Domain, W: Domain> RAM<A, D, R, W> {
     pub fn new(values: BTreeMap<A, D>) -> Self {
         Self {
-            read_address: Default::default(),
-            read_clock: Default::default(),
-            read_data: Default::default(),
-            write_address: Default::default(),
-            write_clock: Default::default(),
-            write_data: Default::default(),
-            write_enable: Default::default(),
+            read: Default::default(),
+            write: Default::default(),
             _sim: values,
         }
     }
@@ -31,23 +57,23 @@ impl<A: Synth + Ord, D: Synth, R: Domain, W: Domain> RAM<A, D, R, W> {
 
 impl<A: Synth + Ord, D: Synth, R: Domain, W: Domain> Logic for RAM<A, D, R, W> {
     fn update(&mut self) {
-        if self.read_clock.pos_edge() {
-            self.read_data.next = Tagged(
+        if self.read.clock.pos_edge() {
+            self.read.data.next = Tagged(
                 *self
                     ._sim
-                    .get(&self.read_address.val().raw())
+                    .get(&self.read.address.val().raw())
                     .unwrap_or(&D::default()),
                 PhantomData,
             );
         }
-        if self.write_clock.pos_edge() && self.write_enable.val().raw() {
+        if self.write.clock.pos_edge() && self.write.enable.val().raw() {
             self._sim
-                .insert(self.write_address.val().raw(), self.write_data.val().raw());
+                .insert(self.write.address.val().raw(), self.write.data.val().raw());
         }
     }
 
     fn connect(&mut self) {
-        self.read_data.connect();
+        self.read.data.connect();
     }
 
     fn hdl(&self) -> Verilog {

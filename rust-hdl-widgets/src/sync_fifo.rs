@@ -1,8 +1,10 @@
-use crate::dff::DFF;
-use crate::ram::RAM;
 use rust_hdl_core::bits::bit_cast;
 use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
+
+use crate::dff::DFF;
+use crate::fifo_if::FIFOReadIF;
+use crate::ram::RAM;
 
 #[derive(LogicBlock)]
 pub struct SyncFIFO<D: Synth, T: Domain, const N: usize, const NP1: usize, const BlockSize: u32> {
@@ -47,7 +49,7 @@ impl<D: Synth, T: Domain, const N: usize, const NP1: usize, const Blocksize: u32
     for SyncFIFO<D, T, N, NP1, Blocksize>
 {
     fn default() -> Self {
-        assert_eq!(N+1, NP1);
+        assert_eq!(N + 1, NP1);
         assert!(NP1 < 32);
         Self {
             clock: Default::default(),
@@ -90,8 +92,8 @@ impl<D: Synth, T: Domain, const N: usize, const NP1: usize, const Blocksize: u32
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the clocks.
-        self.ram.read_clock.next = self.clock.val();
-        self.ram.write_clock.next = self.clock.val();
+        self.ram.read.clock.next = self.clock.val();
+        self.ram.write.clock.next = self.clock.val();
         self.write_address.clk.next = self.clock.val();
         self.write_address_delayed.clk.next = self.clock.val();
         self.read_address.clk.next = self.clock.val();
@@ -103,7 +105,7 @@ impl<D: Synth, T: Domain, const N: usize, const NP1: usize, const Blocksize: u32
         // cycle it is written.
         self.write_address_delayed.d.next = self.write_address.q.val();
         // Default to not writing
-        self.ram.write_enable.next = false.into();
+        self.ram.write.enable.next = false.into();
         // Calculate the empty field - this is used to determine if we
         // can read
         self.is_empty.next =
@@ -136,21 +138,21 @@ impl<D: Synth, T: Domain, const N: usize, const NP1: usize, const Blocksize: u32
         self.empty.next = self.is_empty.val();
 
         // Connect our write address register to the RAM write address
-        self.ram.write_address.next =
+        self.ram.write.address.next =
             tagged_bit_cast::<_, N, NP1>(self.write_address.q.val() & self.fifo_address_mask.val());
-        self.ram.read_address.next =
+        self.ram.read.address.next =
             tagged_bit_cast::<_, N, NP1>(self.read_address.q.val() & self.fifo_address_mask.val());
-        self.ram.write_data.next = self.data_in.val();
-        self.data_out.next = self.ram.read_data.val();
+        self.ram.write.data.next = self.data_in.val();
+        self.data_out.next = self.ram.read.data.val();
 
         // Assign the enable for the write based on the outside
         // request and our availability to write
         if (self.write.val() & !self.is_full.val()).any() {
             self.write_address.d.next = self.write_address.q.val() + 1_u32;
-            self.ram.write_enable.next = true.into();
+            self.ram.write.enable.next = true.into();
         } else {
             self.write_address.d.next = self.write_address.q.val();
-            self.ram.write_enable.next = false.into();
+            self.ram.write.enable.next = false.into();
         }
 
         // Assign the read advance based on the outside request
@@ -159,7 +161,7 @@ impl<D: Synth, T: Domain, const N: usize, const NP1: usize, const Blocksize: u32
             self.read_address.d.next = self.read_address.q.val() + 1_u32;
             // We "forward" by a cycle so that we don't loose a cycle waiting for the
             // update to propogate through the flip flop.
-            self.ram.read_address.next = tagged_bit_cast::<_, N, NP1>(
+            self.ram.read.address.next = tagged_bit_cast::<_, N, NP1>(
                 (self.read_address.q.val() + 1_u32) & self.fifo_address_mask.val(),
             );
         } else {
