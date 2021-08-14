@@ -1,8 +1,5 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok::ok_hi::OpalKellyHostInterface;
-use rust_hdl_ok::ok_host::OpalKellyHost;
-use rust_hdl_ok::pins::xem_6010_leds;
-use rust_hdl_ok::MHz48;
+use rust_hdl_ok::prelude::*;
 
 use crate::alchitry_cu_pwm_vec_srom::FaderWithSyncROM;
 
@@ -10,9 +7,9 @@ use crate::alchitry_cu_pwm_vec_srom::FaderWithSyncROM;
 pub struct OpalKellyXEM6010Wave {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
-    pub led: Signal<Out, Bits<8>, Async>,
-    pub local: Signal<Local, Bits<8>, Async>,
-    pub faders: [FaderWithSyncROM<MHz48>; 8],
+    pub led: Signal<Out, Bits<8>>,
+    pub local: Signal<Local, Bits<8>>,
+    pub faders: [FaderWithSyncROM<MHZ48>; 8],
 }
 
 impl Logic for OpalKellyXEM6010Wave {
@@ -39,7 +36,7 @@ impl Logic for OpalKellyXEM6010Wave {
 
 impl Default for OpalKellyXEM6010Wave {
     fn default() -> Self {
-        let faders: [FaderWithSyncROM<MHz48>; 8] = [
+        let faders: [FaderWithSyncROM<MHZ48>; 8] = [
             FaderWithSyncROM::new(0),
             FaderWithSyncROM::new(18),
             FaderWithSyncROM::new(36),

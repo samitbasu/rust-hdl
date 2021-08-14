@@ -12,9 +12,9 @@ rust_hdl_widgets = {path="../rust-hdl-widgets"}
 rust_hdl_synth = {path="../rust-hdl-synth"}
 rust_hdl_alchitry_cu = {path="../rust-hdl-alchitry-cu"}
 rust_hdl_ok = {path="../rust-hdl-ok"}
-#rust_hdl_ok_frontpanel_sys = {path= "../rust-hdl-ok-frontpanel-sys" }
+rust_hdl_ok_frontpanel_sys = {path= "../rust-hdl-ok-frontpanel-sys", optional=true}
 num-bigint = "0.4.0"
 rand = "0.8.4"
 
 [features]
-fpga_hw_test = []
+fpga_hw_test = ["rust_hdl_ok_frontpanel_sys"]

@@ -8,8 +8,8 @@ use rust_hdl_widgets::prelude::*;
 pub struct OpalKellyXEM6010Blinky {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
-    pub led: Signal<Out, Bits<8>, Async>,
-    pub pulser: Pulser<MHz48>,
+    pub led: Signal<Out, Bits<8>>,
+    pub pulser: Pulser<MHZ48>,
 }
 
 impl OpalKellyXEM6010Blinky {

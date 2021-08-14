@@ -175,6 +175,7 @@ endmodule
 #[test]
 fn test_pipeout_synthesizes() {
     use rust_hdl_synth::top_wrap;
+    use rust_hdl_synth::yosys_validate;
 
     top_wrap!(PipeOut<0xA0>, Wrapper);
     let mut uut: Wrapper = Default::default();

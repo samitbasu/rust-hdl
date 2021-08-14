@@ -11,7 +11,7 @@ use std::num::Wrapping;
 pub struct OpalKellyXEM6010PipeTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
-    pub accum: DFF<Bits<16>, MHz48>,
+    pub accum: DFF<Bits<16>>,
     pub o_wire: WireOut<0x20>,
     pub i_pipe: PipeIn<0x80>,
 }
@@ -47,7 +47,7 @@ impl Logic for OpalKellyXEM6010PipeTest {
 
         // Logic
         self.accum.d.next = self.accum.q.val();
-        if self.i_pipe.write.val().all() {
+        if self.i_pipe.write.val() {
             self.accum.d.next = self.accum.q.val() + self.i_pipe.dataout.val();
         }
         self.o_wire.datain.next = self.accum.q.val();
@@ -93,11 +93,11 @@ fn test_opalkelly_xem_6010_pipe_in_runtime() -> Result<(), OkError> {
 pub struct OpalKellyXEM6010PipeRAMTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
-    pub ram: RAM<Bits<8>, Bits<16>, MHz48, MHz48>,
+    pub ram: RAM<Bits<16>, 8>,
     pub i_pipe: PipeIn<0x80>,
     pub o_pipe: PipeOut<0xA0>,
-    pub read_address: DFF<Bits<8>, MHz48>,
-    pub write_address: DFF<Bits<8>, MHz48>,
+    pub read_address: DFF<Bits<8>>,
+    pub write_address: DFF<Bits<8>>,
 }
 
 impl OpalKellyXEM6010PipeRAMTest {
@@ -126,8 +126,8 @@ impl Logic for OpalKellyXEM6010PipeRAMTest {
         // Clock connections
         self.read_address.clk.next = self.ok_host.ti_clk.val();
         self.write_address.clk.next = self.ok_host.ti_clk.val();
-        self.ram.read_clock.next = self.ok_host.ti_clk.val();
-        self.ram.write_clock.next = self.ok_host.ti_clk.val();
+        self.ram.read.clock.next = self.ok_host.ti_clk.val();
+        self.ram.write.clock.next = self.ok_host.ti_clk.val();
 
         // Bus connections
         self.i_pipe.ok1.next = self.ok_host.ok1.val();
@@ -135,11 +135,11 @@ impl Logic for OpalKellyXEM6010PipeRAMTest {
         self.ok_host.ok2.next = self.i_pipe.ok2.val() | self.o_pipe.ok2.val();
 
         // Data connections
-        self.ram.read_address.next = self.read_address.q.val();
-        self.ram.write_address.next = self.write_address.q.val();
-        self.o_pipe.datain.next = self.ram.read_data.val();
-        self.ram.write_data.next = self.i_pipe.dataout.val();
-        self.ram.write_enable.next = self.i_pipe.write.val();
+        self.ram.read.address.next = self.read_address.q.val();
+        self.ram.write.address.next = self.write_address.q.val();
+        self.o_pipe.datain.next = self.ram.read.data.val();
+        self.ram.write.data.next = self.i_pipe.dataout.val();
+        self.ram.write.enable.next = self.i_pipe.write.val();
 
         // Advance the address counters
         self.write_address.d.next = self.write_address.q.val() + self.i_pipe.write.val();

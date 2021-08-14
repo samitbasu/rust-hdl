@@ -52,15 +52,16 @@ fn test_pulser_synthesis() {
 #[test]
 fn test_pulser() {
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Pulser<1_000>| x.clock.next = !x.clock.val());
-    sim.add_testbench(|mut sim: Sim<Pulser<1_000>>| {
+    const KHZ10: u64 = 10_000;
+    sim.add_clock(5, |x: &mut Pulser<KHZ10>| x.clock.next = !x.clock.val());
+    sim.add_testbench(|mut sim: Sim<Pulser<KHZ10>>| {
         let mut x = sim.init()?;
         x.enable.next = true;
         x = sim.wait(10_000_000, x)?;
         sim.done(x)?;
         Ok(())
     });
-    let mut uut: Pulser<10_000> = Pulser::new(100.0, Duration::from_millis(100));
+    let mut uut: Pulser<KHZ10> = Pulser::new(100.0, Duration::from_millis(100));
     uut.clock.connect();
     uut.enable.connect();
     uut.connect_all();

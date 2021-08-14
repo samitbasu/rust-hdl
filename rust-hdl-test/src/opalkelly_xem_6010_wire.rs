@@ -1,4 +1,5 @@
 use crate::ok_tools::ok_test_prelude;
+use rust_hdl_core::bits::bit_cast;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::ok_trigger::{TriggerIn, TriggerOut};
 use rust_hdl_ok::prelude::*;
@@ -10,14 +11,14 @@ use std::time::Duration;
 pub struct OpalKellyXEM6010WireTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
-    pub led: Signal<Out, Bits<8>, Async>,
+    pub led: Signal<Out, Bits<8>>,
     pub wire_0: WireIn<0x0>,
     pub wire_1: WireIn<0x1>,
     pub o_wire: WireOut<0x20>,
     pub o_wire_1: WireOut<0x21>,
-    pub trig: TriggerIn<MHz48, 0x40>,
-    pub o_trig: TriggerOut<MHz48, 0x60>,
-    pub trig_counter: DFF<Bits<16>, MHz48>,
+    pub trig: TriggerIn<0x40>,
+    pub o_trig: TriggerOut<0x60>,
+    pub trig_counter: DFF<Bits<16>>,
 }
 
 impl OpalKellyXEM6010WireTest {
@@ -44,10 +45,7 @@ impl Logic for OpalKellyXEM6010WireTest {
         self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
         link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
         link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
-        self.led.next = tagged_bit_cast::<MHz48, 8, 16>(
-            !(self.wire_0.dataout.val() & self.wire_1.dataout.val()),
-        )
-        .to_async();
+        self.led.next = bit_cast::<8, 16>(!(self.wire_0.dataout.val() & self.wire_1.dataout.val()));
         self.o_wire.datain.next = self.wire_0.dataout.val();
         //
         self.trig_counter.d.next = self.trig_counter.q.val() + self.trig.trigger.val();
