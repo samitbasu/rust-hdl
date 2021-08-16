@@ -1,19 +1,29 @@
 use rust_hdl_core::prelude::*;
 
 use crate::dff::DFF;
-use crate::fifo_if::{FIFOReadIF, FIFOWriteIF};
-use crate::ram::{RAMRead, RAMWrite};
 use rust_hdl_core::bits::bit_cast;
 
 // The read side of the circuitry for the FIFO.  Manages the read
 // address
 #[derive(LogicBlock)]
 pub struct FIFOReadLogic<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
+    // Clock
     pub clock: Signal<In, Clock>,
-    pub sig: FIFOReadIF<D>,
+    // FIFO facing interface
+    pub read: Signal<In, Bit>,
+    pub data_out: Signal<Out, D>,
+    pub empty: Signal<Out, Bit>,
+    pub almost_empty: Signal<Out, Bit>,
+    pub underflow: Signal<Out, Bit>,
+    // Delayed write address
     pub write_address_delayed: Signal<In, Bits<NP1>>,
-    pub ram_read: RAMRead<D, N>,
+    // RAM read interface (connect to RAM)
+    pub ram_read_address: Signal<Out, Bits<N>>,
+    pub ram_read_data: Signal<In, D>,
+    pub ram_read_clock: Signal<Out, Clock>,
+    // Read address
     pub read_address_out: Signal<Out, Bits<NP1>>,
+    // Internal details
     read_address: DFF<Bits<NP1>>,
     is_empty: Signal<Local, Bit>,
     fill_level: Signal<Local, Bits<NP1>>,
@@ -31,7 +41,7 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
         // Connect the clocks.
         self.read_address.clk.next = self.clock.val();
         self.dff_underflow.clk.next = self.clock.val();
-        self.ram_read.clock.next = self.clock.val();
+        self.ram_read_clock.next = self.clock.val();
         // Compute the is empty flag
         self.is_empty.next = (self.read_address.q.val() == self.write_address_delayed.val()).into();
         // Estimate the fill level
@@ -40,29 +50,29 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
             - (self.read_address.q.val() & self.fifo_address_mask.val()))
             & self.fifo_address_mask.val();
         // Compute the almost empty signal
-        self.sig.almost_empty.next = (self.fill_level.val() < self.block_size.val()).into();
+        self.almost_empty.next = (self.fill_level.val() < self.block_size.val()).into();
         // Propagate the empty signal.
-        self.sig.empty.next = self.is_empty.val();
+        self.empty.next = self.is_empty.val();
         // Set the RAM read address by masking off the lower N bits of the pointer.
-        self.ram_read.address.next =
+        self.ram_read_address.next =
             bit_cast::<N, NP1>(self.read_address.q.val() & self.fifo_address_mask.val());
         // Forward the output of the RAM read to the FIFO interface.
-        self.sig.data_out.next = self.ram_read.data.val();
+        self.data_out.next = self.ram_read_data.val();
         // Assign the read advance based on the outside request
         // and our availability to read.
-        if self.sig.read.val() & !self.is_empty.val() {
+        if self.read.val() & !self.is_empty.val() {
             self.read_address.d.next = self.read_address.q.val() + 1_u32;
             // We "forward" by a cycle so that we don't loose a cycle waiting for the
             // update to propagate through the flip flop.
-            self.ram_read.address.next = bit_cast::<N, NP1>(
+            self.ram_read_address.next = bit_cast::<N, NP1>(
                 (self.read_address.q.val() + 1_u32) & self.fifo_address_mask.val(),
             );
         } else {
             self.read_address.d.next = self.read_address.q.val();
         }
         self.dff_underflow.d.next =
-            self.dff_underflow.q.val() | (self.is_empty.val() & self.sig.read.val());
-        self.sig.underflow.next = self.dff_underflow.q.val();
+            self.dff_underflow.q.val() | (self.is_empty.val() & self.read.val());
+        self.underflow.next = self.dff_underflow.q.val();
         self.read_address_out.next = self.read_address.q.val();
     }
 }
@@ -72,10 +82,16 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Default
 {
     fn default() -> Self {
         Self {
-            sig: Default::default(),
             clock: Default::default(),
+            read: Default::default(),
+            data_out: Default::default(),
+            empty: Default::default(),
+            almost_empty: Default::default(),
+            underflow: Default::default(),
             write_address_delayed: Default::default(),
-            ram_read: Default::default(),
+            ram_read_address: Default::default(),
+            ram_read_data: Default::default(),
+            ram_read_clock: Default::default(),
             read_address_out: Default::default(),
             read_address: Default::default(),
             is_empty: Default::default(),
@@ -93,18 +109,25 @@ fn fifo_read_is_synthesizable() {
     rust_hdl_synth::top_wrap!(FIFOReadLogic<Bits<8>, 8, 9, 4>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.write_address_delayed.connect();
-    dev.uut.ram_read.data.connect();
+    dev.uut.ram_read_data.connect();
     dev.uut.clock.connect();
-    dev.uut.sig.read.connect();
+    dev.uut.read.connect();
     dev.connect_all();
     rust_hdl_synth::yosys_validate("fifo_read", &generate_verilog(&dev)).unwrap();
 }
 
 #[derive(LogicBlock)]
 pub struct FIFOWriteLogic<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
-    pub sig: FIFOWriteIF<D>,
+    pub write: Signal<In, Bit>,
+    pub data_in: Signal<In, D>,
+    pub full: Signal<Out, Bit>,
+    pub almost_full: Signal<Out, Bit>,
+    pub overflow: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub ram_write: RAMWrite<D, N>,
+    pub ram_write_address: Signal<Out, Bits<N>>,
+    pub ram_write_clock: Signal<Out, Clock>,
+    pub ram_write_data: Signal<Out, D>,
+    pub ram_write_enable: Signal<Out, Bit>,
     pub read_address: Signal<In, Bits<NP1>>,
     pub write_address_delayed: Signal<Out, Bits<NP1>>,
     write_address: DFF<Bits<NP1>>,
@@ -125,9 +148,16 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Default
         assert_eq!(N + 1, NP1);
         assert!(NP1 < 32);
         Self {
-            sig: Default::default(),
+            write: Default::default(),
+            data_in: Default::default(),
+            full: Default::default(),
+            almost_full: Default::default(),
+            overflow: Default::default(),
             clock: Default::default(),
-            ram_write: Default::default(),
+            ram_write_address: Default::default(),
+            ram_write_clock: Default::default(),
+            ram_write_data: Default::default(),
+            ram_write_enable: Default::default(),
             read_address: Default::default(),
             write_address: Default::default(),
             write_address_delayed: Default::default(),
@@ -151,14 +181,14 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
         self.dff_overflow.clk.next = self.clock.val();
         self.write_address.clk.next = self.clock.val();
         self.dff_write_address_delay.clk.next = self.clock.val();
-        self.ram_write.clock.next = self.clock.val();
+        self.ram_write_clock.next = self.clock.val();
         // We need a 1 cycle delay on the write address
         // This ensures we do not try to read a data element on the same
         // cycle it is written.
         self.dff_write_address_delay.d.next = self.write_address.q.val();
         self.write_address_delayed.next = self.dff_write_address_delay.q.val();
         // Default to not writing
-        self.ram_write.enable.next = false.into();
+        self.ram_write_enable.next = false.into();
         // Calculate the empty field - this is used to determine if we
         // can read
         self.is_empty.next =
@@ -180,25 +210,25 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
         if self.is_full.val() {
             self.fill_level.next = self.fifo_size.val().into();
         }
-        self.sig.almost_full.next = (self.fill_level.val() >= self.almost_full_level.val()).into();
-        self.sig.full.next = self.is_full.val();
+        self.almost_full.next = (self.fill_level.val() >= self.almost_full_level.val()).into();
+        self.full.next = self.is_full.val();
         // Connect our write address register to the RAM write address
-        self.ram_write.address.next =
+        self.ram_write_address.next =
             bit_cast::<N, NP1>(self.write_address.q.val() & self.fifo_address_mask.val());
-        self.ram_write.data.next = self.sig.data_in.val();
+        self.ram_write_data.next = self.data_in.val();
         // Assign the enable for the write based on the outside
         // request and our availability to write
-        if self.sig.write.val() & !self.is_full.val() {
+        if self.write.val() & !self.is_full.val() {
             self.write_address.d.next = self.write_address.q.val() + 1_u32;
-            self.ram_write.enable.next = true;
+            self.ram_write_enable.next = true;
         } else {
             self.write_address.d.next = self.write_address.q.val();
-            self.ram_write.enable.next = false;
+            self.ram_write_enable.next = false;
         }
         // Compute the overflow signal - it is latched
         self.dff_overflow.d.next =
-            self.dff_overflow.q.val() | (self.is_full.val() & self.sig.write.val());
-        self.sig.overflow.next = self.dff_overflow.q.val();
+            self.dff_overflow.q.val() | (self.is_full.val() & self.write.val());
+        self.overflow.next = self.dff_overflow.q.val();
     }
 }
 
@@ -208,8 +238,8 @@ fn fifo_write_is_synthesizable() {
     let mut dev: Wrapper = Default::default();
     dev.uut.read_address.connect();
     dev.uut.clock.connect();
-    dev.uut.sig.data_in.connect();
-    dev.uut.sig.write.connect();
+    dev.uut.data_in.connect();
+    dev.uut.write.connect();
     dev.connect_all();
     rust_hdl_synth::yosys_validate("fifo_write", &generate_verilog(&dev)).unwrap();
 }

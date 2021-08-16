@@ -126,9 +126,9 @@ impl Logic for SynchronousFIFOTest {
 fn test_almost_empty_is_accurate_synchronous_fifo() {
     let mut uut = SynchronousFIFOTest::default();
     uut.clock.connect();
-    uut.fifo.read_if.read.connect();
-    uut.fifo.write_if.data_in.connect();
-    uut.fifo.write_if.write.connect();
+    uut.fifo.read.connect();
+    uut.fifo.data_in.connect();
+    uut.fifo.write.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut SynchronousFIFOTest| {
@@ -138,20 +138,20 @@ fn test_almost_empty_is_accurate_synchronous_fifo() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for counter in 0_u32..4_u32 {
-            x.fifo.write_if.data_in.next = counter.into();
-            x.fifo.write_if.write.next = true;
-            sim_assert!(sim, x.fifo.read_if.almost_empty.val(), x);
+            x.fifo.data_in.next = counter.into();
+            x.fifo.write.next = true;
+            sim_assert!(sim, x.fifo.almost_empty.val(), x);
             wait_clock_cycle!(sim, clock, x);
-            x.fifo.write_if.write.next = false;
+            x.fifo.write.next = false;
         }
         wait_clock_cycle!(sim, clock, x);
-        sim_assert!(sim, !x.fifo.read_if.almost_empty.val(), x);
+        sim_assert!(sim, !x.fifo.almost_empty.val(), x);
         let mut drain = 0_u32;
-        while !x.fifo.read_if.empty.val() {
+        while !x.fifo.empty.val() {
             drain += 1;
-            x.fifo.read_if.read.next = true;
+            x.fifo.read.next = true;
             wait_clock_cycle!(sim, clock, x);
-            x.fifo.read_if.read.next = false;
+            x.fifo.read.next = false;
         }
         sim_assert!(sim, drain == 4, x);
         sim.done(x)?;
@@ -169,9 +169,9 @@ fn test_almost_empty_is_accurate_synchronous_fifo() {
 fn test_fifo_can_be_filled_synchronous_fifo() {
     let mut uut = SynchronousFIFOTest::default();
     uut.clock.connect();
-    uut.fifo.read_if.read.connect();
-    uut.fifo.write_if.data_in.connect();
-    uut.fifo.write_if.write.connect();
+    uut.fifo.read.connect();
+    uut.fifo.data_in.connect();
+    uut.fifo.write.connect();
     uut.connect_all();
     yosys_validate("fifo_3", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
@@ -185,19 +185,19 @@ fn test_fifo_can_be_filled_synchronous_fifo() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for sample in &rdata {
-            x.fifo.write_if.data_in.next = (*sample).into();
-            x.fifo.write_if.write.next = true;
+            x.fifo.data_in.next = (*sample).into();
+            x.fifo.write.next = true;
             wait_clock_cycle!(sim, clock, x);
-            x.fifo.write_if.write.next = false;
+            x.fifo.write.next = false;
         }
-        sim_assert!(sim, !x.fifo.write_if.overflow.val(), x);
+        sim_assert!(sim, !x.fifo.overflow.val(), x);
         wait_clock_true!(sim, clock, x);
         for sample in &rdata {
-            x = sim.watch(|x| !x.fifo.read_if.empty.val(), x)?;
-            sim_assert!(sim, x.fifo.read_if.data_out.val().eq(sample), x);
-            x.fifo.read_if.read.next = true;
+            x = sim.watch(|x| !x.fifo.empty.val(), x)?;
+            sim_assert!(sim, x.fifo.data_out.val().eq(sample), x);
+            x.fifo.read.next = true;
             wait_clock_cycle!(sim, clock, x);
-            x.fifo.read_if.read.next = false;
+            x.fifo.read.next = false;
         }
         sim.done(x)?;
         Ok(())
@@ -210,9 +210,9 @@ fn test_fifo_can_be_filled_synchronous_fifo() {
 fn test_fifo_works_synchronous_fifo() {
     let mut uut = SynchronousFIFOTest::default();
     uut.clock.connect();
-    uut.fifo.read_if.read.connect();
-    uut.fifo.write_if.data_in.connect();
-    uut.fifo.write_if.write.connect();
+    uut.fifo.read.connect();
+    uut.fifo.data_in.connect();
+    uut.fifo.write.connect();
     uut.connect_all();
     yosys_validate("fifo_4", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
@@ -227,19 +227,19 @@ fn test_fifo_works_synchronous_fifo() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for sample in &rdata {
-            x = sim.watch(|x| !x.fifo.write_if.full.val(), x)?;
-            x.fifo.write_if.data_in.next = (*sample).into();
-            x.fifo.write_if.write.next = true;
+            x = sim.watch(|x| !x.fifo.full.val(), x)?;
+            x.fifo.data_in.next = (*sample).into();
+            x.fifo.write.next = true;
             wait_clock_cycle!(sim, clock, x);
-            x.fifo.write_if.write.next = false;
+            x.fifo.write.next = false;
             if rand::thread_rng().gen::<f64>() < 0.3 {
                 for _ in 0..(rand::thread_rng().gen::<u8>() % 40) {
                     wait_clock_cycle!(sim, clock, x);
                 }
             }
         }
-        sim_assert!(sim, !x.fifo.read_if.underflow.val(), x);
-        sim_assert!(sim, !x.fifo.write_if.overflow.val(), x);
+        sim_assert!(sim, !x.fifo.underflow.val(), x);
+        sim_assert!(sim, !x.fifo.overflow.val(), x);
         sim.done(x)?;
         Ok(())
     });
@@ -247,19 +247,19 @@ fn test_fifo_works_synchronous_fifo() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for sample in &rdata_read {
-            x = sim.watch(|x| !x.fifo.read_if.empty.val(), x)?;
-            sim_assert!(sim, x.fifo.read_if.data_out.val().eq(sample), x);
-            x.fifo.read_if.read.next = true;
+            x = sim.watch(|x| !x.fifo.empty.val(), x)?;
+            sim_assert!(sim, x.fifo.data_out.val().eq(sample), x);
+            x.fifo.read.next = true;
             wait_clock_cycle!(sim, clock, x);
-            x.fifo.read_if.read.next = false;
+            x.fifo.read.next = false;
             if rand::thread_rng().gen::<f64>() < 0.3 {
                 for _ in 0..(rand::thread_rng().gen::<u8>() % 40) {
                     wait_clock_cycle!(sim, clock, x);
                 }
             }
         }
-        sim_assert!(sim, !x.fifo.read_if.underflow.val(), x);
-        sim_assert!(sim, !x.fifo.write_if.overflow.val(), x);
+        sim_assert!(sim, !x.fifo.underflow.val(), x);
+        sim_assert!(sim, !x.fifo.overflow.val(), x);
         sim.done(x)?;
         Ok(())
     });

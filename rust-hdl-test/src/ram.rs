@@ -20,8 +20,8 @@ impl RAMTest {
 impl Logic for RAMTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.ram.write.clock.next = self.clock.val();
-        self.ram.read.clock.next = self.clock.val();
+        self.ram.write_clock.next = self.clock.val();
+        self.ram.read_clock.next = self.clock.val();
     }
 }
 
@@ -29,10 +29,10 @@ impl Logic for RAMTest {
 fn test_synthesis_ram() {
     let mut uut = RAMTest::new();
     uut.clock.connect();
-    uut.ram.write.enable.connect();
-    uut.ram.write.data.connect();
-    uut.ram.write.address.connect();
-    uut.ram.read.address.connect();
+    uut.ram.write_enable.connect();
+    uut.ram.write_data.connect();
+    uut.ram.write_address.connect();
+    uut.ram.read_address.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
@@ -43,10 +43,10 @@ fn test_synthesis_ram() {
 fn test_ram_works() {
     let mut uut = RAMTest::new();
     uut.clock.connect();
-    uut.ram.write.enable.connect();
-    uut.ram.write.data.connect();
-    uut.ram.write.address.connect();
-    uut.ram.read.address.connect();
+    uut.ram.write_enable.connect();
+    uut.ram.write_data.connect();
+    uut.ram.write_address.connect();
+    uut.ram.read_address.connect();
     uut.connect_all();
     yosys_validate("ram", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
@@ -59,17 +59,17 @@ fn test_ram_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for sample in rdata.iter().enumerate() {
-            x.ram.write.address.next = (sample.0 as u32).into();
-            x.ram.write.data.next = (*sample.1).into();
-            x.ram.write.enable.next = true;
+            x.ram.write_address.next = (sample.0 as u32).into();
+            x.ram.write_data.next = (*sample.1).into();
+            x.ram.write_enable.next = true;
             wait_clock_cycle!(sim, clock, x);
         }
-        x.ram.write.enable.next = false.into();
+        x.ram.write_enable.next = false.into();
         wait_clock_cycle!(sim, clock, x);
         for sample in rdata.iter().enumerate() {
-            x.ram.read.address.next = (sample.0 as u32).into();
+            x.ram.read_address.next = (sample.0 as u32).into();
             wait_clock_cycle!(sim, clock, x);
-            assert_eq!(x.ram.read.data.val(), *sample.1);
+            assert_eq!(x.ram.read_data.val(), *sample.1);
         }
         sim.done(x)?;
         Ok(())

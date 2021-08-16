@@ -126,8 +126,8 @@ impl Logic for OpalKellyXEM6010PipeRAMTest {
         // Clock connections
         self.read_address.clk.next = self.ok_host.ti_clk.val();
         self.write_address.clk.next = self.ok_host.ti_clk.val();
-        self.ram.read.clock.next = self.ok_host.ti_clk.val();
-        self.ram.write.clock.next = self.ok_host.ti_clk.val();
+        self.ram.read_clock.next = self.ok_host.ti_clk.val();
+        self.ram.write_clock.next = self.ok_host.ti_clk.val();
 
         // Bus connections
         self.i_pipe.ok1.next = self.ok_host.ok1.val();
@@ -135,11 +135,11 @@ impl Logic for OpalKellyXEM6010PipeRAMTest {
         self.ok_host.ok2.next = self.i_pipe.ok2.val() | self.o_pipe.ok2.val();
 
         // Data connections
-        self.ram.read.address.next = self.read_address.q.val();
-        self.ram.write.address.next = self.write_address.q.val();
-        self.o_pipe.datain.next = self.ram.read.data.val();
-        self.ram.write.data.next = self.i_pipe.dataout.val();
-        self.ram.write.enable.next = self.i_pipe.write.val();
+        self.ram.read_address.next = self.read_address.q.val();
+        self.ram.write_address.next = self.write_address.q.val();
+        self.o_pipe.datain.next = self.ram.read_data.val();
+        self.ram.write_data.next = self.i_pipe.dataout.val();
+        self.ram.write_enable.next = self.i_pipe.write.val();
 
         // Advance the address counters
         self.write_address.d.next = self.write_address.q.val() + self.i_pipe.write.val();
@@ -179,6 +179,7 @@ pub struct OpalKellyXEM6010PipeFIFOTest {
     pub fifo: SynchronousFIFO<Bits<16>, 8, 9, 1>,
     pub i_pipe: PipeIn<0x80>,
     pub o_pipe: PipeOut<0xA0>,
+    pub delay_read: DFF<Bit>,
 }
 
 impl OpalKellyXEM6010PipeFIFOTest {
@@ -188,7 +189,8 @@ impl OpalKellyXEM6010PipeFIFOTest {
             ok_host: Default::default(),
             fifo: Default::default(),
             i_pipe: Default::default(),
-            o_pipe: Default::default()
+            o_pipe: Default::default(),
+            delay_read: Default::default(),
         }
     }
 }
@@ -204,6 +206,7 @@ impl Logic for OpalKellyXEM6010PipeFIFOTest {
 
         // Clock connections
         self.fifo.clock.next = self.ok_host.ti_clk.val();
+        self.delay_read.clk.next = self.ok_host.ti_clk.val();
 
         // Bus connections
         self.i_pipe.ok1.next = self.ok_host.ok1.val();
@@ -211,10 +214,11 @@ impl Logic for OpalKellyXEM6010PipeFIFOTest {
         self.ok_host.ok2.next = self.i_pipe.ok2.val() | self.o_pipe.ok2.val();
 
         // Data connections
-        self.fifo.read_if.read.next = self.o_pipe.read.val();
-        self.o_pipe.datain.next = self.fifo.read_if.data_out.val();
-        self.fifo.write_if.write.next = self.i_pipe.write.val();
-        self.fifo.write_if.data_in.next = self.i_pipe.dataout.val();
+        self.delay_read.d.next = self.o_pipe.read.val();
+        self.fifo.read.next = self.delay_read.q.val();
+        self.o_pipe.datain.next = self.fifo.data_out.val();
+        self.fifo.write.next = self.i_pipe.write.val();
+        self.fifo.data_in.next = self.i_pipe.dataout.val();
     }
 }
 
@@ -226,5 +230,18 @@ fn test_opalkelly_xem_6010_pipe_fifo() {
     uut.hi.sig_out.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkkey_xem_6010_fifo");
+    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_fifo");
+}
+
+#[test]
+fn test_opalkelly_xem_6010_pipe_fifo_runtime() -> Result<(), OkError> {
+    let hnd = ok_test_prelude("opalkelly_xem_6010_fifo/top.bit")?;
+    let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
+    let orig_data_16 = make_u16_buffer(&data);
+    hnd.write_to_pipe_in(0x80, &data)?;
+    let mut out = vec![0_u8; 512];
+    hnd.read_from_pipe_out(0xa0, &mut out)?;
+    let copy_data_16 = make_u16_buffer(&out);
+    assert_eq!(orig_data_16, copy_data_16);
+    Ok(())
 }
