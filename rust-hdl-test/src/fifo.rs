@@ -266,3 +266,83 @@ fn test_fifo_works_synchronous_fifo() {
     sim.run_traced(uut, 100_000, std::fs::File::create("fifo.vcd").unwrap())
         .unwrap();
 }
+
+#[derive(LogicBlock, Default)]
+struct AsynchronousFIFOTest {
+    pub read_clock: Signal<In, Clock>,
+    pub write_clock: Signal<In, Clock>,
+    pub fifo: AsynchronousFIFO<Bits<16>, 4, 5, 4>,
+}
+
+impl Logic for AsynchronousFIFOTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.fifo.write_clock.next = self.write_clock.val();
+        self.fifo.read_clock.next = self.read_clock.val();
+    }
+}
+
+#[test]
+fn test_fifo_works_asynchronous_fifo() {
+    let mut uut = AsynchronousFIFOTest::default();
+    uut.read_clock.connect();
+    uut.write_clock.connect();
+    uut.fifo.read.connect();
+    uut.fifo.data_in.connect();
+    uut.fifo.write.connect();
+    uut.connect_all();
+    yosys_validate("fifo_5", &generate_verilog(&uut)).unwrap();
+    let mut sim = Simulation::new();
+    let rdata = (0..1024)
+        .map(|_| Bits::<16>::from(rand::random::<u16>()))
+        .collect::<Vec<_>>();
+    let rdata_read = rdata.clone();
+    sim.add_clock(5, |x: &mut AsynchronousFIFOTest| {
+        x.read_clock.next = !x.read_clock.val()
+    });
+    sim.add_clock(4, |x: &mut AsynchronousFIFOTest| {
+        x.write_clock.next = !x.write_clock.val()
+    });
+    sim.add_testbench(move |mut sim: Sim<AsynchronousFIFOTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, write_clock, x);
+        for sample in &rdata {
+            x = sim.watch(|x| !x.fifo.full.val(), x)?;
+            x.fifo.data_in.next = (*sample).into();
+            x.fifo.write.next = true;
+            wait_clock_cycle!(sim, write_clock, x);
+            x.fifo.write.next = false;
+            if rand::thread_rng().gen::<f64>() < 0.3 {
+                for _ in 0..(rand::thread_rng().gen::<u8>() % 40) {
+                    wait_clock_cycle!(sim, write_clock, x);
+                }
+            }
+        }
+        sim_assert!(sim, !x.fifo.underflow.val(), x);
+        sim_assert!(sim, !x.fifo.overflow.val(), x);
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.add_testbench(move |mut sim: Sim<AsynchronousFIFOTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, read_clock, x);
+        for sample in &rdata_read {
+            x = sim.watch(|x| !x.fifo.empty.val(), x)?;
+            sim_assert!(sim, x.fifo.data_out.val().eq(sample), x);
+            x.fifo.read.next = true;
+            wait_clock_cycle!(sim, read_clock, x);
+            x.fifo.read.next = false;
+            if rand::thread_rng().gen::<f64>() < 0.3 {
+                for _ in 0..(rand::thread_rng().gen::<u8>() % 40) {
+                    wait_clock_cycle!(sim, read_clock, x);
+                }
+            }
+        }
+        sim_assert!(sim, !x.fifo.underflow.val(), x);
+        sim_assert!(sim, !x.fifo.overflow.val(), x);
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.run_traced(uut, 100_000, std::fs::File::create("afifo.vcd").unwrap())
+        .unwrap();
+}
