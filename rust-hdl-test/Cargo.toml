@@ -18,3 +18,4 @@ rand = "0.8.4"
 
 [features]
 fpga_hw_test = ["rust_hdl_ok_frontpanel_sys"]
+ise_synth = []

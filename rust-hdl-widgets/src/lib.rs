@@ -1,3 +1,4 @@
+pub mod async_fifo;
 pub mod dff;
 pub mod fifo_logic;
 pub mod prelude;

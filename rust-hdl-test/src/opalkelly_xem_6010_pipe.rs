@@ -172,11 +172,13 @@ fn test_opalkelly_xem_6010_pipe_ram_runtime() -> Result<(), OkError> {
     Ok(())
 }
 
+declare_sync_fifo!(OKTestFIFO, Bits<16>, 256, 1);
+
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010PipeFIFOTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
-    pub fifo: SynchronousFIFO<Bits<16>, 8, 9, 1>,
+    pub fifo: OKTestFIFO,
     pub i_pipe: PipeIn<0x80>,
     pub o_pipe: PipeOut<0xA0>,
     pub delay_read: DFF<Bit>,
@@ -236,6 +238,83 @@ fn test_opalkelly_xem_6010_pipe_fifo() {
 #[test]
 fn test_opalkelly_xem_6010_pipe_fifo_runtime() -> Result<(), OkError> {
     let hnd = ok_test_prelude("opalkelly_xem_6010_fifo/top.bit")?;
+    let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
+    let orig_data_16 = make_u16_buffer(&data);
+    hnd.write_to_pipe_in(0x80, &data)?;
+    let mut out = vec![0_u8; 512];
+    hnd.read_from_pipe_out(0xa0, &mut out)?;
+    let copy_data_16 = make_u16_buffer(&out);
+    assert_eq!(orig_data_16, copy_data_16);
+    Ok(())
+}
+
+declare_async_fifo!(OKTestAFIFO, Bits<16>, 256, 1);
+
+#[derive(LogicBlock)]
+pub struct OpalKellyXEM6010PipeAFIFOTest {
+    pub hi: OpalKellyHostInterface,
+    pub ok_host: OpalKellyHost,
+    pub fifo: OKTestAFIFO,
+    pub i_pipe: PipeIn<0x80>,
+    pub o_pipe: PipeOut<0xA0>,
+    pub delay_read: DFF<Bit>,
+}
+
+impl OpalKellyXEM6010PipeAFIFOTest {
+    fn new() -> Self {
+        Self {
+            hi: OpalKellyHostInterface::xem_6010(),
+            ok_host: Default::default(),
+            fifo: Default::default(),
+            i_pipe: Default::default(),
+            o_pipe: Default::default(),
+            delay_read: Default::default(),
+        }
+    }
+}
+
+impl Logic for OpalKellyXEM6010PipeAFIFOTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        // Interface connections
+        self.ok_host.hi.sig_in.next = self.hi.sig_in.val();
+        self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
+        link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
+        link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+
+        // Clock connections
+        self.fifo.read_clock.next = self.ok_host.ti_clk.val();
+        self.fifo.write_clock.next = self.ok_host.ti_clk.val();
+        self.delay_read.clk.next = self.ok_host.ti_clk.val();
+
+        // Bus connections
+        self.i_pipe.ok1.next = self.ok_host.ok1.val();
+        self.o_pipe.ok1.next = self.ok_host.ok1.val();
+        self.ok_host.ok2.next = self.i_pipe.ok2.val() | self.o_pipe.ok2.val();
+
+        // Data connections
+        self.delay_read.d.next = self.o_pipe.read.val();
+        self.fifo.read.next = self.delay_read.q.val();
+        self.o_pipe.datain.next = self.fifo.data_out.val();
+        self.fifo.write.next = self.i_pipe.write.val();
+        self.fifo.data_in.next = self.i_pipe.dataout.val();
+    }
+}
+
+#[test]
+fn test_opalkelly_xem_6010_pipe_afifo() {
+    let mut uut = OpalKellyXEM6010PipeAFIFOTest::new();
+    uut.hi.sig_inout.connect();
+    uut.hi.sig_in.connect();
+    uut.hi.sig_out.connect();
+    uut.hi.sig_aa.connect();
+    uut.connect_all();
+    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_afifo");
+}
+
+#[test]
+fn test_opalkelly_xem_6010_pipe_afifo_runtime() -> Result<(), OkError> {
+    let hnd = ok_test_prelude("opalkelly_xem_6010_afifo/top.bit")?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
     let orig_data_16 = make_u16_buffer(&data);
     hnd.write_to_pipe_in(0x80, &data)?;
