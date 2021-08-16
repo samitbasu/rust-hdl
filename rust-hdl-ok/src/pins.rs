@@ -13,3 +13,18 @@ pub fn xem_6010_leds() -> Signal<Out, Bits<8>> {
     }
     x
 }
+
+pub fn xem_6010_base_clock() -> Signal<In, Clock> {
+    let mut x = Signal::default();
+    x.add_location(0, "AB13");
+    x.add_signal_type(0, SignalType::LowVoltageCMOS_3v3);
+    x.add_constraint(PinConstraint {
+        index: 0,
+        constraint: Constraint::Timing(Timing::Periodic(PeriodicTiming {
+            net: "SystemClk".into(),
+            period_nanoseconds: 10.0,
+            duty_cycle: 50.0,
+        })),
+    });
+    x
+}
