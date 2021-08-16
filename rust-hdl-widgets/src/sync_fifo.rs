@@ -4,6 +4,13 @@ use crate::fifo_components::{FIFOReadLogic, FIFOWriteLogic};
 use crate::fifo_if::{FIFOReadIF, FIFOWriteIF};
 use crate::ram::RAM;
 
+macro_rules! declare_fifo {
+    ($name: ident, $kind: ty, $count: expr, $block: expr) => {
+            pub type $name = SynchronousFIFO<$kind, {clog2($count)}, {clog2($count)+1}, $block>;
+    }
+}
+
+
 #[derive(LogicBlock, Default)]
 pub struct SynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
     pub clock: Signal<In, Clock>,
@@ -74,4 +81,10 @@ fn component_fifo_is_synthesizable() {
     dev.connect_all();
     rust_hdl_synth::yosys_validate("fifo", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev));
+}
+
+#[test]
+fn test_fifo_macro() {
+    declare_fifo!(FIFOTest, Bits<8>, 32, 1);
+    let dev = FIFOTest::default();
 }

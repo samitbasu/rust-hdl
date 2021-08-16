@@ -171,3 +171,60 @@ fn test_opalkelly_xem_6010_pipe_ram_runtime() -> Result<(), OkError> {
     assert_eq!(data, out2);
     Ok(())
 }
+
+#[derive(LogicBlock)]
+pub struct OpalKellyXEM6010PipeFIFOTest {
+    pub hi: OpalKellyHostInterface,
+    pub ok_host: OpalKellyHost,
+    pub fifo: SynchronousFIFO<Bits<16>, 8, 9, 1>,
+    pub i_pipe: PipeIn<0x80>,
+    pub o_pipe: PipeOut<0xA0>,
+}
+
+impl OpalKellyXEM6010PipeFIFOTest {
+    fn new() -> Self {
+        Self {
+            hi: OpalKellyHostInterface::xem_6010(),
+            ok_host: Default::default(),
+            fifo: Default::default(),
+            i_pipe: Default::default(),
+            o_pipe: Default::default()
+        }
+    }
+}
+
+impl Logic for OpalKellyXEM6010PipeFIFOTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        // Interface connections
+        self.ok_host.hi.sig_in.next = self.hi.sig_in.val();
+        self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
+        link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
+        link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+
+        // Clock connections
+        self.fifo.clock.next = self.ok_host.ti_clk.val();
+
+        // Bus connections
+        self.i_pipe.ok1.next = self.ok_host.ok1.val();
+        self.o_pipe.ok1.next = self.ok_host.ok1.val();
+        self.ok_host.ok2.next = self.i_pipe.ok2.val() | self.o_pipe.ok2.val();
+
+        // Data connections
+        self.fifo.read_if.read.next = self.o_pipe.read.val();
+        self.o_pipe.datain.next = self.fifo.read_if.data_out.val();
+        self.fifo.write_if.write.next = self.i_pipe.write.val();
+        self.fifo.write_if.data_in.next = self.i_pipe.dataout.val();
+    }
+}
+
+#[test]
+fn test_opalkelly_xem_6010_pipe_fifo() {
+    let mut uut = OpalKellyXEM6010PipeFIFOTest::new();
+    uut.hi.sig_inout.connect();
+    uut.hi.sig_in.connect();
+    uut.hi.sig_out.connect();
+    uut.hi.sig_aa.connect();
+    uut.connect_all();
+    crate::ok_tools::synth_obj(uut, "opalkkey_xem_6010_fifo");
+}
