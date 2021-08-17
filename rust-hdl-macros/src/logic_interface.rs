@@ -5,6 +5,7 @@ use syn::Result;
 
 pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<TS> {
     let fields = get_field_names(input)?;
+    let link = get_link(fields.clone())?;
     let update_all = get_update_all(fields.clone())?;
     let has_changed = get_has_changed(fields.clone())?;
     let connect_all = get_connect_all(fields.clone())?;
@@ -22,6 +23,18 @@ pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<T
             #update_all
             #has_changed
             #accept
+        }
+
+        impl #impl_generics rust_hdl_core::logic::LogicLink for #name #ty_generics {
+            #link
+        }
+    })
+}
+
+fn get_link(fields: Vec<TS>) -> Result<TS> {
+    Ok(quote! {
+        fn link(&mut self, other: &mut Self) {
+            #(self.#fields.link(&mut other.#fields);)*
         }
     })
 }

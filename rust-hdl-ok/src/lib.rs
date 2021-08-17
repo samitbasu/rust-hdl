@@ -7,6 +7,8 @@ use ok_host::OpalKellyHost;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::pulser::Pulser;
 
+pub mod mcb_if;
+pub mod mig;
 pub mod ok_hi;
 pub mod ok_host;
 pub mod ok_pipe;

@@ -337,7 +337,7 @@ fn test_opalkelly_xem_6010_pipe_afifo_runtime() -> Result<(), OkError> {
     let copy_data_16 = make_u16_buffer(&out);
     let mod_data_16 = orig_data_16
         .iter()
-        .map(|x| Wrapping(*x))
+        .map(|x| Wrapping(*x) << 1)
         .map(|x| x.0)
         .collect::<Vec<_>>();
     assert_eq!(mod_data_16, copy_data_16);

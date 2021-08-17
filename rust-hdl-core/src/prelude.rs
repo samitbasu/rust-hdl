@@ -15,8 +15,9 @@ pub use crate::constraint::{Constraint, PeriodicTiming, PinConstraint, SignalTyp
 pub use crate::direction::{In, InOut, Local, Out};
 pub use crate::link;
 pub use crate::logic::Logic;
-pub use crate::module_defines::generate_verilog;
+pub use crate::logic::LogicLink;
 pub use crate::module_defines::ModuleDefines;
+pub use crate::module_defines::{generate_verilog, generate_verilog_unchecked};
 pub use crate::named_path::NamedPath;
 pub use crate::probe::Probe;
 pub use crate::signal::Signal;

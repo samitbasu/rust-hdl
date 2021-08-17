@@ -303,3 +303,9 @@ pub fn generate_verilog<U: Block>(uut: &U) -> String {
     uut.accept("top", &mut defines);
     defines.defines()
 }
+
+pub fn generate_verilog_unchecked<U: Block>(uut: &U) -> String {
+    let mut defines = ModuleDefines::default();
+    uut.accept("top", &mut defines);
+    defines.defines()
+}

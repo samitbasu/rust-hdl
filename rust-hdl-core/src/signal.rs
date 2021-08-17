@@ -8,6 +8,7 @@ use crate::clock::Clock;
 use crate::constraint::{Constraint, PinConstraint, SignalType};
 use crate::direction::{Direction, In, Out};
 use crate::logic::Logic;
+use crate::prelude::InOut;
 use crate::probe::Probe;
 use crate::synth::{Synth, VCDValue};
 
@@ -27,6 +28,24 @@ pub struct Signal<D: Direction, T: Synth> {
     id: usize,
     constraints: Vec<PinConstraint>,
     dir: std::marker::PhantomData<D>,
+}
+
+impl<T: Synth> Signal<In, T> {
+    pub fn link(&mut self, other: &mut Self) {
+        other.next = self.val();
+    }
+}
+
+impl<T: Synth> Signal<Out, T> {
+    pub fn link(&mut self, other: &mut Self) {
+        self.next = other.val();
+    }
+}
+
+impl<T: Synth> Signal<InOut, T> {
+    pub fn link(&mut self, other: &mut Self) {
+        // Do nothing for bidirectional signals...
+    }
 }
 
 impl<D: Direction, T: Synth> Signal<D, T> {
@@ -164,9 +183,4 @@ impl<D: Direction, T: Synth> Default for Signal<D, T> {
             dir: PhantomData,
         }
     }
-}
-
-#[macro_export]
-macro_rules! link {
-    ($from: expr, $to: expr) => {};
 }

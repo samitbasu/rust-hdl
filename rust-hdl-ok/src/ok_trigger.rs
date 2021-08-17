@@ -61,7 +61,7 @@ fn test_trigger_out() {
     uut.uut.clk.connect();
     uut.uut.trigger.connect();
     uut.connect_all();
-    yosys_validate("trigout", &generate_verilog(&uut)).unwrap();
+    rust_hdl_synth::yosys_validate("trigout", &generate_verilog(&uut)).unwrap();
 }
 
 #[derive(Clone, Debug, Default, LogicBlock)]

@@ -26,10 +26,13 @@ impl OpalKellyXEM6010Blinky {
 impl Logic for OpalKellyXEM6010Blinky {
     #[hdl_gen]
     fn update(&mut self) {
+        /*
         self.ok_host.hi.sig_in.next = self.hi.sig_in.val();
         self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
         link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
         link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+         */
+        link!(self.hi, self.ok_host.hi);
         self.pulser.clock.next = self.ok_host.ti_clk.val();
         self.pulser.enable.next = true;
         if self.pulser.pulse.val() {
@@ -48,5 +51,8 @@ fn test_opalkelly_xem_6010_blinky() {
     uut.hi.sig_inout.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_blinky");
+    check_connected(&uut);
+    let vlog = generate_verilog(&uut);
+    println!("{}", vlog);
+    //    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_blinky");
 }
