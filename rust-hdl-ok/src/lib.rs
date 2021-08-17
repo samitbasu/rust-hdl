@@ -47,10 +47,7 @@ impl OKTest1 {
 impl Logic for OKTest1 {
     #[hdl_gen]
     fn update(&mut self) {
-        link!(self.hi.sig_in, self.ok_host.hi.sig_in);
-        link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
-        link!(self.hi.sig_out, self.ok_host.hi.sig_out);
-        link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+        self.hi.link(&mut self.ok_host.hi);
         self.pulser.clock.next = self.ok_host.ti_clk.val();
         self.pulser.enable.next = true;
         if self.pulser.pulse.val() {

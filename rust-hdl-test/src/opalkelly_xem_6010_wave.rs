@@ -15,10 +15,7 @@ pub struct OpalKellyXEM6010Wave {
 impl Logic for OpalKellyXEM6010Wave {
     #[hdl_gen]
     fn update(&mut self) {
-        self.ok_host.hi.sig_in.next = self.hi.sig_in.val();
-        self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
-        link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
-        link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+        self.hi.link(&mut self.ok_host.hi);
         for i in 0_usize..8_usize {
             self.faders[i].clock.next = self.ok_host.ti_clk.val();
             self.faders[i].enable.next = true;

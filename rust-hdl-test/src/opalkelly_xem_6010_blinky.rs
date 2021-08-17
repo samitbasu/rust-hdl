@@ -32,7 +32,7 @@ impl Logic for OpalKellyXEM6010Blinky {
         link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
         link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
          */
-        link!(self.hi, self.ok_host.hi);
+        self.hi.link(&mut self.ok_host.hi);
         self.pulser.clock.next = self.ok_host.ti_clk.val();
         self.pulser.enable.next = true;
         if self.pulser.pulse.val() {

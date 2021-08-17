@@ -10,6 +10,7 @@ impl VerilogVisitor for SignalLister {
     }
 }
 
+/*
 #[test]
 fn test_write_modules_nested_ports() {
     #[derive(Clone, Debug, Default, LogicInterface)]
@@ -114,3 +115,6 @@ fn test_write_modules_nested_ports() {
     let dev = write_vcd_header(&mut jnk, &uut);
     let _dev = write_vcd_dump(dev, &uut);
 }
+
+
+ */

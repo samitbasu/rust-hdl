@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use crate::ast::VerilogLiteral;
+use crate::ast::{VerilogLiteral, VerilogLink};
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
 use crate::clock::Clock;
@@ -34,17 +34,29 @@ impl<T: Synth> Signal<In, T> {
     pub fn link(&mut self, other: &mut Self) {
         other.next = self.val();
     }
+    pub fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> VerilogLink {
+        println!("{} {} {}", my_name, owner_name, other_name);
+        VerilogLink::Forward(my_name.into(), other_name.into())
+    }
 }
 
 impl<T: Synth> Signal<Out, T> {
     pub fn link(&mut self, other: &mut Self) {
         self.next = other.val();
     }
+    pub fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> VerilogLink {
+        println!("{} {} {}", my_name, owner_name, other_name);
+        VerilogLink::Backward(my_name.into(), other_name.into())
+    }
 }
 
 impl<T: Synth> Signal<InOut, T> {
     pub fn link(&mut self, other: &mut Self) {
-        // Do nothing for bidirectional signals...
+    }
+    // Do nothing for bidirectional signals...
+    pub fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> VerilogLink {
+        println!("{} {} {}", my_name, owner_name, other_name);
+        VerilogLink::Bidirectional(my_name.into(), other_name.into())
     }
 }
 

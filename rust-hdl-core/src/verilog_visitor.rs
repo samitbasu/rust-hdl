@@ -1,8 +1,4 @@
-use crate::ast::{
-    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
-    VerilogIndexAssignment, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary,
-    VerilogStatement,
-};
+use crate::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression, VerilogIndexAssignment, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogStatement, VerilogLink};
 
 pub trait VerilogVisitor {
     fn visit_block(&mut self, b: &VerilogBlock) {
@@ -55,7 +51,7 @@ pub trait VerilogVisitor {
         // Terminal
     }
 
-    fn visit_link(&mut self, _c: &str) {
+    fn visit_link(&mut self, _c: &[VerilogLink]) {
         // Terminal
     }
 

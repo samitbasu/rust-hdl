@@ -1,4 +1,4 @@
-use crate::ast::{Verilog, VerilogBlock, VerilogExpression};
+use crate::ast::{Verilog, VerilogBlock, VerilogExpression, VerilogLink};
 
 pub trait Logic {
     fn update(&mut self);
@@ -18,12 +18,5 @@ impl<L: Logic, const P: usize> Logic for [L; P] {
 
 pub trait LogicLink {
     fn link(&mut self, other: &mut Self);
-    //    fn hdl(&self, this: VerilogExpression, that: VerilogExpression) -> Vec<VerilogBlock>;
-}
-
-#[macro_export]
-macro_rules! link {
-    ($from: expr, $to: expr) => {
-        $from.link(&mut $to);
-    };
+    fn link_hdl(&self, my_name: &str, this: &str, that: &str) -> Vec<VerilogLink>;
 }

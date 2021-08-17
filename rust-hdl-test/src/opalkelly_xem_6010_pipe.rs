@@ -32,10 +32,7 @@ impl Logic for OpalKellyXEM6010PipeTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
-        self.ok_host.hi.sig_in.next = self.hi.sig_in.val();
-        self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
-        link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
-        link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+        self.hi.link(&mut self.ok_host.hi);
 
         // Clock connections
         self.accum.clk.next = self.ok_host.ti_clk.val();
@@ -118,10 +115,7 @@ impl Logic for OpalKellyXEM6010PipeRAMTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
-        self.ok_host.hi.sig_in.next = self.hi.sig_in.val();
-        self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
-        link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
-        link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+        self.hi.link(&mut self.ok_host.hi);
 
         // Clock connections
         self.read_address.clk.next = self.ok_host.ti_clk.val();
@@ -201,10 +195,7 @@ impl Logic for OpalKellyXEM6010PipeFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
-        self.ok_host.hi.sig_in.next = self.hi.sig_in.val();
-        self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
-        link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
-        link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+        self.hi.link(&mut self.ok_host.hi);
 
         // Clock connections
         self.fifo.clock.next = self.ok_host.ti_clk.val();
@@ -281,10 +272,7 @@ impl Logic for OpalKellyXEM6010PipeAFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
-        self.ok_host.hi.sig_in.next = self.hi.sig_in.val();
-        self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
-        link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
-        link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+        self.hi.link(&mut self.ok_host.hi);
 
         // Clock connections
         self.fifo_in.read_clock.next = self.fast_clock.val();

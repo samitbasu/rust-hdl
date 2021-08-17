@@ -41,10 +41,7 @@ impl OpalKellyXEM6010WireTest {
 impl Logic for OpalKellyXEM6010WireTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.ok_host.hi.sig_in.next = self.hi.sig_in.val();
-        self.hi.sig_out.next = self.ok_host.hi.sig_out.val();
-        link!(self.hi.sig_inout, self.ok_host.hi.sig_inout);
-        link!(self.hi.sig_aa, self.ok_host.hi.sig_aa);
+        self.hi.link(&mut self.ok_host.hi);
         self.led.next = bit_cast::<8, 16>(!(self.wire_0.dataout.val() & self.wire_1.dataout.val()));
         self.o_wire.datain.next = self.wire_0.dataout.val();
         //

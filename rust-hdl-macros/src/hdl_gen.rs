@@ -326,6 +326,14 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
                replacement: #value,
            }
         }));
+    } else if method_name == "link" {
+        let expr = method.receiver.as_ref();
+        let signal = common::fixup_ident(quote!(#expr).to_string());
+        let target = method.args.index(0);
+        let target = quote!(#target).to_string();
+        return Ok(quote!(
+            rust_hdl_core::ast::VerilogStatement::Link(#expr.link_hdl(#signal, #signal, #target))
+        ))
     }
     Err(syn::Error::new(
         method.span(),
@@ -485,9 +493,6 @@ fn hdl_macro(x: &syn::ExprMacro) -> Result<TS> {
                 quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())),
             )
         }
-        "link" => Ok(
-            quote!(rust_hdl_core::ast::VerilogStatement::Link(#invocation_as_string.to_string().replace(" ", ""))),
-        ),
         _ => Err(syn::Error::new(
             x.span(),
             "Unsupported macro invocation in HDL",

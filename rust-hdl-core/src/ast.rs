@@ -37,7 +37,14 @@ pub enum VerilogStatement {
     Match(VerilogMatch),
     Loop(VerilogLoop),
     Comment(String),
-    Link(String),
+    Link(Vec<VerilogLink>),
+}
+
+#[derive(Debug, Clone)]
+pub enum VerilogLink {
+    Forward(String, String),
+    Backward(String, String),
+    Bidirectional(String, String)
 }
 
 #[derive(Debug, Clone)]

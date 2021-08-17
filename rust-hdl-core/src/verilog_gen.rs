@@ -1,7 +1,4 @@
-use crate::ast::{
-    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
-    VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary,
-};
+use crate::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogLink};
 use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{walk_block, VerilogVisitor};
 use evalexpr::ContextWithMutableVariables;
@@ -16,7 +13,7 @@ struct LoopVariable {
 pub struct VerilogCodeGenerator {
     io: CodeWriter,
     loops: Vec<LoopVariable>,
-    links: Vec<String>,
+    links: Vec<VerilogLink>,
 }
 
 impl VerilogCodeGenerator {
@@ -76,6 +73,7 @@ impl ToString for VerilogCodeGenerator {
 pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
     let mut gen = VerilogCodeGenerator::new();
     gen.visit_block(code);
+    /*
     let links = gen
         .links
         .iter()
@@ -89,7 +87,9 @@ pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
         .map(|x| format!("assign {};", x))
         .collect::<Vec<_>>()
         .join("\n");
-    format!("always @(*) {}\n{}", gen.to_string(), links)
+     */
+//    format!("always @(*) {}\n{}", gen.to_string(), links)
+    format!("always @(*) {}\n", gen.to_string())
 }
 
 impl VerilogVisitor for VerilogCodeGenerator {
@@ -172,8 +172,10 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.write(v.to_string());
     }
 
-    fn visit_link(&mut self, l: &str) {
-        self.links.push(l.into());
+    fn visit_link(&mut self, l: &[VerilogLink]) {
+        for link in l {
+            self.links.push(link.clone());
+        }
     }
 
     fn visit_case(&mut self, c: &VerilogCase) {
