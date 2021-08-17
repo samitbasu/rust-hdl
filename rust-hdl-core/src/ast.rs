@@ -42,9 +42,16 @@ pub enum VerilogStatement {
 
 #[derive(Debug, Clone)]
 pub enum VerilogLink {
-    Forward(String, String),
-    Backward(String, String),
-    Bidirectional(String, String)
+    Forward(VerilogLinkDetails),
+    Backward(VerilogLinkDetails),
+    Bidirectional(VerilogLinkDetails),
+}
+
+#[derive(Debug, Clone)]
+pub struct VerilogLinkDetails {
+    pub my_name: String,
+    pub owner_name: String,
+    pub other_name: String,
 }
 
 #[derive(Debug, Clone)]
@@ -178,7 +185,7 @@ pub enum VerilogExpression {
     Paren(Box<VerilogExpression>),
     Binary(Box<VerilogExpression>, VerilogOp, Box<VerilogExpression>),
     Unary(VerilogOpUnary, Box<VerilogExpression>),
-    Index(String, Box<VerilogExpression>),
+    Index(Box<VerilogExpression>, Box<VerilogExpression>),
     Slice(String, usize, Box<VerilogExpression>),
     IndexReplace(
         Box<VerilogExpression>,

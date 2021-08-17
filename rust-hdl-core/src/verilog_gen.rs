@@ -1,4 +1,7 @@
-use crate::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogLink};
+use crate::ast::{
+    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
+    VerilogLink, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary,
+};
 use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{walk_block, VerilogVisitor};
 use evalexpr::ContextWithMutableVariables;
@@ -73,6 +76,37 @@ impl ToString for VerilogCodeGenerator {
 pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
     let mut gen = VerilogCodeGenerator::new();
     gen.visit_block(code);
+
+    // add forward links to the code
+    let links = gen
+        .links
+        .iter()
+        .map(|x| {
+            match x {
+                VerilogLink::Forward(x) => {
+                    format!(
+                        "always @(*) {}_{} = {}_{};",
+                        x.other_name, x.my_name, x.owner_name, x.my_name
+                    )
+                }
+                VerilogLink::Backward(x) => {
+                    format!(
+                        "always @(*) {}_{} = {}_{};",
+                        x.owner_name, x.my_name, x.other_name, x.my_name
+                    )
+                }
+                VerilogLink::Bidirectional(x) => {
+                    format!(
+                        "assign {}_{} = {}_{};",
+                        x.owner_name, x.my_name, x.other_name, x.my_name
+                    )
+                }
+            }
+            .to_string()
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
     /*
     let links = gen
         .links
@@ -88,8 +122,8 @@ pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
         .collect::<Vec<_>>()
         .join("\n");
      */
-//    format!("always @(*) {}\n{}", gen.to_string(), links)
-    format!("always @(*) {}\n", gen.to_string())
+    format!("always @(*) {}\n{}", gen.to_string(), links)
+    //    format!("always @(*) {}\n", gen.to_string())
 }
 
 impl VerilogVisitor for VerilogCodeGenerator {
@@ -241,8 +275,8 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.write(format!(") & {}'h{:x}", bits, mask))
     }
 
-    fn visit_index(&mut self, a: &str, b: &VerilogExpression) {
-        self.visit_signal(a);
+    fn visit_index(&mut self, a: &VerilogExpression, b: &VerilogExpression) {
+        self.visit_expression(a);
         self.io.write("[");
         self.visit_expression(b);
         self.io.write("]");

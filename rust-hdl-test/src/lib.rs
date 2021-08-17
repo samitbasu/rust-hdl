@@ -19,6 +19,8 @@ pub mod ok_tools;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_blinky;
 #[cfg(feature = "fpga_hw_test")]
+pub mod opalkelly_xem_6010_mig;
+#[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_pipe;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_wave;

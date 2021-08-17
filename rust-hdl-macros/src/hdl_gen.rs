@@ -330,10 +330,10 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
         let expr = method.receiver.as_ref();
         let signal = common::fixup_ident(quote!(#expr).to_string());
         let target = method.args.index(0);
-        let target = quote!(#target).to_string();
+        let target = common::fixup_ident(quote!(#target).to_string());
         return Ok(quote!(
             rust_hdl_core::ast::VerilogStatement::Link(#expr.link_hdl(#signal, #signal, #target))
-        ))
+        ));
     }
     Err(syn::Error::new(
         method.span(),
@@ -388,8 +388,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
             }))
         }
         "get_bit" => {
-            let expr = method.receiver.as_ref();
-            let signal = common::fixup_ident(quote!(#expr).to_string());
+            let signal = hdl_compute(method.receiver.as_ref())?;
             if method.args.is_empty() {
                 return Err(syn::Error::new(
                     method.span(),
@@ -398,7 +397,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
             }
             let index = hdl_compute(method.args.first().unwrap())?;
             Ok(quote!({
-               rust_hdl_core::ast::VerilogExpression::Index(#signal.to_string(), Box::new(#index))
+               rust_hdl_core::ast::VerilogExpression::Index(Box::new(#signal), Box::new(#index))
             }))
         }
         "replace_bit" => {

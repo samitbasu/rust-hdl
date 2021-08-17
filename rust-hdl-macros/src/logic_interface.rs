@@ -10,6 +10,7 @@ pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<T
     let update_all = get_update_all(fields.clone())?;
     let has_changed = get_has_changed(fields.clone())?;
     let connect_all = get_connect_all(fields.clone())?;
+    let link_connect = get_link_connect(fields.clone())?;
     let accept = get_accept(fields.clone())?;
     let name = &input.ident;
     let (impl_generics, ty_generics, _where_clause) = &input.generics.split_for_impl();
@@ -31,6 +32,17 @@ pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<T
             #link_hdl
         }
 
+        impl #impl_generics #name #ty_generics {
+            #link_connect
+        }
+    })
+}
+
+fn get_link_connect(fields: Vec<TS>) -> Result<TS> {
+    Ok(quote! {
+        pub fn link_connect(&mut self) {
+            #(self.#fields.connect();)*
+        }
     })
 }
 
@@ -47,7 +59,7 @@ fn get_link_hdl(fields: Vec<TS>) -> Result<TS> {
     Ok(quote! {
         fn link_hdl(&self, my_name: &str, this: &str, that: &str) -> Vec<rust_hdl_core::ast::VerilogLink> {
             let mut ret = vec![];
-            #(ret.push(self.#fields.link_hdl(#fields_as_strings, this, that));)*
+            #(ret.append(&mut self.#fields.link_hdl(#fields_as_strings, this, that));)*
             ret
         }
     })

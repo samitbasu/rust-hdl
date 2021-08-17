@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use crate::ast::{VerilogLiteral, VerilogLink};
+use crate::ast::{VerilogLink, VerilogLinkDetails, VerilogLiteral};
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
 use crate::clock::Clock;
 use crate::constraint::{Constraint, PinConstraint, SignalType};
 use crate::direction::{Direction, In, Out};
-use crate::logic::Logic;
+use crate::logic::{Logic, LogicLink};
 use crate::prelude::InOut;
 use crate::probe::Probe;
 use crate::synth::{Synth, VCDValue};
@@ -30,33 +30,45 @@ pub struct Signal<D: Direction, T: Synth> {
     dir: std::marker::PhantomData<D>,
 }
 
-impl<T: Synth> Signal<In, T> {
-    pub fn link(&mut self, other: &mut Self) {
+impl<T: Synth> LogicLink for Signal<In, T> {
+    fn link(&mut self, other: &mut Self) {
         other.next = self.val();
     }
-    pub fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> VerilogLink {
-        println!("{} {} {}", my_name, owner_name, other_name);
-        VerilogLink::Forward(my_name.into(), other_name.into())
+    fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+        let details = VerilogLinkDetails {
+            my_name: my_name.into(),
+            owner_name: owner_name.into(),
+            other_name: other_name.into(),
+        };
+        vec![VerilogLink::Forward(details)]
     }
 }
 
-impl<T: Synth> Signal<Out, T> {
-    pub fn link(&mut self, other: &mut Self) {
+impl<T: Synth> LogicLink for Signal<Out, T> {
+    fn link(&mut self, other: &mut Self) {
         self.next = other.val();
     }
-    pub fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> VerilogLink {
-        println!("{} {} {}", my_name, owner_name, other_name);
-        VerilogLink::Backward(my_name.into(), other_name.into())
+    fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+        let details = VerilogLinkDetails {
+            my_name: my_name.into(),
+            owner_name: owner_name.into(),
+            other_name: other_name.into(),
+        };
+        vec![VerilogLink::Backward(details)]
     }
 }
 
-impl<T: Synth> Signal<InOut, T> {
-    pub fn link(&mut self, other: &mut Self) {
+impl<T: Synth> LogicLink for Signal<InOut, T> {
+    fn link(&mut self, other: &mut Self) {
+        // Do nothing for bidirectional signals...
     }
-    // Do nothing for bidirectional signals...
-    pub fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> VerilogLink {
-        println!("{} {} {}", my_name, owner_name, other_name);
-        VerilogLink::Bidirectional(my_name.into(), other_name.into())
+    fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+        let details = VerilogLinkDetails {
+            my_name: my_name.into(),
+            owner_name: owner_name.into(),
+            other_name: other_name.into(),
+        };
+        vec![VerilogLink::Bidirectional(details)]
     }
 }
 

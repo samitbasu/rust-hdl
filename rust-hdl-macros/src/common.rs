@@ -78,7 +78,8 @@ pub fn fixup_ident(x: String) -> String {
         .replace(" ", "")
         .replace("self.", "")
         .replace(".", "_")
-        .replace("::", "_");
+        .replace("::", "_")
+        .replace("&mut", "");
     assert_ne!(y, "config");
     assert_ne!(y, "input");
     assert_ne!(y, "output");
