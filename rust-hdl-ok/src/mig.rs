@@ -1,4 +1,5 @@
 use crate::mcb_if::MCBInterface;
+use crate::prelude::generate_ucf;
 use rust_hdl_core::prelude::*;
 
 #[derive(LogicInterface, Default)]
@@ -37,7 +38,7 @@ pub struct ReadPort {
     pub error: Signal<Out, Bit>,
 }
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 pub struct MemoryInterfaceGenerator {
     // Raw clock from the system - cannot be intercepted
     pub raw_sys_clk: Signal<In, Clock>,
@@ -57,6 +58,44 @@ pub struct MemoryInterfaceGenerator {
     pub p0_rd: ReadPort,
     // MCB interface
     pub mcb: MCBInterface,
+}
+
+// TODO - currently assumes the MIG is at the top level of the
+// Verilog structure, and that the object is named "mig".  Generalizing
+// this would be a good idea.
+fn add_mig_timing_constraint(raw_sys_clk: &mut Signal<In, Clock>) {
+    raw_sys_clk.add_constraint(PinConstraint {
+        index: 0,
+        constraint: Constraint::Timing(Timing::Custom(
+            r#"NET "*/memc?_wrapper_inst/memc?_mcb_raw_wrapper_inst/selfrefresh_mcb_mode" TIG"#
+                .into(),
+        )),
+    });
+    raw_sys_clk.add_constraint(PinConstraint {
+        index: 0,
+        constraint: Constraint::Timing(Timing::Custom(r#"NET "*/c?_pll_lock" TIG"#.into())),
+    });
+    raw_sys_clk.add_constraint(PinConstraint {
+        index: 0,
+        constraint: Constraint::Timing(Timing::Custom(r#"NET "*/memc?_wrapper_inst/memc?_mcb_raw_wrapper_inst/gen_term_calib.mcb_soft_calibration_top_inst/mcb_soft_calibration_inst/CKE_Train" TIG"#.into()))});
+}
+
+impl Default for MemoryInterfaceGenerator {
+    fn default() -> Self {
+        let mut raw_sys_clk = Signal::default();
+        add_mig_timing_constraint(&mut raw_sys_clk);
+        Self {
+            raw_sys_clk,
+            reset_n: Default::default(),
+            calib_done: Default::default(),
+            clk_out: Default::default(),
+            reset_out: Default::default(),
+            p0_cmd: Default::default(),
+            p0_wr: Default::default(),
+            p0_rd: Default::default(),
+            mcb: Default::default(),
+        }
+    }
 }
 
 impl Logic for MemoryInterfaceGenerator {
