@@ -35,6 +35,7 @@ pub fn synth_obj<U: Block>(uut: U, dir: &str) {
         "MIG/iodrp_mcb_controller.v",
         "MIG/mcb_raw_wrapper.v",
         "MIG/mcb_soft_calibration.v",
+        "MIG/mcb_soft_calibration_top.v",
     ]
     .iter()
     .map(|x| format!("{}/{}", MIG_DIR, x))
