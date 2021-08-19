@@ -1,4 +1,5 @@
 use rust_hdl_core::prelude::*;
+use rust_hdl_widgets::prelude::{AsynchronousFIFO, DFF};
 
 #[derive(Clone, Debug, Default, LogicBlock)]
 pub struct BTPipeIn<const N: u8> {

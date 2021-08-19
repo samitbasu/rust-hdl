@@ -65,7 +65,7 @@ impl Logic for OpalKellyXEM6010MIGTest {
         self.start_cmd.clk.next = self.ok_host.ti_clk.val();
         self.cmd_done.clk.next = self.ok_host.ti_clk.val();
         // Reset
-        self.mig.reset_n.next = self.reset.dataout.val().any();
+        self.mig.reset.next = self.reset.dataout.val().any();
         // Couple the input pipe to the write fifo
         self.mig.p0_wr.data.next = bit_cast::<32, 16>(self.pipe_in.dataout.val());
         self.mig.p0_wr.enable.next = self.pipe_in.write.val();

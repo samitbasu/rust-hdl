@@ -43,7 +43,7 @@ pub struct MemoryInterfaceGenerator {
     // Raw clock from the system - cannot be intercepted
     pub raw_sys_clk: Signal<In, Clock>,
     // Reset - must be handled externally
-    pub reset_n: Signal<In, Bit>,
+    pub reset: Signal<In, Bit>,
     // Calibration complete
     pub calib_done: Signal<Out, Bit>,
     // Buffered 100 MHz clock
@@ -66,18 +66,16 @@ pub struct MemoryInterfaceGenerator {
 fn add_mig_timing_constraint(raw_sys_clk: &mut Signal<In, Clock>) {
     raw_sys_clk.add_constraint(PinConstraint {
         index: 0,
-        constraint: Constraint::Timing(Timing::Custom(
-            r#"NET "*/memc?_wrapper_inst/memc?_mcb_raw_wrapper_inst/selfrefresh_mcb_mode" TIG"#
-                .into(),
-        )),
+        constraint: Constraint::Timing(Timing::Custom(r#"NET "*selfrefresh_mcb_mode" TIG"#.into())),
     });
     raw_sys_clk.add_constraint(PinConstraint {
         index: 0,
-        constraint: Constraint::Timing(Timing::Custom(r#"NET "*/c?_pll_lock" TIG"#.into())),
+        constraint: Constraint::Timing(Timing::Custom(r#"NET "*pll_lock" TIG"#.into())),
     });
     raw_sys_clk.add_constraint(PinConstraint {
         index: 0,
-        constraint: Constraint::Timing(Timing::Custom(r#"NET "*/memc?_wrapper_inst/memc?_mcb_raw_wrapper_inst/gen_term_calib.mcb_soft_calibration_top_inst/mcb_soft_calibration_inst/CKE_Train" TIG"#.into()))});
+        constraint: Constraint::Timing(Timing::Custom(r#"NET "*CKE_Train" TIG"#.into())),
+    });
 }
 
 impl Default for MemoryInterfaceGenerator {
@@ -86,7 +84,7 @@ impl Default for MemoryInterfaceGenerator {
         add_mig_timing_constraint(&mut raw_sys_clk);
         Self {
             raw_sys_clk,
-            reset_n: Default::default(),
+            reset: Default::default(),
             calib_done: Default::default(),
             clk_out: Default::default(),
             reset_out: Default::default(),
@@ -122,7 +120,7 @@ impl Logic for MemoryInterfaceGenerator {
     fn hdl(&self) -> Verilog {
         Verilog::Blackbox(BlackBox {
             code: r##"
-module MemoryInterfaceGenerator(raw_sys_clk,reset_n,calib_done,clk_out,reset_out,
+module MemoryInterfaceGenerator(raw_sys_clk,reset,calib_done,clk_out,reset_out,
 p0_cmd_clock,p0_cmd_enable,p0_cmd_instruction,p0_cmd_burst_length,p0_cmd_byte_address,
 p0_cmd_empty,p0_cmd_full,p0_wr_clock,p0_wr_enable,p0_wr_mask,p0_wr_data,p0_wr_full,
 p0_wr_empty,p0_wr_count,p0_wr_underrun,p0_wr_error,p0_rd_clock,p0_rd_enable,p0_rd_data,
@@ -134,7 +132,7 @@ mcb_data_strobe_signal_neg,mcb_dram_clock,mcb_dram_clock_neg,mcb_chip_select_neg
 
     // Module arguments
     input raw_sys_clk;
-    input reset_n;
+    input reset;
     output calib_done;
     output clk_out;
     output reset_out;
@@ -277,7 +275,6 @@ mcb_data_strobe_signal_neg,mcb_dram_clock,mcb_dram_clock_neg,mcb_chip_select_neg
 
        wire                                                   c3_sys_clk;
        wire                                                   c3_error;
-       wire                                                   c3_calib_done;
        wire                                                   c3_rst0;
        wire                                                   c3_async_rst;
        wire                                                   c3_sysclk_2x;
@@ -300,7 +297,7 @@ mcb_data_strobe_signal_neg,mcb_dram_clock,mcb_dram_clock_neg,mcb_chip_select_neg
          (
           .sys_clk_p                      (raw_sys_clk),
           .sys_clk                        (c3_sys_clk),
-          .sys_rst_n                      (reset_n),
+          .sys_rst_n                      (reset),
           .clk0                           (clk_out),
           .rst0                           (c3_rst0),
           .async_rst                      (c3_async_rst),

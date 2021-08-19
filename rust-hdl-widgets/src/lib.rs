@@ -1,6 +1,7 @@
 pub mod async_fifo;
 pub mod dff;
 pub mod fifo_logic;
+pub mod fifo_reducer;
 pub mod prelude;
 pub mod pulser;
 pub mod pwm;

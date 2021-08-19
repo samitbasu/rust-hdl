@@ -10,14 +10,21 @@ use std::num::Wrapping;
 // The short value must be less than 2^N
 // N <= SHORT_BITS --> Short repr, otherwise Long repr
 
+// Compute the minimum number of bits to represent a container with t items.
+// This is basically ceil(log2(t)) as a constant (compile time computable) function.
 pub const fn clog2(t: usize) -> usize {
     let mut p = 0;
     let mut b = 1;
-    while b <= t {
+    while b < t {
         p += 1;
         b *= 2;
     }
     p
+}
+
+#[test]
+fn test_clog2_is_correct() {
+    assert_eq!(clog2(1024), 10);
 }
 
 #[derive(Clone, Debug, Copy)]

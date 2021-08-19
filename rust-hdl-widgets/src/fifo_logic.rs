@@ -26,6 +26,7 @@ pub struct FIFOReadLogic<D: Synth, const N: usize, const NP1: usize, const BLOCK
     // Internal details
     read_address: DFF<Bits<NP1>>,
     is_empty: Signal<Local, Bit>,
+    is_full: Signal<Local, Bit>,
     fill_level: Signal<Local, Bits<NP1>>,
     dff_underflow: DFF<Bit>,
     fifo_address_mask: Constant<Bits<NP1>>,
@@ -44,11 +45,17 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
         self.ram_read_clock.next = self.clock.val();
         // Compute the is empty flag
         self.is_empty.next = (self.read_address.q.val() == self.write_address_delayed.val()).into();
+        self.is_full.next = !self.is_empty.val()
+            & ((self.read_address.q.val() & self.fifo_address_mask.val())
+                == (self.write_address_delayed.val() & self.fifo_address_mask.val()));
         // Estimate the fill level
         self.fill_level.next = ((self.write_address_delayed.val() & self.fifo_address_mask.val())
             + self.fifo_size.val()
             - (self.read_address.q.val() & self.fifo_address_mask.val()))
             & self.fifo_address_mask.val();
+        if self.is_full.val() {
+            self.fill_level.next = self.fifo_size.val().into();
+        }
         // Compute the almost empty signal
         self.almost_empty.next = (self.fill_level.val() < self.block_size.val()).into();
         // Propagate the empty signal.
@@ -95,6 +102,7 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Default
             read_address_out: Default::default(),
             read_address: Default::default(),
             is_empty: Default::default(),
+            is_full: Default::default(),
             fill_level: Default::default(),
             dff_underflow: Default::default(),
             fifo_address_mask: Constant::new(((1_u32 << (N)) - 1).into()),

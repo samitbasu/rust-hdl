@@ -367,7 +367,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
     match method_name.as_ref() {
         "get_bits" => {
             let expr = method.receiver.as_ref();
-            let signal = common::fixup_ident(quote!(#expr).to_string());
+            let target = hdl_compute(expr)?;
             if method.turbofish.is_none() {
                 return Err(syn::Error::new(method.span(), "get_bits needs a type argument to indicate the width of the slice (e.g., x.get_bits::<Bits4>(ndx))"));
             }
@@ -375,7 +375,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                 return Err(syn::Error::new(method.span(), "get_bits needs a type argument to indicate the width of the slice (e.g., x.get_bits::<Bits4>(ndx))"));
             }
             let width_type = method.turbofish.as_ref().unwrap().args.first().unwrap();
-            let width = quote!(#width_type::bits());
+            let width = quote!(#width_type);
             if method.args.len() != 1 {
                 return Err(syn::Error::new(
                     method.span(),
@@ -384,7 +384,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
             }
             let offset = hdl_compute(&method.args[0])?;
             Ok(quote!({
-               rust_hdl_core::ast::VerilogExpression::Slice(#signal.to_string(), #width, Box::new(#offset))
+               rust_hdl_core::ast::VerilogExpression::Slice(Box::new(#target), #width, Box::new(#offset))
             }))
         }
         "get_bit" => {

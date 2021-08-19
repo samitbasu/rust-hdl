@@ -17,7 +17,7 @@ impl<const FREQ: u64, const N: usize> Strobe<FREQ, N> {
         let interval = strobe_interval_femto / clock_duration_femto;
         let threshold = interval.round() as u64;
         assert!((threshold as u128) < (1_u128 << (N as u128)));
-        assert!(threshold > 1);
+        assert!(threshold > 2);
         Self {
             enable: Signal::default(),
             strobe: Signal::default(),

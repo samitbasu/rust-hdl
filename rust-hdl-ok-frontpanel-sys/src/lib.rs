@@ -86,7 +86,7 @@ impl OkHandle {
     pub fn reset_firmware(&self, addr: i32) {
         self.set_wire_in(addr, 1);
         self.update_wire_ins();
-        thread::sleep(time::Duration::from_millis(100));
+        thread::sleep(time::Duration::from_millis(1000));
         self.set_wire_in(addr, 0);
         self.update_wire_ins();
     }

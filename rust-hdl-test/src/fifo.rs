@@ -122,6 +122,52 @@ impl Logic for SynchronousFIFOTest {
     }
 }
 
+declare_sync_fifo!(BigFIFO, Bits<8>, 1024, 256);
+
+#[derive(LogicBlock, Default)]
+struct BigFIFOTest {
+    pub clock: Signal<In, Clock>,
+    pub fifo: BigFIFO,
+}
+
+impl Logic for BigFIFOTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.fifo.clock.next = self.clock.val();
+    }
+}
+
+#[test]
+fn test_almost_empty_is_accurate_in_large_fifo() {
+    let mut uut = BigFIFOTest::default();
+    uut.clock.connect();
+    uut.fifo.read.connect();
+    uut.fifo.data_in.connect();
+    uut.fifo.write.connect();
+    uut.connect_all();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut BigFIFOTest| x.clock.next = !x.clock.val());
+    sim.add_testbench(move |mut sim: Sim<BigFIFOTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for counter in 0_u32..1024_u32 {
+            x.fifo.data_in.next = counter.into();
+            x.fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+        }
+        sim_assert!(sim, x.fifo.full.val(), x);
+        sim_assert!(sim, !x.fifo.almost_empty.val(), x);
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.run_traced(
+        uut,
+        50_000,
+        std::fs::File::create("fifo_big_almost_empty.vcd").unwrap(),
+    )
+    .unwrap();
+}
+
 #[test]
 fn test_almost_empty_is_accurate_synchronous_fifo() {
     let mut uut = SynchronousFIFOTest::default();
@@ -345,4 +391,57 @@ fn test_fifo_works_asynchronous_fifo() {
     });
     sim.run_traced(uut, 100_000, std::fs::File::create("afifo.vcd").unwrap())
         .unwrap();
+}
+
+#[derive(LogicBlock, Default)]
+struct AsyncBigFIFOTest {
+    pub read_clock: Signal<In, Clock>,
+    pub write_clock: Signal<In, Clock>,
+    pub fifo: AsynchronousFIFO<Bits<16>, 10, 11, 256>,
+}
+
+impl Logic for AsyncBigFIFOTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.fifo.write_clock.next = self.write_clock.val();
+        self.fifo.read_clock.next = self.read_clock.val();
+    }
+}
+
+#[test]
+fn test_almost_empty_is_accurate_in_large_async_fifo() {
+    let mut uut = AsyncBigFIFOTest::default();
+    uut.read_clock.connect();
+    uut.write_clock.connect();
+    uut.fifo.read.connect();
+    uut.fifo.data_in.connect();
+    uut.fifo.write.connect();
+    uut.connect_all();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut AsyncBigFIFOTest| {
+        x.read_clock.next = !x.read_clock.val()
+    });
+    sim.add_clock(4, |x: &mut AsyncBigFIFOTest| {
+        x.write_clock.next = !x.write_clock.val()
+    });
+    sim.add_testbench(move |mut sim: Sim<AsyncBigFIFOTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, write_clock, x);
+        for counter in 0_u32..1024_u32 {
+            x.fifo.data_in.next = counter.into();
+            x.fifo.write.next = true;
+            wait_clock_cycle!(sim, write_clock, x);
+            x.fifo.write.next = false;
+        }
+        sim_assert!(sim, x.fifo.full.val(), x);
+        sim_assert!(sim, !x.fifo.almost_empty.val(), x);
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.run_traced(
+        uut,
+        50_000,
+        std::fs::File::create("fifo_big_almost_empty_async.vcd").unwrap(),
+    )
+    .unwrap();
 }

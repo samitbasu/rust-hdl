@@ -23,6 +23,8 @@ pub fn synth_obj<U: Block>(uut: U, dir: &str) {
         "okTriggerOut.ngc",
         "okPipeIn.ngc",
         "okPipeOut.ngc",
+        "okBTPipeIn.ngc",
+        "okBTPipeOut.ngc",
     ]
     .iter()
     .map(|x| format!("{}/{}", FRONTPANEL_DIR, x))

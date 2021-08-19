@@ -72,10 +72,7 @@ impl Logic for OpalKellyXEM6010WireTest {
 #[test]
 fn test_opalkelly_xem_6010_wire() {
     let mut uut = OpalKellyXEM6010WireTest::new();
-    uut.hi.sig_in.connect();
-    uut.hi.sig_out.connect();
-    uut.hi.sig_inout.connect();
-    uut.hi.sig_aa.connect();
+    uut.hi.link_connect();
     uut.connect_all();
     crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_wire");
 }

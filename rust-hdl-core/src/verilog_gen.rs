@@ -282,8 +282,8 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.write("]");
     }
 
-    fn visit_slice(&mut self, sig: &str, width: &usize, offset: &VerilogExpression) {
-        self.visit_signal(sig);
+    fn visit_slice(&mut self, sig: &VerilogExpression, width: &usize, offset: &VerilogExpression) {
+        self.visit_expression(sig);
         self.io.write("[(");
         self.visit_expression(offset);
         self.io.write(format!(")+:({})]", width));
