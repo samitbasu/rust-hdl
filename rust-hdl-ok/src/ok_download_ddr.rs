@@ -1,10 +1,10 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
-use crate::mcb_if::MCBInterface;
 use crate::ddr_fifo::DDRFIFO;
+use crate::mcb_if::MCBInterface;
+use crate::ok_pipe::BTPipeOut;
+use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::fifo_reducer::FIFOReducer;
 use rust_hdl_widgets::prelude::SynchronousFIFO;
-use crate::ok_pipe::BTPipeOut;
+use rust_hdl_widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 pub struct OpalKellyDDRBackedDownloadFIFO<const PORT: u8> {
@@ -66,7 +66,7 @@ impl<const PORT: u8> Logic for OpalKellyDDRBackedDownloadFIFO<PORT> {
 
 #[test]
 fn test_ddr_download_fifo_gen() {
-    let ddr : OpalKellyDDRBackedDownloadFIFO<0xA0> = Default::default();
+    let ddr: OpalKellyDDRBackedDownloadFIFO<0xA0> = Default::default();
     let vlog = generate_verilog_unchecked(&ddr);
     println!("{}", vlog);
 }

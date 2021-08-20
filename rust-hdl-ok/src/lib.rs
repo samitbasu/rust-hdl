@@ -10,6 +10,7 @@ use rust_hdl_widgets::pulser::Pulser;
 pub mod ddr_fifo;
 pub mod mcb_if;
 pub mod mig;
+pub mod ok_download_ddr;
 pub mod ok_hi;
 pub mod ok_host;
 pub mod ok_pipe;
@@ -19,7 +20,6 @@ pub mod pins;
 pub mod prelude;
 pub mod synth;
 pub mod ucf_gen;
-pub mod ok_download_ddr;
 
 const MHZ48: u64 = 48_000_000;
 

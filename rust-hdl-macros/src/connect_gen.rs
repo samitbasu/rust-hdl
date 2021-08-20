@@ -1,8 +1,8 @@
 use crate::common::TS;
 use quote::quote;
+use std::ops::Index;
 use syn::spanned::Spanned;
 use syn::{Expr, Member, Result};
-use std::ops::Index;
 
 pub fn connect_gen(item: &syn::ItemFn) -> Result<TS> {
     let body = connect_block(&item.block)?;
@@ -60,12 +60,11 @@ fn connect_method_call(node: &syn::ExprMethodCall) -> Result<TS> {
             let target = &t.expr;
             return Ok(quote!(
                 #target.link_connect();
-            ))
+            ));
         }
     }
     Ok(TS::new())
 }
-
 
 fn connect_assignment(node: &syn::ExprAssign) -> Result<TS> {
     if let Expr::Field(field) = node.left.as_ref() {

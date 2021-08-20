@@ -8,6 +8,7 @@ pub mod pwm;
 pub mod ram;
 pub mod rom;
 pub mod shot;
+pub mod spi_master;
 pub mod strobe;
 pub mod sync_fifo;
 pub mod sync_rom;

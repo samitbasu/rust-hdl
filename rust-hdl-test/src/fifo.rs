@@ -1,8 +1,8 @@
 use rand::Rng;
 use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
-use rust_hdl_widgets::prelude::*;
 use rust_hdl_widgets::fifo_reducer::FIFOReducer;
+use rust_hdl_widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 struct SyncVecTest {
@@ -490,9 +490,7 @@ fn test_fifo_reducer_works() {
         rdata_read.push(x.get_bits::<8>(0));
         rdata_read.push(x.get_bits::<8>(8));
     }
-    sim.add_clock(5, |x: &mut ReducerFIFOTest| {
-        x.clock.next = !x.clock.val()
-    });
+    sim.add_clock(5, |x: &mut ReducerFIFOTest| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<ReducerFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
@@ -533,6 +531,10 @@ fn test_fifo_reducer_works() {
         sim.done(x)?;
         Ok(())
     });
-    sim.run_traced(uut, 100_000, std::fs::File::create("fifo_reducer.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        uut,
+        100_000,
+        std::fs::File::create("fifo_reducer.vcd").unwrap(),
+    )
+    .unwrap();
 }

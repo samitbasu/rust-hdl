@@ -3,17 +3,17 @@ use rust_hdl_core::bits::bit_cast;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::ddr_fifo::DDRFIFO;
 use rust_hdl_ok::mcb_if::MCBInterface;
+use rust_hdl_ok::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
 use rust_hdl_ok::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok::ok_host::OpalKellyHost;
 use rust_hdl_ok::ok_pipe::BTPipeOut;
 use rust_hdl_ok::ok_wire::WireIn;
 use rust_hdl_ok::pins::{xem_6010_base_clock, xem_6010_leds};
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
+use rust_hdl_widgets::fifo_reducer::FIFOReducer;
 use rust_hdl_widgets::prelude::*;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
-use rust_hdl_widgets::fifo_reducer::FIFOReducer;
-use rust_hdl_ok::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
 
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFOStressTest {
@@ -101,9 +101,9 @@ fn test_opalkelly_xem_6010_ddr_stress_runtime() -> Result<(), OkError> {
         );
         let data_shorts = make_u16_buffer(&data);
         let mut data_words = vec![];
-        for i in 0..data_shorts.len()/2 {
-            let lo_word = data_shorts[2*i] as u32;
-            let hi_word = data_shorts[2*i+1] as u32;
+        for i in 0..data_shorts.len() / 2 {
+            let lo_word = data_shorts[2 * i] as u32;
+            let hi_word = data_shorts[2 * i + 1] as u32;
             data_words.push((hi_word << 16) | lo_word);
         }
         for (ndx, val) in data_words.iter().enumerate() {

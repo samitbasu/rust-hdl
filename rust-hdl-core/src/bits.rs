@@ -530,6 +530,14 @@ mod tests {
         assert_eq!(c_u32, 10234_u32 + 19423_u32);
     }
     #[test]
+    fn add_int_works() {
+        let a: Bits<32> = 10234_u32.into();
+        let b = 19423_u32;
+        let c: Bits<32> = a + b;
+        let c_u32: u32 = c.into();
+        assert_eq!(c_u32, 10234_u32 + 19423_u32);
+    }
+    #[test]
     fn add_works_with_overflow() {
         let x = 2_042_102_334_u32;
         let y = 2_942_142_512_u32;
@@ -545,6 +553,16 @@ mod tests {
         let y = 2_942_142_512_u32;
         let a: Bits<32> = x.into();
         let b: Bits<32> = y.into();
+        let c = a - b;
+        let c_u32: u32 = c.into();
+        assert_eq!(Wrapping(c_u32), Wrapping(x) - Wrapping(y));
+    }
+    #[test]
+    fn sub_int_works() {
+        let x = 2_042_102_334_u32;
+        let y = 2_942_142_512_u32;
+        let a: Bits<32> = x.into();
+        let b: u32 = y.into();
         let c = a - b;
         let c_u32: u32 = c.into();
         assert_eq!(Wrapping(c_u32), Wrapping(x) - Wrapping(y));
