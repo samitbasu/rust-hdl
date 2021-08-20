@@ -2,6 +2,7 @@ use rand::Rng;
 use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::*;
+use rust_hdl_widgets::fifo_reducer::FIFOReducer;
 
 #[derive(LogicBlock, Default)]
 struct SyncVecTest {
@@ -444,4 +445,94 @@ fn test_almost_empty_is_accurate_in_large_async_fifo() {
         std::fs::File::create("fifo_big_almost_empty_async.vcd").unwrap(),
     )
     .unwrap();
+}
+
+#[derive(LogicBlock, Default)]
+struct ReducerFIFOTest {
+    pub clock: Signal<In, Clock>,
+    pub wide_fifo: SynchronousFIFO<Bits<16>, 4, 5, 4>,
+    pub narrow_fifo: SynchronousFIFO<Bits<8>, 4, 5, 4>,
+    pub reducer: FIFOReducer<16, 8, false>,
+}
+
+impl Logic for ReducerFIFOTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.wide_fifo.clock.next = self.clock.val();
+        self.narrow_fifo.clock.next = self.clock.val();
+        self.reducer.clock.next = self.clock.val();
+        // Connect the reducer to the wide (upstream) FIFO
+        self.reducer.data_in.next = self.wide_fifo.data_out.val();
+        self.reducer.empty.next = self.wide_fifo.empty.val();
+        self.wide_fifo.read.next = self.reducer.read.val();
+        // Connect the reducer to the narrow (downstream) FIFO
+        self.narrow_fifo.data_in.next = self.reducer.data_out.val();
+        self.narrow_fifo.write.next = self.reducer.write.val();
+        self.reducer.full.next = self.narrow_fifo.full.val();
+    }
+}
+
+#[test]
+fn test_fifo_reducer_works() {
+    let mut uut = ReducerFIFOTest::default();
+    uut.clock.connect();
+    uut.wide_fifo.write.connect();
+    uut.wide_fifo.data_in.connect();
+    uut.narrow_fifo.read.connect();
+    uut.connect_all();
+    yosys_validate("fifo_5", &generate_verilog(&uut)).unwrap();
+    let mut sim = Simulation::new();
+    let rdata = (0..256)
+        .map(|_| Bits::<16>::from(rand::random::<u16>()))
+        .collect::<Vec<_>>();
+    let mut rdata_read = vec![];
+    for x in &rdata {
+        rdata_read.push(x.get_bits::<8>(0));
+        rdata_read.push(x.get_bits::<8>(8));
+    }
+    sim.add_clock(5, |x: &mut ReducerFIFOTest| {
+        x.clock.next = !x.clock.val()
+    });
+    sim.add_testbench(move |mut sim: Sim<ReducerFIFOTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for sample in &rdata {
+            x = sim.watch(|x| !x.wide_fifo.full.val(), x)?;
+            x.wide_fifo.data_in.next = (*sample).into();
+            x.wide_fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.wide_fifo.write.next = false;
+            if rand::thread_rng().gen::<f64>() < 0.3 {
+                for _ in 0..(rand::thread_rng().gen::<u8>() % 40) {
+                    wait_clock_cycle!(sim, clock, x);
+                }
+            }
+        }
+        sim_assert!(sim, !x.wide_fifo.underflow.val(), x);
+        sim_assert!(sim, !x.wide_fifo.overflow.val(), x);
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.add_testbench(move |mut sim: Sim<ReducerFIFOTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for sample in &rdata_read {
+            x = sim.watch(|x| !x.narrow_fifo.empty.val(), x)?;
+            sim_assert!(sim, x.narrow_fifo.data_out.val().eq(sample), x);
+            x.narrow_fifo.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.narrow_fifo.read.next = false;
+            if rand::thread_rng().gen::<f64>() < 0.3 {
+                for _ in 0..(rand::thread_rng().gen::<u8>() % 40) {
+                    wait_clock_cycle!(sim, clock, x);
+                }
+            }
+        }
+        sim_assert!(sim, !x.narrow_fifo.underflow.val(), x);
+        sim_assert!(sim, !x.narrow_fifo.overflow.val(), x);
+        sim.done(x)?;
+        Ok(())
+    });
+    sim.run_traced(uut, 100_000, std::fs::File::create("fifo_reducer.vcd").unwrap())
+        .unwrap();
 }
