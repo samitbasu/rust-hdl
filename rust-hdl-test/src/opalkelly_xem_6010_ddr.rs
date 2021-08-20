@@ -15,10 +15,6 @@ use std::time::{Duration, Instant};
 use rust_hdl_widgets::fifo_reducer::FIFOReducer;
 use rust_hdl_ok::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
 
-declare_sync_fifo!(DFIFO, Bits<16>, 8192, 512);
-
-const BENCH_CLOCK: u64 = 156_256_000;
-
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFOStressTest {
     mcb: MCBInterface,
@@ -80,8 +76,6 @@ fn test_opalkelly_xem_6010_ddr_stress() {
     let mut uut = OpalKellyDownloadDDRFIFOStressTest::default();
     uut.hi.link_connect();
     uut.mcb.link_connect();
-    uut.download.mcb.link_connect();
-    uut.download.ddr_fifo.mcb.link_connect();
     uut.raw_sys_clock.connect();
     uut.connect_all();
     crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_ddr_stress");

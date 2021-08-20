@@ -24,7 +24,7 @@ pub struct OpalKellyDDRBackedDownloadFIFO<const PORT: u8> {
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     //  The DDR-backed FIFO
-    pub ddr_fifo: DDRFIFO, // TODO - don't need this public
+    ddr_fifo: DDRFIFO,
     reducer: FIFOReducer<32, 16, false>,
     fifo_out: SynchronousFIFO<Bits<16>, 13, 14, 512>,
     o_pipe: BTPipeOut<PORT>,
