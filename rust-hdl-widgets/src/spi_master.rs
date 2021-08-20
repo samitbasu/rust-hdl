@@ -13,6 +13,7 @@ enum SPIState {
 }
 
 pub struct SPIConfig {
+    pub clock_speed: u64,
     pub cs_off: bool,
     pub mosi_off: bool,
     pub speed_hz: u64,
@@ -29,9 +30,9 @@ pub struct SPIWires {
 }
 
 #[derive(LogicBlock)]
-pub struct SPIMaster<const CLOCK_SPEED_HZ: u64, const N: usize> {
+pub struct SPIMaster<const N: usize> {
     pub clock: Signal<In, Clock>,
-    pub bits_in: Signal<In, Bits<16>>,
+    pub bits_outbound: Signal<In, Bits<16>>,
     pub data_outbound: Signal<In, Bits<N>>,
     pub data_inbound: Signal<Out, Bits<N>>,
     pub start_send: Signal<In, Bit>,
@@ -41,7 +42,7 @@ pub struct SPIMaster<const CLOCK_SPEED_HZ: u64, const N: usize> {
     register_out: DFF<Bits<N>>,
     register_in: DFF<Bits<N>>,
     state: DFF<SPIState>,
-    strobe: Strobe<CLOCK_SPEED_HZ, 32>,
+    strobe: Strobe<32>,
     pointer: DFF<Bits<16>>,
     pointerm1: Signal<Local, Bits<16>>,
     clock_state: DFF<Bit>,
@@ -56,11 +57,11 @@ pub struct SPIMaster<const CLOCK_SPEED_HZ: u64, const N: usize> {
     cpol: Constant<Bit>,
 }
 
-impl<const CLOCK_SPEED_HZ: u64, const N: usize> SPIMaster<CLOCK_SPEED_HZ, N> {
+impl<const N: usize> SPIMaster<N> {
     pub fn new(config: SPIConfig) -> Self {
         Self {
             clock: Default::default(),
-            bits_in: Default::default(),
+            bits_outbound: Default::default(),
             data_outbound: Default::default(),
             data_inbound: Default::default(),
             start_send: Default::default(),
@@ -70,7 +71,7 @@ impl<const CLOCK_SPEED_HZ: u64, const N: usize> SPIMaster<CLOCK_SPEED_HZ, N> {
             register_out: Default::default(),
             register_in: Default::default(),
             state: Default::default(),
-            strobe: Strobe::new(config.speed_hz as f64),
+            strobe: Strobe::new(config.clock_speed, 4.0 * config.speed_hz as f64),
             pointer: Default::default(),
             pointerm1: Default::default(),
             clock_state: Default::default(),
@@ -87,7 +88,7 @@ impl<const CLOCK_SPEED_HZ: u64, const N: usize> SPIMaster<CLOCK_SPEED_HZ, N> {
     }
 }
 
-impl<const CLOCK_SPEED_HZ: u64, const N: usize> Logic for SPIMaster<CLOCK_SPEED_HZ, N> {
+impl<const N: usize> Logic for SPIMaster<N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Wire up the clocks.
@@ -132,7 +133,7 @@ impl<const CLOCK_SPEED_HZ: u64, const N: usize> Logic for SPIMaster<CLOCK_SPEED_
                     // Capture the outgoing data in our register
                     self.register_out.d.next = self.data_outbound.val();
                     self.state.d.next = SPIState::Dwell; // Transition to the DWELL state
-                    self.pointer.d.next = self.bits_in.val(); // set bit pointer to number of bit to send (1 based)
+                    self.pointer.d.next = self.bits_outbound.val(); // set bit pointer to number of bit to send (1 based)
                     self.register_in.d.next = 0_usize.into(); // Clear out the input store register
                     self.msel_flop.d.next = !self.cs_off.val(); // Activate the chip select
                     self.continued_save.d.next = self.continued_transaction.val();
@@ -192,7 +193,7 @@ impl<const CLOCK_SPEED_HZ: u64, const N: usize> Logic for SPIMaster<CLOCK_SPEED_
 fn test_spi_master_is_synthesizable() {
     #[derive(LogicBlock)]
     struct Wrap {
-        uut: SPIMaster<48_000_000, 64>,
+        uut: SPIMaster<64>,
     }
 
     impl Logic for Wrap {
@@ -202,6 +203,7 @@ fn test_spi_master_is_synthesizable() {
     impl Default for Wrap {
         fn default() -> Self {
             let config = SPIConfig {
+                clock_speed: 48_000_000,
                 cs_off: true,
                 mosi_off: false,
                 speed_hz: 1_000_000,
@@ -216,7 +218,7 @@ fn test_spi_master_is_synthesizable() {
 
     let mut dev = Wrap::default();
     dev.uut.clock.connect();
-    dev.uut.bits_in.connect();
+    dev.uut.bits_outbound.connect();
     dev.uut.data_outbound.connect();
     dev.uut.start_send.connect();
     dev.uut.continued_transaction.connect();

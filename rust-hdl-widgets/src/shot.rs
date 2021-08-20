@@ -4,7 +4,7 @@ use rust_hdl_macros::{hdl_gen, LogicBlock};
 use std::time::Duration;
 
 #[derive(Clone, Debug, LogicBlock)]
-pub struct Shot<const FREQ: u64, const N: usize> {
+pub struct Shot<const N: usize> {
     pub trigger: Signal<In, Bit>,
     pub active: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
@@ -13,10 +13,10 @@ pub struct Shot<const FREQ: u64, const N: usize> {
     state: DFF<Bit>,
 }
 
-impl<const FREQ: u64, const N: usize> Shot<FREQ, N> {
-    pub fn new(duration: Duration) -> Self {
+impl<const N: usize> Shot<N> {
+    pub fn new(frequency: u64, duration: Duration) -> Self {
         let duration_nanos = duration.as_nanos() as f64 * NANOS_PER_FEMTO; // duration in femtos
-        let clock_period_nanos = freq_hz_to_period_femto(FREQ as f64);
+        let clock_period_nanos = freq_hz_to_period_femto(frequency as f64);
         let clocks = (duration_nanos / clock_period_nanos).floor() as u64;
         assert!(clocks < (1_u64 << N));
         Self {
@@ -30,7 +30,7 @@ impl<const FREQ: u64, const N: usize> Shot<FREQ, N> {
     }
 }
 
-impl<const FREQ: u64, const N: usize> Logic for Shot<FREQ, N> {
+impl<const N: usize> Logic for Shot<N> {
     #[hdl_gen]
     fn update(&mut self) {
         self.counter.clk.next = self.clock.val();

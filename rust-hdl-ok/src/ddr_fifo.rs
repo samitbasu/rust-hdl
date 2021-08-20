@@ -191,12 +191,12 @@ impl Logic for DDRFIFO {
         // We don't use the mask input
         self.mig.p0_wr.mask.next = 0_usize.into();
         // Set the status byte
-        self.status.next = (bit_cast::<8, 1>(self.mig.p0_wr.error.val().into())
+        self.status.next = bit_cast::<8, 1>(self.mig.p0_wr.error.val().into())
             | (bit_cast::<8, 1>(self.mig.p0_wr.underrun.val().into()) << 1_usize)
             | (bit_cast::<8, 1>(self.mig.p0_cmd.full.val().into()) << 2_usize)
             | (bit_cast::<8, 1>(self.mig.p0_rd.error.val().into()) << 3_usize)
             | (bit_cast::<8, 1>(self.mig.p0_rd.overflow.val().into()) << 4_usize)
-            | (bit_cast::<8, 1>(self.have_data.val().into()) << 5_usize));
+            | (bit_cast::<8, 1>(self.have_data.val().into()) << 5_usize);
     }
 }
 

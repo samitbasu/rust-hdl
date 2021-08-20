@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn test_visit_version() {
-        let mut uut: Strobe<100, 32> = Strobe::new(10.0);
+        let mut uut: Strobe<32> = Strobe::new(100, 10.0);
         // Simulate 100 clock cycles
         uut.enable.next = true;
         println!("Starting");
@@ -201,8 +201,8 @@ mod tests {
         struct StrobePair {
             pub clock: Signal<In, Clock>,
             pub enable: Signal<In, Bit>,
-            a_strobe: Strobe<MHZ100, 32>,
-            b_strobe: Strobe<MHZ100, 32>,
+            a_strobe: Strobe<32>,
+            b_strobe: Strobe<32>,
             increment: Constant<Bits<6>>,
             local: Signal<Local, Bit>,
         }
@@ -210,8 +210,8 @@ mod tests {
         impl StrobePair {
             pub fn new() -> StrobePair {
                 Self {
-                    a_strobe: Strobe::new(10.0),
-                    b_strobe: Strobe::new(10.0),
+                    a_strobe: Strobe::new(10_000_000, 10.0),
+                    b_strobe: Strobe::new(10_000_000, 10.0),
                     clock: Signal::default(),
                     enable: Signal::default(),
                     increment: Constant::new(32_usize.into()),
@@ -322,7 +322,7 @@ mod tests {
     #[derive(LogicBlock)]
     struct Circuit {
         x: Signal<In, Bits<32>>,
-        pub strobe: Strobe<MHZ100, 32>,
+        pub strobe: Strobe<32>,
     }
 
     impl Logic for Circuit {
@@ -373,7 +373,7 @@ mod tests {
         sim.add_testbench(sample_func2);
         let mut x = Circuit {
             x: Signal::default(),
-            strobe: Strobe::new(10.0),
+            strobe: Strobe::new(1000, 10.0),
         };
         x.x.connect();
         x.strobe.clock.connect();

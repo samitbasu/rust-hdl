@@ -18,6 +18,7 @@ pub mod nested_ports;
 pub mod ok_tools;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_blinky;
+#[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_ddr;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_mig;
@@ -31,13 +32,14 @@ pub mod pwm;
 pub mod ram;
 pub mod rom;
 pub mod snore;
+mod spi;
 pub mod sync_rom;
 
 const MHZ1: u64 = 1_000_000;
 
 #[derive(LogicBlock)]
 struct UUT {
-    strobe: Strobe<MHZ1, 32>,
+    strobe: Strobe<32>,
 }
 
 impl Logic for UUT {
@@ -50,7 +52,7 @@ impl Logic for UUT {
 
 #[test]
 fn test_strobe_as_verilog() {
-    let mut uut: Strobe<MHZ1, 32> = Strobe::new(10.0);
+    let mut uut: Strobe<32> = Strobe::new(MHZ1, 10.0);
     uut.enable.connect();
     uut.clock.connect();
     uut.connect_all();
@@ -72,7 +74,7 @@ fn test_strobe() {
         Ok(())
     });
     let mut uut = UUT {
-        strobe: Strobe::new(10.0),
+        strobe: Strobe::new(MHZ1, 10.0),
     };
     uut.connect_all();
     sim.run_traced(uut, 100_000, File::create("strobe.vcd").unwrap())

@@ -60,12 +60,9 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Logic for FIFOReduce
         self.will_run.next = self.data_available.val() && self.can_write.val();
         // If data is available we select which piece of the input based on the loaded flag
         if self.reverse.val() ^ self.loaded.q.val() {
-            self.data_to_write.next = self
-                .data_in
-                .val()
-                .get_bits::<{ DN }>(self.offset.val().into());
+            self.data_to_write.next = self.data_in.val().get_bits::<DN>(self.offset.val().into());
         } else {
-            self.data_to_write.next = self.data_in.val().get_bits::<{ DN }>(0_usize.into());
+            self.data_to_write.next = self.data_in.val().get_bits::<DN>(0_usize.into());
         }
         // The input to the output fifo is always data_to_write (although it may not be valid)
         self.data_out.next = self.data_to_write.val();

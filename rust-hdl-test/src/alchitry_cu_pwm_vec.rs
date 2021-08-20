@@ -8,18 +8,18 @@ use rust_hdl_widgets::prelude::*;
 use crate::snore;
 
 #[derive(LogicBlock)]
-pub struct Fader<const FREQ: u64> {
+pub struct Fader {
     pub clock: Signal<In, Clock>,
     pub active: Signal<Out, Bit>,
     pub enable: Signal<In, Bit>,
-    strobe: Strobe<FREQ, 32>,
+    strobe: Strobe<32>,
     pwm: PulseWidthModulator<6>,
     rom: ROM<Bits<6>, 8>,
     counter: DFF<Bits<8>>,
 }
 
-impl<const FREQ: u64> Fader<FREQ> {
-    pub fn new(phase: u32) -> Self {
+impl Fader {
+    pub fn new(clock_frequency: u64, phase: u32) -> Self {
         let rom = (0..256_u32)
             .map(|x| (Bits::<8>::from(x), snore::snore(x + phase)))
             .collect::<BTreeMap<_, _>>();
@@ -27,7 +27,7 @@ impl<const FREQ: u64> Fader<FREQ> {
             clock: Signal::default(),
             active: Signal::new_with_default(false),
             enable: Signal::default(),
-            strobe: Strobe::new(120.0),
+            strobe: Strobe::new(clock_frequency, 120.0),
             pwm: PulseWidthModulator::default(),
             rom: ROM::new(rom),
             counter: DFF::new(Bits::<8>::default()),
@@ -35,7 +35,7 @@ impl<const FREQ: u64> Fader<FREQ> {
     }
 }
 
-impl<const FREQ: u64> Logic for Fader<FREQ> {
+impl Logic for Fader {
     #[hdl_gen]
     fn update(&mut self) {
         self.strobe.clock.next = self.clock.val();
@@ -51,14 +51,14 @@ impl<const FREQ: u64> Logic for Fader<FREQ> {
 }
 
 #[derive(LogicBlock)]
-pub struct AlchitryCuPWMVec<const FREQ: u64, const P: usize> {
+pub struct AlchitryCuPWMVec<const P: usize> {
     clock: Signal<In, Clock>,
     leds: Signal<Out, Bits<8>>,
     local: Signal<Local, Bits<8>>,
-    faders: [Fader<FREQ>; 8],
+    faders: [Fader; 8],
 }
 
-impl<const FREQ: u64, const P: usize> Logic for AlchitryCuPWMVec<FREQ, P> {
+impl<const P: usize> Logic for AlchitryCuPWMVec<P> {
     #[hdl_gen]
     fn update(&mut self) {
         for i in 0_usize..8_usize {
@@ -73,17 +73,17 @@ impl<const FREQ: u64, const P: usize> Logic for AlchitryCuPWMVec<FREQ, P> {
     }
 }
 
-impl<const FREQ: u64, const P: usize> Default for AlchitryCuPWMVec<FREQ, P> {
-    fn default() -> Self {
-        let faders: [Fader<FREQ>; 8] = [
-            Fader::new(0),
-            Fader::new(18),
-            Fader::new(36),
-            Fader::new(54),
-            Fader::new(72),
-            Fader::new(90),
-            Fader::new(108),
-            Fader::new(128),
+impl<const P: usize> AlchitryCuPWMVec<P> {
+    fn new(clock_frequency: u64) -> Self {
+        let faders: [Fader; 8] = [
+            Fader::new(clock_frequency, 0),
+            Fader::new(clock_frequency, 18),
+            Fader::new(clock_frequency, 36),
+            Fader::new(clock_frequency, 54),
+            Fader::new(clock_frequency, 72),
+            Fader::new(clock_frequency, 90),
+            Fader::new(clock_frequency, 108),
+            Fader::new(clock_frequency, 128),
         ];
         Self {
             clock: rust_hdl_alchitry_cu::pins::clock(),
@@ -96,7 +96,7 @@ impl<const FREQ: u64, const P: usize> Default for AlchitryCuPWMVec<FREQ, P> {
 
 #[test]
 fn test_pwm_vec_synthesizes() {
-    let mut uut: AlchitryCuPWMVec<100_000_000, 6> = AlchitryCuPWMVec::default();
+    let mut uut: AlchitryCuPWMVec<6> = AlchitryCuPWMVec::new(100_000_000);
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);

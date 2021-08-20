@@ -335,7 +335,7 @@ pub struct OpalKellyXEM6010BTPipeOutTest {
     pub delay_read: DFF<Bit>,
     pub fast_clock: Signal<In, Clock>,
     pub counter: DFF<Bits<16>>,
-    pub strobe: Strobe<100_000_000, 32>,
+    pub strobe: Strobe<32>,
     pub can_run: Signal<Local, Bit>,
     pub led: Signal<Out, Bits<8>>,
 }
@@ -401,7 +401,7 @@ impl OpalKellyXEM6010BTPipeOutTest {
             delay_read: Default::default(),
             fast_clock: xem_6010_base_clock(),
             counter: Default::default(),
-            strobe: Strobe::new(1_000_000.0),
+            strobe: Strobe::new(100_000_000, 1_000_000.0),
             can_run: Default::default(),
             led: xem_6010_leds(),
         }

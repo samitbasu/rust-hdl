@@ -7,7 +7,7 @@ const MHZ100: u64 = 100_000_000;
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPulser {
-    pulser: Pulser<MHZ100>,
+    pulser: Pulser,
     clock: Signal<In, Clock>,
     leds: Signal<Out, Bits<8>>,
 }
@@ -26,7 +26,7 @@ impl Logic for AlchitryCuPulser {
 
 impl Default for AlchitryCuPulser {
     fn default() -> Self {
-        let pulser = Pulser::new(1.0, Duration::from_millis(250));
+        let pulser = Pulser::new(MHZ100, 1.0, Duration::from_millis(250));
         Self {
             pulser,
             clock: rust_hdl_alchitry_cu::pins::clock(),

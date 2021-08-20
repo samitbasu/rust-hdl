@@ -28,11 +28,7 @@ pub struct OKTest1 {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>>,
-    pub pulser: Pulser<MHZ48>,
-}
-
-macro_rules! link {
-    ($from: expr, $to: expr) => {};
+    pub pulser: Pulser,
 }
 
 impl OKTest1 {
@@ -41,7 +37,7 @@ impl OKTest1 {
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: OpalKellyHost::default(),
             led: pins::xem_6010_leds(),
-            pulser: Pulser::new(1.0, Duration::from_millis(500)),
+            pulser: Pulser::new(MHZ48, 1.0, Duration::from_millis(500)),
         }
     }
 }

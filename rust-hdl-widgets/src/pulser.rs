@@ -4,18 +4,18 @@ use rust_hdl_core::prelude::*;
 use std::time::Duration;
 
 #[derive(LogicBlock)]
-pub struct Pulser<const CLOCK: u64> {
+pub struct Pulser {
     pub clock: Signal<In, Clock>,
     pub enable: Signal<In, Bit>,
     pub pulse: Signal<Out, Bit>,
-    strobe: Strobe<CLOCK, 32>,
-    shot: Shot<CLOCK, 32>,
+    strobe: Strobe<32>,
+    shot: Shot<32>,
 }
 
-impl<const CLOCK: u64> Pulser<CLOCK> {
-    pub fn new(pulse_rate_hz: f64, pulse_duration: Duration) -> Self {
-        let strobe = Strobe::new(pulse_rate_hz);
-        let shot = Shot::new(pulse_duration);
+impl Pulser {
+    pub fn new(clock_rate_hz: u64, pulse_rate_hz: f64, pulse_duration: Duration) -> Self {
+        let strobe = Strobe::new(clock_rate_hz, pulse_rate_hz);
+        let shot = Shot::new(clock_rate_hz, pulse_duration);
         Self {
             clock: Signal::default(),
             enable: Signal::default(),
@@ -26,7 +26,7 @@ impl<const CLOCK: u64> Pulser<CLOCK> {
     }
 }
 
-impl<const CLOCK: u64> Logic for Pulser<CLOCK> {
+impl Logic for Pulser {
     #[hdl_gen]
     fn update(&mut self) {
         self.strobe.clock.next = self.clock.val();
@@ -40,7 +40,7 @@ impl<const CLOCK: u64> Logic for Pulser<CLOCK> {
 #[test]
 fn test_pulser_synthesis() {
     use rust_hdl_synth::yosys_validate;
-    let mut uut: Pulser<1_000_000> = Pulser::new(1.0, Duration::from_millis(100));
+    let mut uut = Pulser::new(1_000_000, 1.0, Duration::from_millis(100));
     uut.clock.connect();
     uut.enable.connect();
     uut.connect_all();
@@ -53,15 +53,15 @@ fn test_pulser_synthesis() {
 fn test_pulser() {
     let mut sim = Simulation::new();
     const KHZ10: u64 = 10_000;
-    sim.add_clock(5, |x: &mut Pulser<KHZ10>| x.clock.next = !x.clock.val());
-    sim.add_testbench(|mut sim: Sim<Pulser<KHZ10>>| {
+    sim.add_clock(5, |x: &mut Pulser| x.clock.next = !x.clock.val());
+    sim.add_testbench(|mut sim: Sim<Pulser>| {
         let mut x = sim.init()?;
         x.enable.next = true;
         x = sim.wait(10_000_000, x)?;
         sim.done(x)?;
         Ok(())
     });
-    let mut uut: Pulser<KHZ10> = Pulser::new(100.0, Duration::from_millis(100));
+    let mut uut = Pulser::new(KHZ10, 100.0, Duration::from_millis(100));
     uut.clock.connect();
     uut.enable.connect();
     uut.connect_all();

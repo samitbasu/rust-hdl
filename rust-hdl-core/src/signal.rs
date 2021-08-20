@@ -59,7 +59,7 @@ impl<T: Synth> LogicLink for Signal<Out, T> {
 }
 
 impl<T: Synth> LogicLink for Signal<InOut, T> {
-    fn link(&mut self, other: &mut Self) {
+    fn link(&mut self, _other: &mut Self) {
         // Do nothing for bidirectional signals...
     }
     fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {

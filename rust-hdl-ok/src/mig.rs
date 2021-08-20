@@ -1,5 +1,4 @@
 use crate::mcb_if::MCBInterface;
-use crate::prelude::generate_ucf;
 use rust_hdl_core::prelude::*;
 
 #[derive(LogicInterface, Default)]

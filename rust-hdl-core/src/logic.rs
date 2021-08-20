@@ -1,4 +1,4 @@
-use crate::ast::{Verilog, VerilogBlock, VerilogExpression, VerilogLink};
+use crate::ast::{Verilog, VerilogLink};
 
 pub trait Logic {
     fn update(&mut self);

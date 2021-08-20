@@ -6,16 +6,16 @@ use rust_hdl_widgets::prelude::*;
 use std::collections::BTreeMap;
 
 #[derive(LogicBlock)]
-pub struct AlchitryCuPWM<const FREQ: u64, const P: usize> {
+pub struct AlchitryCuPWM<const P: usize> {
     pwm: PulseWidthModulator<P>,
     clock: Signal<In, Clock>,
-    strobe: Strobe<FREQ, 32>,
+    strobe: Strobe<32>,
     leds: Signal<Out, Bits<8>>,
     rom: ROM<Bits<P>, 8>,
     counter: DFF<Bits<8>>,
 }
 
-impl<const FREQ: u64, const P: usize> Logic for AlchitryCuPWM<FREQ, P> {
+impl<const P: usize> Logic for AlchitryCuPWM<P> {
     #[hdl_gen]
     fn update(&mut self) {
         self.pwm.clock.next = self.clock.val();
@@ -38,15 +38,15 @@ impl<const FREQ: u64, const P: usize> Logic for AlchitryCuPWM<FREQ, P> {
     }
 }
 
-impl<const FREQ: u64, const P: usize> Default for AlchitryCuPWM<FREQ, P> {
-    fn default() -> Self {
+impl<const P: usize> AlchitryCuPWM<P> {
+    fn new(clock_freq: u64) -> Self {
         let rom = (0..256_u32)
             .map(|x| (Bits::<8>::from(x), snore(x)))
             .collect::<BTreeMap<_, _>>();
         Self {
             pwm: PulseWidthModulator::default(),
             clock: rust_hdl_alchitry_cu::pins::clock(),
-            strobe: Strobe::new(60.0),
+            strobe: Strobe::new(clock_freq, 60.0),
             leds: rust_hdl_alchitry_cu::pins::leds(),
             rom: ROM::new(rom),
             counter: DFF::new(0_u8.into()),
@@ -56,7 +56,7 @@ impl<const FREQ: u64, const P: usize> Default for AlchitryCuPWM<FREQ, P> {
 
 #[test]
 fn test_pwm_synthesizes() {
-    let mut uut: AlchitryCuPWM<100_000_000, 6> = AlchitryCuPWM::default();
+    let mut uut: AlchitryCuPWM<6> = AlchitryCuPWM::new(100_000_000);
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);

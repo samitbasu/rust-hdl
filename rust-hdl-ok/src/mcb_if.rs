@@ -33,21 +33,6 @@ impl MCBInterface {
             p.add_signal_type(0, kind);
             p
         }
-        fn mk_18v_pin(loc: &str) -> String {
-            format!("LOC=\"{}\" | IOSTANDARD = SSTL18_II;", loc)
-        }
-        fn mk_18v_unterm_pin(loc: &str) -> String {
-            format!("LOC=\"{}\" | IOSTANDARD = SSTL18_II | IN_TERM = NONE;", loc)
-        }
-        fn mk_18v_diff_unterm_pin(loc: &str) -> String {
-            format!(
-                "LOC=\"{}\" | IOSTANDARD = DIFF_SSTL18_II | IN_TERM = NONE;",
-                loc
-            )
-        }
-        fn mk_18v_diff_pin(loc: &str) -> String {
-            format!("LOC=\"{}\" | IOSTANDARD = DIFF_SSTL18_II;", loc)
-        }
         // Pin validation - locations should be unique
         // IO signals should not be terminated
         let mut data_bus = Signal::default();
