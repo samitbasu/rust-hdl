@@ -5,6 +5,7 @@ use rust_hdl_macros::LogicBlock;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::strobe::Strobe;
 
+pub mod ad7193_sim;
 pub mod alchitry_cu_icepll;
 pub mod alchitry_cu_pulser;
 pub mod alchitry_cu_pulser_pll;

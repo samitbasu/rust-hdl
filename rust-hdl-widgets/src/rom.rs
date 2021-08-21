@@ -17,30 +17,22 @@ impl<D: Synth, const N: usize> ROM<D, N> {
         }
     }
 }
-/*
-impl<D: Synth, const N: usize> From<&[D]> for ROM<D, N> {
-    fn from(v: &[D]) -> Self {
-        let mut values = BTreeMap::new();
-        for (index, val) in v.iter().enumerate() {
-            let address: Bits<N> = index.into();
-            values.insert(address, *val);
-        }
-        Self::new(values)
+
+pub fn make_btree_from_iterable<I: Iterator<Item = D>, D: Synth, const N: usize>(
+    v: I,
+) -> BTreeMap<Bits<N>, D> {
+    let mut values = BTreeMap::new();
+    for (index, val) in v.enumerate() {
+        let address: Bits<N> = index.into();
+        values.insert(address, val);
     }
+    values
 }
 
- */
-
-impl<I: Iterator<Item=D>, D: Synth, const N: usize> From<I> for ROM<D, N> {
+impl<I: Iterator<Item = D>, D: Synth, const N: usize> From<I> for ROM<D, N> {
     fn from(v: I) -> Self {
-        let mut values = BTreeMap::new();
-        for (index, val) in v.enumerate() {
-            let address: Bits<N> = index.into();
-            values.insert(address, val);
-        }
-        Self::new(values)
+        Self::new(make_btree_from_iterable(v))
     }
-
 }
 
 impl<D: Synth, const N: usize> Logic for ROM<D, N> {

@@ -1,3 +1,4 @@
+use crate::rom::make_btree_from_iterable;
 use rust_hdl_core::prelude::*;
 use std::collections::BTreeMap;
 
@@ -27,6 +28,12 @@ impl<D: Synth, const N: usize> RAM<D, N> {
             _sim: values,
             ..Default::default()
         }
+    }
+}
+
+impl<I: Iterator<Item = D>, D: Synth, const N: usize> From<I> for RAM<D, N> {
+    fn from(v: I) -> Self {
+        Self::new(make_btree_from_iterable(v))
     }
 }
 
