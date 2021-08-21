@@ -17,7 +17,7 @@ impl<D: Synth, const N: usize> ROM<D, N> {
         }
     }
 }
-
+/*
 impl<D: Synth, const N: usize> From<&[D]> for ROM<D, N> {
     fn from(v: &[D]) -> Self {
         let mut values = BTreeMap::new();
@@ -27,6 +27,20 @@ impl<D: Synth, const N: usize> From<&[D]> for ROM<D, N> {
         }
         Self::new(values)
     }
+}
+
+ */
+
+impl<I: Iterator<Item=D>, D: Synth, const N: usize> From<I> for ROM<D, N> {
+    fn from(v: I) -> Self {
+        let mut values = BTreeMap::new();
+        for (index, val) in v.enumerate() {
+            let address: Bits<N> = index.into();
+            values.insert(address, val);
+        }
+        Self::new(values)
+    }
+
 }
 
 impl<D: Synth, const N: usize> Logic for ROM<D, N> {
