@@ -37,7 +37,12 @@ impl<W: Write> Probe for VCDHeader<W> {
     }
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
-        let id = self.0.vcd.add_wire(signal.bits() as u32, name).unwrap();
+        let width = if signal.is_enum() {
+            0
+        } else {
+            signal.bits() as u32
+        };
+        let id = self.0.vcd.add_wire(width, name).unwrap();
         self.0.id_map.insert(signal.id(), id);
     }
 

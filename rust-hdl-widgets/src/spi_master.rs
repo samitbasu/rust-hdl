@@ -12,6 +12,7 @@ enum SPIState {
     MIdle,
 }
 
+#[derive(Copy, Clone)]
 pub struct SPIConfig {
     pub clock_speed: u64,
     pub cs_off: bool,

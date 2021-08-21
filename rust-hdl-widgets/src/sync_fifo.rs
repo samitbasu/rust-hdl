@@ -95,5 +95,5 @@ fn component_fifo_is_synthesizable() {
 #[test]
 fn test_fifo_macro() {
     declare_sync_fifo!(FIFOTest, Bits<8>, 32, 1);
-    let dev = FIFOTest::default();
+    let _dev = FIFOTest::default();
 }

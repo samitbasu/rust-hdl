@@ -33,7 +33,8 @@ pub mod ram;
 pub mod rom;
 pub mod snore;
 mod spi;
-pub mod sync_rom;
+mod sync_rom;
+mod edge_detector;
 
 const MHZ1: u64 = 1_000_000;
 

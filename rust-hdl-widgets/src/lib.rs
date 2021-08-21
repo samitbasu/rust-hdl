@@ -13,3 +13,5 @@ pub mod strobe;
 pub mod sync_fifo;
 pub mod sync_rom;
 pub mod synchronizer;
+pub mod edge_detector;
+pub mod spi_slave;
