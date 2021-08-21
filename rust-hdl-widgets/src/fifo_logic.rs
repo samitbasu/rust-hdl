@@ -1,7 +1,6 @@
 use rust_hdl_core::prelude::*;
 
 use crate::dff::DFF;
-use rust_hdl_core::bits::bit_cast;
 
 // The read side of the circuitry for the FIFO.  Manages the read
 // address

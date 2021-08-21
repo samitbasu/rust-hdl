@@ -2,7 +2,6 @@ use crate::dff::DFF;
 use crate::edge_detector::EdgeDetector;
 use crate::prelude::BitSynchronizer;
 use crate::spi_master::SPIConfig;
-use rust_hdl_core::bits::bit_cast;
 use rust_hdl_core::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]

@@ -1,6 +1,5 @@
 use crate::mcb_if::MCBInterface;
 use crate::mig::MemoryInterfaceGenerator;
-use rust_hdl_core::bits::bit_cast;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::prelude::*;
 

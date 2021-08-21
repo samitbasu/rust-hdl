@@ -2,6 +2,7 @@ pub use crate::ast::BlackBox;
 pub use crate::ast::Verilog;
 pub use crate::ast::VerilogLiteral;
 pub use crate::atom::{Atom, AtomKind};
+pub use crate::bits::bit_cast;
 pub use crate::bits::clog2;
 pub use crate::bits::{Bit, Bits};
 pub use crate::block::Block;

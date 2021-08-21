@@ -1,5 +1,4 @@
 use crate::ok_tools::ok_test_prelude;
-use rust_hdl_core::bits::bit_cast;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::ddr_fifo::DDRFIFO;
 use rust_hdl_ok::mcb_if::MCBInterface;
