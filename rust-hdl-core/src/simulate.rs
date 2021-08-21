@@ -199,9 +199,11 @@ impl<T: Send + 'static + Block> Simulation<T> {
             x = self.dispatch(id, x)?;
         }
         // Next run until we have no one else waiting
+        let mut halted = false;
         while self.time < max_time {
             let next = self.scan_workers(&x);
-            if next.time == !0 || next.clocks_only {
+            if next.time == !0 || next.clocks_only || next.halted {
+                halted = next.halted;
                 break;
             }
             self.time = next.time;
@@ -210,6 +212,9 @@ impl<T: Send + 'static + Block> Simulation<T> {
         self.terminate();
         if self.time >= max_time {
             return Err(SimError::MaxTimeReached);
+        }
+        if halted {
+            return Err(SimError::SimHalted);
         }
         Ok(())
     }
@@ -327,6 +332,11 @@ macro_rules! wait_clock_cycle {
         } else {
             wait_clock_true!($sim, $clock, $me);
             wait_clock_false!($sim, $clock, $me);
+        }
+    };
+    ($sim: ident, $clock: ident, $me: expr, $count: expr) => {
+        for _i in 0..$count {
+            wait_clock_cycle!($sim, $clock, $me);
         }
     };
 }

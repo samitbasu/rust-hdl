@@ -46,6 +46,17 @@ pub struct AD7193Simulator {
     conversion_counter: DFF<Bits<24>>,
 }
 
+#[cfg(test)]
+const AD7193_SPI_CONFIG: SPIConfig = SPIConfig {
+    clock_speed: 1_000_000,
+    cs_off: true,
+    mosi_off: true,
+    speed_hz: 10_000,
+    cpha: true,
+    cpol: true,
+};
+
+#[cfg(not(test))]
 const AD7193_SPI_CONFIG: SPIConfig = SPIConfig {
     clock_speed: 48_000_000,
     cs_off: true,
@@ -70,7 +81,7 @@ impl Default for AD7193Simulator {
             clock: Default::default(),
             reg_width_rom,
             reg_ram,
-            oneshot: Shot::new(48_000_000, Duration::from_micros(10100)),
+            oneshot: Shot::new(AD7193_SPI_CONFIG.clock_speed, Duration::from_micros(10000)),
             cmd: Default::default(),
             reg_index: Default::default(),
             rw_flag: Default::default(),
@@ -159,7 +170,6 @@ impl Logic for AD7193Simulator {
             }
             AD7193State::DoWrite => {
                 if self.spi_slave.transfer_done.val() {
-                    println!("Write complete: {:x}", self.spi_slave.data_inbound.val());
                     self.reg_ram.write_data.next =
                         bit_cast::<24, 64>(self.spi_slave.data_inbound.val());
                     self.reg_ram.write_enable.next = true;
@@ -242,26 +252,26 @@ impl Default for Test7193 {
 
 fn reg_read(
     reg_index: u32,
-    mut x: Test7193,
-    mut sim: Sim<Test7193>,
-) -> Result<(Bits<64>, Test7193, Sim<Test7193>), SimError> {
+    x: Test7193,
+    sim: &mut Sim<Test7193>,
+) -> Result<(Bits<64>, Test7193), SimError> {
     let cmd = (((1 << 6) | (reg_index << 3)) << 24) as u64;
     let result = do_spi_txn(32, cmd, false, x, sim)?;
     let width = AD7193_REG_WIDTHS[reg_index as usize];
     let reg_val = if width == 8 {
         (result.0 >> 16_u32) & 0xFF_u32
     } else {
-        (result.0 & 0xFFFFFF_usize)
+        result.0 & 0xFFFFFF_usize
     };
-    Ok((reg_val, result.1, result.2))
+    Ok((reg_val, result.1))
 }
 
 fn reg_write(
     reg_index: u32,
     reg_value: u64,
-    mut x: Test7193,
-    mut sim: Sim<Test7193>,
-) -> Result<(Test7193, Sim<Test7193>), SimError> {
+    x: Test7193,
+    sim: &mut Sim<Test7193>,
+) -> Result<Test7193, SimError> {
     let mut cmd = (((0 << 6) | (reg_index << 3)) << 24) as u64;
     if AD7193_REG_WIDTHS[reg_index as usize] == 8 {
         cmd = cmd | reg_value << 16;
@@ -269,7 +279,7 @@ fn reg_write(
         cmd = cmd | reg_value;
     }
     let ret = do_spi_txn(32, cmd, false, x, sim)?;
-    Ok((ret.1, ret.2))
+    Ok(ret.1)
 }
 
 fn do_spi_txn(
@@ -277,8 +287,8 @@ fn do_spi_txn(
     value: u64,
     continued: bool,
     mut x: Test7193,
-    mut sim: Sim<Test7193>,
-) -> Result<(Bits<64>, Test7193, Sim<Test7193>), SimError> {
+    sim: &mut Sim<Test7193>,
+) -> Result<(Bits<64>, Test7193), SimError> {
     wait_clock_true!(sim, clock, x);
     x.master.data_outbound.next = value.into();
     x.master.bits_outbound.next = bits.into();
@@ -293,11 +303,11 @@ fn do_spi_txn(
     for _ in 0..50 {
         wait_clock_cycle!(sim, clock, x);
     }
-    Ok((ret, x, sim))
+    Ok((ret, x))
 }
 
-#[test]
-fn test_reg_reads() {
+#[cfg(test)]
+fn mk_test7193() -> Test7193 {
     let mut uut = Test7193::default();
     uut.clock.connect();
     uut.master.continued_transaction.connect();
@@ -305,20 +315,29 @@ fn test_reg_reads() {
     uut.master.data_outbound.connect();
     uut.master.bits_outbound.connect();
     uut.connect_all();
+    uut
+}
+
+#[test]
+fn test_yosys_validate_test_fixture() {
+    let uut = mk_test7193();
     yosys_validate("7193_1", &generate_verilog(&uut)).unwrap();
+}
+
+#[test]
+fn test_reg_reads() {
+    let uut = mk_test7193();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Test7193| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
         // Do the first read to initialize the chip
-        let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, sim)?;
+        let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, &mut sim)?;
         x = result.1;
-        sim = result.2;
         for ndx in 0..8 {
             println!("Reading register index {}", ndx);
-            let result = reg_read(ndx, x, sim)?;
+            let result = reg_read(ndx, x, &mut sim)?;
             x = result.1;
-            sim = result.2;
             println!("Value {} -> {:x}", ndx, result.0);
             sim_assert!(
                 sim,
@@ -330,4 +349,65 @@ fn test_reg_reads() {
         sim.done(x)
     });
     sim.run(uut, 1_000_000).unwrap();
+}
+
+#[test]
+fn test_reg_writes() {
+    let uut = mk_test7193();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Test7193| x.clock.next = !x.clock.val());
+    sim.add_testbench(move |mut sim: Sim<Test7193>| {
+        let mut x = sim.init()?;
+        // Initialize the chip...
+        let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, &mut sim)?;
+        x = result.1;
+        for ndx in 0..8 {
+            let result = reg_read(ndx, x, &mut sim)?;
+            x = result.1;
+            sim_assert!(
+                sim,
+                result.0 == Bits::<64>::from(AD7193_REG_INITS[ndx as usize]),
+                x
+            );
+            x = reg_write(ndx, AD7193_REG_INITS[ndx as usize] + 1, x, &mut sim)?;
+            let result = reg_read(ndx, x, &mut sim)?;
+            x = result.1;
+            sim_assert!(
+                sim,
+                result.0 == Bits::<64>::from(AD7193_REG_INITS[ndx as usize] + 1),
+                x
+            );
+        }
+        sim.done(x)
+    });
+    sim.run(uut, 1_000_000).unwrap();
+}
+
+#[test]
+fn test_single_conversion() {
+    let uut = mk_test7193();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Test7193| x.clock.next = !x.clock.val());
+    sim.add_testbench(move |mut sim: Sim<Test7193>| {
+        let mut x = sim.init()?;
+        // Initialize the chip...
+        let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, &mut sim)?;
+        x = result.1;
+        for n in 0..3 {
+            wait_clock_cycle!(sim, clock, x, 100);
+            let result = do_spi_txn(32, 0x8382006, true, x, &mut sim)?;
+            x = result.1;
+            wait_clock_cycle!(sim, clock, x, 100);
+            sim_assert!(sim, x.master.wires.miso.val(), x);
+            x = sim.watch(|x| !x.master.wires.miso.val(), x)?;
+            wait_clock_cycle!(sim, clock, x, 100);
+            let result = reg_read(3, x, &mut sim)?;
+            println!("Conversion {} -> {:x}", n, result.0);
+            x = result.1;
+            sim_assert!(sim, result.0 == Bits::<64>::from((n * 0x100) as u32), x);
+            println!("Conversion {} completed", n);
+        }
+        sim.done(x)
+    });
+    sim.run(uut, 10_000_000).unwrap();
 }
