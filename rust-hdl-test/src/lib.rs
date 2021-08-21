@@ -12,6 +12,7 @@ pub mod alchitry_cu_pwm;
 pub mod alchitry_cu_pwm_vec;
 pub mod alchitry_cu_pwm_vec_srom;
 pub mod base_tests;
+mod edge_detector;
 pub mod fifo;
 pub mod nested_ports;
 #[cfg(feature = "fpga_hw_test")]
@@ -34,7 +35,6 @@ pub mod rom;
 pub mod snore;
 mod spi;
 mod sync_rom;
-mod edge_detector;
 
 const MHZ1: u64 = 1_000_000;
 

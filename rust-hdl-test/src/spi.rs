@@ -164,6 +164,6 @@ fn test_spi_xchange(config: SPIConfig) {
         }
         sim.done(x)
     });
-//    sim.run_traced(uut, 1_000_000, std::fs::File::create("spi_x1.vcd").unwrap()).unwrap()
+    //    sim.run_traced(uut, 1_000_000, std::fs::File::create("spi_x1.vcd").unwrap()).unwrap()
     sim.run(uut, 1_000_000).unwrap();
 }

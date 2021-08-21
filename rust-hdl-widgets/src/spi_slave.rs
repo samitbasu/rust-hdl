@@ -1,9 +1,9 @@
 use crate::dff::DFF;
-use rust_hdl_core::prelude::*;
 use crate::edge_detector::EdgeDetector;
-use crate::spi_master::SPIConfig;
 use crate::prelude::BitSynchronizer;
+use crate::spi_master::SPIConfig;
 use rust_hdl_core::bits::bit_cast;
+use rust_hdl_core::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum SPISlaveState {
@@ -95,7 +95,7 @@ impl<const N: usize> SPISlave<N> {
             mclk_synchronizer: BitSynchronizer::default(),
             csel_synchronizer: BitSynchronizer::default(),
             escape: Default::default(),
-            clocks_per_baud: Constant::new((2* config.clock_speed / config.speed_hz).into()),
+            clocks_per_baud: Constant::new((2 * config.clock_speed / config.speed_hz).into()),
             cpha: Constant::new(config.cpha),
             cs_off: Constant::new(config.cs_off),
         }
@@ -137,7 +137,11 @@ impl<const N: usize> Logic for SPISlave<N> {
         self.data_inbound.next = self.register_in.q.val();
         self.transfer_done.next = self.done_flop.q.val();
         self.done_flop.d.next = false;
-        self.miso_flop.d.next = self.register_out.q.val().get_bit(self.pointer.q.val().into());
+        self.miso_flop.d.next = self
+            .register_out
+            .q
+            .val()
+            .get_bit(self.pointer.q.val().into());
         // Latch prevention
         self.register_in.d.next = self.register_in.q.val();
         self.state.d.next = self.state.q.val();
@@ -178,8 +182,8 @@ impl<const N: usize> Logic for SPISlave<N> {
                 }
             }
             SPISlaveState::Capture => {
-                self.register_in.d.next =
-                    (self.register_in.q.val() << 1_usize) | bit_cast::<N, 1>(self.mosi.val().into());
+                self.register_in.d.next = (self.register_in.q.val() << 1_usize)
+                    | bit_cast::<N, 1>(self.mosi.val().into());
                 self.state.d.next = SPISlaveState::Hold;
             }
             SPISlaveState::Hold => {

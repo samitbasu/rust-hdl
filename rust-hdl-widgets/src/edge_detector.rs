@@ -1,5 +1,5 @@
-use rust_hdl_core::prelude::*;
 use crate::dff::DFF;
+use rust_hdl_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct EdgeDetector {
