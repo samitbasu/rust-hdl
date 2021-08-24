@@ -137,7 +137,7 @@ fn test_ok_spi_master_synthesizes() {
     uut.uut.clock.connect();
     uut.connect_all();
     println!("{}", generate_verilog(&uut));
-    rust_hdl_synth::yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
+    rust_hdl_synth::yosys_validate("ok_spi_synth", &generate_verilog(&uut)).unwrap();
 }
 
 #[test]

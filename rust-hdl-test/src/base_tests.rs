@@ -342,7 +342,7 @@ mod tests {
         let mut x = ep.wait(100, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
         x.x.next = 100_u32.into();
-        let x = ep.watch(|m| m.x.val() == 89, x)?;
+        let x = ep.watch(|m| m.x.val() == 89_u32, x)?;
         println!("Hello from TB1 where x value is {:?}", x.x.next);
         let x = ep.wait(250, x)?;
         println!("Hello from TB 1 at time {}", ep.time());

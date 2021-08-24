@@ -51,7 +51,7 @@ fn test_sync_vec() {
     sim.add_testbench(move |mut sim: Sim<SyncVecTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock2, x);
-        for i in 0..150 {
+        for i in 0_u32..150_u32 {
             x = sim.watch(|x| x.recv.update.val(), x)?;
             sim_assert!(sim, x.recv.sig_out.val().eq(&i), x);
             wait_clock_cycle!(sim, clock2, x);
@@ -97,7 +97,7 @@ fn test_vector_synchronizer() {
     sim.add_testbench(move |mut sim: Sim<TestCircuit>| {
         let mut x = sim.init()?;
         x = sim.watch(|x| x.uut.clock_out.val().0, x)?;
-        for i in 0..150 {
+        for i in 0_u32..150_u32 {
             x = sim.watch(|x| x.uut.update.val(), x)?;
             sim_assert!(sim, x.uut.sig_out.val().eq(&i), x);
             x = sim.watch(|x| !x.uut.clock_out.val().0, x)?;

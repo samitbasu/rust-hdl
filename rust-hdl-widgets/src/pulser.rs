@@ -57,7 +57,7 @@ fn test_pulser() {
     sim.add_testbench(|mut sim: Sim<Pulser>| {
         let mut x = sim.init()?;
         x.enable.next = true;
-        x = sim.wait(10_000_000, x)?;
+        x = sim.wait(100_000, x)?;
         sim.done(x)?;
         Ok(())
     });
@@ -65,6 +65,6 @@ fn test_pulser() {
     uut.clock.connect();
     uut.enable.connect();
     uut.connect_all();
-    sim.run_traced(uut, 100_000, std::fs::File::create("pulser.vcd").unwrap())
+    sim.run_traced(uut, 1_000_000, std::fs::File::create("pulser.vcd").unwrap())
         .unwrap();
 }

@@ -108,6 +108,7 @@ fn sync_sender_is_synthesizable() {
     dev.uut.clock.connect();
     dev.uut.sig_in.connect();
     dev.uut.ack_in.connect();
+    dev.uut.send.connect();
     dev.connect_all();
     println!("{}", generate_verilog(&dev));
     rust_hdl_synth::yosys_validate("sync_send", &generate_verilog(&dev)).unwrap();
