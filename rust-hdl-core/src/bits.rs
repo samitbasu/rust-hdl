@@ -411,7 +411,7 @@ macro_rules! partial_eq_with_uint {
                 self.eq(&other_as_bits)
             }
         }
-    }
+    };
 }
 
 partial_eq_with_uint!(u8);

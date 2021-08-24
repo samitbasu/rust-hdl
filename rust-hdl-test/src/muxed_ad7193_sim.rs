@@ -1,5 +1,5 @@
-use rust_hdl_core::prelude::*;
 use crate::ad7193_sim::AD7193Simulator;
+use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
 
 #[derive(LogicBlock, Default)]

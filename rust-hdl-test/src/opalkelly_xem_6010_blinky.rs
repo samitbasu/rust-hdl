@@ -9,7 +9,7 @@ pub struct OpalKellyXEM6010Blinky {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>>,
-    pub pulser: Pulser<MHZ48>,
+    pub pulser: Pulser,
 }
 
 impl OpalKellyXEM6010Blinky {
@@ -18,7 +18,7 @@ impl OpalKellyXEM6010Blinky {
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: OpalKellyHost::default(),
             led: xem_6010_leds(),
-            pulser: Pulser::new(1.0, Duration::from_millis(500)),
+            pulser: Pulser::new(MHZ48, 1.0, Duration::from_millis(500)),
         }
     }
 }

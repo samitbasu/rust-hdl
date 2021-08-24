@@ -9,7 +9,7 @@ pub struct OpalKellyXEM6010Wave {
     pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>>,
     pub local: Signal<Local, Bits<8>>,
-    pub faders: [FaderWithSyncROM<MHZ48>; 8],
+    pub faders: [FaderWithSyncROM; 8],
 }
 
 impl Logic for OpalKellyXEM6010Wave {
@@ -33,15 +33,15 @@ impl Logic for OpalKellyXEM6010Wave {
 
 impl Default for OpalKellyXEM6010Wave {
     fn default() -> Self {
-        let faders: [FaderWithSyncROM<MHZ48>; 8] = [
-            FaderWithSyncROM::new(0),
-            FaderWithSyncROM::new(18),
-            FaderWithSyncROM::new(36),
-            FaderWithSyncROM::new(54),
-            FaderWithSyncROM::new(72),
-            FaderWithSyncROM::new(90),
-            FaderWithSyncROM::new(108),
-            FaderWithSyncROM::new(128),
+        let faders: [FaderWithSyncROM; 8] = [
+            FaderWithSyncROM::new(MHZ48, 0),
+            FaderWithSyncROM::new(MHZ48, 18),
+            FaderWithSyncROM::new(MHZ48, 36),
+            FaderWithSyncROM::new(MHZ48, 54),
+            FaderWithSyncROM::new(MHZ48, 72),
+            FaderWithSyncROM::new(MHZ48, 90),
+            FaderWithSyncROM::new(MHZ48, 108),
+            FaderWithSyncROM::new(MHZ48, 128),
         ];
         Self {
             hi: OpalKellyHostInterface::xem_6010(),

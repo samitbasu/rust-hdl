@@ -1,8 +1,8 @@
+use rust_hdl_core::prelude::*;
 use std::env::temp_dir;
 use std::fs::{create_dir, remove_dir_all, File};
 use std::io::{Error, Write};
 use std::process::Command;
-use rust_hdl_core::prelude::*;
 
 #[derive(Debug)]
 pub enum SynthError {
@@ -78,14 +78,10 @@ pub struct TopWrap<U: Block> {
 
 impl<U: Block> TopWrap<U> {
     pub fn new(uut: U) -> Self {
-        Self {
-            uut,
-        }
+        Self { uut }
     }
 }
 
 impl<U: Block> Logic for TopWrap<U> {
-    fn update(&mut self) {
-    }
+    fn update(&mut self) {}
 }
-

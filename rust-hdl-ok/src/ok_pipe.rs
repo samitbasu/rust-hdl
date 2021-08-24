@@ -22,11 +22,10 @@ impl BTPipeIn {
             blockstrobe: Default::default(),
             dataout: Default::default(),
             ready: Default::default(),
-            _n: n
+            _n: n,
         }
     }
 }
-
 
 impl Logic for BTPipeIn {
     fn update(&mut self) {}
@@ -99,7 +98,7 @@ impl PipeIn {
             ok2: Default::default(),
             write: Default::default(),
             dataout: Default::default(),
-            _n: n
+            _n: n,
         }
     }
 }
@@ -167,7 +166,7 @@ impl PipeOut {
             ok2: Default::default(),
             read: Default::default(),
             datain: Default::default(),
-            _n: n
+            _n: n,
         }
     }
 }
@@ -242,7 +241,7 @@ impl BTPipeOut {
             blockstrobe: Default::default(),
             datain: Default::default(),
             ready: Default::default(),
-            _n: n
+            _n: n,
         }
     }
 }

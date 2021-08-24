@@ -49,7 +49,7 @@ impl OpalKellyDDRBackedDownloadFIFO {
             reducer: Default::default(),
             fifo_out: Default::default(),
             o_pipe: BTPipeOut::new(n),
-            read_delay: Default::default()
+            read_delay: Default::default(),
         }
     }
 }

@@ -11,12 +11,12 @@ pub struct OpalKellyXEM6010WireTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>>,
-    pub wire_0: WireIn<0x0>,
-    pub wire_1: WireIn<0x1>,
-    pub o_wire: WireOut<0x20>,
-    pub o_wire_1: WireOut<0x21>,
-    pub trig: TriggerIn<0x40>,
-    pub o_trig: TriggerOut<0x60>,
+    pub wire_0: WireIn,
+    pub wire_1: WireIn,
+    pub o_wire: WireOut,
+    pub o_wire_1: WireOut,
+    pub trig: TriggerIn,
+    pub o_trig: TriggerOut,
     pub trig_counter: DFF<Bits<16>>,
 }
 
@@ -26,13 +26,13 @@ impl OpalKellyXEM6010WireTest {
             hi: OpalKellyHostInterface::xem_6010(),
             trig_counter: DFF::new(0_u16.into()),
             led: xem_6010_leds(),
-            wire_0: Default::default(),
-            wire_1: Default::default(),
-            o_wire: Default::default(),
-            o_wire_1: Default::default(),
-            trig: Default::default(),
+            wire_0: WireIn::new(0),
+            wire_1: WireIn::new(1),
+            o_wire: WireOut::new(0x20),
+            o_wire_1: WireOut::new(0x21),
+            trig: TriggerIn::new(0x40),
             ok_host: Default::default(),
-            o_trig: Default::default(),
+            o_trig: TriggerOut::new(0x60),
         }
     }
 }

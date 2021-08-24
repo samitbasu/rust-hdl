@@ -1,10 +1,10 @@
-use rust_hdl_core::prelude::*;
 use crate::ok_pipe::{PipeIn, PipeOut};
-use crate::prelude::WireIn;
 use crate::ok_trigger::{TriggerIn, TriggerOut};
-use rust_hdl_widgets::spi_master::{SPIWires, SPIMaster, SPIConfig};
-use rust_hdl_widgets::prelude::*;
+use crate::prelude::WireIn;
+use rust_hdl_core::prelude::*;
 use rust_hdl_synth::TopWrap;
+use rust_hdl_widgets::prelude::*;
+use rust_hdl_widgets::spi_master::{SPIConfig, SPIMaster, SPIWires};
 use rust_hdl_widgets::spi_slave::SPISlave;
 
 #[derive(Copy, Clone, Debug)]
@@ -67,12 +67,11 @@ impl Logic for OKSPIMaster {
         self.bits.ok1.next = self.ok1.val();
         self.trigger_start.ok1.next = self.ok1.val();
         self.trigger_done.ok1.next = self.ok1.val();
-        self.ok2.next = self.pipe_out.ok2.val() |
-            self.trigger_done.ok2.val();
+        self.ok2.next = self.pipe_out.ok2.val() | self.trigger_done.ok2.val();
         // Pipe in the SPI outbound register
         if self.pipe_in.write.val() {
             self.data_outbound.d.next = (self.data_outbound.q.val() << 16_usize)
-            | bit_cast::<64, 16>(self.pipe_in.dataout.val());
+                | bit_cast::<64, 16>(self.pipe_in.dataout.val());
         }
         // Pipe from the SPI inbound register
         self.pipe_out.datain.next = self.output_register.q.val();
@@ -116,7 +115,7 @@ impl OKSPIMaster {
             core: SPIMaster::new(spi_config),
             data_outbound: Default::default(),
             output_register: Default::default(),
-            data_inbound: Default::default()
+            data_inbound: Default::default(),
         }
     }
 }
@@ -129,7 +128,7 @@ fn test_ok_spi_master_synthesizes() {
         mosi_off: true,
         speed_hz: 1_000_000,
         cpha: true,
-        cpol: true
+        cpol: true,
     };
     let mut uut = TopWrap::new(OKSPIMaster::new(Default::default(), spi_config));
     uut.uut.wires.link_connect();
@@ -167,7 +166,6 @@ fn test_ok_spi_master_works() {
         }
     }
 
-
     impl TopOK {
         fn new() -> TopOK {
             let spi_config = SPIConfig {
@@ -176,7 +174,7 @@ fn test_ok_spi_master_works() {
                 mosi_off: true,
                 speed_hz: 1_000_000,
                 cpha: true,
-                cpol: true
+                cpol: true,
             };
             Self {
                 wires: Default::default(),
@@ -201,9 +199,7 @@ fn test_ok_spi_master_works() {
     uut.connect_all();
     rust_hdl_synth::yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut TopOK| {
-        x.clock.next = !x.clock.val()
-    });
+    sim.add_clock(5, |x: &mut TopOK| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<TopOK>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
@@ -219,7 +215,11 @@ fn test_ok_spi_master_works() {
             x.core.pipe_in.write.next = false;
         }
         wait_clock_cycle!(sim, clock, x);
-        sim_assert!(sim, x.core.data_outbound.q.val() == 0x12345678deadbeef_u64, x);
+        sim_assert!(
+            sim,
+            x.core.data_outbound.q.val() == 0x12345678deadbeef_u64,
+            x
+        );
         x.core.bits.dataout.next = 64_u32.into();
         x.core.trigger_start.trigger.next = 1_u32.into();
         wait_clock_cycle!(sim, clock, x);
@@ -234,5 +234,6 @@ fn test_ok_spi_master_works() {
         }
         sim.done(x)
     });
-    sim.run_traced(uut, 100_000, std::fs::File::create("ok_spi.vcd").unwrap()).unwrap()
+    sim.run_traced(uut, 100_000, std::fs::File::create("ok_spi.vcd").unwrap())
+        .unwrap()
 }

@@ -12,8 +12,8 @@ pub struct OpalKellyXEM6010PipeTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub accum: DFF<Bits<16>>,
-    pub o_wire: WireOut<0x20>,
-    pub i_pipe: PipeIn<0x80>,
+    pub o_wire: WireOut,
+    pub i_pipe: PipeIn,
 }
 
 impl OpalKellyXEM6010PipeTest {
@@ -22,8 +22,8 @@ impl OpalKellyXEM6010PipeTest {
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: Default::default(),
             accum: DFF::new(0_u16.into()),
-            o_wire: Default::default(),
-            i_pipe: Default::default(),
+            o_wire: WireOut::new(0x20),
+            i_pipe: PipeIn::new(0x80),
         }
     }
 }
@@ -88,8 +88,8 @@ pub struct OpalKellyXEM6010PipeRAMTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub ram: RAM<Bits<16>, 8>,
-    pub i_pipe: PipeIn<0x80>,
-    pub o_pipe: PipeOut<0xA0>,
+    pub i_pipe: PipeIn,
+    pub o_pipe: PipeOut,
     pub read_address: DFF<Bits<8>>,
     pub write_address: DFF<Bits<8>>,
 }
@@ -100,8 +100,8 @@ impl OpalKellyXEM6010PipeRAMTest {
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: Default::default(),
             ram: RAM::new(Default::default()),
-            i_pipe: Default::default(),
-            o_pipe: Default::default(),
+            i_pipe: PipeIn::new(0x80),
+            o_pipe: PipeOut::new(0xA0),
             read_address: Default::default(),
             write_address: Default::default(),
         }
@@ -167,8 +167,8 @@ pub struct OpalKellyXEM6010PipeFIFOTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub fifo: OKTestFIFO,
-    pub i_pipe: PipeIn<0x80>,
-    pub o_pipe: PipeOut<0xA0>,
+    pub i_pipe: PipeIn,
+    pub o_pipe: PipeOut,
     pub delay_read: DFF<Bit>,
 }
 
@@ -178,8 +178,8 @@ impl OpalKellyXEM6010PipeFIFOTest {
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: Default::default(),
             fifo: Default::default(),
-            i_pipe: Default::default(),
-            o_pipe: Default::default(),
+            i_pipe: PipeIn::new(0x80),
+            o_pipe: PipeOut::new(0xA0),
             delay_read: Default::default(),
         }
     }
@@ -241,8 +241,8 @@ pub struct OpalKellyXEM6010PipeAFIFOTest {
     pub ok_host: OpalKellyHost,
     pub fifo_in: OKTestAFIFO,
     pub fifo_out: OKTestAFIFO,
-    pub i_pipe: PipeIn<0x80>,
-    pub o_pipe: PipeOut<0xA0>,
+    pub i_pipe: PipeIn,
+    pub o_pipe: PipeOut,
     pub delay_read: DFF<Bit>,
     pub fast_clock: Signal<In, Clock>,
 }
@@ -254,8 +254,8 @@ impl OpalKellyXEM6010PipeAFIFOTest {
             ok_host: Default::default(),
             fifo_in: Default::default(),
             fifo_out: Default::default(),
-            i_pipe: Default::default(),
-            o_pipe: Default::default(),
+            i_pipe: PipeIn::new(0x80),
+            o_pipe: PipeOut::new(0xA0),
             delay_read: Default::default(),
             fast_clock: xem_6010_base_clock(),
         }
@@ -330,7 +330,7 @@ pub struct OpalKellyXEM6010BTPipeOutTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub fifo_out: OKTestAFIFO2,
-    pub o_pipe: BTPipeOut<0xA0>,
+    pub o_pipe: BTPipeOut,
     pub delay_read: DFF<Bit>,
     pub fast_clock: Signal<In, Clock>,
     pub counter: DFF<Bits<16>>,
@@ -396,7 +396,7 @@ impl OpalKellyXEM6010BTPipeOutTest {
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: Default::default(),
             fifo_out: Default::default(),
-            o_pipe: Default::default(),
+            o_pipe: BTPipeOut::new(0xA0),
             delay_read: Default::default(),
             fast_clock: xem_6010_base_clock(),
             counter: Default::default(),

@@ -19,13 +19,13 @@ struct OpalKellyDownloadDDRFIFOStressTest {
     mcb: MCBInterface,
     hi: OpalKellyHostInterface,
     ok_host: OpalKellyHost,
-    download: OpalKellyDDRBackedDownloadFIFO<0xA0>,
+    download: OpalKellyDDRBackedDownloadFIFO,
     count_in: DFF<Bits<32>>,
     raw_sys_clock: Signal<In, Clock>,
     strobe: Strobe<32>,
     will_write: Signal<Local, Bit>,
-    reset: WireIn<0x0>,
-    enable: WireIn<0x1>,
+    reset: WireIn,
+    enable: WireIn,
 }
 
 impl Default for OpalKellyDownloadDDRFIFOStressTest {
@@ -34,13 +34,13 @@ impl Default for OpalKellyDownloadDDRFIFOStressTest {
             mcb: MCBInterface::xem_6010(),
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: OpalKellyHost::default(),
-            download: Default::default(),
+            download: OpalKellyDDRBackedDownloadFIFO::new(0xA0),
             count_in: Default::default(),
             raw_sys_clock: xem_6010_base_clock(),
             strobe: Strobe::new(48_000_000, 4_000_000.0),
             will_write: Default::default(),
-            reset: Default::default(),
-            enable: Default::default(),
+            reset: WireIn::new(0x0),
+            enable: WireIn::new(0x1),
         }
     }
 }

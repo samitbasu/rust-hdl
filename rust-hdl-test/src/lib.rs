@@ -15,6 +15,7 @@ pub mod alchitry_cu_pwm_vec_srom;
 pub mod base_tests;
 mod edge_detector;
 pub mod fifo;
+mod muxed_ad7193_sim;
 pub mod nested_ports;
 #[cfg(feature = "fpga_hw_test")]
 pub mod ok_tools;
@@ -36,7 +37,6 @@ pub mod rom;
 pub mod snore;
 mod spi;
 mod sync_rom;
-mod muxed_ad7193_sim;
 
 const MHZ1: u64 = 1_000_000;
 
