@@ -6,8 +6,8 @@ use rust_hdl_widgets::fifo_reducer::FIFOReducer;
 use rust_hdl_widgets::prelude::SynchronousFIFO;
 use rust_hdl_widgets::prelude::*;
 
-#[derive(LogicBlock, Default)]
-pub struct OpalKellyDDRBackedDownloadFIFO<const PORT: u8> {
+#[derive(LogicBlock)]
+pub struct OpalKellyDDRBackedDownloadFIFO {
     pub mcb: MCBInterface,
     pub raw_sys_clock: Signal<In, Clock>,
     // You must assert reset!
@@ -27,11 +27,34 @@ pub struct OpalKellyDDRBackedDownloadFIFO<const PORT: u8> {
     ddr_fifo: DDRFIFO,
     reducer: FIFOReducer<32, 16, false>,
     fifo_out: SynchronousFIFO<Bits<16>, 13, 14, 512>,
-    o_pipe: BTPipeOut<PORT>,
+    o_pipe: BTPipeOut,
     read_delay: DFF<Bit>,
 }
 
-impl<const PORT: u8> Logic for OpalKellyDDRBackedDownloadFIFO<PORT> {
+impl OpalKellyDDRBackedDownloadFIFO {
+    pub fn new(n: u8) -> Self {
+        Self {
+            mcb: Default::default(),
+            raw_sys_clock: Default::default(),
+            reset: Default::default(),
+            data_in: Default::default(),
+            write: Default::default(),
+            full: Default::default(),
+            almost_full: Default::default(),
+            write_clock: Default::default(),
+            ti_clk: Default::default(),
+            ok1: Default::default(),
+            ok2: Default::default(),
+            ddr_fifo: Default::default(),
+            reducer: Default::default(),
+            fifo_out: Default::default(),
+            o_pipe: BTPipeOut::new(n),
+            read_delay: Default::default()
+        }
+    }
+}
+
+impl Logic for OpalKellyDDRBackedDownloadFIFO {
     #[hdl_gen]
     fn update(&mut self) {
         self.mcb.link(&mut self.ddr_fifo.mcb);
@@ -66,7 +89,7 @@ impl<const PORT: u8> Logic for OpalKellyDDRBackedDownloadFIFO<PORT> {
 
 #[test]
 fn test_ddr_download_fifo_gen() {
-    let ddr: OpalKellyDDRBackedDownloadFIFO<0xA0> = Default::default();
+    let ddr = OpalKellyDDRBackedDownloadFIFO::new(0xA0);
     let vlog = generate_verilog_unchecked(&ddr);
     println!("{}", vlog);
 }

@@ -2,6 +2,7 @@ use std::env::temp_dir;
 use std::fs::{create_dir, remove_dir_all, File};
 use std::io::{Error, Write};
 use std::process::Command;
+use rust_hdl_core::prelude::*;
 
 #[derive(Debug)]
 pub enum SynthError {
@@ -69,3 +70,22 @@ macro_rules! top_wrap {
         }
     };
 }
+
+#[derive(LogicBlock)]
+pub struct TopWrap<U: Block> {
+    pub uut: U,
+}
+
+impl<U: Block> TopWrap<U> {
+    pub fn new(uut: U) -> Self {
+        Self {
+            uut,
+        }
+    }
+}
+
+impl<U: Block> Logic for TopWrap<U> {
+    fn update(&mut self) {
+    }
+}
+

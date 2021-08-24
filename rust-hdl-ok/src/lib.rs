@@ -20,6 +20,7 @@ pub mod pins;
 pub mod prelude;
 pub mod synth;
 pub mod ucf_gen;
+pub mod spi;
 
 const MHZ48: u64 = 48_000_000;
 

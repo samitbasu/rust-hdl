@@ -1,21 +1,35 @@
 use rust_hdl_core::prelude::*;
+use rust_hdl_synth::TopWrap;
 
-#[derive(Clone, Debug, Default, LogicBlock)]
-pub struct TriggerOut<const N: u8> {
+#[derive(Clone, Debug, LogicBlock)]
+pub struct TriggerOut {
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     pub clk: Signal<In, Clock>,
     pub trigger: Signal<In, Bits<16>>,
+    _n: u8,
 }
 
-impl<const N: u8> Logic for TriggerOut<N> {
+impl TriggerOut {
+    pub fn new(n: u8) -> Self {
+        assert!(n >= 60 && n < 0x80);
+        Self {
+            ok1: Default::default(),
+            ok2: Default::default(),
+            clk: Default::default(),
+            trigger: Default::default(),
+            _n: n,
+        }
+    }
+}
+
+impl Logic for TriggerOut {
     fn update(&mut self) {}
     fn connect(&mut self) {
-        assert!(N >= 60 && N < 0x80);
         self.ok2.connect();
     }
     fn hdl(&self) -> Verilog {
-        let name = format!("TriggerOut_{:x}", N);
+        let name = format!("TriggerOut_{:x}", self._n);
         Verilog::Blackbox(BlackBox {
             code: format!(
                 r#"
@@ -44,7 +58,7 @@ module okTriggerOut(
 );
 endmodule  "#,
                 name,
-                VerilogLiteral::from(N)
+                VerilogLiteral::from(self._n)
             ),
             name,
         })
@@ -53,10 +67,7 @@ endmodule  "#,
 
 #[test]
 fn test_trigger_out() {
-    use rust_hdl_synth::top_wrap;
-
-    top_wrap!(TriggerOut<0x60>, Wrapper);
-    let mut uut: Wrapper = Default::default();
+    let mut uut = TopWrap::new(TriggerOut::new(0x60));
     uut.uut.ok1.connect();
     uut.uut.clk.connect();
     uut.uut.trigger.connect();
@@ -64,21 +75,33 @@ fn test_trigger_out() {
     rust_hdl_synth::yosys_validate("trigout", &generate_verilog(&uut)).unwrap();
 }
 
-#[derive(Clone, Debug, Default, LogicBlock)]
-pub struct TriggerIn<const N: u8> {
+#[derive(Clone, Debug, LogicBlock)]
+pub struct TriggerIn {
     pub ok1: Signal<In, Bits<31>>,
     pub clk: Signal<In, Clock>,
     pub trigger: Signal<Out, Bits<16>>,
+    _n: u8,
 }
 
-impl<const N: u8> Logic for TriggerIn<N> {
+impl TriggerIn {
+    pub fn new(n: u8) -> Self {
+        assert!(n >= 0x40 && n < 0x60);
+        Self {
+            ok1: Default::default(),
+            clk: Default::default(),
+            trigger: Default::default(),
+            _n: n,
+        }
+    }
+}
+
+impl Logic for TriggerIn {
     fn update(&mut self) {}
     fn connect(&mut self) {
-        assert!(N >= 0x40 && N < 0x60);
         self.trigger.connect();
     }
     fn hdl(&self) -> Verilog {
-        let name = format!("TriggerIn_{:x}", N);
+        let name = format!("TriggerIn_{:x}", self._n);
         Verilog::Blackbox(BlackBox {
             code: format!(
                 r#"
@@ -104,7 +127,7 @@ module okTriggerIn(
 );
 endmodule  "#,
                 name,
-                VerilogLiteral::from(N)
+                VerilogLiteral::from(self._n)
             ),
             name,
         })
@@ -113,10 +136,7 @@ endmodule  "#,
 
 #[test]
 fn test_trigger_in() {
-    use rust_hdl_synth::top_wrap;
-
-    top_wrap!(TriggerIn<0x40>, Wrapper);
-    let mut uut: Wrapper = Default::default();
+    let mut uut = TopWrap::new(TriggerIn::new(0x40));
     uut.uut.ok1.connect();
     uut.uut.clk.connect();
     uut.connect_all();

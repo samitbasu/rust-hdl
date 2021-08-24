@@ -7,3 +7,4 @@ edition = "2018"
 
 [dependencies]
 regex = "1.5.4"
+rust_hdl_core = {path="../rust-hdl-core"}

@@ -1,26 +1,43 @@
 use rust_hdl_core::prelude::*;
+use rust_hdl_synth::TopWrap;
 
-#[derive(Clone, Debug, Default, LogicBlock)]
-pub struct BTPipeIn<const N: u8> {
+#[derive(Clone, Debug, LogicBlock)]
+pub struct BTPipeIn {
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     pub write: Signal<Out, bool>,
     pub blockstrobe: Signal<Out, bool>,
     pub dataout: Signal<Out, Bits<16>>,
     pub ready: Signal<In, bool>,
+    _n: u8,
 }
 
-impl<const N: u8> Logic for BTPipeIn<N> {
+impl BTPipeIn {
+    pub fn new(n: u8) -> Self {
+        assert!(n >= 0x80 && n < 0xA0);
+        Self {
+            ok1: Default::default(),
+            ok2: Default::default(),
+            write: Default::default(),
+            blockstrobe: Default::default(),
+            dataout: Default::default(),
+            ready: Default::default(),
+            _n: n
+        }
+    }
+}
+
+
+impl Logic for BTPipeIn {
     fn update(&mut self) {}
     fn connect(&mut self) {
-        assert!(N >= 0x80 && N < 0xA0);
         self.ok2.connect();
         self.write.connect();
         self.blockstrobe.connect();
         self.dataout.connect();
     }
     fn hdl(&self) -> Verilog {
-        let name = format!("BTPipeIn_{:x}", N);
+        let name = format!("BTPipeIn_{:x}", self._n);
         Verilog::Blackbox(BlackBox {
             code: format!(
                 r#"
@@ -49,7 +66,7 @@ module okBTPipeIn(ok1, ok2, ep_addr, ep_write, ep_blockstrobe, ep_dataout, ep_re
 endmodule
                     "#,
                 name,
-                VerilogLiteral::from(N)
+                VerilogLiteral::from(self._n)
             ),
             name,
         })
@@ -58,34 +75,44 @@ endmodule
 
 #[test]
 fn test_bt_pipein_synthesizes() {
-    use rust_hdl_synth::top_wrap;
-
-    top_wrap!(BTPipeIn<0x80>, Wrapper);
-    let mut uut: Wrapper = Default::default();
+    let mut uut = TopWrap::new(BTPipeIn::new(0x80));
     uut.uut.ok1.connect();
     uut.uut.ready.connect();
     uut.connect_all();
     rust_hdl_synth::yosys_validate("btpipein", &generate_verilog(&uut)).unwrap();
 }
 
-#[derive(Clone, Debug, Default, LogicBlock)]
-pub struct PipeIn<const N: u8> {
+#[derive(Clone, Debug, LogicBlock)]
+pub struct PipeIn {
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     pub write: Signal<Out, bool>,
     pub dataout: Signal<Out, Bits<16>>,
+    _n: u8,
 }
 
-impl<const N: u8> Logic for PipeIn<N> {
+impl PipeIn {
+    pub fn new(n: u8) -> Self {
+        assert!(n >= 0x80 && n < 0xA0);
+        Self {
+            ok1: Default::default(),
+            ok2: Default::default(),
+            write: Default::default(),
+            dataout: Default::default(),
+            _n: n
+        }
+    }
+}
+
+impl Logic for PipeIn {
     fn update(&mut self) {}
     fn connect(&mut self) {
-        assert!(N >= 0x80 && N < 0xA0);
         self.ok2.connect();
         self.write.connect();
         self.dataout.connect();
     }
     fn hdl(&self) -> Verilog {
-        let name = format!("PipeIn_{:x}", N);
+        let name = format!("PipeIn_{:x}", self._n);
         Verilog::Blackbox(BlackBox {
             code: format!(
                 r#"
@@ -108,7 +135,7 @@ module okPipeIn(ok1, ok2, ep_addr, ep_write, ep_dataout);
 endmodule
                     "#,
                 name,
-                VerilogLiteral::from(N)
+                VerilogLiteral::from(self._n)
             ),
             name,
         })
@@ -117,32 +144,42 @@ endmodule
 
 #[test]
 fn test_pipein_synthesizes() {
-    use rust_hdl_synth::top_wrap;
-
-    top_wrap!(PipeIn<0x80>, Wrapper);
-    let mut uut: Wrapper = Default::default();
+    let mut uut = TopWrap::new(PipeIn::new(0x80));
     uut.uut.ok1.connect();
     uut.connect_all();
     rust_hdl_synth::yosys_validate("pipein", &generate_verilog(&uut)).unwrap();
 }
 
-#[derive(Clone, Debug, Default, LogicBlock)]
-pub struct PipeOut<const N: u8> {
+#[derive(Clone, Debug, LogicBlock)]
+pub struct PipeOut {
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     pub read: Signal<Out, Bit>,
     pub datain: Signal<In, Bits<16>>,
+    _n: u8,
 }
 
-impl<const N: u8> Logic for PipeOut<N> {
+impl PipeOut {
+    pub fn new(n: u8) -> Self {
+        assert!(n >= 0xA0 && n < 0xC0);
+        Self {
+            ok1: Default::default(),
+            ok2: Default::default(),
+            read: Default::default(),
+            datain: Default::default(),
+            _n: n
+        }
+    }
+}
+
+impl Logic for PipeOut {
     fn update(&mut self) {}
     fn connect(&mut self) {
-        assert!(N >= 0xA0 && N < 0xC0);
         self.ok2.connect();
         self.read.connect();
     }
     fn hdl(&self) -> Verilog {
-        let name = format!("PipeOut_{:x}", N);
+        let name = format!("PipeOut_{:x}", self._n);
         Verilog::Blackbox(BlackBox {
             code: format!(
                 r#"
@@ -165,7 +202,7 @@ module okPipeOut(ok1, ok2, ep_addr, ep_read, ep_datain);
 endmodule
                 "#,
                 name,
-                VerilogLiteral::from(N)
+                VerilogLiteral::from(self._n)
             ),
             name,
         })
@@ -177,34 +214,48 @@ fn test_pipeout_synthesizes() {
     use rust_hdl_synth::top_wrap;
     use rust_hdl_synth::yosys_validate;
 
-    top_wrap!(PipeOut<0xA0>, Wrapper);
-    let mut uut: Wrapper = Default::default();
+    let mut uut = TopWrap::new(PipeOut::new(0xA0));
     uut.uut.ok1.connect();
     uut.uut.datain.connect();
     uut.connect_all();
     yosys_validate("pipeout", &generate_verilog(&uut)).unwrap();
 }
 
-#[derive(Clone, Debug, Default, LogicBlock)]
-pub struct BTPipeOut<const N: u8> {
+#[derive(Clone, Debug, LogicBlock)]
+pub struct BTPipeOut {
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     pub read: Signal<Out, Bit>,
     pub blockstrobe: Signal<Out, Bit>,
     pub datain: Signal<In, Bits<16>>,
     pub ready: Signal<In, Bit>,
+    _n: u8,
 }
 
-impl<const N: u8> Logic for BTPipeOut<N> {
+impl BTPipeOut {
+    pub fn new(n: u8) -> Self {
+        assert!(n >= 0xA0 && n < 0xC0);
+        Self {
+            ok1: Default::default(),
+            ok2: Default::default(),
+            read: Default::default(),
+            blockstrobe: Default::default(),
+            datain: Default::default(),
+            ready: Default::default(),
+            _n: n
+        }
+    }
+}
+
+impl Logic for BTPipeOut {
     fn update(&mut self) {}
     fn connect(&mut self) {
-        assert!(N >= 0xA0 && N < 0xC0);
         self.ok2.connect();
         self.read.connect();
         self.blockstrobe.connect();
     }
     fn hdl(&self) -> Verilog {
-        let name = format!("BTPipeOut_{:x}", N);
+        let name = format!("BTPipeOut_{:x}", self._n);
         Verilog::Blackbox(BlackBox {
             code: format!(
                 r#"
@@ -234,7 +285,7 @@ module okBTPipeOut(ok1, ok2, ep_addr, ep_read, ep_blockstrobe, ep_datain, ep_rea
 endmodule
                 "#,
                 name,
-                VerilogLiteral::from(N)
+                VerilogLiteral::from(self._n)
             ),
             name,
         })
@@ -243,10 +294,7 @@ endmodule
 
 #[test]
 fn test_btpipeout_synthesizes() {
-    use rust_hdl_synth::top_wrap;
-
-    top_wrap!(BTPipeOut<0xA0>, Wrapper);
-    let mut uut: Wrapper = Default::default();
+    let mut uut = TopWrap::new(BTPipeOut::new(0xA0));
     uut.uut.ok1.connect();
     uut.uut.datain.connect();
     uut.uut.ready.connect();

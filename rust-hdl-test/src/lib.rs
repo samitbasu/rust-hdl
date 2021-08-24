@@ -36,6 +36,7 @@ pub mod rom;
 pub mod snore;
 mod spi;
 mod sync_rom;
+mod muxed_ad7193_sim;
 
 const MHZ1: u64 = 1_000_000;
 

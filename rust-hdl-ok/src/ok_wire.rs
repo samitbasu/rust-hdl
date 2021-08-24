@@ -1,20 +1,34 @@
 use rust_hdl_core::prelude::*;
+use rust_hdl_synth::TopWrap;
 
-#[derive(Clone, Debug, Default, LogicBlock)]
-pub struct WireOut<const N: u8> {
+#[derive(Clone, Debug, LogicBlock)]
+pub struct WireOut {
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     pub datain: Signal<In, Bits<16>>,
+    _n: u8,
 }
 
-impl<const N: u8> Logic for WireOut<N> {
+impl WireOut {
+    // TODO - add collision detection
+    pub fn new(port: u8) -> Self {
+        assert!(port >= 0x20 && port < 0x40);
+        Self {
+            ok1: Default::default(),
+            ok2: Default::default(),
+            datain: Default::default(),
+            _n: port,
+        }
+    }
+}
+
+impl Logic for WireOut {
     fn update(&mut self) {}
     fn connect(&mut self) {
-        assert!(N >= 0x20 && N < 0x40);
         self.ok2.connect();
     }
     fn hdl(&self) -> Verilog {
-        let name = format!("WireOut_{:x}", N);
+        let name = format!("WireOut_{:x}", self._n);
         Verilog::Blackbox(BlackBox {
             code: format!(
                 r#"
@@ -40,7 +54,7 @@ module okWireOut(
 );
 endmodule  "#,
                 name,
-                VerilogLiteral::from(N)
+                VerilogLiteral::from(self._n)
             ),
             name,
         })
@@ -49,30 +63,38 @@ endmodule  "#,
 
 #[test]
 fn test_wire_out_synth() {
-    use rust_hdl_synth::top_wrap;
-
-    top_wrap!(WireOut<0x20>, Wrapper);
-    let mut uut: Wrapper = Default::default();
+    let mut uut = TopWrap::new(WireOut::new(0x20));
     uut.uut.ok1.connect();
     uut.uut.datain.connect();
-    uut.connect_all();
+    uut.uut.connect_all();
     rust_hdl_synth::yosys_validate("wire_out", &generate_verilog(&uut)).unwrap();
 }
 
-#[derive(Clone, Debug, Default, LogicBlock)]
-pub struct WireIn<const N: u8> {
+#[derive(Clone, Debug, LogicBlock)]
+pub struct WireIn {
     pub ok1: Signal<In, Bits<31>>,
     pub dataout: Signal<Out, Bits<16>>,
+    _n: u8,
 }
 
-impl<const N: u8> Logic for WireIn<N> {
+impl WireIn {
+    pub fn new(n: u8) -> WireIn {
+        assert!(n < 0x20);
+        WireIn {
+            ok1: Default::default(),
+            dataout: Default::default(),
+            _n: n,
+        }
+    }
+}
+
+impl Logic for WireIn {
     fn update(&mut self) {}
     fn connect(&mut self) {
-        assert!(N < 0x20);
         self.dataout.connect();
     }
     fn hdl(&self) -> Verilog {
-        let name = format!("WireIn_{:x}", N);
+        let name = format!("WireIn_{:x}", self._n);
         Verilog::Blackbox(BlackBox {
             code: format!(
                 r#"
@@ -95,7 +117,7 @@ module okWireIn(
 );
 endmodule  "#,
                 name,
-                VerilogLiteral::from(N)
+                VerilogLiteral::from(self._n)
             ),
             name,
         })
@@ -104,10 +126,7 @@ endmodule  "#,
 
 #[test]
 fn test_wire_in_synth() {
-    use rust_hdl_synth::top_wrap;
-
-    top_wrap!(WireIn<0x02>, Wrapper);
-    let mut uut: Wrapper = Default::default();
+    let mut uut = TopWrap::new(WireIn::new(0x02));
     uut.uut.ok1.connect();
     uut.connect_all();
     rust_hdl_synth::yosys_validate("wire_in", &generate_verilog(&uut)).unwrap();

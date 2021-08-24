@@ -136,6 +136,13 @@ impl<const N: usize> Bits<N> {
         }
     }
 
+    pub fn index(&self) -> usize {
+        match self {
+            Bits::Short(x) => x.short() as usize,
+            Bits::Long(_x) => panic!("Cannot map long bit vector to index type"),
+        }
+    }
+
     #[inline(always)]
     pub fn len(&self) -> usize {
         N
@@ -395,13 +402,24 @@ impl<const N: usize> std::cmp::PartialEq<Bits<N>> for Bits<N> {
     }
 }
 
-impl<const N: usize> std::cmp::PartialEq<u32> for Bits<N> {
-    #[inline(always)]
-    fn eq(&self, other: &u32) -> bool {
-        let other_as_bits: Bits<N> = (*other).into();
-        self.eq(&other_as_bits)
+macro_rules! partial_eq_with_uint {
+    ($kind: ty) => {
+        impl<const N: usize> std::cmp::PartialEq<$kind> for Bits<N> {
+            #[inline(always)]
+            fn eq(&self, other: &$kind) -> bool {
+                let other_as_bits: Bits<N> = (*other).into();
+                self.eq(&other_as_bits)
+            }
+        }
     }
 }
+
+partial_eq_with_uint!(u8);
+partial_eq_with_uint!(u16);
+partial_eq_with_uint!(u32);
+partial_eq_with_uint!(u64);
+partial_eq_with_uint!(u128);
+partial_eq_with_uint!(usize);
 
 impl std::cmp::PartialEq<bool> for Bits<1> {
     #[inline(always)]
