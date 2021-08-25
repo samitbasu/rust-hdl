@@ -40,7 +40,7 @@ impl Logic for OpalKellyXEM6010Blinky {
 #[test]
 fn test_opalkelly_xem_6010_blinky() {
     let mut uut = OpalKellyXEM6010Blinky::new();
-    uut.hi.link_connect();
+    uut.hi.link_connect_dest();
     uut.connect_all();
     check_connected(&uut);
     let vlog = generate_verilog(&uut);

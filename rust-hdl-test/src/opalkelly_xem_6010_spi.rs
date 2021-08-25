@@ -1,9 +1,10 @@
 use crate::ad7193_sim::{AD7193Simulator, AD7193_SPI_CONFIG};
-use crate::ok_tools::{ok_do_spi_txn, ok_reg_read, ok_test_prelude};
+//use crate::ok_tools::{ok_do_spi_txn, ok_reg_read, ok_test_prelude};
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::prelude::*;
 use rust_hdl_ok::spi::OKSPIMaster;
-use rust_hdl_ok_frontpanel_sys::OkError;
+//use rust_hdl_ok_frontpanel_sys::OkError;
+use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_widgets::spi_master::{SPIConfig, SPIWires};
 
@@ -50,6 +51,15 @@ impl Logic for OpalKellyXEM6010SPITest {
 }
 
 #[test]
+fn test_synth() {
+    let mut uut = OpalKellyXEM6010SPITest::default();
+    uut.hi.link_connect_dest();
+    uut.connect_all();
+    yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
+}
+
+/*
+#[test]
 fn test_opalkelly_xem_6010_spi() {
     let mut uut = OpalKellyXEM6010SPITest::default();
     uut.hi.link_connect();
@@ -71,3 +81,6 @@ fn test_opalkelly_xem_6010_spi_reg_read_runtime() -> Result<(), OkError> {
     hnd.close();
     Ok(())
 }
+
+
+ */

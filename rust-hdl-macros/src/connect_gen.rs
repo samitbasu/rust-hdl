@@ -53,13 +53,14 @@ fn connect_for_loop(node: &syn::ExprForLoop) -> Result<TS> {
 }
 
 fn connect_method_call(node: &syn::ExprMethodCall) -> Result<TS> {
+    let source = &node.receiver;
     let method_name = node.method.to_string();
     if method_name == "link" {
         let target = node.args.index(0);
         if let Expr::Reference(t) = target {
             let target = &t.expr;
             return Ok(quote!(
-                #target.link_connect();
+                rust_hdl_core::logic::logic_connect_link_fn(&mut #source, &mut #target);
             ));
         }
     }

@@ -40,7 +40,7 @@ impl Default for SPITestAsync {
 fn test_spi_txn_completes() {
     let mut uut = SPITestAsync::default();
     uut.clock.connect();
-    uut.bus.link_connect();
+    uut.bus.link_connect_dest();
     uut.master.bits_outbound.connect();
     uut.master.continued_transaction.connect();
     uut.master.data_outbound.connect();

@@ -10,7 +10,6 @@ pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<T
     let update_all = get_update_all(fields.clone())?;
     let has_changed = get_has_changed(fields.clone())?;
     let connect_all = get_connect_all(fields.clone())?;
-    let link_connect = get_link_connect(fields.clone())?;
     let accept = get_accept(fields.clone())?;
     let name = &input.ident;
     let (impl_generics, ty_generics, _where_clause) = &input.generics.split_for_impl();
@@ -31,18 +30,6 @@ pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<T
             #link
             #link_hdl
         }
-
-        impl #impl_generics #name #ty_generics {
-            #link_connect
-        }
-    })
-}
-
-fn get_link_connect(fields: Vec<TS>) -> Result<TS> {
-    Ok(quote! {
-        pub fn link_connect(&mut self) {
-            #(self.#fields.connect();)*
-        }
     })
 }
 
@@ -50,6 +37,12 @@ fn get_link(fields: Vec<TS>) -> Result<TS> {
     Ok(quote! {
         fn link(&mut self, other: &mut Self) {
             #(self.#fields.link(&mut other.#fields);)*
+        }
+        fn link_connect_source(&mut self) {
+            #(self.#fields.link_connect_source();)*
+        }
+        fn link_connect_dest(&mut self) {
+            #(self.#fields.link_connect_dest();)*
         }
     })
 }

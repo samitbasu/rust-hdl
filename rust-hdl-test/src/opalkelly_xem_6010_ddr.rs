@@ -73,8 +73,8 @@ impl Logic for OpalKellyDownloadDDRFIFOStressTest {
 #[test]
 fn test_opalkelly_xem_6010_ddr_stress() {
     let mut uut = OpalKellyDownloadDDRFIFOStressTest::default();
-    uut.hi.link_connect();
-    uut.mcb.link_connect();
+    uut.hi.link_connect_connect();
+    uut.mcb.link_connect_connect();
     uut.raw_sys_clock.connect();
     uut.connect_all();
     crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_ddr_stress");

@@ -42,6 +42,12 @@ impl<T: Synth> LogicLink for Signal<In, T> {
         };
         vec![VerilogLink::Forward(details)]
     }
+    fn link_connect_source(&mut self) {
+        // Does nothing
+    }
+    fn link_connect_dest(&mut self) {
+        self.connect();
+    }
 }
 
 impl<T: Synth> LogicLink for Signal<Out, T> {
@@ -56,6 +62,10 @@ impl<T: Synth> LogicLink for Signal<Out, T> {
         };
         vec![VerilogLink::Backward(details)]
     }
+    fn link_connect_source(&mut self) {
+        self.connect();
+    }
+    fn link_connect_dest(&mut self) {}
 }
 
 impl<T: Synth> LogicLink for Signal<InOut, T> {
@@ -69,6 +79,12 @@ impl<T: Synth> LogicLink for Signal<InOut, T> {
             other_name: other_name.into(),
         };
         vec![VerilogLink::Bidirectional(details)]
+    }
+    fn link_connect_source(&mut self) {
+        self.connect();
+    }
+    fn link_connect_dest(&mut self) {
+        self.connect();
     }
 }
 

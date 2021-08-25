@@ -109,8 +109,8 @@ impl Logic for OpalKellyXEM6010MIGTest {
 #[test]
 fn test_opalkelly_xem_6010_mig() {
     let mut uut = OpalKellyXEM6010MIGTest::default();
-    uut.hi.link_connect();
-    uut.mcb.link_connect();
+    uut.hi.link_connect_dest();
+    uut.mcb.link_connect_dest();
     uut.raw_clock.connect();
     uut.connect_all();
     crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_mig");

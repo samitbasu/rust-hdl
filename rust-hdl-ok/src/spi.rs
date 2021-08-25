@@ -132,7 +132,7 @@ fn test_ok_spi_master_synthesizes() {
         cpol: true,
     };
     let mut uut = TopWrap::new(OKSPIMaster::new(Default::default(), spi_config));
-    uut.uut.wires.link_connect();
+    uut.uut.wires.link_connect_dest();
     uut.uut.ok1.connect();
     uut.uut.clock.connect();
     uut.connect_all();
@@ -189,7 +189,7 @@ fn test_ok_spi_master_works() {
     }
 
     let mut uut = TopOK::new();
-    uut.wires.link_connect();
+    uut.wires.link_connect_dest();
     uut.ok1.connect();
     uut.clock.connect();
     uut.slave.data_outbound.connect();

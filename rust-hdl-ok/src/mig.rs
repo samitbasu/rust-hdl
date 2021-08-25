@@ -114,7 +114,8 @@ impl Logic for MemoryInterfaceGenerator {
         self.p0_rd.empty.connect();
         self.p0_rd.data.connect();
         self.p0_rd.overflow.connect();
-        self.mcb.link_connect();
+        self.mcb.link_connect_source();
+        self.mcb.link_connect_dest();
     }
     fn hdl(&self) -> Verilog {
         Verilog::Blackbox(BlackBox {

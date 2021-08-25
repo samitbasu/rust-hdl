@@ -54,7 +54,7 @@ impl Logic for OpalKellyXEM6010PipeTest {
 #[test]
 fn test_opalkelly_xem_6010_pipe() {
     let mut uut = OpalKellyXEM6010PipeTest::new();
-    uut.hi.link_connect();
+    uut.hi.link_connect_dest();
     uut.connect_all();
     crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_pipe");
 }
@@ -141,7 +141,7 @@ impl Logic for OpalKellyXEM6010PipeRAMTest {
 #[test]
 fn test_opalkelly_xem_6010_pipe_ram() {
     let mut uut = OpalKellyXEM6010PipeRAMTest::new();
-    uut.hi.link_connect();
+    uut.hi.link_connect_dest();
     uut.connect_all();
     crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_pipe_ram");
 }
@@ -299,7 +299,7 @@ impl Logic for OpalKellyXEM6010PipeAFIFOTest {
 #[test]
 fn test_opalkelly_xem_6010_pipe_afifo() {
     let mut uut = OpalKellyXEM6010PipeAFIFOTest::new();
-    uut.hi.link_connect();
+    uut.hi.link_connect_dest();
     uut.fast_clock.connect();
     uut.connect_all();
     crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_afifo");
@@ -410,7 +410,7 @@ impl OpalKellyXEM6010BTPipeOutTest {
 #[test]
 fn test_opalkelly_xem_6010_btpipe() {
     let mut uut = OpalKellyXEM6010BTPipeOutTest::new();
-    uut.hi.link_connect();
+    uut.hi.link_connect_dest();
     uut.fast_clock.connect();
     uut.connect_all();
     crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_btpipe");
