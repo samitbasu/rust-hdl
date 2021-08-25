@@ -58,12 +58,11 @@ fn test_synth() {
     yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
 }
 
-/*
+
 #[test]
 fn test_opalkelly_xem_6010_spi() {
     let mut uut = OpalKellyXEM6010SPITest::default();
     uut.hi.link_connect();
-    uut.spi.wires.link_connect(); // TODO - this should not be needed
     uut.connect_all();
     crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_spi");
 }
@@ -82,5 +81,17 @@ fn test_opalkelly_xem_6010_spi_reg_read_runtime() -> Result<(), OkError> {
     Ok(())
 }
 
+#[test]
+fn test_opalkelly_xem_6010_spi_reg_write_runtime() -> Result<(), OkError> {
+    let hnd = ok_test_prelude("opalkelly_xem_6010_spi/top.bit")?;
+    ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();
+    let expected = [0x40, 0x80060, 0x117, 0, 0xa2, 0, 0x800000, 0x5544d0];
+    for reg in 0..8 {
+        let x = ok_reg_read(&hnd, reg).unwrap();
+        println!("Read of reg {} is {:x}", reg, x);
+        assert_eq!(x, expected[reg as usize]);
+    }
+    hnd.close();
+    Ok(())
+}
 
- */
