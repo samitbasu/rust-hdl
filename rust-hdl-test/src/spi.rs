@@ -129,7 +129,7 @@ fn test_spi_xchange(config: SPIConfig) {
     uut.slave.data_outbound.connect();
     uut.slave.start_send.connect();
     uut.slave.continued_transaction.connect();
-    uut.slave.disable.connect();
+    uut.slave.disabled.connect();
     uut.slave.bits.connect();
     uut.connect_all();
     yosys_validate("spi_1", &generate_verilog(&uut)).unwrap();

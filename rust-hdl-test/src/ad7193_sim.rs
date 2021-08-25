@@ -47,7 +47,7 @@ pub struct AD7193Simulator {
 }
 
 #[cfg(test)]
-const AD7193_SPI_CONFIG: SPIConfig = SPIConfig {
+pub const AD7193_SPI_CONFIG: SPIConfig = SPIConfig {
     clock_speed: 1_000_000,
     cs_off: true,
     mosi_off: true,
@@ -57,7 +57,7 @@ const AD7193_SPI_CONFIG: SPIConfig = SPIConfig {
 };
 
 #[cfg(not(test))]
-const AD7193_SPI_CONFIG: SPIConfig = SPIConfig {
+pub const AD7193_SPI_CONFIG: SPIConfig = SPIConfig {
     clock_speed: 48_000_000,
     cs_off: true,
     mosi_off: true,
@@ -66,11 +66,11 @@ const AD7193_SPI_CONFIG: SPIConfig = SPIConfig {
     cpol: true,
 };
 
-const AD7193_REG_WIDTHS: [u32; 8] = [8, 24, 24, 24, 8, 8, 24, 24];
+pub const AD7193_REG_WIDTHS: [u32; 8] = [8, 24, 24, 24, 8, 8, 24, 24];
 const AD7193_REG_INITS: [u64; 8] = [0x40, 0x80060, 0x117, 0x0, 0xa2, 0x0, 0x800000, 0x5544d0];
 
-impl Default for AD7193Simulator {
-    fn default() -> Self {
+impl AD7193Simulator {
+    pub fn new(spi_config: SPIConfig) -> Self {
         let reg_width_rom = AD7193_REG_WIDTHS.iter().map(|x| Bits::<5>::from(*x)).into();
         let reg_ram = AD7193_REG_INITS.iter().map(|x| Bits::<24>::from(*x)).into();
         Self {
@@ -81,15 +81,21 @@ impl Default for AD7193Simulator {
             clock: Default::default(),
             reg_width_rom,
             reg_ram,
-            oneshot: Shot::new(AD7193_SPI_CONFIG.clock_speed, Duration::from_micros(10000)),
+            oneshot: Shot::new(spi_config.clock_speed, Duration::from_micros(10000)),
             cmd: Default::default(),
             reg_index: Default::default(),
             rw_flag: Default::default(),
-            spi_slave: SPISlave::new(AD7193_SPI_CONFIG),
+            spi_slave: SPISlave::new(spi_config),
             state: Default::default(),
             reg_write_index: Default::default(),
             conversion_counter: Default::default(),
         }
+    }
+}
+
+impl Default for AD7193Simulator {
+    fn default() -> Self {
+        Self::new(AD7193_SPI_CONFIG)
     }
 }
 
@@ -126,7 +132,7 @@ impl Logic for AD7193Simulator {
         self.spi_slave.data_outbound.next = 0_u64.into();
         self.reg_ram.write_enable.next = false;
         self.reg_ram.write_data.next = 0_usize.into();
-        self.spi_slave.disable.next = false;
+        self.spi_slave.disabled.next = false;
         self.oneshot.trigger.next = false;
         match self.state.q.val() {
             AD7193State::Init => {
@@ -189,7 +195,7 @@ impl Logic for AD7193Simulator {
                 }
             }
             AD7193State::SingleConversion => {
-                self.spi_slave.disable.next = true;
+                self.spi_slave.disabled.next = true;
                 if !self.oneshot.active.val() {
                     self.state.d.next = AD7193State::SingleConversionCommit;
                 }

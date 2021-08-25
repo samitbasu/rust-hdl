@@ -67,7 +67,8 @@ impl Logic for OKSPIMaster {
         self.bits.ok1.next = self.ok1.val();
         self.trigger_start.ok1.next = self.ok1.val();
         self.trigger_done.ok1.next = self.ok1.val();
-        self.ok2.next = self.pipe_out.ok2.val() | self.trigger_done.ok2.val();
+        self.ok2.next =
+            self.pipe_in.ok2.val() | self.pipe_out.ok2.val() | self.trigger_done.ok2.val();
         // Pipe in the SPI outbound register
         if self.pipe_in.write.val() {
             self.data_outbound.d.next = (self.data_outbound.q.val() << 16_usize)
@@ -195,7 +196,7 @@ fn test_ok_spi_master_works() {
     uut.slave.bits.connect();
     uut.slave.start_send.connect();
     uut.slave.continued_transaction.connect();
-    uut.slave.disable.connect();
+    uut.slave.disabled.connect();
     uut.connect_all();
     rust_hdl_synth::yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();

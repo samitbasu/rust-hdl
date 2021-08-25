@@ -18,7 +18,9 @@ pub(crate) fn get_field_names(input: &syn::DeriveInput) -> syn::Result<Vec<TS>> 
                 let name = &field.ident.as_ref();
                 let qname = quote!(#name);
                 let qname_string = qname.to_string();
-                if ["config", "wire", "reg", "module", "edge"].contains(&qname_string.as_str()) {
+                if ["config", "wire", "reg", "module", "edge", "disable"]
+                    .contains(&qname_string.as_str())
+                {
                     return Err(syn::Error::new(
                         field.span(),
                         "Cannot use an HDL keyword here",

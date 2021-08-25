@@ -23,7 +23,7 @@ pub struct SPISlave<const N: usize> {
     pub miso: Signal<Out, Bit>,
     pub msel: Signal<In, Bit>,
     pub mclk: Signal<In, Bit>,
-    pub disable: Signal<In, Bit>,
+    pub disabled: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
     pub data_inbound: Signal<Out, Bits<N>>,
     pub start_send: Signal<In, Bit>,
@@ -72,7 +72,7 @@ impl<const N: usize> SPISlave<N> {
             miso: Default::default(),
             msel: Default::default(),
             mclk: Default::default(),
-            disable: Default::default(),
+            disabled: Default::default(),
             busy: Default::default(),
             data_inbound: Default::default(),
             start_send: Default::default(),
@@ -166,7 +166,7 @@ impl<const N: usize> Logic for SPISlave<N> {
                     } else {
                         self.state.d.next = SPISlaveState::Settle;
                     }
-                } else if self.disable.val() {
+                } else if self.disabled.val() {
                     self.state.d.next = SPISlaveState::Disabled;
                 }
             }
@@ -220,12 +220,12 @@ impl<const N: usize> Logic for SPISlave<N> {
                     self.done_flop.d.next = true;
                     self.state.d.next = SPISlaveState::Idle;
                 }
-                if self.disable.val() {
+                if self.disabled.val() {
                     self.state.d.next = SPISlaveState::Disabled;
                 }
             }
             SPISlaveState::Disabled => {
-                if !self.disable.val() {
+                if !self.disabled.val() {
                     self.state.d.next = SPISlaveState::Idle;
                     self.register_out.d.next = 0_u32.into();
                 }
@@ -250,7 +250,7 @@ fn test_spi_slave_synthesizes() {
     uut.mosi.connect();
     uut.msel.connect();
     uut.mclk.connect();
-    uut.disable.connect();
+    uut.disabled.connect();
     uut.start_send.connect();
     uut.data_outbound.connect();
     uut.bits.connect();
