@@ -1,6 +1,7 @@
 use crate::ad7193_sim::AD7193Simulator;
 use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
+use rust_hdl_widgets::spi_master::SPIConfig;
 
 #[derive(LogicBlock, Default)]
 pub struct MuxedAD7193Simulators {
@@ -13,6 +14,30 @@ pub struct MuxedAD7193Simulators {
     pub clock: Signal<In, Clock>,
     adcs: [AD7193Simulator; 8],
 }
+
+impl MuxedAD7193Simulators {
+    pub fn new(spi_config: SPIConfig) -> Self {
+        Self {
+            mosi: Default::default(),
+            mclk: Default::default(),
+            msel: Default::default(),
+            miso: Default::default(),
+            addr: Default::default(),
+            clock: Default::default(),
+            adcs: [
+                AD7193Simulator::new(spi_config),
+                AD7193Simulator::new(spi_config),
+                AD7193Simulator::new(spi_config),
+                AD7193Simulator::new(spi_config),
+                AD7193Simulator::new(spi_config),
+                AD7193Simulator::new(spi_config),
+                AD7193Simulator::new(spi_config),
+                AD7193Simulator::new(spi_config)
+            ]
+        }
+    }
+}
+
 
 impl Logic for MuxedAD7193Simulators {
     #[hdl_gen]
