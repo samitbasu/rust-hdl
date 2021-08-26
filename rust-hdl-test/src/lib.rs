@@ -27,9 +27,9 @@ pub mod opalkelly_xem_6010_ddr;
 pub mod opalkelly_xem_6010_mig;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_pipe;
-//#[cfg(feature = "fpga_hw_test")]
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_mux_spi;
+#[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_spi;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_wave;
