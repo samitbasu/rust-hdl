@@ -32,12 +32,11 @@ impl MuxedAD7193Simulators {
                 AD7193Simulator::new(spi_config),
                 AD7193Simulator::new(spi_config),
                 AD7193Simulator::new(spi_config),
-                AD7193Simulator::new(spi_config)
-            ]
+                AD7193Simulator::new(spi_config),
+            ],
         }
     }
 }
-
 
 impl Logic for MuxedAD7193Simulators {
     #[hdl_gen]

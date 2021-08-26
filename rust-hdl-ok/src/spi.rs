@@ -200,7 +200,7 @@ fn test_ok_spi_master_works() {
     uut.connect_all();
     rust_hdl_synth::yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut TopOK| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<TopOK>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<TopOK>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
@@ -235,6 +235,10 @@ fn test_ok_spi_master_works() {
         }
         sim.done(x)
     });
-    sim.run_traced(uut, 100_000, std::fs::File::create("ok_spi.vcd").unwrap())
-        .unwrap()
+    sim.run_traced(
+        Box::new(uut),
+        100_000,
+        std::fs::File::create("ok_spi.vcd").unwrap(),
+    )
+    .unwrap()
 }

@@ -258,9 +258,9 @@ impl Default for Test7193 {
 
 fn reg_read(
     reg_index: u32,
-    x: Test7193,
+    x: Box<Test7193>,
     sim: &mut Sim<Test7193>,
-) -> Result<(Bits<64>, Test7193), SimError> {
+) -> Result<(Bits<64>, Box<Test7193>), SimError> {
     let cmd = (((1 << 6) | (reg_index << 3)) << 24) as u64;
     let result = do_spi_txn(32, cmd, false, x, sim)?;
     let width = AD7193_REG_WIDTHS[reg_index as usize];
@@ -275,9 +275,9 @@ fn reg_read(
 fn reg_write(
     reg_index: u32,
     reg_value: u64,
-    x: Test7193,
+    x: Box<Test7193>,
     sim: &mut Sim<Test7193>,
-) -> Result<Test7193, SimError> {
+) -> Result<Box<Test7193>, SimError> {
     let mut cmd = (((0 << 6) | (reg_index << 3)) << 24) as u64;
     if AD7193_REG_WIDTHS[reg_index as usize] == 8 {
         cmd = cmd | reg_value << 16;
@@ -292,9 +292,9 @@ fn do_spi_txn(
     bits: u16,
     value: u64,
     continued: bool,
-    mut x: Test7193,
+    mut x: Box<Test7193>,
     sim: &mut Sim<Test7193>,
-) -> Result<(Bits<64>, Test7193), SimError> {
+) -> Result<(Bits<64>, Box<Test7193>), SimError> {
     wait_clock_true!(sim, clock, x);
     x.master.data_outbound.next = value.into();
     x.master.bits_outbound.next = bits.into();
@@ -334,7 +334,7 @@ fn test_yosys_validate_test_fixture() {
 fn test_reg_reads() {
     let uut = mk_test7193();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Test7193| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
         // Do the first read to initialize the chip
@@ -354,14 +354,14 @@ fn test_reg_reads() {
         }
         sim.done(x)
     });
-    sim.run(uut, 1_000_000).unwrap();
+    sim.run(Box::new(uut), 1_000_000).unwrap();
 }
 
 #[test]
 fn test_reg_writes() {
     let uut = mk_test7193();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Test7193| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
         // Initialize the chip...
@@ -386,14 +386,14 @@ fn test_reg_writes() {
         }
         sim.done(x)
     });
-    sim.run(uut, 1_000_000).unwrap();
+    sim.run(Box::new(uut), 1_000_000).unwrap();
 }
 
 #[test]
 fn test_single_conversion() {
     let uut = mk_test7193();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Test7193| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
         // Initialize the chip...
@@ -415,5 +415,5 @@ fn test_single_conversion() {
         }
         sim.done(x)
     });
-    sim.run(uut, 10_000_000).unwrap();
+    sim.run(Box::new(uut), 10_000_000).unwrap();
 }

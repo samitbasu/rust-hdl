@@ -10,7 +10,7 @@ fn test_rising_edge_detector_works() {
     uut.connect_all();
     yosys_validate("edge_2", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut EdgeDetector| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<EdgeDetector>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<EdgeDetector>| {
         let mut x = sim.init()?;
         x.input_signal.next = true;
@@ -29,8 +29,12 @@ fn test_rising_edge_detector_works() {
         sim_assert!(sim, !x.edge_signal.val(), x);
         sim.done(x)
     });
-    sim.run_traced(uut, 1000, std::fs::File::create("edge_det2.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        1000,
+        std::fs::File::create("edge_det2.vcd").unwrap(),
+    )
+    .unwrap();
 }
 
 #[test]
@@ -41,7 +45,7 @@ fn test_falling_edge_detector_works() {
     uut.connect_all();
     yosys_validate("edge_1", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut EdgeDetector| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<EdgeDetector>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<EdgeDetector>| {
         let mut x = sim.init()?;
         x.input_signal.next = false;
@@ -60,6 +64,10 @@ fn test_falling_edge_detector_works() {
         sim_assert!(sim, !x.edge_signal.val(), x);
         sim.done(x)
     });
-    sim.run_traced(uut, 1000, std::fs::File::create("edge_det.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        1000,
+        std::fs::File::create("edge_det.vcd").unwrap(),
+    )
+    .unwrap();
 }

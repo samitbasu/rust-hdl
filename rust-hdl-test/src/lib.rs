@@ -26,9 +26,9 @@ pub mod opalkelly_xem_6010_ddr;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_mig;
 #[cfg(feature = "fpga_hw_test")]
-pub mod opalkelly_xem_6010_pipe;
-#[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_mux_spi;
+#[cfg(feature = "fpga_hw_test")]
+pub mod opalkelly_xem_6010_pipe;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_spi;
 #[cfg(feature = "fpga_hw_test")]
@@ -72,7 +72,9 @@ fn test_strobe_as_verilog() {
 #[test]
 fn test_strobe() {
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut UUT| x.strobe.clock.next = !x.strobe.clock.val());
+    sim.add_clock(5, |x: &mut Box<UUT>| {
+        x.strobe.clock.next = !x.strobe.clock.val()
+    });
     sim.add_testbench(|mut sim: Sim<UUT>| {
         let mut x = sim.init()?;
         x.strobe.enable.next = true;
@@ -84,6 +86,6 @@ fn test_strobe() {
         strobe: Strobe::new(MHZ1, 10.0),
     };
     uut.connect_all();
-    sim.run_traced(uut, 100_000, File::create("strobe.vcd").unwrap())
+    sim.run_traced(Box::new(uut), 100_000, File::create("strobe.vcd").unwrap())
         .unwrap();
 }

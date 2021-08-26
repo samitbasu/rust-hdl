@@ -33,8 +33,12 @@ fn test_sync_vec() {
     uut.connect_all();
     yosys_validate("sync", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut SyncVecTest| x.clock2.next = !x.clock2.val());
-    sim.add_clock(9, |x: &mut SyncVecTest| x.clock1.next = !x.clock1.val());
+    sim.add_clock(5, |x: &mut Box<SyncVecTest>| {
+        x.clock2.next = !x.clock2.val()
+    });
+    sim.add_clock(9, |x: &mut Box<SyncVecTest>| {
+        x.clock1.next = !x.clock1.val()
+    });
     sim.add_testbench(move |mut sim: Sim<SyncVecTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock1, x);
@@ -59,8 +63,12 @@ fn test_sync_vec() {
         sim.done(x)?;
         Ok(())
     });
-    sim.run_traced(uut, 100_000, std::fs::File::create("vsync.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        100_000,
+        std::fs::File::create("vsync.vcd").unwrap(),
+    )
+    .unwrap();
 }
 
 #[test]
@@ -74,10 +82,10 @@ fn test_vector_synchronizer() {
     dev.connect_all();
     yosys_validate("vsync", &generate_verilog(&dev)).unwrap();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut TestCircuit| {
+    sim.add_clock(5, |x: &mut Box<TestCircuit>| {
         x.uut.clock_out.next = !x.uut.clock_out.val()
     });
-    sim.add_clock(9, |x: &mut TestCircuit| {
+    sim.add_clock(9, |x: &mut Box<TestCircuit>| {
         x.uut.clock_in.next = !x.uut.clock_in.val()
     });
     sim.add_testbench(move |mut sim: Sim<TestCircuit>| {
@@ -106,8 +114,12 @@ fn test_vector_synchronizer() {
         sim.done(x)?;
         Ok(())
     });
-    sim.run_traced(dev, 100_000, std::fs::File::create("vsync.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(dev),
+        100_000,
+        std::fs::File::create("vsync.vcd").unwrap(),
+    )
+    .unwrap();
 }
 
 #[derive(LogicBlock, Default)]
@@ -147,7 +159,7 @@ fn test_almost_empty_is_accurate_in_large_fifo() {
     uut.fifo.write.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut BigFIFOTest| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<BigFIFOTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<BigFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
@@ -162,7 +174,7 @@ fn test_almost_empty_is_accurate_in_large_fifo() {
         Ok(())
     });
     sim.run_traced(
-        uut,
+        Box::new(uut),
         50_000,
         std::fs::File::create("fifo_big_almost_empty.vcd").unwrap(),
     )
@@ -178,7 +190,7 @@ fn test_almost_empty_is_accurate_synchronous_fifo() {
     uut.fifo.write.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut SynchronousFIFOTest| {
+    sim.add_clock(5, |x: &mut Box<SynchronousFIFOTest>| {
         x.clock.next = !x.clock.val()
     });
     sim.add_testbench(move |mut sim: Sim<SynchronousFIFOTest>| {
@@ -205,7 +217,7 @@ fn test_almost_empty_is_accurate_synchronous_fifo() {
         Ok(())
     });
     sim.run_traced(
-        uut,
+        Box::new(uut),
         10_000,
         std::fs::File::create("fifo_almost_empty.vcd").unwrap(),
     )
@@ -225,7 +237,7 @@ fn test_fifo_can_be_filled_synchronous_fifo() {
     let rdata = (0..16)
         .map(|_| Bits::<16>::from(rand::random::<u16>()))
         .collect::<Vec<_>>();
-    sim.add_clock(5, |x: &mut SynchronousFIFOTest| {
+    sim.add_clock(5, |x: &mut Box<SynchronousFIFOTest>| {
         x.clock.next = !x.clock.val()
     });
     sim.add_testbench(move |mut sim: Sim<SynchronousFIFOTest>| {
@@ -249,8 +261,12 @@ fn test_fifo_can_be_filled_synchronous_fifo() {
         sim.done(x)?;
         Ok(())
     });
-    sim.run_traced(uut, 10_000, std::fs::File::create("fifo_fill.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        10_000,
+        std::fs::File::create("fifo_fill.vcd").unwrap(),
+    )
+    .unwrap();
 }
 
 #[test]
@@ -267,7 +283,7 @@ fn test_fifo_works_synchronous_fifo() {
         .map(|_| Bits::<16>::from(rand::random::<u16>()))
         .collect::<Vec<_>>();
     let rdata_read = rdata.clone();
-    sim.add_clock(5, |x: &mut SynchronousFIFOTest| {
+    sim.add_clock(5, |x: &mut Box<SynchronousFIFOTest>| {
         x.clock.next = !x.clock.val()
     });
     sim.add_testbench(move |mut sim: Sim<SynchronousFIFOTest>| {
@@ -310,8 +326,12 @@ fn test_fifo_works_synchronous_fifo() {
         sim.done(x)?;
         Ok(())
     });
-    sim.run_traced(uut, 100_000, std::fs::File::create("fifo.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        100_000,
+        std::fs::File::create("fifo.vcd").unwrap(),
+    )
+    .unwrap();
 }
 
 #[derive(LogicBlock, Default)]
@@ -344,10 +364,10 @@ fn test_fifo_works_asynchronous_fifo() {
         .map(|_| Bits::<16>::from(rand::random::<u16>()))
         .collect::<Vec<_>>();
     let rdata_read = rdata.clone();
-    sim.add_clock(5, |x: &mut AsynchronousFIFOTest| {
+    sim.add_clock(5, |x: &mut Box<AsynchronousFIFOTest>| {
         x.read_clock.next = !x.read_clock.val()
     });
-    sim.add_clock(4, |x: &mut AsynchronousFIFOTest| {
+    sim.add_clock(4, |x: &mut Box<AsynchronousFIFOTest>| {
         x.write_clock.next = !x.write_clock.val()
     });
     sim.add_testbench(move |mut sim: Sim<AsynchronousFIFOTest>| {
@@ -390,8 +410,12 @@ fn test_fifo_works_asynchronous_fifo() {
         sim.done(x)?;
         Ok(())
     });
-    sim.run_traced(uut, 100_000, std::fs::File::create("afifo.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        100_000,
+        std::fs::File::create("afifo.vcd").unwrap(),
+    )
+    .unwrap();
 }
 
 #[derive(LogicBlock, Default)]
@@ -419,10 +443,10 @@ fn test_almost_empty_is_accurate_in_large_async_fifo() {
     uut.fifo.write.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut AsyncBigFIFOTest| {
+    sim.add_clock(5, |x: &mut Box<AsyncBigFIFOTest>| {
         x.read_clock.next = !x.read_clock.val()
     });
-    sim.add_clock(4, |x: &mut AsyncBigFIFOTest| {
+    sim.add_clock(4, |x: &mut Box<AsyncBigFIFOTest>| {
         x.write_clock.next = !x.write_clock.val()
     });
     sim.add_testbench(move |mut sim: Sim<AsyncBigFIFOTest>| {
@@ -440,7 +464,7 @@ fn test_almost_empty_is_accurate_in_large_async_fifo() {
         Ok(())
     });
     sim.run_traced(
-        uut,
+        Box::new(uut),
         50_000,
         std::fs::File::create("fifo_big_almost_empty_async.vcd").unwrap(),
     )
@@ -490,7 +514,9 @@ fn test_fifo_reducer_works() {
         rdata_read.push(x.get_bits::<8>(0));
         rdata_read.push(x.get_bits::<8>(8));
     }
-    sim.add_clock(5, |x: &mut ReducerFIFOTest| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<ReducerFIFOTest>| {
+        x.clock.next = !x.clock.val()
+    });
     sim.add_testbench(move |mut sim: Sim<ReducerFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
@@ -532,7 +558,7 @@ fn test_fifo_reducer_works() {
         Ok(())
     });
     sim.run_traced(
-        uut,
+        Box::new(uut),
         100_000,
         std::fs::File::create("fifo_reducer.vcd").unwrap(),
     )

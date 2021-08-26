@@ -49,6 +49,6 @@ fn test_rom_works() {
     let mut uut = ROMTest::new();
     uut.rom.address.connect();
     uut.connect_all();
-    sim.run_traced(uut, 100, File::create("ROM.vcd").unwrap())
+    sim.run_traced(Box::new(uut), 100, File::create("ROM.vcd").unwrap())
         .unwrap();
 }

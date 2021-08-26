@@ -366,7 +366,7 @@ mod tests {
     #[test]
     fn test_tb() {
         let mut sim = Simulation::new();
-        sim.add_clock(5, |x: &mut Circuit| {
+        sim.add_clock(5, |x: &mut Box<Circuit>| {
             x.strobe.clock.next = !x.strobe.clock.val()
         });
         sim.add_testbench(sample_func);
@@ -379,6 +379,6 @@ mod tests {
         x.strobe.clock.connect();
         x.strobe.enable.connect();
         x.connect_all();
-        sim.run(x, 400).unwrap();
+        sim.run(Box::new(x), 400).unwrap();
     }
 }

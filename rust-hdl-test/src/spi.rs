@@ -48,7 +48,7 @@ fn test_spi_txn_completes() {
     uut.connect_all();
     yosys_validate("spi_0", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut SPITestAsync| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<SPITestAsync>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<SPITestAsync>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
@@ -61,8 +61,12 @@ fn test_spi_txn_completes() {
         wait_clock_cycle!(sim, clock, x);
         sim.done(x)
     });
-    sim.run_traced(uut, 100_000, std::fs::File::create("spi_txn.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        100_000,
+        std::fs::File::create("spi_txn.vcd").unwrap(),
+    )
+    .unwrap();
 }
 
 #[derive(LogicBlock)]
@@ -134,7 +138,7 @@ fn test_spi_xchange(config: SPIConfig) {
     uut.connect_all();
     yosys_validate("spi_1", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut SPITestPair| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<SPITestPair>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<SPITestPair>| {
         let mut x = sim.init()?;
         for _ in 0..4 {
@@ -165,5 +169,5 @@ fn test_spi_xchange(config: SPIConfig) {
         sim.done(x)
     });
     //    sim.run_traced(uut, 1_000_000, std::fs::File::create("spi_x1.vcd").unwrap()).unwrap()
-    sim.run(uut, 1_000_000).unwrap();
+    sim.run(Box::new(uut), 1_000_000).unwrap();
 }

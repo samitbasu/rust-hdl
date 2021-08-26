@@ -53,7 +53,7 @@ fn test_ram_works() {
     let rdata = (0..32)
         .map(|_| Bits::<16>::from(rand::random::<u16>()))
         .collect::<Vec<_>>();
-    sim.add_clock(5, |x: &mut RAMTest| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<RAMTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<RAMTest>| {
         println!("Init test bench");
         let mut x = sim.init()?;
@@ -74,6 +74,10 @@ fn test_ram_works() {
         sim.done(x)?;
         Ok(())
     });
-    sim.run_traced(uut, 512 * 10, std::fs::File::create("ram.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        512 * 10,
+        std::fs::File::create("ram.vcd").unwrap(),
+    )
+    .unwrap();
 }
