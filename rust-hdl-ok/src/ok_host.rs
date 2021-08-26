@@ -26,19 +26,19 @@ impl Logic for OpalKellyHost {
             code: r#"
 module OpalKellyHost
 	(
-	input  wire [7:0]  hi_sig_in,
-	output wire [1:0]  hi_sig_out,
-	inout  wire [15:0] hi_sig_inout,
-	inout  wire        hi_sig_aa,
+	input  wire [7:0]  hi$sig_in,
+	output wire [1:0]  hi$sig_out,
+	inout  wire [15:0] hi$sig_inout,
+	inout  wire        hi$sig_aa,
 	output wire        ti_clk,
 	output wire [30:0] ok1,
 	input  wire [16:0] ok2
 	);
 
-	okHost host(.hi_in(hi_sig_in),
-	            .hi_out(hi_sig_out),
-	            .hi_inout(hi_sig_inout),
-	            .hi_aa(hi_sig_aa),
+	okHost host(.hi_in(hi$sig_in),
+	            .hi_out(hi$sig_out),
+	            .hi_inout(hi$sig_inout),
+	            .hi_aa(hi$sig_aa),
 	            .ti_clk(ti_clk),
 	            .ok1(ok1),
 	            .ok2(ok2));

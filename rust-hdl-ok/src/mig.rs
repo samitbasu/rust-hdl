@@ -121,14 +121,14 @@ impl Logic for MemoryInterfaceGenerator {
         Verilog::Blackbox(BlackBox {
             code: r##"
 module MemoryInterfaceGenerator(raw_sys_clk,reset,calib_done,clk_out,reset_out,
-p0_cmd_clock,p0_cmd_enable,p0_cmd_instruction,p0_cmd_burst_length,p0_cmd_byte_address,
-p0_cmd_empty,p0_cmd_full,p0_wr_clock,p0_wr_enable,p0_wr_mask,p0_wr_data,p0_wr_full,
-p0_wr_empty,p0_wr_count,p0_wr_underrun,p0_wr_error,p0_rd_clock,p0_rd_enable,p0_rd_data,
-p0_rd_full,p0_rd_empty,p0_rd_count,p0_rd_overflow,p0_rd_error,mcb_data_bus,mcb_address,
-mcb_bank_select,mcb_row_address_strobe_not,mcb_column_address_strobe_not,mcb_write_enable_not,
-mcb_on_die_termination,mcb_clock_enable,mcb_data_mask,mcb_upper_byte_data_strobe,
-mcb_upper_byte_data_strobe_neg,mcb_rzq,mcb_zio,mcb_upper_data_mask,mcb_data_strobe_signal,
-mcb_data_strobe_signal_neg,mcb_dram_clock,mcb_dram_clock_neg,mcb_chip_select_neg);
+p0_cmd$clock,p0_cmd$enable,p0_cmd$instruction,p0_cmd$burst_length,p0_cmd$byte_address,
+p0_cmd$empty,p0_cmd$full,p0_wr$clock,p0_wr$enable,p0_wr$mask,p0_wr$data,p0_wr$full,
+p0_wr$empty,p0_wr$count,p0_wr$underrun,p0_wr$error,p0_rd$clock,p0_rd$enable,p0_rd$data,
+p0_rd$full,p0_rd$empty,p0_rd$count,p0_rd$overflow,p0_rd$error,mcb$data_bus,mcb$address,
+mcb$bank_select,mcb$row_address_strobe_not,mcb$column_address_strobe_not,mcb$write_enable_not,
+mcb$on_die_termination,mcb$clock_enable,mcb$data_mask,mcb$upper_byte_data_strobe,
+mcb$upper_byte_data_strobe_neg,mcb$rzq,mcb$zio,mcb$upper_data_mask,mcb$data_strobe_signal,
+mcb$data_strobe_signal_neg,mcb$dram_clock,mcb$dram_clock_neg,mcb$chip_select_neg);
 
     // Module arguments
     input raw_sys_clk;
@@ -136,49 +136,49 @@ mcb_data_strobe_signal_neg,mcb_dram_clock,mcb_dram_clock_neg,mcb_chip_select_neg
     output calib_done;
     output clk_out;
     output reset_out;
-    input p0_cmd_clock;
-    input p0_cmd_enable;
-    input [2:0] p0_cmd_instruction;
-    input [5:0] p0_cmd_burst_length;
-    input [29:0] p0_cmd_byte_address;
-    output p0_cmd_empty;
-    output p0_cmd_full;
-    input p0_wr_clock;
-    input p0_wr_enable;
-    input [3:0] p0_wr_mask;
-    input [31:0] p0_wr_data;
-    output p0_wr_full;
-    output p0_wr_empty;
-    output [6:0] p0_wr_count;
-    output p0_wr_underrun;
-    output p0_wr_error;
-    input p0_rd_clock;
-    input p0_rd_enable;
-    output [31:0] p0_rd_data;
-    output p0_rd_full;
-    output p0_rd_empty;
-    output [6:0] p0_rd_count;
-    output p0_rd_overflow;
-    output p0_rd_error;
-    inout [15:0] mcb_data_bus;
-    output [12:0] mcb_address;
-    output [2:0] mcb_bank_select;
-    output mcb_row_address_strobe_not;
-    output mcb_column_address_strobe_not;
-    output mcb_write_enable_not;
-    output mcb_on_die_termination;
-    output mcb_clock_enable;
-    output mcb_data_mask;
-    output mcb_upper_byte_data_strobe;
-    output mcb_upper_byte_data_strobe_neg;
-    inout mcb_rzq;
-    inout mcb_zio;
-    output mcb_upper_data_mask;
-    inout mcb_data_strobe_signal;
-    inout mcb_data_strobe_signal_neg;
-    output mcb_dram_clock;
-    output mcb_dram_clock_neg;
-    output mcb_chip_select_neg;
+    input p0_cmd$clock;
+    input p0_cmd$enable;
+    input [2:0] p0_cmd$instruction;
+    input [5:0] p0_cmd$burst_length;
+    input [29:0] p0_cmd$byte_address;
+    output p0_cmd$empty;
+    output p0_cmd$full;
+    input p0_wr$clock;
+    input p0_wr$enable;
+    input [3:0] p0_wr$mask;
+    input [31:0] p0_wr$data;
+    output p0_wr$full;
+    output p0_wr$empty;
+    output [6:0] p0_wr$count;
+    output p0_wr$underrun;
+    output p0_wr$error;
+    input p0_rd$clock;
+    input p0_rd$enable;
+    output [31:0] p0_rd$data;
+    output p0_rd$full;
+    output p0_rd$empty;
+    output [6:0] p0_rd$count;
+    output p0_rd$overflow;
+    output p0_rd$error;
+    inout [15:0] mcb$data_bus;
+    output [12:0] mcb$address;
+    output [2:0] mcb$bank_select;
+    output mcb$row_address_strobe_not;
+    output mcb$column_address_strobe_not;
+    output mcb$write_enable_not;
+    output mcb$on_die_termination;
+    output mcb$clock_enable;
+    output mcb$data_mask;
+    output mcb$upper_byte_data_strobe;
+    output mcb$upper_byte_data_strobe_neg;
+    inout mcb$rzq;
+    inout mcb$zio;
+    output mcb$upper_data_mask;
+    inout mcb$data_strobe_signal;
+    inout mcb$data_strobe_signal_neg;
+    output mcb$dram_clock;
+    output mcb$dram_clock_neg;
+    output mcb$chip_select_neg;
 
     // Memory Interface Block
     /* These are constants for our generated memory interface */
@@ -386,20 +386,20 @@ mcb_data_strobe_signal_neg,mcb_dram_clock,mcb_dram_clock_neg,mcb_chip_select_neg
           )
        memc3_wrapper_inst
          (
-          .mcb3_dram_dq                        (mcb_data_bus),
-          .mcb3_dram_a                         (mcb_address),
-          .mcb3_dram_ba                        (mcb_bank_select),
-          .mcb3_dram_ras_n                     (mcb_row_address_strobe_not),
-          .mcb3_dram_cas_n                     (mcb_column_address_strobe_not),
-          .mcb3_dram_we_n                      (mcb_write_enable_not),
-          .mcb3_dram_odt                       (mcb_on_die_termination),
-          .mcb3_dram_cke                       (mcb_clock_enable),
-          .mcb3_dram_dm                        (mcb_data_mask),
-          .mcb3_dram_udqs                      (mcb_upper_byte_data_strobe),
-          .mcb3_dram_udqs_n                    (mcb_upper_byte_data_strobe_neg),
-          .mcb3_rzq                            (mcb_rzq),
-          .mcb3_zio                            (mcb_zio),
-          .mcb3_dram_udm                       (mcb_upper_data_mask),
+          .mcb3_dram_dq                        (mcb$data_bus),
+          .mcb3_dram_a                         (mcb$address),
+          .mcb3_dram_ba                        (mcb$bank_select),
+          .mcb3_dram_ras_n                     (mcb$row_address_strobe_not),
+          .mcb3_dram_cas_n                     (mcb$column_address_strobe_not),
+          .mcb3_dram_we_n                      (mcb$write_enable_not),
+          .mcb3_dram_odt                       (mcb$on_die_termination),
+          .mcb3_dram_cke                       (mcb$clock_enable),
+          .mcb3_dram_dm                        (mcb$data_mask),
+          .mcb3_dram_udqs                      (mcb$upper_byte_data_strobe),
+          .mcb3_dram_udqs_n                    (mcb$upper_byte_data_strobe_neg),
+          .mcb3_rzq                            (mcb$rzq),
+          .mcb3_zio                            (mcb$zio),
+          .mcb3_dram_udm                       (mcb$upper_data_mask),
           .calib_done                          (calib_done),
           .async_rst                           (c3_async_rst),
           .sysclk_2x                           (c3_sysclk_2x),
@@ -408,34 +408,34 @@ mcb_data_strobe_signal_neg,mcb_dram_clock,mcb_dram_clock_neg,mcb_chip_select_neg
           .pll_ce_90                           (c3_pll_ce_90),
           .pll_lock                            (c3_pll_lock),
           .mcb_drp_clk                         (c3_mcb_drp_clk),
-          .mcb3_dram_dqs                       (mcb_data_strobe_signal),
-          .mcb3_dram_dqs_n                     (mcb_data_strobe_signal_neg),
-          .mcb3_dram_ck                        (mcb_dram_clock),
-          .mcb3_dram_ck_n                      (mcb_dram_clock_neg),
-          .p0_cmd_clk                          (p0_cmd_clock),
-          .p0_cmd_en                           (p0_cmd_enable),
-          .p0_cmd_instr                        (p0_cmd_instruction),
-          .p0_cmd_bl                           (p0_cmd_burst_length),
-          .p0_cmd_byte_addr                    (p0_cmd_byte_address),
-          .p0_cmd_empty                        (p0_cmd_empty),
-          .p0_cmd_full                         (p0_cmd_full),
-          .p0_wr_clk                           (p0_wr_clock),
-          .p0_wr_en                            (p0_wr_enable),
-          .p0_wr_mask                          (p0_wr_mask),
-          .p0_wr_data                          (p0_wr_data),
-          .p0_wr_full                          (p0_wr_full),
-          .p0_wr_empty                         (p0_wr_empty),
-          .p0_wr_count                         (p0_wr_count),
-          .p0_wr_underrun                      (p0_wr_underrun),
-          .p0_wr_error                         (p0_wr_error),
-          .p0_rd_clk                           (p0_rd_clock),
-          .p0_rd_en                            (p0_rd_enable),
-          .p0_rd_data                          (p0_rd_data),
-          .p0_rd_full                          (p0_rd_full),
-          .p0_rd_empty                         (p0_rd_empty),
-          .p0_rd_count                         (p0_rd_count),
-          .p0_rd_overflow                      (p0_rd_overflow),
-          .p0_rd_error                         (p0_rd_error),
+          .mcb3_dram_dqs                       (mcb$data_strobe_signal),
+          .mcb3_dram_dqs_n                     (mcb$data_strobe_signal_neg),
+          .mcb3_dram_ck                        (mcb$dram_clock),
+          .mcb3_dram_ck_n                      (mcb$dram_clock_neg),
+          .p0_cmd_clk                          (p0_cmd$clock),
+          .p0_cmd_en                           (p0_cmd$enable),
+          .p0_cmd_instr                        (p0_cmd$instruction),
+          .p0_cmd_bl                           (p0_cmd$burst_length),
+          .p0_cmd_byte_addr                    (p0_cmd$byte_address),
+          .p0_cmd_empty                        (p0_cmd$empty),
+          .p0_cmd_full                         (p0_cmd$full),
+          .p0_wr_clk                           (p0_wr$clock),
+          .p0_wr_en                            (p0_wr$enable),
+          .p0_wr_mask                          (p0_wr$mask),
+          .p0_wr_data                          (p0_wr$data),
+          .p0_wr_full                          (p0_wr$full),
+          .p0_wr_empty                         (p0_wr$empty),
+          .p0_wr_count                         (p0_wr$count),
+          .p0_wr_underrun                      (p0_wr$underrun),
+          .p0_wr_error                         (p0_wr$error),
+          .p0_rd_clk                           (p0_rd$clock),
+          .p0_rd_en                            (p0_rd$enable),
+          .p0_rd_data                          (p0_rd$data),
+          .p0_rd_full                          (p0_rd$full),
+          .p0_rd_empty                         (p0_rd$empty),
+          .p0_rd_count                         (p0_rd$count),
+          .p0_rd_overflow                      (p0_rd$overflow),
+          .p0_rd_error                         (p0_rd$error),
           .selfrefresh_enter                   (0)
           );
 endmodule

@@ -32,7 +32,7 @@ impl<B: Block, const P: usize> Block for [B; P] {
 
     fn accept(&self, name: &str, probe: &mut dyn Probe) {
         for x in self.iter().enumerate() {
-            let name = format!("{}_{}", name, x.0);
+            let name = format!("{}${}", name, x.0);
             x.1.accept(&name, probe);
         }
     }

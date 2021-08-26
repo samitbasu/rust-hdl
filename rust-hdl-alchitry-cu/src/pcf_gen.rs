@@ -19,11 +19,11 @@ impl Probe for PCFGenerator {
     }
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
         if self.path.len() == 1 {
-            let namespace = self.namespace.flat("_");
+            let namespace = self.namespace.flat("$");
             let name = if namespace.is_empty() {
                 name.to_owned()
             } else {
-                format!("{}_{}", namespace, name)
+                format!("{}${}", namespace, name)
             };
             for pin in &signal.constraints() {
                 match &pin.constraint {

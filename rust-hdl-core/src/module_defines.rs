@@ -138,17 +138,17 @@ impl Probe for ModuleDefines {
             "Atom: name {} path {} namespace {} enum {} type {}",
             name,
             self.path.to_string(),
-            self.namespace.flat("_"),
+            self.namespace.flat("$"),
             signal.is_enum(),
             signal.type_name()
         );
         let module_path = self.path.to_string();
         let module_name = self.path.last();
-        let namespace = self.namespace.flat("_");
+        let namespace = self.namespace.flat("$");
         let name = if namespace.is_empty() {
             name.to_owned()
         } else {
-            format!("{}_{}", namespace, name)
+            format!("{}${}", namespace, name)
         };
         let param = AtomDetails {
             name: name.clone(),
@@ -163,7 +163,7 @@ impl Probe for ModuleDefines {
                 StubOutputSignal
             };
             let parent_param = AtomDetails {
-                name: format!("{}_{}", module_name, name.to_owned()),
+                name: format!("{}${}", module_name, name.to_owned()),
                 kind,
                 width: signal.bits(),
                 const_val: signal.verilog(),
@@ -236,7 +236,7 @@ impl ModuleDefines {
                     module_details.enums.iter().for_each(|x| {
                         io.add(format!(
                             "localparam {} = {};",
-                            x.discriminant.replace("::", "_"),
+                            x.discriminant.replace("::", "$"),
                             x.value
                         ))
                     });
@@ -261,7 +261,7 @@ impl ModuleDefines {
                             .atoms
                             .iter()
                             .filter(|x| x.kind.is_parameter())
-                            .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
+                            .map(|x| format!(".{}({}${})", x.name, child.name, x.name))
                             .collect::<Vec<_>>()
                             .join(",");
                         io.add(format!(

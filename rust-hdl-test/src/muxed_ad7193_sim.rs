@@ -3,7 +3,7 @@ use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
 
 #[derive(LogicBlock, Default)]
-struct MuxedAD7193Simulators {
+pub struct MuxedAD7193Simulators {
     // Input SPI bus
     pub mosi: Signal<In, Bit>,
     pub mclk: Signal<In, Bit>,

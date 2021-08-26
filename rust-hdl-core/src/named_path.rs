@@ -18,7 +18,7 @@ impl NamedPath {
             .iter()
             .map(|x| x.to_string())
             .collect::<Vec<_>>()
-            .join("_")
+            .join("$")
     }
 
     pub fn last(&self) -> String {
@@ -40,6 +40,6 @@ impl NamedPath {
 
 impl ToString for NamedPath {
     fn to_string(&self) -> String {
-        self.path.join("_")
+        self.path.join("$")
     }
 }

@@ -38,7 +38,7 @@ impl VerilogCodeGenerator {
             if x.len() == 2 {
                 if let Some(txt) = x.get(1) {
                     let arg = evalexpr::eval_with_context(txt.as_str(), &context).unwrap();
-                    return re.replace(a, format!("_{}", arg)).to_string();
+                    return re.replace(a, format!("$${}", arg)).to_string();
                 }
             }
         }
@@ -56,9 +56,9 @@ impl VerilogCodeGenerator {
             x.remove(0);
         }
         x = x
-            .replace(".", "_")
-            .replace("::", "_")
-            .trim_end_matches("_next")
+            .replace(".", "$")
+            .replace("::", "$")
+            .trim_end_matches("$next")
             .to_owned();
         if x.contains('[') {
             x = self.array_index_simplification(&x);
@@ -85,19 +85,19 @@ pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
             match x {
                 VerilogLink::Forward(x) => {
                     format!(
-                        "always @(*) {}_{} = {}_{};",
+                        "always @(*) {}${} = {}${};",
                         x.other_name, x.my_name, x.owner_name, x.my_name
                     )
                 }
                 VerilogLink::Backward(x) => {
                     format!(
-                        "always @(*) {}_{} = {}_{};",
+                        "always @(*) {}${} = {}${};",
                         x.owner_name, x.my_name, x.other_name, x.my_name
                     )
                 }
                 VerilogLink::Bidirectional(x) => {
                     format!(
-                        "assign {}_{} = {}_{};",
+                        "assign {}${} = {}${};",
                         x.owner_name, x.my_name, x.other_name, x.my_name
                     )
                 }
@@ -320,7 +320,7 @@ fn test_array_replacement() {
             if let Some(txt) = x.get(1) {
                 let arg = evalexpr::eval_with_context(txt.as_str(), &context).unwrap();
                 println!("Replace {} -> {}", txt.as_str(), arg);
-                println!("Update {}", re.replace(test, format!("_{}", arg)))
+                println!("Update {}", re.replace(test, format!("$${}", arg)))
             }
         }
     }

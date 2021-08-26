@@ -79,8 +79,8 @@ pub fn fixup_ident(x: String) -> String {
     let y = x
         .replace(" ", "")
         .replace("self.", "")
-        .replace(".", "_")
-        .replace("::", "_")
+        .replace(".", "$")
+        .replace("::", "$")
         .replace("&mut", "");
     assert_ne!(y, "config");
     assert_ne!(y, "input");

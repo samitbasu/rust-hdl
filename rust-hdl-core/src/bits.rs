@@ -682,7 +682,7 @@ mod tests {
         let a = bits::<A_WIDTH>(153);
         println!("{:x}", a);
         assert_eq!(a.len(), 8);
-        assert_eq!(clog2(1024), 11);
+        assert_eq!(clog2(1024), 10);
     }
     #[test]
     fn test_clog2_inline() {
