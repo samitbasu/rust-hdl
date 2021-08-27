@@ -128,7 +128,8 @@ impl<const N: usize> Logic for SPISlave<N> {
         self.mclk_synchronizer.sig_in.next = self.mclk.val();
         self.csel_synchronizer.sig_in.next = self.msel.val();
         // Logic
-        self.busy.next = self.state.q.val() != SPISlaveState::Idle;
+        self.busy.next = (self.state.q.val() != SPISlaveState::Idle)
+            | (self.csel_synchronizer.sig_out.val() != self.cs_off.val());
         if self.state.q.val() != SPISlaveState::Disabled {
             self.miso.next = self.miso_flop.q.val();
         } else {

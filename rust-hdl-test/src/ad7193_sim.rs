@@ -178,7 +178,7 @@ impl Logic for AD7193Simulator {
                 }
             }
             AD7193State::ReadCmd => {
-                self.spi_slave.continued_transaction.next = false;
+                self.spi_slave.continued_transaction.next = true;
                 self.spi_slave.bits.next =
                     bit_cast::<16, 5>(self.reg_width_rom.data.val()) + 8_usize;
                 self.spi_slave.data_outbound.next =
@@ -188,7 +188,7 @@ impl Logic for AD7193Simulator {
                 self.state.d.next = AD7193State::WaitSlaveIdle;
             }
             AD7193State::WriteCmd => {
-                self.spi_slave.continued_transaction.next = false;
+                self.spi_slave.continued_transaction.next = true;
                 self.spi_slave.bits.next = bit_cast::<16, 5>(self.reg_width_rom.data.val());
                 self.spi_slave.data_outbound.next = 0xFFFFFFFF_u64.into();
                 self.spi_slave.start_send.next = true;
