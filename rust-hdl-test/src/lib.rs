@@ -26,6 +26,8 @@ pub mod opalkelly_xem_6010_blinky;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_ddr;
 #[cfg(feature = "fpga_hw_test")]
+pub mod opalkelly_xem_6010_download;
+#[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_mig;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_mux_spi;

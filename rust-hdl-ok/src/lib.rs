@@ -10,6 +10,7 @@ use rust_hdl_widgets::pulser::Pulser;
 pub mod ddr_fifo;
 pub mod mcb_if;
 pub mod mig;
+pub mod ok_download;
 pub mod ok_download_ddr;
 pub mod ok_hi;
 pub mod ok_host;
