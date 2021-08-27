@@ -31,7 +31,7 @@ pub struct OpalKellyXEM6010MIGTest {
 
 impl Default for OpalKellyXEM6010MIGTest {
     fn default() -> Self {
-        let mut raw_clock = xem_6010_base_clock();
+        let raw_clock = xem_6010_base_clock();
         Self {
             hi: OpalKellyHostInterface::xem_6010(),
             mcb: MCBInterface::xem_6010(),
