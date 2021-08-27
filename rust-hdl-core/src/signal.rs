@@ -198,10 +198,10 @@ impl Signal<In, Clock> {
 impl<T: Synth> Signal<Out, T> {
     pub fn new_with_default(init: T) -> Signal<Out, T> {
         Self {
-            next: T::default(),
+            next: init,
             val: init,
             prev: init,
-            changed: true,
+            changed: false,
             claimed: false,
             id: get_signal_id(),
             constraints: vec![],
