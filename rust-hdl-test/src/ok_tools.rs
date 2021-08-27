@@ -9,7 +9,6 @@ use std::time::Duration;
 const FRONTPANEL_DIR: &str = "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM6010-LX45";
 const MIG_DIR: &str = "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/Samples/RAMTester/XEM6010-Verilog";
 
-#[cfg(test)]
 pub fn synth_obj<U: Block>(uut: U, dir: &str) {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
