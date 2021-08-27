@@ -46,33 +46,51 @@ pub struct AD7193Simulator {
     conversion_counter: DFF<Bits<24>>,
 }
 
-#[cfg(test)]
-pub const AD7193_SPI_CONFIG: SPIConfig = SPIConfig {
-    clock_speed: 1_000_000,
-    cs_off: true,
-    mosi_off: true,
-    speed_hz: 10_000,
-    cpha: true,
-    cpol: true,
-};
+#[derive(Clone, Copy)]
+pub struct AD7193Config {
+    pub spi: SPIConfig,
+    pub sample_time: Duration,
+}
 
-#[cfg(not(test))]
-pub const AD7193_SPI_CONFIG: SPIConfig = SPIConfig {
-    clock_speed: 48_000_000,
-    cs_off: true,
-    mosi_off: true,
-    speed_hz: 400_000,
-    cpha: true,
-    cpol: true,
-};
+impl AD7193Config {
+    pub fn hw() -> Self {
+        Self {
+            spi: SPIConfig {
+                clock_speed: 48_000_000,
+                cs_off: true,
+                mosi_off: true,
+                speed_hz: 400_000,
+                cpha: true,
+                cpol: true
+            },
+            sample_time: Duration::from_micros(10100)
+        }
+    }
+    pub fn sw() -> Self {
+        Self {
+            spi: SPIConfig {
+                clock_speed: 1_000_000,
+                cs_off: true,
+                mosi_off: true,
+                speed_hz: 10_000,
+                cpha: true,
+                cpol: true
+            },
+            sample_time: Duration::from_micros(100)
+        }
+    }
+}
 
 pub const AD7193_REG_WIDTHS: [u32; 8] = [8, 24, 24, 24, 8, 8, 24, 24];
 const AD7193_REG_INITS: [u64; 8] = [0x40, 0x80060, 0x117, 0x0, 0xa2, 0x0, 0x800000, 0x5544d0];
 
 impl AD7193Simulator {
-    pub fn new(spi_config: SPIConfig) -> Self {
+    pub fn new(config: AD7193Config) -> Self {
+        assert!(config.spi.clock_speed > 10*config.spi.speed_hz);
         let reg_width_rom = AD7193_REG_WIDTHS.iter().map(|x| Bits::<5>::from(*x)).into();
         let reg_ram = AD7193_REG_INITS.iter().map(|x| Bits::<24>::from(*x)).into();
+        // The conversion time should really be 10 msec, but we instead tie it to the clock
+        // frequency.  Otherwise, it takes forever to simulate. - 40 nsec per period
         Self {
             mosi: Default::default(),
             mclk: Default::default(),
@@ -81,21 +99,15 @@ impl AD7193Simulator {
             clock: Default::default(),
             reg_width_rom,
             reg_ram,
-            oneshot: Shot::new(spi_config.clock_speed, Duration::from_micros(10000)),
+            oneshot: Shot::new(config.spi.clock_speed, config.sample_time),
             cmd: Default::default(),
             reg_index: Default::default(),
             rw_flag: Default::default(),
-            spi_slave: SPISlave::new(spi_config),
+            spi_slave: SPISlave::new(config.spi),
             state: Default::default(),
             reg_write_index: Default::default(),
             conversion_counter: Default::default(),
         }
-    }
-}
-
-impl Default for AD7193Simulator {
-    fn default() -> Self {
-        Self::new(AD7193_SPI_CONFIG)
     }
 }
 
@@ -218,7 +230,7 @@ impl Logic for AD7193Simulator {
 
 #[test]
 fn test_ad7193_synthesizes() {
-    let mut uut = AD7193Simulator::default();
+    let mut uut = AD7193Simulator::new(AD7193Config::sw());
     uut.mosi.connect();
     uut.mclk.connect();
     uut.msel.connect();
@@ -250,8 +262,8 @@ impl Default for Test7193 {
     fn default() -> Self {
         Self {
             clock: Default::default(),
-            master: SPIMaster::new(AD7193_SPI_CONFIG),
-            adc: Default::default(),
+            master: SPIMaster::new(AD7193Config::sw().spi),
+            adc: AD7193Simulator::new(AD7193Config::sw()),
         }
     }
 }

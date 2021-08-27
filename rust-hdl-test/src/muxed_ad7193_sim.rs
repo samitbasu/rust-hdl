@@ -1,9 +1,9 @@
-use crate::ad7193_sim::AD7193Simulator;
+use crate::ad7193_sim::{AD7193Simulator, AD7193Config};
 use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::spi_master::SPIConfig;
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 pub struct MuxedAD7193Simulators {
     // Input SPI bus
     pub mosi: Signal<In, Bit>,
@@ -16,7 +16,7 @@ pub struct MuxedAD7193Simulators {
 }
 
 impl MuxedAD7193Simulators {
-    pub fn new(spi_config: SPIConfig) -> Self {
+    pub fn new(config: AD7193Config) -> Self {
         Self {
             mosi: Default::default(),
             mclk: Default::default(),
@@ -25,14 +25,14 @@ impl MuxedAD7193Simulators {
             addr: Default::default(),
             clock: Default::default(),
             adcs: [
-                AD7193Simulator::new(spi_config),
-                AD7193Simulator::new(spi_config),
-                AD7193Simulator::new(spi_config),
-                AD7193Simulator::new(spi_config),
-                AD7193Simulator::new(spi_config),
-                AD7193Simulator::new(spi_config),
-                AD7193Simulator::new(spi_config),
-                AD7193Simulator::new(spi_config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
             ],
         }
     }
@@ -58,7 +58,7 @@ impl Logic for MuxedAD7193Simulators {
 
 #[test]
 fn test_mux_is_synthesizable() {
-    let mut uut = MuxedAD7193Simulators::default();
+    let mut uut = MuxedAD7193Simulators::new(AD7193Config::hw());
     uut.mclk.connect();
     uut.mosi.connect();
     uut.msel.connect();

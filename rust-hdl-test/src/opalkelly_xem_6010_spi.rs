@@ -1,4 +1,4 @@
-use crate::ad7193_sim::{AD7193Simulator, AD7193_SPI_CONFIG};
+use crate::ad7193_sim::{AD7193Simulator, AD7193Config};
 use crate::ok_tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::prelude::*;
@@ -20,19 +20,12 @@ pub struct OpalKellyXEM6010SPITest {
 
 impl Default for OpalKellyXEM6010SPITest {
     fn default() -> Self {
-        let spi_config = SPIConfig {
-            clock_speed: 48_000_000,
-            cs_off: true,
-            mosi_off: true,
-            speed_hz: 400_000,
-            cpha: true,
-            cpol: true,
-        };
+        let adc_config = AD7193Config::hw();
         Self {
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: Default::default(),
-            adc: AD7193Simulator::new(spi_config),
-            spi: OKSPIMaster::new(Default::default(), spi_config),
+            adc: AD7193Simulator::new(adc_config),
+            spi: OKSPIMaster::new(Default::default(), adc_config.spi),
         }
     }
 }

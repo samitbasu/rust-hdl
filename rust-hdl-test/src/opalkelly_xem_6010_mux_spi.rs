@@ -9,6 +9,7 @@ use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_widgets::spi_master::SPIConfig;
 use std::thread::sleep;
 use std::time::Duration;
+use crate::ad7193_sim::AD7193Config;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010SPIMuxTest {
@@ -42,19 +43,12 @@ impl Logic for OpalKellyXEM6010SPIMuxTest {
 
 impl Default for OpalKellyXEM6010SPIMuxTest {
     fn default() -> Self {
-        let spi_config = SPIConfig {
-            clock_speed: 48_000_000,
-            cs_off: true,
-            mosi_off: true,
-            speed_hz: 400_000,
-            cpha: true,
-            cpol: true,
-        };
+        let adc_config = AD7193Config::hw();
         Self {
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: Default::default(),
-            mux_adc: Default::default(),
-            spi: OKSPIMaster::new(Default::default(), spi_config),
+            mux_adc: MuxedAD7193Simulators::new(adc_config),
+            spi: OKSPIMaster::new(Default::default(), adc_config.spi),
             addr: WireIn::new(0x03),
         }
     }
