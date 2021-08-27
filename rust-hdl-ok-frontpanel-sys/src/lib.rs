@@ -257,3 +257,11 @@ pub fn make_u16_buffer(data: &[u8]) -> Vec<u16> {
     }
     ret
 }
+
+pub fn make_u32_buffer(data: &[u16]) -> Vec<u32> {
+    let mut ret = vec![];
+    for i in (0..data.len()).step_by(2) {
+        ret.push(((data[i] as u32) | ((data[i + 1] as u32) << 16)) as u32);
+    }
+    ret
+}
