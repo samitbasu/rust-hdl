@@ -62,7 +62,7 @@ impl AD7193Config {
                 mosi_off: true,
                 speed_hz: 400_000,
                 cpha: true,
-                cpol: true
+                cpol: true,
             },
             sample_time: Duration::from_micros(10100),
             auto_init: false,
@@ -76,7 +76,7 @@ impl AD7193Config {
                 mosi_off: true,
                 speed_hz: 10_000,
                 cpha: true,
-                cpol: true
+                cpol: true,
             },
             sample_time: Duration::from_micros(100),
             auto_init: false,
@@ -89,7 +89,7 @@ const AD7193_REG_INITS: [u64; 8] = [0x40, 0x80060, 0x117, 0x0, 0xa2, 0x0, 0x8000
 
 impl AD7193Simulator {
     pub fn new(config: AD7193Config) -> Self {
-        assert!(config.spi.clock_speed > 10*config.spi.speed_hz);
+        assert!(config.spi.clock_speed > 10 * config.spi.speed_hz);
         let reg_width_rom = AD7193_REG_WIDTHS.iter().map(|x| Bits::<5>::from(*x)).into();
         let reg_ram = AD7193_REG_INITS.iter().map(|x| Bits::<24>::from(*x)).into();
         // The conversion time should really be 10 msec, but we instead tie it to the clock
@@ -216,7 +216,7 @@ impl Logic for AD7193Simulator {
             }
             AD7193State::SingleConversion => {
                 self.spi_slave.disabled.next = true;
-                if !self.oneshot.active.val() {
+                if self.oneshot.fired.val() {
                     self.state.d.next = AD7193State::SingleConversionCommit;
                 }
             }

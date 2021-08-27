@@ -1,4 +1,4 @@
-use crate::ad7193_sim::{AD7193Simulator, AD7193Config};
+use crate::ad7193_sim::{AD7193Config, AD7193Simulator};
 use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::spi_master::SPIConfig;

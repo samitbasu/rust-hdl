@@ -1,3 +1,4 @@
+use crate::ad7193_sim::AD7193Config;
 use crate::muxed_ad7193_sim::MuxedAD7193Simulators;
 use crate::ok_tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
 use rust_hdl_core::prelude::*;
@@ -9,7 +10,6 @@ use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_widgets::spi_master::SPIConfig;
 use std::thread::sleep;
 use std::time::Duration;
-use crate::ad7193_sim::AD7193Config;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010SPIMuxTest {

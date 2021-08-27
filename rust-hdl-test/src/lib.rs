@@ -3,7 +3,9 @@ use std::fs::File;
 use rust_hdl_core::prelude::*;
 use rust_hdl_macros::LogicBlock;
 use rust_hdl_synth::yosys_validate;
+use rust_hdl_widgets::prelude::Shot;
 use rust_hdl_widgets::strobe::Strobe;
+use std::time::Duration;
 
 pub mod ad7193_sim;
 pub mod alchitry_cu_icepll;
@@ -88,4 +90,32 @@ fn test_strobe() {
     uut.connect_all();
     sim.run_traced(Box::new(uut), 100_000, File::create("strobe.vcd").unwrap())
         .unwrap();
+}
+
+#[test]
+fn test_shot() {
+    let mut shot: Shot<32> = Shot::new(1_000_000, Duration::from_millis(1));
+    shot.trigger.connect();
+    shot.clock.connect();
+    shot.connect_all();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<Shot<32>>| x.clock.next = !x.clock.val());
+    sim.add_testbench(|mut sim: Sim<Shot<32>>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        x.trigger.next = true;
+        wait_clock_cycle!(sim, clock, x);
+        x.trigger.next = false;
+        x = sim.watch(|x| x.fired.val(), x)?;
+        wait_clock_cycle!(sim, clock, x);
+        sim_assert!(sim, !x.fired.val(), x);
+        wait_clock_cycle!(sim, clock, x);
+        sim.done(x)
+    });
+    sim.run_traced(
+        Box::new(shot),
+        10_0000,
+        std::fs::File::create("shot.vcd").unwrap(),
+    )
+    .unwrap();
 }

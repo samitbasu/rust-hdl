@@ -8,6 +8,7 @@ pub struct Shot<const N: usize> {
     pub trigger: Signal<In, Bit>,
     pub active: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
+    pub fired: Signal<Out, Bit>,
     duration: Constant<Bits<N>>,
     counter: DFF<Bits<N>>,
     state: DFF<Bit>,
@@ -23,6 +24,7 @@ impl<const N: usize> Shot<N> {
             trigger: Signal::default(),
             active: Signal::new_with_default(false),
             clock: Signal::default(),
+            fired: Default::default(),
             duration: Constant::new(clocks.into()),
             counter: DFF::new(0_u32.into()),
             state: DFF::new(false),
@@ -44,8 +46,10 @@ impl<const N: usize> Logic for Shot<N> {
             self.state.d.next = true;
             self.counter.d.next = 0_u32.into();
         }
+        self.fired.next = false;
         if self.state.q.val() && (self.counter.q.val() == self.duration.val()) {
             self.state.d.next = false;
+            self.fired.next = true;
         }
         self.active.next = self.state.q.val();
     }

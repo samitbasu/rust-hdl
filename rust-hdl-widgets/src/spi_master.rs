@@ -60,7 +60,7 @@ pub struct SPIMaster<const N: usize> {
 
 impl<const N: usize> SPIMaster<N> {
     pub fn new(config: SPIConfig) -> Self {
-        assert!(8*config.speed_hz <= config.clock_speed);
+        assert!(8 * config.speed_hz <= config.clock_speed);
         Self {
             clock: Default::default(),
             bits_outbound: Default::default(),
