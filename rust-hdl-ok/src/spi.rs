@@ -23,7 +23,7 @@ impl Default for OKSPIMasterAddressConfig {
             pipe_out_address: 0xA0,
             trigger_start_address: 0x40,
             trigger_done_address: 0x60,
-            wire_bits_address: 0x01,
+            wire_bits_address: 0x00,
         }
     }
 }
