@@ -2,7 +2,7 @@ use crate::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::ok_download::{OpalKellyDownload32FIFO, OpalKellyDownloadFIFO};
 use rust_hdl_ok::prelude::*;
-use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError, make_u32_buffer};
+use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, make_u32_buffer, OkError};
 use rust_hdl_widgets::prelude::*;
 
 #[derive(LogicBlock)]
@@ -50,7 +50,6 @@ fn test_opalkelly_xem_6010_download32() {
     crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_download32");
 }
 
-
 #[test]
 fn test_opalkelly_xem_6010_download32_runtime() -> Result<(), OkError> {
     let hnd = ok_test_prelude("opalkelly_xem_6010_download32/top.bit")?;
@@ -69,7 +68,6 @@ fn test_opalkelly_xem_6010_download32_runtime() -> Result<(), OkError> {
     }
     Ok(())
 }
-
 
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010DownloadFIFOTest {
