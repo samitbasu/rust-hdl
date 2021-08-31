@@ -332,6 +332,13 @@ fn test_reg_writes() {
         let result = do_spi_txn(16, 0x00, false, x, &mut sim)?;
         x = result.1;
         sim_assert!(sim, result.0.index() == 0x40_08, x);
+        for i in 0..5 {
+            wait_clock_cycle!(sim, clock, x);
+            let result = do_spi_txn(32, 0x00_00_00_00, false, x, &mut sim)?;
+            x = result.1;
+            println!("Reading is {:x}", result.0);
+            sim_assert!(sim, result.0 == ((i+2) << 16) as u32, x);
+        }
         sim.done(x)
     });
     sim.run(Box::new(uut), 1_000_000).unwrap();
