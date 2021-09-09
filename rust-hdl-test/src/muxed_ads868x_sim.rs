@@ -4,7 +4,7 @@ use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::spi_master::SPIConfig;
 
 #[derive(LogicBlock)]
-pub struct MuxedADS868XSimulators {
+pub struct MuxedADS868XSimulators<const N: usize> {
     // Input SPI bus
     pub mosi: Signal<In, Bit>,
     pub mclk: Signal<In, Bit>,
@@ -12,11 +12,12 @@ pub struct MuxedADS868XSimulators {
     pub miso: Signal<Out, Bit>,
     pub addr: Signal<In, Bits<3>>,
     pub clock: Signal<In, Clock>,
-    adcs: [ADS868XSimulator; 8],
+    adcs: [ADS868XSimulator; N],
 }
 
-impl MuxedADS868XSimulators {
+impl<const N: usize> MuxedADS868XSimulators<N> {
     pub fn new(config: SPIConfig) -> Self {
+        assert!(N <= 8);
         Self {
             mosi: Default::default(),
             mclk: Default::default(),
@@ -24,26 +25,17 @@ impl MuxedADS868XSimulators {
             miso: Default::default(),
             addr: Default::default(),
             clock: Default::default(),
-            adcs: [
-                ADS868XSimulator::new(config),
-                ADS868XSimulator::new(config),
-                ADS868XSimulator::new(config),
-                ADS868XSimulator::new(config),
-                ADS868XSimulator::new(config),
-                ADS868XSimulator::new(config),
-                ADS868XSimulator::new(config),
-                ADS868XSimulator::new(config),
-            ],
+            adcs: array_init::array_init(|_| ADS868XSimulator::new(config)),
         }
     }
 }
 
-impl Logic for MuxedADS868XSimulators {
+impl<const N: usize> Logic for MuxedADS868XSimulators<N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Latch prevention
         self.miso.next = true;
-        for i in 0_usize..8_usize {
+        for i in 0_usize..N {
             self.adcs[i].clock.next = self.clock.val();
             self.adcs[i].mosi.next = self.mosi.val();
             self.adcs[i].mclk.next = self.mclk.val();
@@ -58,7 +50,8 @@ impl Logic for MuxedADS868XSimulators {
 
 #[test]
 fn test_mux_is_synthesizable() {
-    let mut uut = MuxedADS868XSimulators::new(ADS868XSimulator::spi_hw());
+    let mut uut: MuxedADS868XSimulators<8> =
+        MuxedADS868XSimulators::new(ADS868XSimulator::spi_hw());
     uut.mclk.connect();
     uut.mosi.connect();
     uut.msel.connect();

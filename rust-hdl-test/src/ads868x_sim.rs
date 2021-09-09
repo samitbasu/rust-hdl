@@ -337,7 +337,7 @@ fn test_reg_writes() {
             let result = do_spi_txn(32, 0x00_00_00_00, false, x, &mut sim)?;
             x = result.1;
             println!("Reading is {:x}", result.0);
-            sim_assert!(sim, result.0 == ((i+2) << 16) as u32, x);
+            sim_assert!(sim, result.0 == ((i + 2) << 16) as u32, x);
         }
         sim.done(x)
     });
