@@ -136,6 +136,14 @@ impl<const N: usize> Bits<N> {
         }
     }
 
+    #[inline(always)]
+    pub fn xor(&self) -> bool {
+        match self {
+            Bits::Short(x) => x.xor(),
+            Bits::Long(x) => x.xor(),
+        }
+    }
+
     pub fn index(&self) -> usize {
         match self {
             Bits::Short(x) => x.short() as usize,

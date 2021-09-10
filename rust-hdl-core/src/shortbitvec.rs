@@ -48,6 +48,17 @@ impl<const N: usize> ShortBitVec<N> {
     pub fn all(&self) -> bool {
         self.0 == Self::bit_mask()
     }
+
+    #[inline(always)]
+    pub fn xor(&self) -> bool {
+        let mut ret = false;
+        let mut x = self.0;
+        for _ in 0..N {
+            ret = ret ^ (x & 0x1 != 0);
+            x = x >> 1;
+        }
+        ret
+    }
 }
 
 impl<const N: usize> From<ShortType> for ShortBitVec<N> {

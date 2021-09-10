@@ -28,6 +28,14 @@ impl<const N: usize> BitVec<N> {
         false
     }
 
+    pub fn xor(&self) -> bool {
+        let mut ret = false;
+        for i in 0..N {
+            ret = ret ^ self.bits[i];
+        }
+        ret
+    }
+
     pub fn get_bit(&self, ndx: usize) -> bool {
         assert!(ndx < N);
         self.bits[ndx]

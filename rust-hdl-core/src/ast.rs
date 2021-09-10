@@ -220,4 +220,5 @@ pub enum VerilogOpUnary {
     Neg,
     All,
     Any,
+    Xor,
 }

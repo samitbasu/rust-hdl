@@ -427,6 +427,13 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                 Box::new(#target))
             }))
         }
+        "xor" => {
+            let target = hdl_compute(method.receiver.as_ref())?;
+            Ok(quote!({
+                rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::Xor,
+                Box::new(#target))
+            }))
+        }
         "val" | "into" | "index" => {
             let receiver = method.receiver.as_ref();
             hdl_compute(receiver)

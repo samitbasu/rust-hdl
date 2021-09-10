@@ -251,6 +251,7 @@ impl VerilogVisitor for VerilogCodeGenerator {
             VerilogOpUnary::Neg => "-",
             VerilogOpUnary::All => "&",
             VerilogOpUnary::Any => "|",
+            VerilogOpUnary::Xor => "^",
         });
         self.visit_expression(r);
     }

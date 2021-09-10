@@ -41,6 +41,8 @@ pub struct ADS868XSimulator {
     read_cmd: Signal<Local, Bits<5>>,
     write_cmd: Signal<Local, Bits<7>>,
     address: Signal<Local, Bits<9>>,
+    data_parity: Signal<Local, Bit>,
+    id_parity: Signal<Local, Bit>,
 }
 
 impl ADS868XSimulator {
@@ -81,6 +83,8 @@ impl ADS868XSimulator {
             read_cmd: Default::default(),
             write_cmd: Default::default(),
             address: Default::default(),
+            data_parity: Default::default(),
+            id_parity: Default::default(),
         }
     }
 }
@@ -124,6 +128,8 @@ impl Logic for ADS868XSimulator {
         self.reg_ram.write_address.next = bit_cast::<5, 9>(self.address.val() >> 1_usize);
         self.reg_ram.read_address.next = 0_u32.into();
         self.inbound.d.next = self.inbound.q.val();
+        self.data_parity.next = self.conversion_counter.q.val().xor();
+        self.id_parity.next = (self.reg_ram.read_data.val() & 0x0FF_u32).xor();
         match self.state.q.val() {
             ADS868XState::Ready => {
                 self.state.d.next = ADS868XState::Nop;
@@ -207,7 +213,10 @@ impl Logic for ADS868XSimulator {
                 self.spi_slave.bits.next = 32_usize.into();
                 self.spi_slave.data_outbound.next =
                     (bit_cast::<32, 16>(self.conversion_counter.q.val()) << 16_u32)
-                        | bit_cast::<32, 16>(self.reg_ram.read_data.val() & 0x0FF_u32) << 12_u32;
+                        | bit_cast::<32, 16>(self.reg_ram.read_data.val() & 0x0FF_u32) << 12_u32
+                        | bit_cast::<32, 1>(self.data_parity.val().into()) << 11_u32
+                        | bit_cast::<32, 1>((self.data_parity.val() ^ self.id_parity.val()).into())
+                            << 10_u32;
                 self.spi_slave.start_send.next = true;
                 self.state.d.next = ADS868XState::Waiting;
                 self.conversion_counter.d.next = self.conversion_counter.q.val() + 1_u32;
@@ -337,9 +346,42 @@ fn test_reg_writes() {
             let result = do_spi_txn(32, 0x00_00_00_00, false, x, &mut sim)?;
             x = result.1;
             println!("Reading is {:x}", result.0);
-            sim_assert!(sim, result.0 == ((i + 2) << 16) as u32, x);
+            sim_assert!(sim, (result.0 & 0xFFFF0000_usize) == ((i + 2) << 16) as u32, x);
+            let parity_bit = result.0 & 0x800_usize != 0_usize;
+            let data : Bits<32> = (result.0 & 0xFFFF0000_usize) >> 16_usize;
+            sim_assert!(sim, data.xor() == parity_bit, x);
         }
         sim.done(x)
     });
     sim.run(Box::new(uut), 1_000_000).unwrap();
+}
+
+#[test]
+fn test_parity_calculations() {
+    for sample in [
+        0x00020C00_u32,
+        0x92ab1400_u32,
+        0x734b1800,
+        0x4fc81400,
+        0x7bee1400,
+        0x94821800,
+        0x5eb31400,
+        0x4eaa1400,
+        0x8ac91800,
+        0x95321800,
+        0x54c01800,
+        0x561a1800,
+        0x91601800,
+        0x7e401800,
+        0x50961400,
+    ] {
+        let mut data = (sample & 0xFFFF_0000) >> 16;
+        let mut parity = false;
+        for _ in 0..16 {
+            parity = parity ^ (data & 0x1 != 0);
+            data = data >> 1;
+        }
+        let adc_flag = (sample & 0x800) != 0;
+        assert_eq!(adc_flag, parity);
+    }
 }

@@ -1,9 +1,9 @@
 use crate::ok_pipe::{BTPipeOut, PipeOut};
 use crate::ok_wire::WireOut;
+use rust_hdl_core::bits::bits;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::fifo_reducer::FIFOReducer;
 use rust_hdl_widgets::prelude::*;
-use rust_hdl_core::bits::bits;
 
 declare_sync_fifo!(OKDLFIFO, Bits<16>, 8192, 256);
 
