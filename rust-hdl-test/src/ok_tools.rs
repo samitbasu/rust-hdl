@@ -15,8 +15,8 @@ pub fn find_ok_bus_collisions(vlog: &str) {
     let mut addr_list = vec![];
     for capture in expr.captures(vlog) {
         let port = capture.get(1).unwrap().as_str();
-        assert!(!addr_list.contains(&port));
-        addr_list.push(port);
+        assert!(!addr_list.contains(&port.to_string()));
+        addr_list.push(port.to_owned());
     }
 }
 
