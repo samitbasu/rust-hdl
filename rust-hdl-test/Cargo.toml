@@ -16,6 +16,7 @@ rust_hdl_ok_frontpanel_sys = {path= "../rust-hdl-ok-frontpanel-sys", optional=tr
 num-bigint = "0.4.0"
 rand = "0.8.4"
 array-init = "2.0.0"
+regex = "^1"
 
 [features]
 fpga_hw_test = ["rust_hdl_ok_frontpanel_sys"]
