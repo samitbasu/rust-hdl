@@ -3,6 +3,7 @@ use crate::ok_wire::WireOut;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::fifo_reducer::FIFOReducer;
 use rust_hdl_widgets::prelude::*;
+use rust_hdl_core::bits::bits;
 
 declare_sync_fifo!(OKDLFIFO, Bits<16>, 8192, 256);
 
@@ -35,7 +36,7 @@ impl Logic for OpalKellyDownloadFIFO {
         self.fifo.data_in.next = self.data_in.val();
         self.fifo.write.next = self.data_write.val();
         self.data_full.next = self.fifo.full.val();
-        self.status_wire.datain.next = 0xAD00_u16.into()
+        self.status_wire.datain.next = bits::<16>(0xAD00_u128)
             | (bit_cast::<16, 1>(self.fifo.overflow.val().into()) << 4_u32)
             | (bit_cast::<16, 1>(self.fifo.full.val().into()) << 3_u32)
             | (bit_cast::<16, 1>(self.fifo.almost_empty.val().into()) << 2_u32)
