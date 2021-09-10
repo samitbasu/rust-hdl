@@ -2,6 +2,7 @@ use crate::ok_pipe::{BTPipeOut, PipeOut};
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::fifo_reducer::FIFOReducer;
 use rust_hdl_widgets::prelude::*;
+use crate::ok_wire::WireOut;
 
 declare_sync_fifo!(OKDLFIFO, Bits<16>, 8192, 256);
 
@@ -16,6 +17,7 @@ pub struct OpalKellyDownloadFIFO {
     fifo: OKDLFIFO,
     o_pipe: BTPipeOut,
     delay_read: DFF<Bit>,
+    status_wire: WireOut,
 }
 
 impl Logic for OpalKellyDownloadFIFO {
@@ -24,7 +26,8 @@ impl Logic for OpalKellyDownloadFIFO {
         self.delay_read.clk.next = self.clock.val();
         self.fifo.clock.next = self.clock.val();
         self.o_pipe.ok1.next = self.ok1.val();
-        self.ok2.next = self.o_pipe.ok2.val();
+        self.status_wire.ok1.next = self.ok1.val();
+        self.ok2.next = self.o_pipe.ok2.val() | self.status_wire.ok2.val();
         self.o_pipe.datain.next = self.fifo.data_out.val();
         self.o_pipe.ready.next = !self.fifo.almost_empty.val();
         self.delay_read.d.next = self.o_pipe.read.val();
@@ -32,6 +35,12 @@ impl Logic for OpalKellyDownloadFIFO {
         self.fifo.data_in.next = self.data_in.val();
         self.fifo.write.next = self.data_write.val();
         self.data_full.next = self.fifo.full.val();
+        self.status_wire.datain.next =
+            (bit_cast::<16,1>(self.fifo.overflow.val().into()) << 4_u32) |
+                (bit_cast::<16, 1>(self.fifo.full.val().into()) << 3_u32) |
+                (bit_cast::<16, 1>(self.fifo.almost_empty.val().into()) << 2_u32) |
+                (bit_cast::<16,1>(self.fifo.empty.val().into()) << 1_u32) |
+                (bit_cast::<16,1>(self.fifo.underflow.val().into()) << 0_u32);
     }
 }
 
@@ -47,6 +56,7 @@ impl OpalKellyDownloadFIFO {
             fifo: Default::default(),
             o_pipe: BTPipeOut::new(port),
             delay_read: Default::default(),
+            status_wire: WireOut::new(0x38),
         }
     }
 }
