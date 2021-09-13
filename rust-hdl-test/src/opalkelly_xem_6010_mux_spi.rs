@@ -7,7 +7,6 @@ use rust_hdl_ok::ok_host::OpalKellyHost;
 use rust_hdl_ok::ok_wire::WireIn;
 use rust_hdl_ok::spi::OKSPIMaster;
 use rust_hdl_ok_frontpanel_sys::OkError;
-use rust_hdl_widgets::spi_master::SPIConfig;
 use std::thread::sleep;
 use std::time::Duration;
 

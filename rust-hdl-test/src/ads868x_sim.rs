@@ -4,7 +4,6 @@ use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_widgets::spi_master::{SPIConfig, SPIMaster};
 use rust_hdl_widgets::spi_slave::SPISlave;
-use std::time::Duration;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum ADS868XState {
@@ -346,9 +345,13 @@ fn test_reg_writes() {
             let result = do_spi_txn(32, 0x00_00_00_00, false, x, &mut sim)?;
             x = result.1;
             println!("Reading is {:x}", result.0);
-            sim_assert!(sim, (result.0 & 0xFFFF0000_usize) == ((i + 2) << 16) as u32, x);
+            sim_assert!(
+                sim,
+                (result.0 & 0xFFFF0000_usize) == ((i + 2) << 16) as u32,
+                x
+            );
             let parity_bit = result.0 & 0x800_usize != 0_usize;
-            let data : Bits<32> = (result.0 & 0xFFFF0000_usize) >> 16_usize;
+            let data: Bits<32> = (result.0 & 0xFFFF0000_usize) >> 16_usize;
             sim_assert!(sim, data.xor() == parity_bit, x);
         }
         sim.done(x)

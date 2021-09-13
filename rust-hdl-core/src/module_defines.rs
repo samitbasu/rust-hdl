@@ -134,6 +134,8 @@ impl Probe for ModuleDefines {
     }
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
+        // TODO - add proper logging
+        /*
         println!(
             "Atom: name {} path {} namespace {} enum {} type {}",
             name,
@@ -142,6 +144,7 @@ impl Probe for ModuleDefines {
             signal.is_enum(),
             signal.type_name()
         );
+         */
         let module_path = self.path.to_string();
         let module_name = self.path.last();
         let namespace = self.namespace.flat("$");

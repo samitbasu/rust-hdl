@@ -5,8 +5,6 @@ use rust_hdl_ok::prelude::*;
 use rust_hdl_ok::spi::OKSPIMaster;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_synth::yosys_validate;
-use rust_hdl_widgets::prelude::*;
-use rust_hdl_widgets::spi_master::{SPIConfig, SPIWires};
 use std::thread::sleep;
 use std::time::Duration;
 

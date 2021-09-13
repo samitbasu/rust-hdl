@@ -7,7 +7,6 @@ use std::thread::sleep;
 use std::time::Duration;
 
 const FRONTPANEL_DIR: &str = "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM6010-LX45";
-const MIG_DIR: &str = "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/Samples/RAMTester/XEM6010-Verilog";
 
 pub fn find_ok_bus_collisions(vlog: &str) {
     let expr = regex::Regex::new(r#"\.ep_addr\(8'h(\w+)\)"#).unwrap();
@@ -27,9 +26,9 @@ pub fn synth_obj<U: Block>(uut: U, dir: &str) {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
     find_ok_bus_collisions(&vlog);
-    let ucf = rust_hdl_ok::ucf_gen::generate_ucf(&uut);
+    let _ucf = rust_hdl_ok::ucf_gen::generate_ucf(&uut);
     rust_hdl_synth::yosys_validate("vlog", &vlog).unwrap();
-    let mut frontpanel_hdl = [
+    let frontpanel_hdl = [
         "okLibrary.v",
         "okCoreHarness.ngc",
         "okWireIn.ngc",
@@ -45,20 +44,6 @@ pub fn synth_obj<U: Block>(uut: U, dir: &str) {
     .iter()
     .map(|x| format!("{}/{}", FRONTPANEL_DIR, x))
     .collect::<Vec<_>>();
-    let mut mig_hdl = [
-        "ddr2.v",
-        "memc3_infrastructure.v",
-        "MIG/memc3_wrapper.v",
-        "MIG/iodrp_controller.v",
-        "MIG/iodrp_mcb_controller.v",
-        "MIG/mcb_raw_wrapper.v",
-        "MIG/mcb_soft_calibration.v",
-        "MIG/mcb_soft_calibration_top.v",
-    ]
-    .iter()
-    .map(|x| format!("{}/{}", MIG_DIR, x))
-    .collect::<Vec<_>>();
-    frontpanel_hdl.append(&mut mig_hdl);
     rust_hdl_ok::synth::generate_bitstream_xem_6010(uut, dir, &frontpanel_hdl);
 }
 

@@ -25,9 +25,11 @@ impl Probe for CheckConnected {
                 self.path.to_string(),
                 name
             );
-        } else {
-            println!("Signal {}::{} is driven", self.path.to_string(), name);
         }
+        /* TODO - add logging
+        else {
+            println!("Signal {}::{} is driven", self.path.to_string(), name);
+        }*/
     }
 
     fn visit_end_namespace(&mut self, _name: &str, _node: &dyn Block) {

@@ -1,4 +1,4 @@
-use crate::ok_pipe::{BTPipeOut, PipeOut};
+use crate::ok_pipe::BTPipeOut;
 use crate::ok_wire::WireOut;
 use rust_hdl_core::bits::bits;
 use rust_hdl_core::prelude::*;

@@ -7,6 +7,8 @@ pub use crate::pwm::PulseWidthModulator;
 pub use crate::ram::RAM;
 pub use crate::rom::ROM;
 pub use crate::shot::Shot;
+pub use crate::spi_master::{SPIConfig, SPIMaster, SPIWires};
+pub use crate::spi_slave::SPISlave;
 pub use crate::strobe::Strobe;
 pub use crate::sync_fifo::SynchronousFIFO;
 pub use crate::synchronizer::{BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer};

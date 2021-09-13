@@ -2,7 +2,7 @@ use crate::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::ok_trigger::{TriggerIn, TriggerOut};
 use rust_hdl_ok::prelude::*;
-use rust_hdl_ok_frontpanel_sys::{OkError, OkHandle};
+use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_widgets::prelude::DFF;
 use std::time::Duration;
 

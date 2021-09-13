@@ -1,5 +1,4 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::TopWrap;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct WireOut {

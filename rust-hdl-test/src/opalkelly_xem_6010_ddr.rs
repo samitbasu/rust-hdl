@@ -1,15 +1,12 @@
 use crate::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok::ddr_fifo::DDRFIFO;
 use rust_hdl_ok::mcb_if::MCBInterface;
 use rust_hdl_ok::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
 use rust_hdl_ok::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok::ok_host::OpalKellyHost;
-use rust_hdl_ok::ok_pipe::BTPipeOut;
 use rust_hdl_ok::ok_wire::WireIn;
-use rust_hdl_ok::pins::{xem_6010_base_clock, xem_6010_leds};
+use rust_hdl_ok::pins::xem_6010_base_clock;
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
-use rust_hdl_widgets::fifo_reducer::FIFOReducer;
 use rust_hdl_widgets::prelude::*;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
@@ -105,8 +102,8 @@ fn test_opalkelly_xem_6010_ddr_stress_runtime() -> Result<(), OkError> {
             let hi_word = data_shorts[2 * i + 1] as u32;
             data_words.push((hi_word << 16) | lo_word);
         }
-        for (ndx, val) in data_words.iter().enumerate() {
-            assert_eq!(((counter as u128) & 0xFFFFFFFF_u128) as u32, *val);
+        for val in data_words {
+            assert_eq!(((counter as u128) & 0xFFFFFFFF_u128) as u32, val);
             counter += 1;
         }
     }

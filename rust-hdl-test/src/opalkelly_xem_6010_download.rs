@@ -61,8 +61,8 @@ fn test_opalkelly_xem_6010_download32_runtime() -> Result<(), OkError> {
         hnd.read_from_block_pipe_out(0xA0, 256, &mut data).unwrap();
         let data_shorts = make_u16_buffer(&data);
         let data_words = make_u32_buffer(&data_shorts);
-        for (ndx, val) in data_words.iter().enumerate() {
-            assert_eq!(((last_val as u128) & 0xFFFFFFFF_u128) as u32, *val);
+        for val in data_words {
+            assert_eq!(((last_val as u128) & 0xFFFFFFFF_u128) as u32, val);
             last_val += 1;
         }
     }

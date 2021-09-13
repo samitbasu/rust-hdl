@@ -2,10 +2,8 @@ use crate::ok_pipe::{PipeIn, PipeOut};
 use crate::ok_trigger::{TriggerIn, TriggerOut};
 use crate::prelude::WireIn;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::TopWrap;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_widgets::spi_master::{SPIConfig, SPIMaster, SPIWires};
-use rust_hdl_widgets::spi_slave::SPISlave;
 
 #[derive(Copy, Clone, Debug)]
 pub struct OKSPIMasterAddressConfig {
