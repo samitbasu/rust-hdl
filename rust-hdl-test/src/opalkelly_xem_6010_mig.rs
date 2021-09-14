@@ -113,7 +113,7 @@ fn test_opalkelly_xem_6010_mig() {
     uut.mcb.link_connect_dest();
     uut.raw_clock.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_mig");
+    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_mig");
 }
 
 #[test]

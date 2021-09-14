@@ -47,7 +47,7 @@ fn test_opalkelly_xem_6010_download32() {
     let mut uut = OpalKellyXEM6010Download32FIFOTest::default();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_download32");
+    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_download32");
 }
 
 #[test]
@@ -111,7 +111,7 @@ fn test_opalkelly_xem_6010_download() {
     let mut uut = OpalKellyXEM6010DownloadFIFOTest::default();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opal_kelly_xem_6010_download");
+    crate::ok_tools::synth_obj_6010(uut, "opal_kelly_xem_6010_download");
 }
 
 #[test]

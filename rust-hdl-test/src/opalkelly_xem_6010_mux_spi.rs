@@ -58,7 +58,7 @@ fn test_opalkelly_xem_6010_mux_spi() {
     let mut uut = OpalKellyXEM6010SPIMuxTest::default();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_mux_spi");
+    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_mux_spi");
 }
 
 #[test]

@@ -66,7 +66,7 @@ endmodule  "#,
 
 #[test]
 fn test_trigger_out() {
-    let mut uut = TopWrap::new(TriggerOut::new(0x60));
+    let mut uut = rust_hdl_synth::TopWrap::new(TriggerOut::new(0x60));
     uut.uut.ok1.connect();
     uut.uut.clk.connect();
     uut.uut.trigger.connect();
@@ -135,7 +135,7 @@ endmodule  "#,
 
 #[test]
 fn test_trigger_in() {
-    let mut uut = TopWrap::new(TriggerIn::new(0x40));
+    let mut uut = rust_hdl_synth::TopWrap::new(TriggerIn::new(0x40));
     uut.uut.ok1.connect();
     uut.uut.clk.connect();
     uut.connect_all();

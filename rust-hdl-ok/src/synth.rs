@@ -5,7 +5,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-fn filter_blackbox_directives(t: &str) -> String {
+pub fn filter_blackbox_directives(t: &str) -> String {
     let mut in_black_box = false;
     let mut ret = vec![];
     for line in t.split("\n") {

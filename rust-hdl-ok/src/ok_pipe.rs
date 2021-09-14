@@ -73,7 +73,7 @@ endmodule
 
 #[test]
 fn test_bt_pipein_synthesizes() {
-    let mut uut = TopWrap::new(BTPipeIn::new(0x80));
+    let mut uut = rust_hdl_synth::TopWrap::new(BTPipeIn::new(0x80));
     uut.uut.ok1.connect();
     uut.uut.ready.connect();
     uut.connect_all();
@@ -142,7 +142,7 @@ endmodule
 
 #[test]
 fn test_pipein_synthesizes() {
-    let mut uut = TopWrap::new(PipeIn::new(0x80));
+    let mut uut = rust_hdl_synth::TopWrap::new(PipeIn::new(0x80));
     uut.uut.ok1.connect();
     uut.connect_all();
     rust_hdl_synth::yosys_validate("pipein", &generate_verilog(&uut)).unwrap();
@@ -209,10 +209,9 @@ endmodule
 
 #[test]
 fn test_pipeout_synthesizes() {
-    use rust_hdl_synth::top_wrap;
     use rust_hdl_synth::yosys_validate;
 
-    let mut uut = TopWrap::new(PipeOut::new(0xA0));
+    let mut uut = rust_hdl_synth::TopWrap::new(PipeOut::new(0xA0));
     uut.uut.ok1.connect();
     uut.uut.datain.connect();
     uut.connect_all();
@@ -292,7 +291,7 @@ endmodule
 
 #[test]
 fn test_btpipeout_synthesizes() {
-    let mut uut = TopWrap::new(BTPipeOut::new(0xA0));
+    let mut uut = rust_hdl_synth::TopWrap::new(BTPipeOut::new(0xA0));
     uut.uut.ok1.connect();
     uut.uut.datain.connect();
     uut.uut.ready.connect();

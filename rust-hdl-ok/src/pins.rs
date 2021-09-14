@@ -1,5 +1,17 @@
 use rust_hdl_core::prelude::*;
 
+pub fn xem_7010_leds() -> Signal<Out, Bits<8>> {
+    let mut x = Signal::default();
+    for (ndx, name) in ["N13", "N14", "P15", "P16", "N17", "P17", "R16", "R17"]
+        .iter()
+        .enumerate()
+    {
+        x.add_location(ndx, name);
+        x.add_signal_type(ndx, SignalType::LowVoltageCMOS_3v3);
+    }
+    x
+}
+
 pub fn xem_6010_leds() -> Signal<Out, Bits<8>> {
     let mut x = Signal::default();
     for (ndx, name) in [

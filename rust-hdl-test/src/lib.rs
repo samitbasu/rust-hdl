@@ -41,6 +41,8 @@ pub mod opalkelly_xem_6010_spi;
 pub mod opalkelly_xem_6010_wave;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_wire;
+#[cfg(feature = "fpga_hw_test")]
+pub mod opalkelly_xem_7010_blinky;
 pub mod pwm;
 pub mod ram;
 pub mod rom;

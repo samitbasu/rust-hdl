@@ -56,7 +56,7 @@ fn test_opalkelly_xem_6010_pipe() {
     let mut uut = OpalKellyXEM6010PipeTest::new();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_pipe");
+    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_pipe");
 }
 
 fn sum_vec(t: &[u16]) -> u16 {
@@ -143,7 +143,7 @@ fn test_opalkelly_xem_6010_pipe_ram() {
     let mut uut = OpalKellyXEM6010PipeRAMTest::new();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_pipe_ram");
+    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_pipe_ram");
 }
 
 #[test]
@@ -217,7 +217,7 @@ fn test_opalkelly_xem_6010_pipe_fifo() {
     uut.hi.sig_out.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_fifo");
+    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_fifo");
 }
 
 #[test]
@@ -302,7 +302,7 @@ fn test_opalkelly_xem_6010_pipe_afifo() {
     uut.hi.link_connect_dest();
     uut.fast_clock.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_afifo");
+    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_afifo");
 }
 
 #[test]
@@ -413,7 +413,7 @@ fn test_opalkelly_xem_6010_btpipe() {
     uut.hi.link_connect_dest();
     uut.fast_clock.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_btpipe");
+    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_btpipe");
 }
 
 #[test]

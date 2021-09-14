@@ -61,5 +61,5 @@ fn test_opalkelly_xem_6010_wave() {
     uut.hi.sig_inout.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj(uut, "opalkelly_xem_6010_wave");
+    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_wave");
 }

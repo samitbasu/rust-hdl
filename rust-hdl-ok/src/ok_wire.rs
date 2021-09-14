@@ -62,7 +62,7 @@ endmodule  "#,
 
 #[test]
 fn test_wire_out_synth() {
-    let mut uut = TopWrap::new(WireOut::new(0x20));
+    let mut uut = rust_hdl_synth::TopWrap::new(WireOut::new(0x20));
     uut.uut.ok1.connect();
     uut.uut.datain.connect();
     uut.uut.connect_all();
@@ -125,7 +125,7 @@ endmodule  "#,
 
 #[test]
 fn test_wire_in_synth() {
-    let mut uut = TopWrap::new(WireIn::new(0x02));
+    let mut uut = rust_hdl_synth::TopWrap::new(WireIn::new(0x02));
     uut.uut.ok1.connect();
     uut.connect_all();
     rust_hdl_synth::yosys_validate("wire_in", &generate_verilog(&uut)).unwrap();

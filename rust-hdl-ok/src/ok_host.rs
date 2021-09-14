@@ -19,6 +19,7 @@ impl Logic for OpalKellyHost {
         self.hi.sig_out.connect();
         self.hi.sig_inout.connect();
         self.hi.sig_aa.connect();
+        self.hi.sig_mux.connect();
         self.ti_clk.connect();
     }
     fn hdl(&self) -> Verilog {
@@ -30,10 +31,13 @@ module OpalKellyHost
 	output wire [1:0]  hi$sig_out,
 	inout  wire [15:0] hi$sig_inout,
 	inout  wire        hi$sig_aa,
+	output wire        hi$sig_mux,
 	output wire        ti_clk,
 	output wire [30:0] ok1,
 	input  wire [16:0] ok2
 	);
+
+    assign hi$sig_mux = 1'b0;
 
 	okHost host(.hi_in(hi$sig_in),
 	            .hi_out(hi$sig_out),

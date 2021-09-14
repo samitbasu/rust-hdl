@@ -129,7 +129,7 @@ fn test_ok_spi_master_synthesizes() {
         cpha: true,
         cpol: true,
     };
-    let mut uut = TopWrap::new(OKSPIMaster::new(Default::default(), spi_config));
+    let mut uut = rust_hdl_synth::TopWrap::new(OKSPIMaster::new(Default::default(), spi_config));
     uut.uut.wires.link_connect_dest();
     uut.uut.ok1.connect();
     uut.uut.clock.connect();

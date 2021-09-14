@@ -1,12 +1,16 @@
 use crate::ad7193_sim::AD7193_REG_WIDTHS;
 use rust_hdl_core::prelude::*;
+use rust_hdl_ok::prelude::*;
 use rust_hdl_ok::spi::OKSPIMasterAddressConfig;
 use rust_hdl_ok_frontpanel_sys::{OkError, OkHandle};
 use std::path::Path;
 use std::thread::sleep;
 use std::time::Duration;
 
-const FRONTPANEL_DIR: &str = "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM6010-LX45";
+const FRONT_PANEL_6010_DIR: &str =
+    "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM6010-LX45";
+const FRONT_PANEL_7010_DIR: &str =
+    "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM7010-A50";
 
 pub fn find_ok_bus_collisions(vlog: &str) {
     let expr = regex::Regex::new(r#"\.ep_addr\(8'h(\w+)\)"#).unwrap();
@@ -22,7 +26,31 @@ pub fn find_ok_bus_collisions(vlog: &str) {
     }
 }
 
-pub fn synth_obj<U: Block>(uut: U, dir: &str) {
+pub fn synth_obj_7010<U: Block>(uut: U, dir: &str) {
+    check_connected(&uut);
+    let vlog = generate_verilog(&uut);
+    find_ok_bus_collisions(&vlog);
+    let _xcd = rust_hdl_ok::xdc_gen::generate_xdc(&uut);
+    rust_hdl_synth::yosys_validate("vlog", &vlog).unwrap();
+    let frontpanel_hdl = [
+        "okLibrary.v",
+        "okCoreHarness.v",
+        "okWireIn.v",
+        "okWireOut.v",
+        "okTriggerIn.v",
+        "okTriggerOut.v",
+        "okPipeIn.v",
+        "okPipeOut.v",
+        "okBTPipeIn.v",
+        "okBTPipeOut.v",
+    ]
+    .iter()
+    .map(|x| format!("{}/{}", FRONT_PANEL_7010_DIR, x))
+    .collect::<Vec<_>>();
+    generate_bitstream_xem_7010(uut, dir, &frontpanel_hdl);
+}
+
+pub fn synth_obj_6010<U: Block>(uut: U, dir: &str) {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
     find_ok_bus_collisions(&vlog);
@@ -42,9 +70,9 @@ pub fn synth_obj<U: Block>(uut: U, dir: &str) {
         "okBTPipeOut.ngc",
     ]
     .iter()
-    .map(|x| format!("{}/{}", FRONTPANEL_DIR, x))
+    .map(|x| format!("{}/{}", FRONT_PANEL_6010_DIR, x))
     .collect::<Vec<_>>();
-    rust_hdl_ok::synth::generate_bitstream_xem_6010(uut, dir, &frontpanel_hdl);
+    generate_bitstream_xem_6010(uut, dir, &frontpanel_hdl);
 }
 
 pub fn ok_test_prelude(filename: &str) -> Result<OkHandle, OkError> {

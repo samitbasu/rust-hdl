@@ -9,3 +9,4 @@ edition = "2018"
 rust_hdl_core = {path="../rust-hdl-core"}
 rust_hdl_synth = {path="../rust-hdl-synth"}
 rust_hdl_widgets = {path="../rust-hdl-widgets"}
+regex = "1.5.4"
