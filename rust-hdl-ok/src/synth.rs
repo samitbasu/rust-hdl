@@ -230,15 +230,15 @@ GENERATE
         std::fs::read_to_string(dir.clone().join("mig/user_design/rtl/mig.v")).unwrap();
     let mig_source = mig_source.replace(
         "localparam C3_CLKOUT2_DIVIDE       = 16;",
-        "localparam C3_CLKOUT2_DIVIDE         = 4; // Patched by Rust-HDL",
+        "localparam C3_CLKOUT2_DIVIDE       = 6; // Patched by Rust-HDL",
     );
     let mig_source = mig_source.replace(
         "localparam C3_CLKFBOUT_MULT        = 2;",
-        "localparam C3_CLKFBOUT_MULT        = 25;  // Patched by Rust-HDL",
+        "localparam C3_CLKFBOUT_MULT        = 6;  // Patched by Rust-HDL",
     );
     let mig_source = mig_source.replace(
-        "localparam C3_DIVCLK_DIVIDE        = 1;",
-        "localparam C3_DIVCLK_DIVIDE        = 4;  // Patched by Rust-HDL",
+        "localparam C3_INCLK_PERIOD         = ((C3_MEMCLK_PERIOD * C3_CLKFBOUT_MULT) / (C3_DIVCLK_DIVIDE * C3_CLKOUT0_DIVIDE * 2));",
+        "localparam C3_INCLK_PERIOD          = 10000; // Assumes 100MHz system clock Patched by Rust-HDL"
     );
     std::fs::write(
         dir.clone().join("mig/user_design/rtl/mig_patched.v"),
