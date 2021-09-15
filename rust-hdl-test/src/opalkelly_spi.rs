@@ -9,26 +9,26 @@ use std::thread::sleep;
 use std::time::Duration;
 
 #[derive(LogicBlock)]
-pub struct OpalKellyXEM6010SPITest {
+pub struct OpalKellySPITest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub adc: AD7193Simulator,
     pub spi: OKSPIMaster,
 }
 
-impl Default for OpalKellyXEM6010SPITest {
-    fn default() -> Self {
+impl OpalKellySPITest {
+    fn new<B: OpalKellyBSP>() -> Self {
         let adc_config = AD7193Config::hw();
         Self {
-            hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: OpalKellyHost::xem_6010(),
+            hi: B::hi(),
+            ok_host: B::ok_host(),
             adc: AD7193Simulator::new(adc_config),
             spi: OKSPIMaster::new(Default::default(), adc_config.spi),
         }
     }
 }
 
-impl Logic for OpalKellyXEM6010SPITest {
+impl Logic for OpalKellySPITest {
     #[hdl_gen]
     fn update(&mut self) {
         self.hi.link(&mut self.ok_host.hi);
@@ -45,23 +45,31 @@ impl Logic for OpalKellyXEM6010SPITest {
 
 #[test]
 fn test_synth() {
-    let mut uut = OpalKellyXEM6010SPITest::default();
+    let mut uut = OpalKellySPITest::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.connect_all();
     yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
 }
 
 #[test]
-fn test_opalkelly_xem_6010_spi() {
-    let mut uut = OpalKellyXEM6010SPITest::default();
+fn test_opalkelly_xem_6010_synth_spi() {
+    let mut uut = OpalKellySPITest::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_spi");
+    crate::ok_tools::synth_obj_6010(uut, "xem_6010_spi");
 }
 
 #[test]
-fn test_opalkelly_xem_6010_spi_reg_read_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_spi/top.bit")?;
+fn test_opalkelly_xem_7010_synth_spi() {
+    let mut uut = OpalKellySPITest::new::<XEM7010>();
+    uut.hi.link_connect_dest();
+    uut.connect_all();
+    crate::ok_tools::synth_obj_7010(uut, "xem_7010_spi");
+}
+
+#[cfg(test)]
+fn test_opalkelly_spi_reg_read_runtime(bit_file: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file)?;
     ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();
     let expected = [0x40, 0x80060, 0x117, 0, 0xa2, 0, 0x800000, 0x5544d0];
     for reg in 0..8 {
@@ -74,8 +82,18 @@ fn test_opalkelly_xem_6010_spi_reg_read_runtime() -> Result<(), OkError> {
 }
 
 #[test]
-fn test_opalkelly_xem_6010_spi_reg_write_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_spi/top.bit")?;
+fn test_opalkelly_xem_6010_spi_reg_read_runtime() -> Result<(), OkError> {
+    test_opalkelly_spi_reg_read_runtime("xem_6010_spi/top.bit")
+}
+
+#[test]
+fn test_opalkelly_xem_7010_spi_reg_read_runtime() -> Result<(), OkError> {
+    test_opalkelly_spi_reg_read_runtime("xem_7010_spi/top.bit")
+}
+
+#[cfg(test)]
+fn test_opalkelly_spi_reg_write_runtime(bit_file: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file)?;
     ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();
     let expected = [0x40, 0x80060, 0x117, 0, 0xa2, 0, 0x800000, 0x5544d0];
     for reg in 0..8 {
@@ -91,8 +109,19 @@ fn test_opalkelly_xem_6010_spi_reg_write_runtime() -> Result<(), OkError> {
 }
 
 #[test]
-fn test_opalkelly_xem_6010_spi_single_conversion_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_spi/top.bit")?;
+fn test_opalkelly_spi_reg_write_xem_6010_runtime() -> Result<(), OkError> {
+    test_opalkelly_spi_reg_write_runtime("xem_6010_spi/top.bit")
+}
+
+#[test]
+fn test_opalkelly_spi_reg_write_xem_7010_runtime() -> Result<(), OkError> {
+    test_opalkelly_spi_reg_write_runtime("xem_7010_spi/top.bit")
+}
+
+
+#[cfg(test)]
+fn test_opalkelly_spi_single_conversion_runtime(bit_file: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file)?;
     ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();
     sleep(Duration::from_millis(100));
     for i in 0..4 {
@@ -104,4 +133,14 @@ fn test_opalkelly_xem_6010_spi_single_conversion_runtime() -> Result<(), OkError
     }
     hnd.close();
     Ok(())
+}
+
+#[test]
+fn test_opalkelly_xem_6010_spi_single_conversion_runtime() -> Result<(), OkError> {
+    test_opalkelly_spi_single_conversion_runtime("xem_6010_spi/top.bit")
+}
+
+#[test]
+fn test_opalkelly_xem_7010_spi_single_conversion_runtime() -> Result<(), OkError> {
+    test_opalkelly_spi_single_conversion_runtime("xem_7010_spi/top.bit")
 }

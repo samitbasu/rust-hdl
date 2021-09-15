@@ -9,9 +9,10 @@ use rust_hdl_ok::spi::OKSPIMaster;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use std::thread::sleep;
 use std::time::Duration;
+use rust_hdl_ok::bsp::{OpalKellyBSP, XEM6010, XEM7010};
 
 #[derive(LogicBlock)]
-pub struct OpalKellyXEM6010SPIMuxTest {
+pub struct OpalKellySPIMuxTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub mux_adc: MuxedAD7193Simulators,
@@ -19,7 +20,7 @@ pub struct OpalKellyXEM6010SPIMuxTest {
     pub addr: WireIn,
 }
 
-impl Logic for OpalKellyXEM6010SPIMuxTest {
+impl Logic for OpalKellySPIMuxTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.hi.link(&mut self.ok_host.hi);
@@ -40,12 +41,12 @@ impl Logic for OpalKellyXEM6010SPIMuxTest {
     }
 }
 
-impl Default for OpalKellyXEM6010SPIMuxTest {
-    fn default() -> Self {
+impl OpalKellySPIMuxTest {
+    fn new<B: OpalKellyBSP>() -> Self {
         let adc_config = AD7193Config::hw();
         Self {
-            hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: OpalKellyHost::xem_6010(),
+            hi: B::hi(),
+            ok_host: B::ok_host(),
             mux_adc: MuxedAD7193Simulators::new(adc_config),
             spi: OKSPIMaster::new(Default::default(), adc_config.spi),
             addr: WireIn::new(0x03),
@@ -55,15 +56,24 @@ impl Default for OpalKellyXEM6010SPIMuxTest {
 
 #[test]
 fn test_opalkelly_xem_6010_mux_spi() {
-    let mut uut = OpalKellyXEM6010SPIMuxTest::default();
+    let mut uut = OpalKellySPIMuxTest::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_mux_spi");
+    crate::ok_tools::synth_obj_6010(uut, "xem_6010_mux_spi");
 }
 
 #[test]
-fn test_opalkelly_xem_6010_mux_spi_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_mux_spi/top.bit")?;
+fn test_opalkelly_xem_7010_mux_spi() {
+    let mut uut = OpalKellySPIMuxTest::new::<XEM7010>();
+    uut.hi.link_connect_dest();
+    uut.connect_all();
+    crate::ok_tools::synth_obj_7010(uut, "xem_7010_mux_spi");
+}
+
+
+#[cfg(test)]
+fn test_opalkelly_mux_spi_runtime(bit_file: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file)?;
     for addr in 0..8 {
         hnd.set_wire_in(3, addr);
         hnd.update_wire_ins();
@@ -93,4 +103,14 @@ fn test_opalkelly_xem_6010_mux_spi_runtime() -> Result<(), OkError> {
     }
     hnd.close();
     Ok(())
+}
+
+#[test]
+fn test_opalkelly_xem_6010_mux_spi_runtime() -> Result<(), OkError> {
+    test_opalkelly_mux_spi_runtime("xem_6010_mux_spi/top.bit")
+}
+
+#[test]
+fn test_opalkelly_xem_7010_mux_spi_runtime() -> Result<(), OkError> {
+    test_opalkelly_mux_spi_runtime("xem_7010_mux_spi/top.bit")
 }

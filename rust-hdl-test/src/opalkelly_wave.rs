@@ -4,7 +4,7 @@ use rust_hdl_ok::prelude::*;
 use crate::alchitry_cu_pwm_vec_srom::FaderWithSyncROM;
 
 #[derive(LogicBlock)]
-pub struct OpalKellyXEM6010Wave {
+pub struct OpalKellyWave {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>>,
@@ -12,7 +12,7 @@ pub struct OpalKellyXEM6010Wave {
     pub faders: [FaderWithSyncROM; 8],
 }
 
-impl Logic for OpalKellyXEM6010Wave {
+impl Logic for OpalKellyWave {
     #[hdl_gen]
     fn update(&mut self) {
         self.hi.link(&mut self.ok_host.hi);
@@ -31,8 +31,8 @@ impl Logic for OpalKellyXEM6010Wave {
     }
 }
 
-impl Default for OpalKellyXEM6010Wave {
-    fn default() -> Self {
+impl OpalKellyWave {
+    fn new<B: OpalKellyBSP>() -> Self {
         let faders: [FaderWithSyncROM; 8] = [
             FaderWithSyncROM::new(MHZ48, 0),
             FaderWithSyncROM::new(MHZ48, 18),
@@ -44,22 +44,33 @@ impl Default for OpalKellyXEM6010Wave {
             FaderWithSyncROM::new(MHZ48, 128),
         ];
         Self {
-            hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: OpalKellyHost::xem_6010(),
+            hi: B::hi(),
+            ok_host: B::ok_host(),
             local: Signal::default(),
             faders,
-            led: xem_6010_leds(),
+            led: B::leds(),
         }
     }
 }
 
 #[test]
-fn test_opalkelly_xem_6010_wave() {
-    let mut uut = OpalKellyXEM6010Wave::default();
+fn test_opalkelly_xem_6010_synth_wave() {
+    let mut uut = OpalKellyWave::new::<XEM6010>();
     uut.hi.sig_in.connect();
     uut.hi.sig_out.connect();
     uut.hi.sig_inout.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_wave");
+    crate::ok_tools::synth_obj_6010(uut, "xem_6010_wave");
+}
+
+#[test]
+fn test_opalkelly_xem_7010_synth_wave() {
+    let mut uut = OpalKellyWave::new::<XEM7010>();
+    uut.hi.sig_in.connect();
+    uut.hi.sig_out.connect();
+    uut.hi.sig_inout.connect();
+    uut.hi.sig_aa.connect();
+    uut.connect_all();
+    crate::ok_tools::synth_obj_7010(uut, "xem_7010_wave");
 }

@@ -26,6 +26,7 @@ pub mod synth_7010;
 pub mod synth_common;
 pub mod ucf_gen;
 pub mod xdc_gen;
+pub mod ok_sys_clock7;
 
 const MHZ48: u64 = 48_000_000;
 

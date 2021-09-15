@@ -8,3 +8,4 @@ pub use crate::synth_7010::*;
 pub use crate::ucf_gen::*;
 
 pub const MHZ48: u64 = 48_000_000;
+pub const MHZ100: u64 = 100_000_000;

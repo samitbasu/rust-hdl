@@ -1,6 +1,8 @@
 use rust_hdl_core::prelude::*;
 
 use crate::ok_hi::OpalKellyHostInterface;
+use rust_hdl_synth::TopWrap;
+use crate::bsp::XEM6010;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct OpalKellyHost {
@@ -88,10 +90,7 @@ impl OpalKellyHost {
 
 #[test]
 fn test_host_interface_synthesizes() {
-    use rust_hdl_synth::top_wrap;
-
-    top_wrap!(OpalKellyHost, Wrapper);
-    let mut uut: Wrapper = Default::default();
+    let mut uut = TopWrap::new(OpalKellyHost::xem_6010());
     uut.uut.ok2.connect();
     uut.uut.hi.sig_in.connect();
     uut.connect_all();

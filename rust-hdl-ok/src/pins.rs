@@ -40,3 +40,27 @@ pub fn xem_6010_base_clock() -> Signal<In, Clock> {
     });
     x
 }
+
+pub fn xem_7010_pos_clock() -> Signal<In, Clock> {
+    let mut x = Signal::default();
+    x.add_location(0, "K4");
+    x.add_signal_type(0, SignalType::LowVoltageDifferentialSignal_2v5);
+    x.connect();
+    x.add_constraint(PinConstraint {
+        index: 0,
+        constraint: Constraint::Timing(Timing::Periodic(PeriodicTiming {
+            net: "SystemClk".into(),
+            period_nanoseconds: 5.0,
+            duty_cycle: 50.0,
+        })),
+    });
+    x
+}
+
+pub fn xem_7010_neg_clock() -> Signal<In, Clock> {
+    let mut x = Signal::default();
+    x.add_location(0, "J4");
+    x.add_signal_type(0, SignalType::LowVoltageDifferentialSignal_2v5);
+    x.connect();
+    x
+}

@@ -36,11 +36,11 @@ pub mod opalkelly_xem_6010_download;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_mig;
 #[cfg(feature = "fpga_hw_test")]
-pub mod opalkelly_xem_6010_mux_spi;
+pub mod opalkelly_mux_spi;
 #[cfg(feature = "fpga_hw_test")]
-pub mod opalkelly_xem_6010_spi;
+pub mod opalkelly_spi;
 #[cfg(feature = "fpga_hw_test")]
-pub mod opalkelly_xem_6010_wave;
+pub mod opalkelly_wave;
 pub mod pwm;
 pub mod ram;
 pub mod rom;
