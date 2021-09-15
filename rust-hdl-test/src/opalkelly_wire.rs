@@ -7,7 +7,7 @@ use rust_hdl_widgets::prelude::DFF;
 use std::time::Duration;
 
 #[derive(LogicBlock)]
-pub struct OpalKellyXEM6010WireTest {
+pub struct OpalKellyWireTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>>,
@@ -20,24 +20,24 @@ pub struct OpalKellyXEM6010WireTest {
     pub trig_counter: DFF<Bits<16>>,
 }
 
-impl OpalKellyXEM6010WireTest {
-    pub fn new() -> Self {
+impl OpalKellyWireTest {
+    pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
-            hi: OpalKellyHostInterface::xem_6010(),
+            hi: B::hi(),
             trig_counter: DFF::new(0_u16.into()),
-            led: xem_6010_leds(),
+            led: B::leds(),
             wire_0: WireIn::new(0),
             wire_1: WireIn::new(1),
             o_wire: WireOut::new(0x20),
             o_wire_1: WireOut::new(0x21),
             trig: TriggerIn::new(0x40),
-            ok_host: Default::default(),
+            ok_host: B::ok_host(),
             o_trig: TriggerOut::new(0x60),
         }
     }
 }
 
-impl Logic for OpalKellyXEM6010WireTest {
+impl Logic for OpalKellyWireTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.hi.link(&mut self.ok_host.hi);
@@ -69,16 +69,24 @@ impl Logic for OpalKellyXEM6010WireTest {
 }
 
 #[test]
-fn test_opalkelly_xem_6010_wire() {
-    let mut uut = OpalKellyXEM6010WireTest::new();
+fn test_opalkelly_xem_6010_synth_wire() {
+    let mut uut = OpalKellyWireTest::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_wire");
+    crate::ok_tools::synth_obj_6010(uut, "xem_6010_wire");
 }
 
 #[test]
-fn test_opalkelly_xem_6010_wire_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_wire/top.bit")?;
+fn test_opalkelly_xem_7010_synth_wire() {
+    let mut uut = OpalKellyWireTest::new::<XEM7010>();
+    uut.hi.link_connect_dest();
+    uut.connect_all();
+    crate::ok_tools::synth_obj_7010(uut, "xem_7010_wire");
+}
+
+#[cfg(test)]
+fn test_opalkelly_xem_wire_runtime(filename: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(filename)?;
     hnd.set_wire_in(0x00, 0x45);
     hnd.update_wire_ins();
     for i in 0..12 {
@@ -97,4 +105,14 @@ fn test_opalkelly_xem_6010_wire_runtime() -> Result<(), OkError> {
         }
     }
     Ok(())
+}
+
+#[test]
+fn test_opalkelly_xem_6010_wire_runtime() -> Result<(), OkError> {
+    test_opalkelly_xem_wire_runtime("xem_6010_wire/top.bit")
+}
+
+#[test]
+fn test_opalkelly_xem_7010_wire_runtime() -> Result<(), OkError> {
+    test_opalkelly_xem_wire_runtime("xem_7010_wire/top.bit")
 }

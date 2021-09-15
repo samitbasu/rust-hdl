@@ -1,61 +1,60 @@
-use crate::ucf_gen::generate_ucf;
-use rust_hdl_core::prelude::*;
 use std::fs::{copy, create_dir, remove_dir_all, File};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-pub fn filter_blackbox_directives(t: &str) -> String {
-    let mut in_black_box = false;
-    let mut ret = vec![];
-    for line in t.split("\n") {
-        in_black_box = in_black_box || line.starts_with("(* blackbox *)");
-        if !in_black_box {
-            ret.push(line);
-        }
-        if line.starts_with("endmodule") {
-            in_black_box = false;
+use rust_hdl_core::prelude::*;
+
+use crate::synth_common;
+use crate::ucf_gen::generate_ucf;
+
+#[derive(Clone, Debug)]
+pub struct ISEOptions {
+    pub ise_path: String,
+    pub add_mig: bool,
+    pub assets: Vec<String>,
+}
+
+const ISE_PATH: &str = "/opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64/";
+const FP_PATH: &str = "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM6010-LX45";
+
+impl Default for ISEOptions {
+    fn default() -> Self {
+        Self {
+            ise_path: ISE_PATH.to_string(),
+            add_mig: true,
+            assets: [
+                "okLibrary.v",
+                "okCoreHarness.ngc",
+                "okWireIn.ngc",
+                "TFIFO64x8a_64x8b.ngc",
+                "okWireOut.ngc",
+                "okTriggerIn.ngc",
+                "okTriggerOut.ngc",
+                "okPipeIn.ngc",
+                "okPipeOut.ngc",
+                "okBTPipeIn.ngc",
+                "okBTPipeOut.ngc",
+            ]
+            .iter()
+            .map(|x| format!("{}/{}", FP_PATH, x))
+            .collect(),
         }
     }
-    ret.join("\n")
 }
 
-#[test]
-fn test_filter_bb_directives() {
-    let p = r#"
-blah
-more code
-goes here
-
-(* blackbox *)
-module my_famous_module(
-    super_secret_arg1,
-    super_secret_arg2,
-    super_secret_arg3);
-/* Comment */
-endmodule
-
-stuff
-"#;
-    let q = filter_blackbox_directives(p);
-    println!("{}", q);
-    assert!(!q.contains("blackbox"));
-    assert!(!q.contains("module"));
-    assert!(!q.contains("endmodule"));
-    assert!(q.contains("more code"));
-    assert!(q.contains("stuff"));
-}
-
-pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, assets: &[String]) {
+pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, options: ISEOptions) {
     uut.connect_all();
     check_connected(&uut);
-    let verilog_text = filter_blackbox_directives(&generate_verilog(&uut));
+    let verilog_text = synth_common::filter_blackbox_directives(&generate_verilog(&uut));
     let ucf_text = generate_ucf(&uut);
     let dir = PathBuf::from(prefix);
     let _ = remove_dir_all(&dir);
     let _ = create_dir(&dir);
-    let mut assets: Vec<String> = assets.into();
-    assets.extend_from_slice(&add_mig_core_xem_6010(prefix));
+    let mut assets: Vec<String> = options.assets.clone();
+    if options.add_mig {
+        assets.extend_from_slice(&add_mig_core_xem_6010(prefix, options.clone()));
+    }
     let mut v_file = File::create(dir.clone().join("top.v")).unwrap();
     write!(v_file, "{}", verilog_text).unwrap();
     let mut ucf_file = File::create(dir.clone().join("top.ucf")).unwrap();
@@ -91,22 +90,20 @@ project close
             .join(" ")
     )
     .unwrap();
-    let output = Command::new("xtclsh")
+    let output = Command::new(format!("{}/xtclsh", options.ise_path))
         .current_dir(dir.clone())
         .arg("top.tcl")
         .output()
         .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
-    let mut out_file = File::create(dir.clone().join("top.out")).unwrap();
-    write!(out_file, "{}", stdout).unwrap();
-    let mut err_file = File::create(dir.clone().join("top.err")).unwrap();
-    write!(err_file, "{}", stderr).unwrap();
+    std::fs::write(dir.clone().join("top.out"), &stdout).unwrap();
+    std::fs::write(dir.clone().join("top.err"), &stderr).unwrap();
     assert!(stdout.contains(r#"Process "Generate Programming File" completed successfully"#));
     assert!(stdout.contains(r#"All constraints were met."#));
 }
 
-pub fn add_mig_core_xem_6010(prefix: &str) -> Vec<String> {
+pub fn add_mig_core_xem_6010(prefix: &str, options: ISEOptions) -> Vec<String> {
     let dir = PathBuf::from(prefix).join("core_gen");
     let _ = create_dir(&dir);
     let mut prj_file = File::create(dir.clone().join("mig.prj")).unwrap();
@@ -219,7 +216,7 @@ GENERATE
 "#
     )
     .unwrap();
-    let _output = Command::new("coregen")
+    let _output = Command::new(format!("{}/coregen", options.ise_path))
         .current_dir(dir.clone())
         .arg("-b")
         .arg("coregen.xco")

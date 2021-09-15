@@ -54,6 +54,20 @@ impl ToString for TimingRelativeEdge {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct VivadoInputTimingConstraint {
+    pub min_nanoseconds: f64,
+    pub max_nanoseconds: f64,
+    pub multicycle: usize,
+    pub clock: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct VivadoOutputTimingConstraint {
+    pub delay_nanoseconds: f64,
+    pub clock: String,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct InputTimingConstraint {
     pub offset_nanoseconds: f64,
@@ -78,6 +92,8 @@ pub enum Timing {
     Periodic(PeriodicTiming),
     InputTiming(InputTimingConstraint),
     OutputTiming(OutputTimingConstraint),
+    VivadoInputTiming(VivadoInputTimingConstraint),
+    VivadoOutputTiming(VivadoOutputTimingConstraint),
     Custom(String),
 }
 

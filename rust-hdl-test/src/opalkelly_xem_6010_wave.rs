@@ -45,7 +45,7 @@ impl Default for OpalKellyXEM6010Wave {
         ];
         Self {
             hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: Default::default(),
+            ok_host: OpalKellyHost::xem_6010(),
             local: Signal::default(),
             faders,
             led: xem_6010_leds(),

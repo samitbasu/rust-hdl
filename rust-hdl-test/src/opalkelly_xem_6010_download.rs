@@ -34,7 +34,7 @@ impl Default for OpalKellyXEM6010Download32FIFOTest {
     fn default() -> Self {
         Self {
             hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: Default::default(),
+            ok_host: OpalKellyHost::xem_6010(),
             dl: OpalKellyDownload32FIFO::new(0xA0),
             counter: Default::default(),
             will_write: Default::default(),
@@ -98,7 +98,7 @@ impl Default for OpalKellyXEM6010DownloadFIFOTest {
     fn default() -> Self {
         Self {
             hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: Default::default(),
+            ok_host: OpalKellyHost::xem_6010(),
             dl: OpalKellyDownloadFIFO::new(0xA0),
             counter: Default::default(),
             will_write: Default::default(),

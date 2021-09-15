@@ -8,7 +8,7 @@ use rust_hdl_widgets::ram::RAM;
 use std::num::Wrapping;
 
 #[derive(LogicBlock)]
-pub struct OpalKellyXEM6010PipeTest {
+pub struct OpalKellyPipeTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub accum: DFF<Bits<16>>,
@@ -16,11 +16,11 @@ pub struct OpalKellyXEM6010PipeTest {
     pub i_pipe: PipeIn,
 }
 
-impl OpalKellyXEM6010PipeTest {
-    pub fn new() -> Self {
+impl OpalKellyPipeTest {
+    pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
-            hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: Default::default(),
+            hi: B::hi(),
+            ok_host: B::ok_host(),
             accum: DFF::new(0_u16.into()),
             o_wire: WireOut::new(0x20),
             i_pipe: PipeIn::new(0x80),
@@ -28,7 +28,7 @@ impl OpalKellyXEM6010PipeTest {
     }
 }
 
-impl Logic for OpalKellyXEM6010PipeTest {
+impl Logic for OpalKellyPipeTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
@@ -52,11 +52,19 @@ impl Logic for OpalKellyXEM6010PipeTest {
 }
 
 #[test]
-fn test_opalkelly_xem_6010_pipe() {
-    let mut uut = OpalKellyXEM6010PipeTest::new();
+fn test_opalkelly_xem_6010_synth_pipe() {
+    let mut uut = OpalKellyPipeTest::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_pipe");
+    crate::ok_tools::synth_obj_6010(uut, "xem_6010_pipe");
+}
+
+#[test]
+fn test_opalkelly_xem_7010_synth_pipe() {
+    let mut uut = OpalKellyPipeTest::new::<XEM7010>();
+    uut.hi.link_connect_dest();
+    uut.connect_all();
+    crate::ok_tools::synth_obj_7010(uut, "xem_7010_pipe");
 }
 
 fn sum_vec(t: &[u16]) -> u16 {
@@ -67,9 +75,9 @@ fn sum_vec(t: &[u16]) -> u16 {
     ret.0
 }
 
-#[test]
-fn test_opalkelly_xem_6010_pipe_in_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_pipe/top.bit")?;
+#[cfg(test)]
+fn test_opalkelly_pipe_in_runtime(bit_name: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_name)?;
     let data = (0..1024 * 1024)
         .map(|_| rand::random::<u8>())
         .collect::<Vec<_>>();
@@ -83,8 +91,18 @@ fn test_opalkelly_xem_6010_pipe_in_runtime() -> Result<(), OkError> {
     Ok(())
 }
 
+#[test]
+fn test_xem_6010_pipe_in_runtime() -> Result<(), OkError> {
+    test_opalkelly_pipe_in_runtime("xem_6010_pipe/top.bit")
+}
+
+#[test]
+fn test_xem_7010_pipe_in_runtime() -> Result<(), OkError> {
+    test_opalkelly_pipe_in_runtime("xem_7010_pipe/top.bit")
+}
+
 #[derive(LogicBlock)]
-pub struct OpalKellyXEM6010PipeRAMTest {
+pub struct OpalKellyPipeRAMTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub ram: RAM<Bits<16>, 8>,
@@ -94,11 +112,11 @@ pub struct OpalKellyXEM6010PipeRAMTest {
     pub write_address: DFF<Bits<8>>,
 }
 
-impl OpalKellyXEM6010PipeRAMTest {
-    fn new() -> Self {
+impl OpalKellyPipeRAMTest {
+    fn new<B: OpalKellyBSP>() -> Self {
         Self {
-            hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: Default::default(),
+            hi: B::hi(),
+            ok_host: B::ok_host(),
             ram: RAM::new(Default::default()),
             i_pipe: PipeIn::new(0x80),
             o_pipe: PipeOut::new(0xA0),
@@ -108,7 +126,7 @@ impl OpalKellyXEM6010PipeRAMTest {
     }
 }
 
-impl Logic for OpalKellyXEM6010PipeRAMTest {
+impl Logic for OpalKellyPipeRAMTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
@@ -139,16 +157,24 @@ impl Logic for OpalKellyXEM6010PipeRAMTest {
 }
 
 #[test]
-fn test_opalkelly_xem_6010_pipe_ram() {
-    let mut uut = OpalKellyXEM6010PipeRAMTest::new();
+fn test_opalkelly_xem_6010_synth_pipe_ram() {
+    let mut uut = OpalKellyPipeRAMTest::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_pipe_ram");
+    crate::ok_tools::synth_obj_6010(uut, "xem_6010_pipe_ram");
 }
 
 #[test]
-fn test_opalkelly_xem_6010_pipe_ram_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_pipe_ram/top.bit")?;
+fn test_opalkelly_xem_7010_synth_pipe_ram() {
+    let mut uut = OpalKellyPipeRAMTest::new::<XEM7010>();
+    uut.hi.link_connect_dest();
+    uut.connect_all();
+    crate::ok_tools::synth_obj_7010(uut, "xem_7010_pipe_ram");
+}
+
+#[cfg(test)]
+fn test_opalkelly_pipe_ram_runtime(bitfile: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bitfile)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
     hnd.write_to_pipe_in(0x80, &data)?;
     let mut out = vec![0_u8; 512];
@@ -160,10 +186,20 @@ fn test_opalkelly_xem_6010_pipe_ram_runtime() -> Result<(), OkError> {
     Ok(())
 }
 
+#[test]
+fn test_opalkelly_xem_6010_pipe_ram_runtime() -> Result<(), OkError> {
+    test_opalkelly_pipe_ram_runtime("xem_6010_pipe_ram/top.bit")
+}
+
+#[test]
+fn test_opalkelly_xem_7010_pipe_ram_runtime() -> Result<(), OkError> {
+    test_opalkelly_pipe_ram_runtime("xem_7010_pipe_ram/top.bit")
+}
+
 declare_sync_fifo!(OKTestFIFO, Bits<16>, 256, 1);
 
 #[derive(LogicBlock)]
-pub struct OpalKellyXEM6010PipeFIFOTest {
+pub struct OpalKellyPipeFIFOTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub fifo: OKTestFIFO,
@@ -172,11 +208,11 @@ pub struct OpalKellyXEM6010PipeFIFOTest {
     pub delay_read: DFF<Bit>,
 }
 
-impl OpalKellyXEM6010PipeFIFOTest {
-    fn new() -> Self {
+impl OpalKellyPipeFIFOTest {
+    fn new<B: OpalKellyBSP>() -> Self {
         Self {
-            hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: Default::default(),
+            hi: B::hi(),
+            ok_host: B::ok_host(),
             fifo: Default::default(),
             i_pipe: PipeIn::new(0x80),
             o_pipe: PipeOut::new(0xA0),
@@ -185,7 +221,7 @@ impl OpalKellyXEM6010PipeFIFOTest {
     }
 }
 
-impl Logic for OpalKellyXEM6010PipeFIFOTest {
+impl Logic for OpalKellyPipeFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
@@ -210,19 +246,30 @@ impl Logic for OpalKellyXEM6010PipeFIFOTest {
 }
 
 #[test]
-fn test_opalkelly_xem_6010_pipe_fifo() {
-    let mut uut = OpalKellyXEM6010PipeFIFOTest::new();
+fn test_opalkelly_xem_6010_synth_pipe_fifo() {
+    let mut uut = OpalKellyPipeFIFOTest::new::<XEM6010>();
     uut.hi.sig_inout.connect();
     uut.hi.sig_in.connect();
     uut.hi.sig_out.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_fifo");
+    crate::ok_tools::synth_obj_6010(uut, "xem_6010_fifo");
 }
 
 #[test]
-fn test_opalkelly_xem_6010_pipe_fifo_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_fifo/top.bit")?;
+fn test_opalkelly_xem_7010_synth_pipe_fifo() {
+    let mut uut = OpalKellyPipeFIFOTest::new::<XEM7010>();
+    uut.hi.sig_inout.connect();
+    uut.hi.sig_in.connect();
+    uut.hi.sig_out.connect();
+    uut.hi.sig_aa.connect();
+    uut.connect_all();
+    crate::ok_tools::synth_obj_7010(uut, "xem_7010_fifo");
+}
+
+#[cfg(test)]
+fn test_opalkelly_pipe_fifo_runtime(bit_file: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
     let orig_data_16 = make_u16_buffer(&data);
     hnd.write_to_pipe_in(0x80, &data)?;
@@ -233,10 +280,20 @@ fn test_opalkelly_xem_6010_pipe_fifo_runtime() -> Result<(), OkError> {
     Ok(())
 }
 
+#[test]
+fn test_opalkelly_xem_6010_pipe_fifo_runtime() -> Result<(), OkError> {
+    test_opalkelly_pipe_fifo_runtime("xem_6010_fifo/top.bit")
+}
+
+#[test]
+fn test_opalkelly_xem_7010_pipe_fifo_runtime() -> Result<(), OkError> {
+    test_opalkelly_pipe_fifo_runtime("xem_7010_fifo/top.bit")
+}
+
 declare_async_fifo!(OKTestAFIFO, Bits<16>, 256, 1);
 
 #[derive(LogicBlock)]
-pub struct OpalKellyXEM6010PipeAFIFOTest {
+pub struct OpalKellyPipeAFIFOTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub fifo_in: OKTestAFIFO,
@@ -247,11 +304,11 @@ pub struct OpalKellyXEM6010PipeAFIFOTest {
     pub fast_clock: Signal<In, Clock>,
 }
 
-impl OpalKellyXEM6010PipeAFIFOTest {
-    fn new() -> Self {
+impl OpalKellyPipeAFIFOTest {
+    fn new<B: OpalKellyBSP>() -> Self {
         Self {
-            hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: Default::default(),
+            hi: B::hi(),
+            ok_host: B::ok_host(),
             fifo_in: Default::default(),
             fifo_out: Default::default(),
             i_pipe: PipeIn::new(0x80),
@@ -262,7 +319,7 @@ impl OpalKellyXEM6010PipeAFIFOTest {
     }
 }
 
-impl Logic for OpalKellyXEM6010PipeAFIFOTest {
+impl Logic for OpalKellyPipeAFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
@@ -297,17 +354,26 @@ impl Logic for OpalKellyXEM6010PipeAFIFOTest {
 }
 
 #[test]
-fn test_opalkelly_xem_6010_pipe_afifo() {
-    let mut uut = OpalKellyXEM6010PipeAFIFOTest::new();
+fn test_opalkelly_xem_6010_synth_pipe_afifo() {
+    let mut uut = OpalKellyPipeAFIFOTest::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.fast_clock.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_afifo");
+    crate::ok_tools::synth_obj_6010(uut, "xem_6010_afifo");
 }
 
 #[test]
-fn test_opalkelly_xem_6010_pipe_afifo_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_afifo/top.bit")?;
+fn test_opalkelly_xem_7010_synth_pipe_afifo() {
+    let mut uut = OpalKellyPipeAFIFOTest::new::<XEM7010>();
+    uut.hi.link_connect_dest();
+    uut.fast_clock.connect();
+    uut.connect_all();
+    crate::ok_tools::synth_obj_7010(uut, "xem_7010_afifo");
+}
+
+#[cfg(test)]
+fn test_opalkelly_pipe_afifo_runtime(bit_file: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
     let orig_data_16 = make_u16_buffer(&data);
     hnd.write_to_pipe_in(0x80, &data)?;
@@ -323,10 +389,20 @@ fn test_opalkelly_xem_6010_pipe_afifo_runtime() -> Result<(), OkError> {
     Ok(())
 }
 
+#[test]
+fn test_opalkelly_xem_6010_pipe_afifo_runtime() -> Result<(), OkError> {
+    test_opalkelly_pipe_afifo_runtime("xem_6010_afifo/top.bit")
+}
+
+#[test]
+fn test_opalkelly_xem_7010_pipe_afifo_runtime() -> Result<(), OkError> {
+    test_opalkelly_pipe_afifo_runtime("xem_7010_afifo/top.bit")
+}
+
 declare_async_fifo!(OKTestAFIFO2, Bits<16>, 1024, 256);
 
 #[derive(LogicBlock)]
-pub struct OpalKellyXEM6010BTPipeOutTest {
+pub struct OpalKellyBTPipeOutTest {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub fifo_out: OKTestAFIFO2,
@@ -339,7 +415,7 @@ pub struct OpalKellyXEM6010BTPipeOutTest {
     pub led: Signal<Out, Bits<8>>,
 }
 
-impl Logic for OpalKellyXEM6010BTPipeOutTest {
+impl Logic for OpalKellyBTPipeOutTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Link the interfaces
@@ -390,11 +466,11 @@ impl Logic for OpalKellyXEM6010BTPipeOutTest {
     }
 }
 
-impl OpalKellyXEM6010BTPipeOutTest {
+impl OpalKellyBTPipeOutTest {
     pub fn new() -> Self {
         Self {
             hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: Default::default(),
+            ok_host: OpalKellyHost::xem_6010(),
             fifo_out: Default::default(),
             o_pipe: BTPipeOut::new(0xA0),
             delay_read: Default::default(),
@@ -408,8 +484,8 @@ impl OpalKellyXEM6010BTPipeOutTest {
 }
 
 #[test]
-fn test_opalkelly_xem_6010_btpipe() {
-    let mut uut = OpalKellyXEM6010BTPipeOutTest::new();
+fn test_opalkelly_xem_6010_synth_btpipe() {
+    let mut uut = OpalKellyBTPipeOutTest::new();
     uut.hi.link_connect_dest();
     uut.fast_clock.connect();
     uut.connect_all();

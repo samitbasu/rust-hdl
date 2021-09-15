@@ -64,7 +64,25 @@ impl Probe for XDCGenerator {
                                 prefix=prefix)
                         }
                         Timing::Custom(c) => c.to_string(),
-                        _ => unimplemented!("Constraint type is not implemented"),
+                        Timing::VivadoOutputTiming(o) => {
+                            format!("set_output_delay -add_delay -clock [get_clocks {{ {clock} }}] {delay} [get_ports {{ {prefix} }}]",
+                                    clock = o.clock, delay = o.delay_nanoseconds, prefix=prefix)
+                        }
+                        Timing::VivadoInputTiming(i) => {
+                            format!(
+"set_input_delay -add_delay -max -clock [get_clocks {{ {clock} }}] {max} [get_ports {{ {prefix} }}]
+set_input_delay -add_delay -min -clock [get_clocks {{ {clock} }}] {min} [get_ports {{ {prefix} }}]
+set_multicycle_path -setup -from [get_ports {{ {prefix} }}] {cycles}",
+                                clock = i.clock,
+                                max = i.max_nanoseconds,
+                                min = i.min_nanoseconds,
+                                prefix = prefix,
+                                cycles = i.multicycle
+                            )
+                        }
+                        _ => {
+                            unimplemented!("Constraint type {:?} is not implemented for Vivado", t)
+                        }
                     };
                     self.xdc.push(timing);
                 }
@@ -89,5 +107,10 @@ pub fn generate_xdc<U: Block>(uut: &U) -> String {
             xdc_uniq.push(line);
         }
     }
-    xdc_uniq.join("\n") + "\n"
+    xdc_uniq.join("\n")
+        + "
+set_property CFGBVS VCCO [current_design]
+set_property CONFIG_VOLTAGE 3.3 [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS True [current_design]
+    "
 }

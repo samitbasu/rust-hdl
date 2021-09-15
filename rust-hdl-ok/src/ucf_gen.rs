@@ -136,6 +136,7 @@ impl Probe for UCFGenerator {
                             )
                         }
                         Timing::Custom(c) => c.to_string(),
+                        _ => unimplemented!("Unknown timing constraint for ISE/UCF generation"),
                     };
                     self.ucf.push(timing);
                 }
@@ -166,5 +167,8 @@ pub fn generate_ucf<U: Block>(uut: &U) -> String {
             ucf_uniq.push(line);
         }
     }
-    ucf_uniq.join(";\n") + ";\n"
+    ucf_uniq.join(";\n")
+        + ";
+CONFIG VCCAUX = \"3.3\"; // Required for Spartan-6
+"
 }

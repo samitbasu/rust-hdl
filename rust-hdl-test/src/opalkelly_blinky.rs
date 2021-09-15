@@ -5,25 +5,25 @@ use rust_hdl_ok::prelude::*;
 use rust_hdl_widgets::prelude::*;
 
 #[derive(LogicBlock)]
-pub struct OpalKellyXEM6010Blinky {
+pub struct OpalKellyBlinky {
     pub hi: OpalKellyHostInterface,
     pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>>,
     pub pulser: Pulser,
 }
 
-impl OpalKellyXEM6010Blinky {
-    pub fn new() -> Self {
+impl OpalKellyBlinky {
+    pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
-            hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: OpalKellyHost::default(),
-            led: xem_6010_leds(),
+            hi: B::hi(),
+            ok_host: B::ok_host(),
+            led: B::leds(),
             pulser: Pulser::new(MHZ48, 1.0, Duration::from_millis(500)),
         }
     }
 }
 
-impl Logic for OpalKellyXEM6010Blinky {
+impl Logic for OpalKellyBlinky {
     #[hdl_gen]
     fn update(&mut self) {
         self.hi.link(&mut self.ok_host.hi);
@@ -38,12 +38,19 @@ impl Logic for OpalKellyXEM6010Blinky {
 }
 
 #[test]
-fn test_opalkelly_xem_6010_blinky() {
-    let mut uut = OpalKellyXEM6010Blinky::new();
+fn test_opalkelly_xem_6010_synth_blinky() {
+    let mut uut = OpalKellyBlinky::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.connect_all();
     check_connected(&uut);
-    let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_blinky");
+    crate::ok_tools::synth_obj_6010(uut, "xem_6010_blinky");
+}
+
+#[test]
+fn test_opalkelly_xem_7010_synth_blinky() {
+    let mut uut = OpalKellyBlinky::new::<XEM7010>();
+    uut.hi.link_connect_dest();
+    uut.connect_all();
+    check_connected(&uut);
+    crate::ok_tools::synth_obj_7010(uut, "xem_7010_blinky");
 }

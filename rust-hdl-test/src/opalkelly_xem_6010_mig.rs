@@ -36,7 +36,7 @@ impl Default for OpalKellyXEM6010MIGTest {
             hi: OpalKellyHostInterface::xem_6010(),
             mcb: MCBInterface::xem_6010(),
             raw_clock,
-            ok_host: Default::default(),
+            ok_host: OpalKellyHost::xem_6010(),
             mig: Default::default(),
             reset: WireIn::new(0x00),
             pipe_in: PipeIn::new(0x80),

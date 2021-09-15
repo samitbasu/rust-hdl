@@ -7,11 +7,6 @@ use std::path::Path;
 use std::thread::sleep;
 use std::time::Duration;
 
-const FRONT_PANEL_6010_DIR: &str =
-    "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM6010-LX45";
-const FRONT_PANEL_7010_DIR: &str =
-    "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM7010-A50";
-
 pub fn find_ok_bus_collisions(vlog: &str) {
     let expr = regex::Regex::new(r#"\.ep_addr\(8'h(\w+)\)"#).unwrap();
     let mut addr_list = vec![];
@@ -32,22 +27,7 @@ pub fn synth_obj_7010<U: Block>(uut: U, dir: &str) {
     find_ok_bus_collisions(&vlog);
     let _xcd = rust_hdl_ok::xdc_gen::generate_xdc(&uut);
     rust_hdl_synth::yosys_validate("vlog", &vlog).unwrap();
-    let frontpanel_hdl = [
-        "okLibrary.v",
-        "okCoreHarness.v",
-        "okWireIn.v",
-        "okWireOut.v",
-        "okTriggerIn.v",
-        "okTriggerOut.v",
-        "okPipeIn.v",
-        "okPipeOut.v",
-        "okBTPipeIn.v",
-        "okBTPipeOut.v",
-    ]
-    .iter()
-    .map(|x| format!("{}/{}", FRONT_PANEL_7010_DIR, x))
-    .collect::<Vec<_>>();
-    generate_bitstream_xem_7010(uut, dir, &frontpanel_hdl);
+    generate_bitstream_xem_7010(uut, dir, Default::default());
 }
 
 pub fn synth_obj_6010<U: Block>(uut: U, dir: &str) {
@@ -56,23 +36,7 @@ pub fn synth_obj_6010<U: Block>(uut: U, dir: &str) {
     find_ok_bus_collisions(&vlog);
     let _ucf = rust_hdl_ok::ucf_gen::generate_ucf(&uut);
     rust_hdl_synth::yosys_validate("vlog", &vlog).unwrap();
-    let frontpanel_hdl = [
-        "okLibrary.v",
-        "okCoreHarness.ngc",
-        "okWireIn.ngc",
-        "TFIFO64x8a_64x8b.ngc",
-        "okWireOut.ngc",
-        "okTriggerIn.ngc",
-        "okTriggerOut.ngc",
-        "okPipeIn.ngc",
-        "okPipeOut.ngc",
-        "okBTPipeIn.ngc",
-        "okBTPipeOut.ngc",
-    ]
-    .iter()
-    .map(|x| format!("{}/{}", FRONT_PANEL_6010_DIR, x))
-    .collect::<Vec<_>>();
-    generate_bitstream_xem_6010(uut, dir, &frontpanel_hdl);
+    generate_bitstream_xem_6010(uut, dir, Default::default());
 }
 
 pub fn ok_test_prelude(filename: &str) -> Result<OkHandle, OkError> {

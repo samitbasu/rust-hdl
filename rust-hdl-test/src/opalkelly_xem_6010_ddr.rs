@@ -30,7 +30,7 @@ impl Default for OpalKellyDownloadDDRFIFOStressTest {
         Self {
             mcb: MCBInterface::xem_6010(),
             hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: OpalKellyHost::default(),
+            ok_host: OpalKellyHost::xem_6010(),
             download: OpalKellyDDRBackedDownloadFIFO::new(0xA0),
             count_in: Default::default(),
             raw_sys_clock: xem_6010_base_clock(),

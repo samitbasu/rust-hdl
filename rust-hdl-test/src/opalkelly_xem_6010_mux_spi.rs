@@ -45,7 +45,7 @@ impl Default for OpalKellyXEM6010SPIMuxTest {
         let adc_config = AD7193Config::hw();
         Self {
             hi: OpalKellyHostInterface::xem_6010(),
-            ok_host: Default::default(),
+            ok_host: OpalKellyHost::xem_6010(),
             mux_adc: MuxedAD7193Simulators::new(adc_config),
             spi: OKSPIMaster::new(Default::default(), adc_config.spi),
             addr: WireIn::new(0x03),

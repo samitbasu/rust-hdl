@@ -65,9 +65,18 @@ endmodule
     }
 }
 
-impl Default for OpalKellyHost {
-    fn default() -> Self {
+impl OpalKellyHost {
+    pub fn xem_6010() -> Self {
         let hi = OpalKellyHostInterface::xem_6010();
+        Self {
+            hi,
+            ok1: Signal::default(),
+            ok2: Signal::default(),
+            ti_clk: Signal::default(),
+        }
+    }
+    pub fn xem_7010() -> Self {
+        let hi = OpalKellyHostInterface::xem_7010();
         Self {
             hi,
             ok1: Signal::default(),

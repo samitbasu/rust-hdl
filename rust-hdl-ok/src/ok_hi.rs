@@ -116,11 +116,40 @@ impl OpalKellyHostInterface {
                 index: ndx,
                 constraint: Constraint::Slew(SlewType::Fast),
             });
+            if ndx != 0 {
+                hi_in.add_constraint(PinConstraint {
+                    index: ndx,
+                    constraint: Constraint::Timing(Timing::VivadoInputTiming(
+                        VivadoInputTimingConstraint {
+                            min_nanoseconds: 0.0,
+                            max_nanoseconds: 6.7,
+                            multicycle: 2,
+                            clock: "okHostClk".to_string(),
+                        },
+                    )),
+                })
+            } else {
+                hi_in.add_constraint(PinConstraint {
+                    index: 0,
+                    constraint: Constraint::Timing(Periodic(PeriodicTiming {
+                        net: "okHostClk".into(),
+                        period_nanoseconds: 20.83,
+                        duty_cycle: 50.0,
+                    })),
+                });
+            }
         }
         let mut hi_out = Signal::default();
         for (ndx, name) in ["Y21", "U20"].iter().enumerate() {
             hi_out.add_location(ndx, name);
             hi_out.add_signal_type(ndx, SignalType::LowVoltageCMOS_3v3);
+            hi_out.add_constraint(PinConstraint {
+                index: ndx,
+                constraint: Constraint::Timing(VivadoOutputTiming(VivadoOutputTimingConstraint {
+                    delay_nanoseconds: 8.9,
+                    clock: "okHostClk".to_string(),
+                })),
+            })
         }
         let mut hi_inout = Signal::default();
         for (ndx, name) in [
@@ -132,6 +161,22 @@ impl OpalKellyHostInterface {
         {
             hi_inout.add_location(ndx, name);
             hi_inout.add_signal_type(ndx, SignalType::LowVoltageCMOS_3v3);
+            hi_inout.add_constraint(PinConstraint {
+                index: ndx,
+                constraint: Constraint::Timing(VivadoInputTiming(VivadoInputTimingConstraint {
+                    min_nanoseconds: 0.0,
+                    max_nanoseconds: 11.0,
+                    multicycle: 2,
+                    clock: "okHostClk".to_string(),
+                })),
+            });
+            hi_inout.add_constraint(PinConstraint {
+                index: ndx,
+                constraint: Constraint::Timing(VivadoOutputTiming(VivadoOutputTimingConstraint {
+                    delay_nanoseconds: 9.2,
+                    clock: "okHostClk".to_string(),
+                })),
+            });
         }
         let mut hi_aa = Signal::default();
         hi_aa.add_location(0, "V22");

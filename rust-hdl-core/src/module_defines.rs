@@ -40,13 +40,13 @@ struct AtomDetails {
 
 fn verilog_atom_name(x: &AtomKind) -> &str {
     match x {
-        AtomKind::InputParameter => "input",
+        AtomKind::InputParameter => "input wire",
         AtomKind::OutputParameter => "output reg",
         AtomKind::StubInputSignal => "reg",
         AtomKind::StubOutputSignal => "wire",
         AtomKind::Constant => "localparam",
         AtomKind::LocalSignal => "reg",
-        AtomKind::InOutParameter => "inout",
+        AtomKind::InOutParameter => "inout wire",
     }
 }
 
