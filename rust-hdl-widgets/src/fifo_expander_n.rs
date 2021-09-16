@@ -1,8 +1,14 @@
 use crate::dff::DFF;
 use rust_hdl_core::prelude::*;
+use rust_hdl_synth::TopWrap;
+
+pub enum WordOrder {
+    LeastSignificantFirst,
+    MostSignificantFirst,
+}
 
 #[derive(LogicBlock)]
-pub struct FIFOExpanderN<const DN: usize, const DW: usize, const REVERSE: bool> {
+pub struct FIFOExpanderN<const DN: usize, const DW: usize> {
     // Data comes by reading from the source FIFO
     pub data_in: Signal<In, Bits<DN>>,
     pub read: Signal<Out, Bit>,
@@ -23,12 +29,10 @@ pub struct FIFOExpanderN<const DN: usize, const DW: usize, const REVERSE: bool> 
     offset: Constant<Bits<DW>>,
     ratio: Constant<Bits<8>>,
     placement: Constant<Bits<DW>>,
-    reverse: Constant<bool>,
+    msw_first: Constant<bool>,
 }
 
-impl<const DN: usize, const DW: usize, const REVERSE: bool> Logic
-    for FIFOExpanderN<DN, DW, REVERSE>
-{
+impl<const DN: usize, const DW: usize> Logic for FIFOExpanderN<DN, DW> {
     #[hdl_gen]
     fn update(&mut self) {
         // Clocks and latch prevention for the DFFs
@@ -47,7 +51,7 @@ impl<const DN: usize, const DW: usize, const REVERSE: bool> Logic
         self.will_consume.next = !self.empty.val() & (self.will_write.val() | !self.loaded.val());
         // If we will consume data and we are not loaded, then the data goes to the store
         if self.will_consume.val() & !self.loaded.val() {
-            if !self.reverse.val() {
+            if self.msw_first.val() {
                 self.data_store.d.next = (self.data_store.q.val() << self.offset.val())
                     | bit_cast::<DW, DN>(self.data_in.val());
             } else {
@@ -57,7 +61,7 @@ impl<const DN: usize, const DW: usize, const REVERSE: bool> Logic
             self.load_count.d.next = self.load_count.q.val() + 1_u32;
         }
         // The output FIFO always sees the data store shifted with the input or-ed in
-        if !self.reverse.val() {
+        if self.msw_first.val() {
             self.data_out.next = bit_cast::<DW, DN>(self.data_in.val())
                 | (self.data_store.q.val() << self.offset.val());
         } else {
@@ -72,10 +76,8 @@ impl<const DN: usize, const DW: usize, const REVERSE: bool> Logic
     }
 }
 
-impl<const DN: usize, const DW: usize, const REVERSE: bool> Default
-    for FIFOExpanderN<DN, DW, REVERSE>
-{
-    fn default() -> Self {
+impl<const DN: usize, const DW: usize> FIFOExpanderN<DN, DW> {
+    pub fn new(order: WordOrder) -> Self {
         assert!(DW > DN);
         assert_eq!(DW % DN, 0);
         Self {
@@ -95,15 +97,17 @@ impl<const DN: usize, const DW: usize, const REVERSE: bool> Default
             offset: Constant::new(DN.into()),
             ratio: Constant::new((DW / DN - 1).into()),
             placement: Constant::new((DN * (DW / DN - 1)).into()),
-            reverse: Constant::new(REVERSE),
+            msw_first: Constant::new(match order {
+                WordOrder::LeastSignificantFirst => false,
+                WordOrder::MostSignificantFirst => true,
+            }),
         }
     }
 }
 
 #[test]
 fn fifo_expandern_is_synthesizable() {
-    rust_hdl_synth::top_wrap!(FIFOExpanderN<4, 32, false>, Wrapper);
-    let mut dev: Wrapper = Default::default();
+    let mut dev = TopWrap::new(FIFOExpanderN::<4, 32>::new(WordOrder::MostSignificantFirst));
     dev.uut.empty.connect();
     dev.uut.full.connect();
     dev.uut.data_in.connect();

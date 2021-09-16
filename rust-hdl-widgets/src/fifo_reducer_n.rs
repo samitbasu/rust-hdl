@@ -1,8 +1,10 @@
 use crate::dff::DFF;
+use crate::fifo_expander_n::WordOrder;
 use rust_hdl_core::prelude::*;
+use rust_hdl_synth::TopWrap;
 
 #[derive(LogicBlock)]
-pub struct FIFOReducerN<const DW: usize, const DN: usize, const REVERSE: bool> {
+pub struct FIFOReducerN<const DW: usize, const DN: usize> {
     // Data comes by reading from the source FIFO
     pub data_in: Signal<In, Bits<DW>>,
     pub read: Signal<Out, Bit>,
@@ -19,15 +21,13 @@ pub struct FIFOReducerN<const DW: usize, const DN: usize, const REVERSE: bool> {
     will_write: Signal<Local, Bit>,
     will_consume: Signal<Local, Bit>,
     data_store: DFF<Bits<DW>>,
-    reverse: Constant<Bit>,
+    msw_first: Constant<Bit>,
     ratio: Constant<Bits<8>>,
     offset: Constant<Bits<DW>>,
     select: Constant<Bits<DW>>,
 }
 
-impl<const DW: usize, const DN: usize, const REVERSE: bool> Logic
-    for FIFOReducerN<DW, DN, REVERSE>
-{
+impl<const DW: usize, const DN: usize> Logic for FIFOReducerN<DW, DN> {
     #[hdl_gen]
     fn update(&mut self) {
         self.load_count.clk.next = self.clock.val();
@@ -57,7 +57,7 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Logic
         }
         // If we will write, then the data store should be right shifted.
         if self.will_write.val() {
-            if !self.reverse.val() {
+            if !self.msw_first.val() {
                 self.data_store.d.next = self.data_store.q.val() >> self.offset.val();
             } else {
                 self.data_store.d.next = self.data_store.q.val() << self.offset.val();
@@ -68,7 +68,7 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Logic
         }
         // if we will consume, then the store input comes from the data store
         if self.will_consume.val() {
-            if !self.reverse.val() {
+            if !self.msw_first.val() {
                 self.data_store.d.next = self.data_in.val() >> self.offset.val();
             } else {
                 self.data_store.d.next = self.data_in.val() << self.offset.val();
@@ -80,11 +80,13 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Logic
     }
 }
 
-impl<const DW: usize, const DN: usize, const REVERSE: bool> Default
-    for FIFOReducerN<DW, DN, REVERSE>
-{
-    fn default() -> Self {
+impl<const DW: usize, const DN: usize> FIFOReducerN<DW, DN> {
+    pub fn new(order: WordOrder) -> Self {
         assert_eq!(DW % DN, 0);
+        let msw_first = match order {
+            WordOrder::LeastSignificantFirst => false,
+            WordOrder::MostSignificantFirst => true,
+        };
         Self {
             data_in: Default::default(),
             read: Default::default(),
@@ -98,10 +100,10 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Default
             will_write: Default::default(),
             will_consume: Default::default(),
             data_store: Default::default(),
-            reverse: Constant::new(REVERSE),
+            msw_first: Constant::new(msw_first),
             ratio: Constant::new((DW / DN - 1).into()),
             offset: Constant::new(DN.into()),
-            select: if !REVERSE {
+            select: if !msw_first {
                 Constant::new(0_u32.into())
             } else {
                 Constant::new((DW - DN).into())
@@ -112,8 +114,7 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Default
 
 #[test]
 fn fifo_reducern_is_synthesizable() {
-    rust_hdl_synth::top_wrap!(FIFOReducerN<32, 4, false>, Wrapper);
-    let mut dev: Wrapper = Default::default();
+    let mut dev = TopWrap::new(FIFOReducerN::<32, 4>::new(WordOrder::MostSignificantFirst));
     dev.uut.empty.connect();
     dev.uut.full.connect();
     dev.uut.data_in.connect();

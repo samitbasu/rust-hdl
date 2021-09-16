@@ -1,12 +1,13 @@
 use rust_hdl_core::prelude::*;
+use rust_hdl_widgets::fifo_expander_n::WordOrder;
 use rust_hdl_widgets::prelude::*;
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 struct ReducerTest {
     pub clock: Signal<In, Clock>,
     pub fifo_in: SynchronousFIFO<Bits<32>, 4, 5, 1>,
     pub fifo_out: SynchronousFIFO<Bits<4>, 8, 9, 1>,
-    pub redux: FIFOReducerN<32, 4, true>,
+    pub redux: FIFOReducerN<32, 4>,
 }
 
 impl Logic for ReducerTest {
@@ -24,9 +25,20 @@ impl Logic for ReducerTest {
     }
 }
 
+impl ReducerTest {
+    pub fn new(order: WordOrder) -> Self {
+        Self {
+            clock: Default::default(),
+            fifo_in: Default::default(),
+            fifo_out: Default::default(),
+            redux: FIFOReducerN::new(order),
+        }
+    }
+}
+
 #[test]
 fn test_reducer_works() {
-    let mut uut = ReducerTest::default();
+    let mut uut = ReducerTest::new(WordOrder::MostSignificantFirst);
     uut.clock.connect();
     uut.fifo_in.data_in.connect();
     uut.fifo_in.write.connect();
@@ -60,10 +72,44 @@ fn test_reducer_works() {
         }
         sim.done(x)
     });
-    sim.run_traced(
-        Box::new(uut),
-        100_000,
-        std::fs::File::create("reducern.vcd").unwrap(),
-    )
-    .unwrap()
+    sim.run(Box::new(uut), 100_000).unwrap()
+}
+
+#[test]
+fn test_reducer_works_least_sig_word_first() {
+    let mut uut = ReducerTest::new(WordOrder::LeastSignificantFirst);
+    uut.clock.connect();
+    uut.fifo_in.data_in.connect();
+    uut.fifo_in.write.connect();
+    uut.fifo_out.read.connect();
+    uut.connect_all();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<ReducerTest>| x.clock.next = !x.clock.val());
+    sim.add_testbench(move |mut sim: Sim<ReducerTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for datum in [0xFEEBDAED_u32, 0xEBABEFAC] {
+            x = sim.watch(|x| !x.fifo_in.full.val(), x)?;
+            x.fifo_in.data_in.next = datum.into();
+            x.fifo_in.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo_in.write.next = false;
+        }
+        sim.done(x)
+    });
+    sim.add_testbench(move |mut sim: Sim<ReducerTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for datum in [
+            0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
+        ] {
+            x = sim.watch(|x| !x.fifo_out.empty.val(), x)?;
+            sim_assert!(sim, x.fifo_out.data_out.val() == Bits::<4>::from(datum), x);
+            x.fifo_out.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo_out.read.next = false;
+        }
+        sim.done(x)
+    });
+    sim.run(Box::new(uut), 100_000).unwrap()
 }
