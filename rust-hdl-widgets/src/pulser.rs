@@ -53,7 +53,7 @@ fn test_pulser_synthesis() {
 fn test_pulser() {
     let mut sim = Simulation::new();
     const KHZ10: u64 = 10_000;
-    sim.add_clock(5, |x: &mut Pulser| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<Pulser>| x.clock.next = !x.clock.val());
     sim.add_testbench(|mut sim: Sim<Pulser>| {
         let mut x = sim.init()?;
         x.enable.next = true;
@@ -65,6 +65,10 @@ fn test_pulser() {
     uut.clock.connect();
     uut.enable.connect();
     uut.connect_all();
-    sim.run_traced(uut, 1_000_000, std::fs::File::create("pulser.vcd").unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        1_000_000,
+        std::fs::File::create("pulser.vcd").unwrap(),
+    )
+    .unwrap();
 }

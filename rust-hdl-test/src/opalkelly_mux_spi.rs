@@ -2,6 +2,7 @@ use crate::ad7193_sim::AD7193Config;
 use crate::muxed_ad7193_sim::MuxedAD7193Simulators;
 use crate::ok_tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
 use rust_hdl_core::prelude::*;
+use rust_hdl_ok::bsp::{OpalKellyBSP, XEM6010, XEM7010};
 use rust_hdl_ok::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok::ok_host::OpalKellyHost;
 use rust_hdl_ok::ok_wire::WireIn;
@@ -9,7 +10,6 @@ use rust_hdl_ok::spi::OKSPIMaster;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use std::thread::sleep;
 use std::time::Duration;
-use rust_hdl_ok::bsp::{OpalKellyBSP, XEM6010, XEM7010};
 
 #[derive(LogicBlock)]
 pub struct OpalKellySPIMuxTest {
@@ -69,7 +69,6 @@ fn test_opalkelly_xem_7010_mux_spi() {
     uut.connect_all();
     crate::ok_tools::synth_obj_7010(uut, "xem_7010_mux_spi");
 }
-
 
 #[cfg(test)]
 fn test_opalkelly_mux_spi_runtime(bit_file: &str) -> Result<(), OkError> {

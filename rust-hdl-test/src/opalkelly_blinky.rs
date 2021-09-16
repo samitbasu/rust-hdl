@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use rust_hdl_core::prelude::*;
+use rust_hdl_ok::ok_sys_clock7::OpalKellySystemClock7;
 use rust_hdl_ok::prelude::*;
 use rust_hdl_widgets::prelude::*;
-use rust_hdl_ok::ok_sys_clock7::OpalKellySystemClock7;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyBlinky {
@@ -55,7 +55,6 @@ fn test_opalkelly_xem_7010_synth_blinky() {
     check_connected(&uut);
     crate::ok_tools::synth_obj_7010(uut, "xem_7010_blinky");
 }
-
 
 #[derive(LogicBlock)]
 pub struct OpalKellyFastBlinky {

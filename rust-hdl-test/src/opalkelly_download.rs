@@ -140,7 +140,6 @@ fn test_opalkelly_xem_7010_synth_download() {
     crate::ok_tools::synth_obj_7010(uut, "xem_7010_download");
 }
 
-
 #[cfg(test)]
 fn test_opalkelly_download_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;

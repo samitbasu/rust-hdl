@@ -1,4 +1,6 @@
-use crate::pins::{xem_6010_leds, xem_7010_leds, xem_6010_base_clock, xem_7010_pos_clock, xem_7010_neg_clock};
+use crate::pins::{
+    xem_6010_base_clock, xem_6010_leds, xem_7010_leds, xem_7010_neg_clock, xem_7010_pos_clock,
+};
 use crate::OpalKellyHost;
 use crate::OpalKellyHostInterface;
 use rust_hdl_core::prelude::*;

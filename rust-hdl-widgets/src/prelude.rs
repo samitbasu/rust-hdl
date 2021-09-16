@@ -2,6 +2,8 @@ pub use crate::async_fifo::AsynchronousFIFO;
 pub use crate::declare_async_fifo;
 pub use crate::declare_sync_fifo;
 pub use crate::dff::DFF;
+pub use crate::fifo_expander_n::FIFOExpanderN;
+pub use crate::fifo_reducer_n::FIFOReducerN;
 pub use crate::pulser::Pulser;
 pub use crate::pwm::PulseWidthModulator;
 pub use crate::ram::RAM;

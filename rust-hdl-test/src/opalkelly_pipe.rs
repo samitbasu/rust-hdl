@@ -1,12 +1,12 @@
 use crate::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::ok_pipe::{BTPipeOut, PipeIn, PipeOut};
+use rust_hdl_ok::ok_sys_clock7::OpalKellySystemClock7;
 use rust_hdl_ok::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_widgets::ram::RAM;
 use std::num::Wrapping;
-use rust_hdl_ok::ok_sys_clock7::OpalKellySystemClock7;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyPipeTest {
@@ -619,4 +619,3 @@ fn test_opalkelly_xem_7010_btpipe_runtime() -> Result<(), OkError> {
     }
     Ok(())
 }
-

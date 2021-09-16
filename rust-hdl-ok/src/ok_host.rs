@@ -1,8 +1,8 @@
 use rust_hdl_core::prelude::*;
 
+use crate::bsp::XEM6010;
 use crate::ok_hi::OpalKellyHostInterface;
 use rust_hdl_synth::TopWrap;
-use crate::bsp::XEM6010;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct OpalKellyHost {

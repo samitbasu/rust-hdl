@@ -16,6 +16,7 @@ pub mod ok_download_ddr;
 pub mod ok_hi;
 pub mod ok_host;
 pub mod ok_pipe;
+pub mod ok_sys_clock7;
 pub mod ok_trigger;
 pub mod ok_wire;
 pub mod pins;
@@ -26,7 +27,6 @@ pub mod synth_7010;
 pub mod synth_common;
 pub mod ucf_gen;
 pub mod xdc_gen;
-pub mod ok_sys_clock7;
 
 const MHZ48: u64 = 48_000_000;
 

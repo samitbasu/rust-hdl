@@ -162,8 +162,9 @@ module MMCME2_BASE (
    input RST;
 endmodule
 
-        "#.into(),
-            name: "opal_kelly_system_clock_7".to_string()
+        "#
+            .into(),
+            name: "opal_kelly_system_clock_7".to_string(),
         })
     }
 }

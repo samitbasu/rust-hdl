@@ -118,7 +118,6 @@ fn test_opalkelly_spi_reg_write_xem_7010_runtime() -> Result<(), OkError> {
     test_opalkelly_spi_reg_write_runtime("xem_7010_spi/top.bit")
 }
 
-
 #[cfg(test)]
 fn test_opalkelly_spi_single_conversion_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
