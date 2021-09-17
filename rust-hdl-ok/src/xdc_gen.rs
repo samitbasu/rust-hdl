@@ -80,6 +80,15 @@ set_multicycle_path -setup -from [get_ports {{ {prefix} }}] {cycles}",
                                 cycles = i.multicycle
                             )
                         }
+                        VivadoClockGroup(c) => {
+                            format!(
+                                "set_clock_groups -asynchronous {}",
+                                c.iter()
+                                    .map(|g| format!("-group {{ {} }}", g.join(" ")))
+                                    .collect::<Vec<_>>()
+                                    .join(" ")
+                            )
+                        }
                         _ => {
                             unimplemented!("Constraint type {:?} is not implemented for Vivado", t)
                         }

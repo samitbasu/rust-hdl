@@ -137,6 +137,12 @@ impl OpalKellyHostInterface {
                         duty_cycle: 50.0,
                     })),
                 });
+                hi_in.add_constraint(PinConstraint {
+                    index: 0,
+                    constraint: Constraint::Timing(VivadoClockGroup(vec![vec![
+                        "okHostClk".to_string()
+                    ]])),
+                })
             }
         }
         let mut hi_out = Signal::default();

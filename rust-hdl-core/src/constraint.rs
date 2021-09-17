@@ -94,6 +94,7 @@ pub enum Timing {
     OutputTiming(OutputTimingConstraint),
     VivadoInputTiming(VivadoInputTimingConstraint),
     VivadoOutputTiming(VivadoOutputTimingConstraint),
+    VivadoClockGroup(Vec<Vec<String>>),
     Custom(String),
 }
 

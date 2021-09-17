@@ -314,6 +314,9 @@ fn mk_pin7<D: Direction>(loc: &str) -> Signal<D, Bit> {
 
 impl MCBInterface4GDDR3 {
     pub fn xem_7010() -> Self {
+        Default::default()
+    }
+    pub fn xem_7010_constrained() -> Self {
         let mut data_bus = Signal::default();
         for (ndx, name) in [
             "AB1", "Y4", "AB2", "V4", "AB5", "AA5", "AB3", "AA4", "U3", "W2", "U2", "Y2", "U1",
@@ -427,7 +430,7 @@ impl MCBInterface4GDDR3 {
 
 #[test]
 fn test_dram7_if_xdc() {
-    let uut = TopWrap::new(MCBInterface4GDDR3::xem_7010());
+    let uut = TopWrap::new(MCBInterface4GDDR3::xem_7010_constrained());
     let xdc = crate::xdc_gen::generate_xdc(&uut);
     println!("{}", xdc);
     assert!(xdc.contains("set_property PACKAGE_PIN AB1 [get_ports { uut$data_bus[0] }]"));

@@ -1,8 +1,12 @@
+use crate::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::mcb_if::MCBInterface4GDDR3;
 use rust_hdl_ok::mig7::MemoryInterfaceGenerator7Series;
 use rust_hdl_ok::prelude::*;
+use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_widgets::prelude::*;
+use std::thread::sleep;
+use std::time::Duration;
 
 declare_expanding_fifo!(FrontPorch, 16, 4096, 128, 256);
 declare_narrowing_fifo!(BackPorch, 128, 256, 16, 4096);
@@ -103,4 +107,18 @@ fn test_opalkelly_xem_7010_mig() {
     uut.sys_clock_neg.connect();
     uut.connect_all();
     crate::ok_tools::synth_obj_7010(uut, "xem7010_mig");
+}
+
+#[test]
+fn test_opalkelly_xem_7010_mig_runtime() -> Result<(), OkError> {
+    let hnd = ok_test_prelude("xem7010_mig/top.bit")?;
+    hnd.reset_firmware(0);
+    let data = (64..(32 + 64)).collect::<Vec<u8>>();
+    println!("Output data {:?}", data);
+    hnd.write_to_pipe_in(0x80, &data).unwrap();
+    sleep(Duration::from_millis(100));
+    let mut data_out = vec![0_u8; 32];
+    hnd.read_from_pipe_out(0xA0, &mut data_out).unwrap();
+    println!("Output data {:?}", data_out);
+    Ok(())
 }
