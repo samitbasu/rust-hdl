@@ -38,6 +38,12 @@ impl ToString for TimingRelative {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct FalsePathRegexp {
+    pub from_regexp: String,
+    pub to_regexp: String,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub enum TimingRelativeEdge {
     Rising,
@@ -95,6 +101,7 @@ pub enum Timing {
     VivadoInputTiming(VivadoInputTimingConstraint),
     VivadoOutputTiming(VivadoOutputTimingConstraint),
     VivadoClockGroup(Vec<Vec<String>>),
+    VivadoFalsePath(FalsePathRegexp),
     Custom(String),
 }
 

@@ -89,6 +89,13 @@ set_multicycle_path -setup -from [get_ports {{ {prefix} }}] {cycles}",
                                     .join(" ")
                             )
                         }
+                        VivadoFalsePath(p) => {
+                            format!(
+                                "set_false_path -from [get_pins -hierarchical -regexp {from}] -to [get_pins -hierarchical -regexp {to}]",
+                                from = p.from_regexp,
+                                to = p.to_regexp
+                            )
+                        }
                         _ => {
                             unimplemented!("Constraint type {:?} is not implemented for Vivado", t)
                         }

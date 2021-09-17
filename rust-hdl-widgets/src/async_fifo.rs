@@ -11,7 +11,7 @@ macro_rules! declare_async_fifo {
     };
 }
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 pub struct AsynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
     // Read interface
     pub read: Signal<In, Bit>,
@@ -37,6 +37,75 @@ pub struct AsynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BL
     write_to_read: VectorSynchronizer<Bits<NP1>>,
     // Synchronize the read pointer to the write side
     read_to_write: VectorSynchronizer<Bits<NP1>>,
+}
+
+impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Default
+    for AsynchronousFIFO<D, N, NP1, BLOCK_SIZE>
+{
+    fn default() -> Self {
+        let mut read = Signal::default();
+        read.add_constraint(PinConstraint {
+            index: 0,
+            constraint: Constraint::Timing(Timing::VivadoFalsePath(FalsePathRegexp {
+                from_regexp: ".*/write_to_read/.*".into(),
+                to_regexp: ".*/read_to_write/.*".into(),
+            })),
+        });
+        read.add_constraint(PinConstraint {
+            index: 0,
+            constraint: Constraint::Timing(Timing::VivadoFalsePath(FalsePathRegexp {
+                from_regexp: ".*/read_to_write/.*".into(),
+                to_regexp: ".*/write_to_read/.*".into(),
+            })),
+        });
+        read.add_constraint(PinConstraint {
+            index: 0,
+            constraint: Constraint::Timing(Timing::VivadoFalsePath(FalsePathRegexp {
+                from_regexp: ".*/write_to_read/sender/.*".into(),
+                to_regexp: ".*/write_to_read/recv/.*".into(),
+            })),
+        });
+        read.add_constraint(PinConstraint {
+            index: 0,
+            constraint: Constraint::Timing(Timing::VivadoFalsePath(FalsePathRegexp {
+                from_regexp: ".*/write_to_read/recv/.*".into(),
+                to_regexp: ".*/write_to_read/sender/.*".into(),
+            })),
+        });
+        read.add_constraint(PinConstraint {
+            index: 0,
+            constraint: Constraint::Timing(Timing::VivadoFalsePath(FalsePathRegexp {
+                from_regexp: ".*/read_to_write/sender/.*".into(),
+                to_regexp: ".*/read_to_write/recv/.*".into(),
+            })),
+        });
+        read.add_constraint(PinConstraint {
+            index: 0,
+            constraint: Constraint::Timing(Timing::VivadoFalsePath(FalsePathRegexp {
+                from_regexp: ".*/read_to_write/recv/.*".into(),
+                to_regexp: ".*/read_to_write/sender/.*".into(),
+            })),
+        });
+        Self {
+            read,
+            data_out: Default::default(),
+            empty: Default::default(),
+            almost_empty: Default::default(),
+            underflow: Default::default(),
+            read_clock: Default::default(),
+            write: Default::default(),
+            data_in: Default::default(),
+            full: Default::default(),
+            almost_full: Default::default(),
+            overflow: Default::default(),
+            write_clock: Default::default(),
+            ram: Default::default(),
+            read_logic: Default::default(),
+            write_logic: Default::default(),
+            write_to_read: Default::default(),
+            read_to_write: Default::default(),
+        }
+    }
 }
 
 impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic

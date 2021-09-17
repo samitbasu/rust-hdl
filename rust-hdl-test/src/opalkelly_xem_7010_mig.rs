@@ -38,9 +38,9 @@ impl Default for OpalKellyXEM7010MIGTest {
     fn default() -> Self {
         Self {
             hi: OpalKellyHostInterface::xem_7010(),
-            mcb: MCBInterface4GDDR3::xem_7010(),
-            sys_clock_pos: xem_7010_pos_clock(),
-            sys_clock_neg: xem_7010_neg_clock(),
+            mcb: MCBInterface4GDDR3::xem_7010(), // Constraints provided by the IP core
+            sys_clock_pos: Default::default(),   // Constraints provided by the IP core
+            sys_clock_neg: Default::default(),   // Constraints provided by the IP core
             ok_host: OpalKellyHost::xem_7010(),
             mig: Default::default(),
             reset: WireIn::new(0x00),
