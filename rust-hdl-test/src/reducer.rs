@@ -113,3 +113,67 @@ fn test_reducer_works_least_sig_word_first() {
     });
     sim.run(Box::new(uut), 100_000).unwrap()
 }
+
+declare_narrowing_fifo!(Slim, 32, 16, 4, 256);
+
+#[derive(LogicBlock)]
+struct SlimTest {
+    pub clock: Signal<In, Clock>,
+    pub fifo: Slim,
+}
+
+impl Logic for SlimTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.fifo.write_clock.next = self.clock.val();
+        self.fifo.read_clock.next = self.clock.val();
+    }
+}
+
+impl SlimTest {
+    pub fn new(order: WordOrder) -> Self {
+        Self {
+            clock: Default::default(),
+            fifo: Slim::new(order),
+        }
+    }
+}
+
+#[test]
+fn test_slim_works() {
+    let mut uut = SlimTest::new(WordOrder::MostSignificantFirst);
+    uut.clock.connect();
+    uut.fifo.data_in.connect();
+    uut.fifo.write.connect();
+    uut.fifo.read.connect();
+    uut.connect_all();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<SlimTest>| x.clock.next = !x.clock.val());
+    sim.add_testbench(move |mut sim: Sim<SlimTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for datum in [0xDEADBEEF_u32, 0xCAFEBABE] {
+            x = sim.watch(|x| !x.fifo.full.val(), x)?;
+            x.fifo.data_in.next = datum.into();
+            x.fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo.write.next = false;
+        }
+        sim.done(x)
+    });
+    sim.add_testbench(move |mut sim: Sim<SlimTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for datum in [
+            0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
+        ] {
+            x = sim.watch(|x| !x.fifo.empty.val(), x)?;
+            sim_assert!(sim, x.fifo.data_out.val() == Bits::<4>::from(datum), x);
+            x.fifo.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo.read.next = false;
+        }
+        sim.done(x)
+    });
+    sim.run(Box::new(uut), 100_000).unwrap()
+}

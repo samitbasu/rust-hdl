@@ -1,4 +1,4 @@
-use crate::mcb_if::MCBInterface;
+use crate::mcb_if::MCBInterface1GDDR2;
 use crate::mig::MemoryInterfaceGenerator;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::prelude::*;
@@ -47,7 +47,7 @@ pub struct DDRFIFO {
     pub full: Signal<Out, Bit>,
     pub write_clock: Signal<In, Clock>,
     // DRAM interface
-    pub mcb: MCBInterface,
+    pub mcb: MCBInterface1GDDR2,
     // Internal MIG
     mig: MemoryInterfaceGenerator,
     write_address: DFF<Bits<27>>,

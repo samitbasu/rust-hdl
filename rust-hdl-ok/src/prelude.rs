@@ -1,6 +1,8 @@
 pub use crate::bsp::*;
 pub use crate::ok_hi::*;
 pub use crate::ok_host::*;
+pub use crate::ok_pipe::*;
+pub use crate::ok_trigger::*;
 pub use crate::ok_wire::*;
 pub use crate::pins::*;
 pub use crate::synth_6010::*;

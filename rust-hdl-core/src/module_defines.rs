@@ -282,20 +282,21 @@ impl ModuleDefines {
                         io.add("\n// Update code (custom)");
                         io.add(code);
                     }
+                    Verilog::Wrapper(c) => {
+                        io.add("\n// Update code (wrapper)");
+                        io.add(&c.code);
+                    }
                     Verilog::Blackbox(_) => {}
                     Verilog::Empty => {}
                 }
                 io.pop();
                 io.add(format!("endmodule // {}", module_name));
             });
-        self.details
-            .iter()
-            .filter(|x| matches!(x.1.code, Verilog::Blackbox(_)))
-            .for_each(|k| {
-                if let Verilog::Blackbox(b) = &k.1.code {
-                    io.add(&b.code)
-                }
-            });
+        self.details.iter().for_each(|x| match &x.1.code {
+            Verilog::Blackbox(b) => io.add(&b.code),
+            Verilog::Wrapper(w) => io.add(&w.cores),
+            _ => {}
+        });
         io.to_string()
     }
 }

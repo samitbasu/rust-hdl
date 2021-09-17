@@ -106,8 +106,7 @@ project close
 pub fn add_mig_core_xem_6010(prefix: &str, options: ISEOptions) -> Vec<String> {
     let dir = PathBuf::from(prefix).join("core_gen");
     let _ = create_dir(&dir);
-    let mut prj_file = File::create(dir.clone().join("mig.prj")).unwrap();
-    write!(prj_file, r#"<?xml version="1.0" encoding="UTF-8"?>
+    std::fs::write(dir.clone().join("mig.prj"), r#"<?xml version="1.0" encoding="UTF-8"?>
 <Project NoOfControllers="1" >
     <ModuleName>mig</ModuleName>
     <TargetFPGA>xc6slx45-fgg484/-2</TargetFPGA>
@@ -170,11 +169,9 @@ pub fn add_mig_core_xem_6010(prefix: &str, options: ISEOptions) -> Vec<String> {
     </Controller>
 </Project>
 "#).unwrap();
-    let mut xco_file = File::create(dir.clone().join("coregen.xco")).unwrap();
-    write!(
-        xco_file,
-        r#"
-NEWPROJECT coregen.cgc
+    std::fs::write(
+        dir.clone().join("coregen.xco"),
+        r#"NEWPROJECT coregen.cgc
 SET workingdirectory="."
 ##############################################################
 #
@@ -213,7 +210,7 @@ MISC pkg_timestamp=2013-10-13T18:46:09Z
 # END Extra information
 GENERATE
 # CRC: d7d2c6fc
-"#
+"#,
     )
     .unwrap();
     let _output = Command::new(format!("{}/coregen", options.ise_path))

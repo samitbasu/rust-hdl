@@ -1,6 +1,6 @@
 use crate::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok::mcb_if::MCBInterface;
+use rust_hdl_ok::mcb_if::MCBInterface1GDDR2;
 use rust_hdl_ok::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
 use rust_hdl_ok::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok::ok_host::OpalKellyHost;
@@ -13,7 +13,7 @@ use std::time::{Duration, Instant};
 
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFOStressTest {
-    mcb: MCBInterface,
+    mcb: MCBInterface1GDDR2,
     hi: OpalKellyHostInterface,
     ok_host: OpalKellyHost,
     download: OpalKellyDDRBackedDownloadFIFO,
@@ -28,7 +28,7 @@ struct OpalKellyDownloadDDRFIFOStressTest {
 impl Default for OpalKellyDownloadDDRFIFOStressTest {
     fn default() -> Self {
         Self {
-            mcb: MCBInterface::xem_6010(),
+            mcb: MCBInterface1GDDR2::xem_6010(),
             hi: OpalKellyHostInterface::xem_6010(),
             ok_host: OpalKellyHost::xem_6010(),
             download: OpalKellyDDRBackedDownloadFIFO::new(0xA0),

@@ -123,3 +123,72 @@ fn test_expander_works_with_lsw_first() {
     )
     .unwrap()
 }
+
+declare_expanding_fifo!(Fatten, 4, 256, 32, 16);
+
+#[derive(LogicBlock)]
+struct FattenTest {
+    pub clock: Signal<In, Clock>,
+    pub fifo: Fatten,
+}
+
+impl Logic for FattenTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.fifo.read_clock.next = self.clock.val();
+        self.fifo.write_clock.next = self.clock.val();
+    }
+}
+
+impl FattenTest {
+    pub fn new(word_order: WordOrder) -> Self {
+        Self {
+            clock: Default::default(),
+            fifo: Fatten::new(word_order),
+        }
+    }
+}
+
+#[test]
+fn test_fatten_works() {
+    let mut uut = FattenTest::new(WordOrder::MostSignificantFirst);
+    uut.clock.connect();
+    uut.fifo.data_in.connect();
+    uut.fifo.write.connect();
+    uut.fifo.read.connect();
+    uut.connect_all();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<FattenTest>| x.clock.next = !x.clock.val());
+    sim.add_testbench(move |mut sim: Sim<FattenTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for datum in [
+            0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
+        ] {
+            x = sim.watch(|x| !x.fifo.full.val(), x)?;
+            x.fifo.data_in.next = datum.into();
+            x.fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo.write.next = false;
+        }
+        sim.done(x)
+    });
+    sim.add_testbench(move |mut sim: Sim<FattenTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for datum in [0xDEADBEEF_u32, 0xCAFEBABE] {
+            x = sim.watch(|x| !x.fifo.empty.val(), x)?;
+            sim_assert!(sim, x.fifo.data_out.val() == Bits::<32>::from(datum), x);
+            x.fifo.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo.read.next = false;
+        }
+        sim.done(x)
+    });
+    sim.run_traced(
+        Box::new(uut),
+        100_000,
+        std::fs::File::create("fattenn.vcd").unwrap(),
+    )
+    .unwrap()
+}

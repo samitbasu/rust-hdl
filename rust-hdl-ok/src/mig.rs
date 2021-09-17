@@ -1,4 +1,4 @@
-use crate::mcb_if::MCBInterface;
+use crate::mcb_if::MCBInterface1GDDR2;
 use rust_hdl_core::prelude::*;
 
 #[derive(LogicInterface, Default)]
@@ -56,7 +56,7 @@ pub struct MemoryInterfaceGenerator {
     // P0 read port
     pub p0_rd: ReadPort,
     // MCB interface
-    pub mcb: MCBInterface,
+    pub mcb: MCBInterface1GDDR2,
 }
 
 // TODO - currently assumes the MIG is at the top level of the
@@ -128,7 +128,7 @@ p0_rd$full,p0_rd$empty,p0_rd$count,p0_rd$overflow,p0_rd$error,mcb$data_bus,mcb$a
 mcb$bank_select,mcb$row_address_strobe_not,mcb$column_address_strobe_not,mcb$write_enable_not,
 mcb$on_die_termination,mcb$clock_enable,mcb$data_mask,mcb$upper_byte_data_strobe,
 mcb$upper_byte_data_strobe_neg,mcb$rzq,mcb$zio,mcb$upper_data_mask,mcb$data_strobe_signal,
-mcb$data_strobe_signal_neg,mcb$dram_clock,mcb$dram_clock_neg,mcb$chip_select_neg);
+mcb$data_strobe_signal_neg,mcb$dram_clock,mcb$dram_clock_neg,mcb$chip_select_neg,mcb$dram_reset_not);
 
     // Module arguments
     input raw_sys_clk;
@@ -179,6 +179,9 @@ mcb$data_strobe_signal_neg,mcb$dram_clock,mcb$dram_clock_neg,mcb$chip_select_neg
     output mcb$dram_clock;
     output mcb$dram_clock_neg;
     output mcb$chip_select_neg;
+    output mcb$dram_reset_not;
+
+    assign mcb$dram_reset_not=1'b1; // Unused for DDR2
 
 // Unfortunately, the generated MIG for Spartan6 is not particularly
 // useful for us, since it assumes the raw clock is running at memory

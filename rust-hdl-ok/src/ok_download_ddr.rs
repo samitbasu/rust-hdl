@@ -1,5 +1,5 @@
 use crate::ddr_fifo::DDRFIFO;
-use crate::mcb_if::MCBInterface;
+use crate::mcb_if::MCBInterface1GDDR2;
 use crate::ok_pipe::BTPipeOut;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::fifo_reducer::FIFOReducer;
@@ -8,7 +8,7 @@ use rust_hdl_widgets::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyDDRBackedDownloadFIFO {
-    pub mcb: MCBInterface,
+    pub mcb: MCBInterface1GDDR2,
     pub raw_sys_clock: Signal<In, Clock>,
     // You must assert reset!
     pub reset: Signal<In, Bit>,

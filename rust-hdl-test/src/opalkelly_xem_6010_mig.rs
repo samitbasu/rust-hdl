@@ -1,6 +1,6 @@
 use crate::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok::mcb_if::MCBInterface;
+use rust_hdl_ok::mcb_if::MCBInterface1GDDR2;
 use rust_hdl_ok::mig::MemoryInterfaceGenerator;
 use rust_hdl_ok::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok::ok_host::OpalKellyHost;
@@ -16,7 +16,7 @@ use std::time::Duration;
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010MIGTest {
     pub hi: OpalKellyHostInterface,
-    pub mcb: MCBInterface,
+    pub mcb: MCBInterface1GDDR2,
     pub raw_clock: Signal<In, Clock>,
     pub ok_host: OpalKellyHost,
     pub mig: MemoryInterfaceGenerator,
@@ -34,7 +34,7 @@ impl Default for OpalKellyXEM6010MIGTest {
         let raw_clock = xem_6010_base_clock();
         Self {
             hi: OpalKellyHostInterface::xem_6010(),
-            mcb: MCBInterface::xem_6010(),
+            mcb: MCBInterface1GDDR2::xem_6010(),
             raw_clock,
             ok_host: OpalKellyHost::xem_6010(),
             mig: Default::default(),

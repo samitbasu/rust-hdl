@@ -1,4 +1,5 @@
 pub mod async_fifo;
+pub mod cross_fifo;
 pub mod dff;
 pub mod edge_detector;
 pub mod fifo_expander_n;
