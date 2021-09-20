@@ -42,6 +42,7 @@ pub mod opalkelly_wire;
 pub mod opalkelly_xem_6010_ddr;
 #[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_6010_mig;
+#[cfg(feature = "fpga_hw_test")]
 pub mod opalkelly_xem_7010_mig;
 pub mod pwm;
 pub mod ram;
