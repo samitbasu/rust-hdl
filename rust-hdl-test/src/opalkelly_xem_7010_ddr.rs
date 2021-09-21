@@ -1,14 +1,14 @@
 use crate::ok_tools::ok_test_prelude;
+use crate::opalkelly_xem_6010_ddr::test_opalkelly_ddr_stress_runtime;
 use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
 use rust_hdl_ok::ddr_fifo7::DDR7FIFO;
 use rust_hdl_ok::mcb_if::MCBInterface4GDDR3;
+use rust_hdl_ok::ok_download_ddr7::OpalKellyDDRBackedDownloadFIFO7Series;
 use rust_hdl_ok::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_widgets::dff::DFF;
+use rust_hdl_widgets::prelude::*;
 use std::time::Instant;
-use rust_hdl_ok::ok_download_ddr7::OpalKellyDDRBackedDownloadFIFO7Series;
-use crate::opalkelly_xem_6010_ddr::test_opalkelly_ddr_stress_runtime;
 
 #[derive(LogicBlock)]
 struct OpalKellyDDR7Test {
@@ -116,7 +116,7 @@ struct OpalKellyDownloadDDRFIFO7SeriesStressTest {
     hi: OpalKellyHostInterface,
     ok_host: OpalKellyHost,
     download: OpalKellyDDRBackedDownloadFIFO7Series,
-    count_in : DFF<Bits<32>>,
+    count_in: DFF<Bits<32>>,
     sys_clock_p: Signal<In, Clock>,
     sys_clock_n: Signal<In, Clock>,
     strobe: Strobe<32>,

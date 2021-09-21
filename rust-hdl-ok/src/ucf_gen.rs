@@ -136,9 +136,12 @@ impl Probe for UCFGenerator {
                             )
                         }
                         Timing::Custom(c) => c.to_string(),
+                        Timing::VivadoFalsePath(_) => "".to_string(),
                         _ => unimplemented!("Unknown timing constraint for ISE/UCF generation"),
                     };
-                    self.ucf.push(timing);
+                    if !timing.is_empty() {
+                        self.ucf.push(timing);
+                    }
                 }
                 Constraint::Custom(s) => self.ucf.push(s.clone()),
                 _ => {
