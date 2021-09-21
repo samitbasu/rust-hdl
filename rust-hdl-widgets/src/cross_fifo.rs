@@ -65,6 +65,20 @@ impl<
         const DW: usize,
         const WN: usize,
         const WNP1: usize,
+    > Default for CrossWidenFIFO<DN, NN, NNP1, DW, WN, WNP1>
+{
+    fn default() -> Self {
+        Self::new(WordOrder::MostSignificantFirst)
+    }
+}
+
+impl<
+        const DN: usize,
+        const NN: usize,
+        const NNP1: usize,
+        const DW: usize,
+        const WN: usize,
+        const WNP1: usize,
     > Logic for CrossWidenFIFO<DN, NN, NNP1, DW, WN, WNP1>
 {
     #[hdl_gen]
@@ -191,6 +205,20 @@ impl<
         self.out_fifo.data_in.next = self.reducer.data_out.val();
         self.reducer.full.next = self.out_fifo.full.val();
         self.out_fifo.write.next = self.reducer.write.val();
+    }
+}
+
+impl<
+        const DW: usize,
+        const WN: usize,
+        const WNP1: usize,
+        const DN: usize,
+        const NN: usize,
+        const NNP1: usize,
+    > Default for CrossNarrowFIFO<DW, WN, WNP1, DN, NN, NNP1>
+{
+    fn default() -> Self {
+        Self::new(WordOrder::MostSignificantFirst)
     }
 }
 

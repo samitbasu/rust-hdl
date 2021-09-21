@@ -9,11 +9,13 @@ use rust_hdl_widgets::pulser::Pulser;
 
 pub mod bsp;
 pub mod ddr_fifo;
+pub mod ddr_fifo7;
 pub mod mcb_if;
 pub mod mig;
 pub mod mig7;
 pub mod ok_download;
 pub mod ok_download_ddr;
+pub mod ok_download_ddr7;
 pub mod ok_hi;
 pub mod ok_host;
 pub mod ok_pipe;

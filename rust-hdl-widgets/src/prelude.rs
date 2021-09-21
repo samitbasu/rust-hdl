@@ -8,6 +8,7 @@ pub use crate::declare_sync_fifo;
 pub use crate::dff::DFF;
 pub use crate::fifo_expander_n::FIFOExpanderN;
 pub use crate::fifo_expander_n::WordOrder;
+pub use crate::fifo_reducer::FIFOReducer;
 pub use crate::fifo_reducer_n::FIFOReducerN;
 pub use crate::pulser::Pulser;
 pub use crate::pwm::PulseWidthModulator;

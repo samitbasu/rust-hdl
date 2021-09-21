@@ -1,6 +1,8 @@
 use crate::mcb_if::MCBInterface4GDDR3;
 use rust_hdl_core::ast::Wrapper;
 use rust_hdl_core::prelude::*;
+use rust_hdl_widgets::dff::DFF;
+use std::collections::BTreeMap;
 
 #[derive(LogicBlock, Default)]
 pub struct MemoryInterfaceGenerator7Series {
@@ -192,3 +194,75 @@ fn test_mig7_gen() {
     let vlog = generate_verilog_unchecked(&mig);
     println!("{}", vlog);
 }
+
+#[derive(LogicState, Copy, Clone, Debug, PartialEq)]
+pub enum MIG7SimState {
+    Reset,
+    Calibrating,
+    Idle,
+}
+
+/*
+// Just used for simulation...
+#[derive(LogicBlock, Default)]
+pub struct MIG7Sim {
+    pub raw_pos_clock: Signal<In, Clock>,
+    pub raw_neg_clock: Signal<In, Clock>,
+    pub mcb: MCBInterface4GDDR3,
+    pub address: Signal<In, Bits<29>>,
+    pub command: Signal<In, Bits<3>>,
+    pub enable: Signal<In, Bit>,
+    pub write_data_in: Signal<In, Bits<128>>,
+    pub write_data_end: Signal<In, Bit>,
+    pub write_data_mask: Signal<In, Bits<16>>,
+    pub write_enable: Signal<In, Bit>,
+    pub read_data_out: Signal<Out, Bits<128>>,
+    pub read_data_end: Signal<Out, Bit>,
+    pub read_data_valid: Signal<Out, Bit>,
+    pub ready: Signal<Out, Bit>,
+    pub write_fifo_not_full: Signal<Out, Bit>,
+    pub calib_done: Signal<Out, Bit>,
+    pub reset: Signal<In, Bit>,
+    pub clock: Signal<Out, Clock>,
+    pub reset_out: Signal<Out, Bit>,
+    state: DFF<MIG7SimState>,
+    data_in_register: DFF<Bits<128>>,
+    data_out_register: DFF<Bits<128>>,
+    calib_flag: DFF<Bit>,
+    _sim: BTreeMap<Bits<29>, Bits<128>>,
+}
+
+impl<D: Synth, const N: usize> Logic for MIG7Sim {
+    fn update(&mut self) {
+        self.clock.next = self.raw_pos_clock.val();
+        self.state.clk.next = self.raw_pos_clock.val();
+        self.data_in_register.clk.next = self.raw_pos_clock.val();
+        self.data_out_register.clk.next = self.raw_pos_clock.val();
+        self.data_in_register.d.next = self.data_in_register.q.val();
+        self.data_out_register.d.next = self.data_out_register.q.val();
+        self.calib_flag.clk.next = self.raw_pos_clock.val();
+        self.calib_flag.d.next = self.calib_flag.q.val();
+        self.state.d.next = self.state.q.val();
+        match self.state.q.val() {
+            MIG7SimState::Reset => {
+                self.calib_flag.d.next = false;
+                if !self.reset.val() {
+                    self.state.d.next = MIG7SimState::Calibrating;
+                }
+            }
+            MIG7SimState::Calibrating => {
+                self.calb_flag.d.next = true;
+                self.state.d.next = MIG7SimState::Idle;
+            }
+            MIG7SimState::Idle => {
+            }
+        }
+        if self.reset.val() {
+            self.state.d.next = MIG7SimState::Reset;
+        }
+        self.calib_done.next = self.calib_flag.val();
+        self.ready.next = self.state.q.val() == MIG7SimState::Idle;
+    }
+}
+
+ */

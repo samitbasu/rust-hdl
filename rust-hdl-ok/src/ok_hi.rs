@@ -139,9 +139,10 @@ impl OpalKellyHostInterface {
                 });
                 hi_in.add_constraint(PinConstraint {
                     index: 0,
-                    constraint: Constraint::Timing(VivadoClockGroup(vec![vec![
-                        "okHostClk".to_string()
-                    ]])),
+                    constraint: Constraint::Timing(VivadoClockGroup(vec![
+                        vec!["okHostClk".to_string()],
+                        vec!["sys_clock_p".to_string()],
+                    ])),
                 })
             }
         }

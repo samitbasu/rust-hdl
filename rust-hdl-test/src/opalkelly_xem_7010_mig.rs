@@ -100,8 +100,8 @@ impl Logic for OpalKellyXEM7010MIGTest {
         self.start_cmd.ok1.next = self.ok_host.ok1.val();
         self.cmd_done.ok1.next = self.ok_host.ok1.val();
         self.address.ok1.next = self.ok_host.ok1.val();
-        self.ok_host.ok2.next = self.pipe_in.ok2.val() |
-            self.pipe_out.ok2.val() | self.cmd_done.ok2.val();
+        self.ok_host.ok2.next =
+            self.pipe_in.ok2.val() | self.pipe_out.ok2.val() | self.cmd_done.ok2.val();
         self.mig.address.next = bit_cast::<29, 16>(self.address.dataout.val());
         self.mig.write_data_in.next = self.front_porch.data_out.val();
         self.back_porch.data_in.next = self.mig.read_data_out.val();
@@ -127,7 +127,10 @@ impl Logic for OpalKellyXEM7010MIGTest {
                 }
             }
             MIGState::Write => {
-                if !self.front_porch.empty.val() & self.mig.write_fifo_not_full.val() & self.mig.ready.val() {
+                if !self.front_porch.empty.val()
+                    & self.mig.write_fifo_not_full.val()
+                    & self.mig.ready.val()
+                {
                     self.mig.write_enable.next = true;
                     self.mig.write_data_end.next = true;
                     self.front_porch.read.next = true;
