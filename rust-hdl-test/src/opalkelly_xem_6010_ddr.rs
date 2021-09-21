@@ -68,7 +68,7 @@ impl Logic for OpalKellyDownloadDDRFIFOStressTest {
 }
 
 #[test]
-fn test_opalkelly_xem_6010_ddr_stress() {
+fn test_opalkelly_xem_6010_synth_ddr_stress() {
     let mut uut = OpalKellyDownloadDDRFIFOStressTest::default();
     uut.hi.link_connect_dest();
     uut.mcb.link_connect_dest();
@@ -77,9 +77,9 @@ fn test_opalkelly_xem_6010_ddr_stress() {
     crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_ddr_stress");
 }
 
-#[test]
-fn test_opalkelly_xem_6010_ddr_stress_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_ddr_stress/top.bit")?;
+#[cfg(test)]
+pub(crate) fn test_opalkelly_ddr_stress_runtime(bit_file: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file)?;
     hnd.reset_firmware(0);
     sleep(Duration::from_millis(100));
     hnd.set_wire_in(1, 1);
@@ -111,4 +111,9 @@ fn test_opalkelly_xem_6010_ddr_stress_runtime() -> Result<(), OkError> {
     hnd.update_wire_ins();
     hnd.close();
     Ok(())
+}
+
+#[test]
+fn test_opalkelly_xem_6010_ddr_stress() -> Result<(), OkError> {
+    test_opalkelly_ddr_stress_runtime("opalkelly_xem_6010_ddr_stress/top.bit")
 }
