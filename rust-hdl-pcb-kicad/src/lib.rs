@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use std::str::FromStr;
 
-use crate::glyph::{polyline, rectangle};
+use crate::glyph::{pin, polyline, rectangle};
 use crate::serde_s::to_s_string;
 use serde::{ser, Serialize};
 use uuid::Uuid;
@@ -60,6 +60,24 @@ pub struct xy(f64, f64);
 pub struct Fill(Option<FillType>);
 
 #[derive(Debug, Clone, Serialize)]
+pub enum PinKind {
+    power_in,
+    input,
+    power_out,
+    no_connect,
+    output,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub enum PinAppearance {
+    line,
+}
+
+fn make_font_size(sze: f64) -> Hint {
+    Hint::effects(vec![Effect::font(vec![FontDetail::size(sze, sze)])])
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub enum glyph {
     rectangle {
         start: (f64, f64),
@@ -69,6 +87,14 @@ pub enum glyph {
     polyline {
         pts: Vec<xy>,
         _visuals: Vec<Visual>,
+    },
+    pin {
+        _kind: PinKind,
+        _appears: PinAppearance,
+        at: (f64, f64, f64),
+        length: f64,
+        name: (String, Vec<Hint>),
+        number: (String, Vec<Hint>),
     },
 }
 
@@ -122,7 +148,7 @@ fn test_schematic() {
                     _hints: vec![
                         Hint::id(0),
                         Hint::at(-7.62, 8.89, 0.0),
-                        Hint::effects(vec![Effect::font(vec![FontDetail::size(1.27, 1.27)])]),
+                        make_font_size(1.27),
                     ],
                 },
                 property {
@@ -152,6 +178,22 @@ fn test_schematic() {
                     polyline {
                         pts: vec![xy(0.0, -5.08), xy(0.0, -6.35)],
                         _visuals: vec![Visual::stroke(Width(0.0)), Visual::fill(Fill(None))],
+                    },
+                    pin {
+                        _kind: PinKind::power_in,
+                        _appears: PinAppearance::line,
+                        at: (-12.7, -5.08, 0.0),
+                        length: 2.54,
+                        name: ("-VIN".to_string(), vec![make_font_size(1.27)]),
+                        number: ("1".to_string(), vec![make_font_size(1.27)]),
+                    },
+                    pin {
+                        _kind: PinKind::power_in,
+                        _appears: PinAppearance::line,
+                        at: (-12.7, 5.08, 0.0),
+                        length: 2.54,
+                        name: ("+VIN".to_string(), vec![make_font_size(1.27)]),
+                        number: ("2".to_string(), vec![make_font_size(1.27)]),
                     },
                 ],
             }],

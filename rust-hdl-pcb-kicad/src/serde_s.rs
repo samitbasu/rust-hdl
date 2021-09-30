@@ -196,6 +196,7 @@ impl<'a> serde::Serializer for &'a mut SSerializer {
     ) -> Result<Self::SerializeTupleVariant, Self::Error> {
         self.output += "(";
         self.output += variant;
+        self.output += " ";
         Ok(self)
     }
 
