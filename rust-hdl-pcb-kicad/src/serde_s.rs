@@ -107,7 +107,6 @@ impl<'a> serde::Serializer for &'a mut SSerializer {
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        self.output += "none";
         Ok(())
     }
 
