@@ -16,6 +16,8 @@ pub enum FontDetail {
 #[derive(Debug, Clone, Serialize)]
 pub enum Justification {
     right,
+    left,
+    bottom,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -26,15 +28,8 @@ pub enum Generator {
 #[derive(Debug, Clone, Serialize)]
 pub enum Effect {
     font(Vec<FontDetail>),
-    justify(Justification),
+    justify(Vec<Justification>),
     hide,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub enum Hint {
-    id(u32),
-    at(f64, f64, f64),
-    effects(Vec<Effect>),
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -92,8 +87,13 @@ pub enum PinHide {
     hide,
 }
 
-fn make_font_size(sze: f64) -> Hint {
-    Hint::effects(vec![Effect::font(vec![FontDetail::size(sze, sze)])])
+#[derive(Debug, Clone, Serialize)]
+pub enum Fields {
+    fields_autoplaced,
+}
+
+fn make_font_size(sze: f64) -> Vec<Effect> {
+    vec![Effect::font(vec![FontDetail::size(sze, sze)])]
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -113,8 +113,8 @@ pub enum glyph {
         at: (f64, f64, f64),
         length: f64,
         _hide: Option<PinHide>,
-        name: (String, Vec<Hint>),
-        number: (String, Vec<Hint>),
+        name: (String, Vec<Effect>),
+        number: (String, Vec<Effect>),
     },
 }
 
@@ -129,7 +129,9 @@ pub struct shape {
 pub struct property {
     _name: String,
     _value: String,
-    _hints: Vec<Hint>,
+    id: u32,
+    at: (f64, f64, f64),
+    effects: Vec<Effect>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -158,6 +160,30 @@ pub enum Element {
         stroke: Vec<StrokeDetails>,
         uuid: Uuid,
     },
+    label {
+        _name: String,
+        at: (f64, f64, f64),
+        justify: Vec<Justification>,
+        uuid: Uuid,
+    },
+    symbol {
+        lib_id: String,
+        at: (f64, f64, f64),
+        unit: i32,
+        in_bom: bool,
+        on_board: bool,
+        _auto: Option<Fields>,
+        uuid: Uuid,
+        _properties: Vec<property>,
+        _pin: Vec<PinMap>,
+    },
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename = "pin")]
+pub struct PinMap {
+    _number: String,
+    uuid: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -185,23 +211,20 @@ fn test_schematic() {
                     property {
                         _name: "Reference".to_string(),
                         _value: "U".to_string(),
-                        _hints: vec![
-                            Hint::id(0),
-                            Hint::at(-7.62, 8.89, 0.0),
-                            make_font_size(1.27),
-                        ],
+                        id: 0,
+                        at: (-7.62, 8.89, 0.0),
+                        effects: make_font_size(1.27),
                     },
                     property {
                         _name: "Value".to_string(),
                         _value: "TMR2-2411WI".to_string(),
-                        _hints: vec![
-                            Hint::id(1),
-                            Hint::at(11.43, 8.89, 0.0),
-                            Hint::effects(vec![
-                                Effect::font(vec![FontDetail::size(1.27, 1.27)]),
-                                Effect::justify(Justification::right),
-                            ]),
-                        ],
+                        id: 1,
+                        at: (11.43, 8.89, 0.0),
+                        effects: {
+                            let mut r = make_font_size(1.27);
+                            r.push(Effect::justify(vec![Justification::right]));
+                            r
+                        },
                     },
                 ],
                 _shapes: vec![shape {
@@ -228,8 +251,8 @@ fn test_schematic() {
                             at: (-12.7, -5.08, 0.0),
                             length: 2.54,
                             _hide: None,
-                            name: ("-VIN".to_string(), vec![make_font_size(1.27)]),
-                            number: ("1".to_string(), vec![make_font_size(1.27)]),
+                            name: ("-VIN".to_string(), make_font_size(1.27)),
+                            number: ("1".to_string(), make_font_size(1.27)),
                         },
                         pin {
                             _kind: PinKind::power_in,
@@ -237,8 +260,8 @@ fn test_schematic() {
                             at: (-12.7, 5.08, 0.0),
                             length: 2.54,
                             _hide: None,
-                            name: ("+VIN".to_string(), vec![make_font_size(1.27)]),
-                            number: ("2".to_string(), vec![make_font_size(1.27)]),
+                            name: ("+VIN".to_string(), make_font_size(1.27)),
+                            number: ("2".to_string(), make_font_size(1.27)),
                         },
                         pin {
                             _kind: PinKind::no_connect,
@@ -246,8 +269,8 @@ fn test_schematic() {
                             at: (10.16, 2.54, 180.0),
                             length: 2.54,
                             _hide: Some(PinHide::hide),
-                            name: ("NC".to_string(), vec![make_font_size(1.27)]),
-                            number: ("7".to_string(), vec![make_font_size(1.27)]),
+                            name: ("NC".to_string(), make_font_size(1.27)),
+                            number: ("7".to_string(), make_font_size(1.27)),
                         },
                     ],
                 }],
@@ -270,6 +293,52 @@ fn test_schematic() {
                     StrokeDetails::color(0.0, 0.0, 0.0, 0.0),
                 ],
                 uuid: Uuid::from_str("6222b708-5a6d-4f91-8f28-6abbc1ebfea0").unwrap(),
+            },
+            Element::symbol {
+                lib_id: "Converter_DCDC:TMR2-2411WI".to_string(),
+                at: (92.71, 64.77, 0.0),
+                unit: 1,
+                in_bom: true,
+                on_board: true,
+                _auto: Some(Fields::fields_autoplaced),
+                uuid: Uuid::from_str("33abe0c8-3486-4c7c-a2ef-f55fc4bed422").unwrap(),
+                _properties: vec![property {
+                    _name: "Reference".into(),
+                    _value: "U1".into(),
+                    id: 0,
+                    at: (92.71, 52.07, 0.0),
+                    effects: vec![],
+                }],
+                _pin: vec![
+                    PinMap {
+                        _number: "1".into(),
+                        uuid: Uuid::from_str("6a5a1852-4c63-44e1-b56f-75954e493785").unwrap(),
+                    },
+                    PinMap {
+                        _number: "2".into(),
+                        uuid: Uuid::from_str("46a44479-2cb4-428c-8a60-e5bccebe2cab").unwrap(),
+                    },
+                    PinMap {
+                        _number: "3".into(),
+                        uuid: Uuid::from_str("593540a1-4bce-40ce-bd4b-b0b5c80ae860").unwrap(),
+                    },
+                    PinMap {
+                        _number: "6".into(),
+                        uuid: Uuid::from_str("ed5b2a22-eee0-4877-87ea-c441ec704706").unwrap(),
+                    },
+                    PinMap {
+                        _number: "7".into(),
+                        uuid: Uuid::from_str("e39a3e9e-c9fc-4b7f-88b9-cce9f4b1d655").unwrap(),
+                    },
+                    PinMap {
+                        _number: "8".into(),
+                        uuid: Uuid::from_str("3d3be133-493f-452c-a56b-f68961872065").unwrap(),
+                    },
+                    PinMap {
+                        _number: "9".into(),
+                        uuid: Uuid::from_str("9dffd0c4-c608-4a1d-9b31-9b886dcb2a90").unwrap(),
+                    },
+                ],
             },
         ],
     };
