@@ -1,19 +1,13 @@
-use crate::circuit::{instance, Circuit, CircuitNode, Net, PartInstance};
-use crate::epin::PinKind;
-use crate::glyph::make_ic_body;
 use crate::ldo::make_ti_tps_7b84_regulator;
 use crate::murata_mlcc_caps::make_murata_capacitor;
-use crate::port::make_port;
-use crate::schematic::write_circuit_to_svg;
-use crate::schematic_layout::NetLayoutCmd::{
-    Junction, LineToCoords, LineToPort, MoveToCoords, MoveToPort,
-};
-use crate::schematic_layout::SchematicRotation::{Horizontal, Vertical};
-use crate::schematic_layout::{
-    orient, NetLayoutCmd, SchematicLayout, SchematicOrientation, SchematicRotation,
-};
 use crate::yageo_cc_caps::make_yageo_cc_series_cap;
 use crate::yageo_resistor_series::make_yageo_series_resistor;
+use rust_hdl_pcb_core::prelude::*;
+use rust_hdl_pcb_core::schematic_layout::NetLayoutCmd::{
+    Junction, LineToCoords, LineToPort, MoveToCoords, MoveToPort,
+};
+use rust_hdl_pcb_core::schematic_layout::SchematicRotation::{Horizontal, Vertical};
+use rust_hdl_pcb_svg::schematic::write_circuit_to_svg;
 
 #[test]
 fn test_manual_layout() {

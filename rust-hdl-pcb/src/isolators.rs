@@ -1,12 +1,4 @@
-use crate::bom::Manufacturer;
-use crate::circuit::{CircuitNode, PartDetails};
-use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, PinKind};
-use crate::epin::{EdgeLocation, PinLocation};
-use crate::glyph::{make_ic_body, make_label, make_line, TextJustification};
-use crate::pin;
-use crate::smd::SizeCode;
-use crate::utils::pin_list;
+use rust_hdl_pcb_core::prelude::*;
 
 pub fn make_iso7741edwrq1(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "ISO7741EDWRQ1");

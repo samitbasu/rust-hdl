@@ -1,16 +1,20 @@
+use rust_hdl_pcb_core::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode};
+use rust_hdl_pcb_core::circuit::{
+    instance, Capacitor, CircuitNode, LogicFunction, LogicSignalStandard, PartInstance,
+};
+use rust_hdl_pcb_core::diode::DiodeKind;
+use rust_hdl_pcb_core::epin::PinKind;
+use rust_hdl_pcb_core::inductors::make_ty_brl_series;
+use rust_hdl_pcb_core::resistors::{PowerWatt, ResistorKind};
+use rust_hdl_pcb_core::smd::SizeCode;
+use rust_hdl_pcb_svg::schematic::make_svgs;
+
 use crate::adc::make_ads868x;
 use crate::analog_devices::make_lt3092_current_source;
 use crate::avx_caps::make_avx_capacitor;
-use crate::capacitors::{CapacitorKind, CapacitorTolerance, DielectricCode};
-use crate::circuit::{
-    instance, Capacitor, CircuitNode, LogicFunction, LogicSignalStandard, PartInstance,
-};
 use crate::connectors::{
     make_amphenol_10056845_header, make_molex_55935_connector, make_sullins_sbh11_header,
 };
-use crate::diode::DiodeKind;
-use crate::epin::PinKind;
-use crate::inductors::make_ty_brl_series;
 use crate::isolators::make_iso7741edwrq1;
 use crate::kemet_ceramic_caps::make_kemet_ceramic_capacitor;
 use crate::kemet_t491_series::make_kemet_t491_capacitor;
@@ -22,9 +26,6 @@ use crate::lvc_one_gate::make_lvc_one_gate;
 use crate::murata_mlcc_caps::make_murata_capacitor;
 use crate::nippon_electrolytic_caps::make_nippon_hxd_capacitor;
 use crate::panasonic_era_resistors::make_panasonic_resistor;
-use crate::resistors::{PowerWatt, ResistorKind};
-use crate::schematic::make_svgs;
-use crate::smd::SizeCode;
 use crate::sn74_series_logic::make_sn74_series;
 use crate::tdk_c_series::make_tdk_c_series_capacitor;
 use crate::tdk_cga_series::make_tdk_cga_capacitor;
@@ -36,16 +37,8 @@ use crate::yageo_resistor_series::make_yageo_series_resistor;
 pub mod adc;
 pub mod analog_devices;
 pub mod avx_caps;
-pub mod bom;
-pub mod capacitors;
-pub mod circuit;
 pub mod connectors;
-pub mod designator;
 pub mod digikey_table;
-pub mod diode;
-pub mod epin;
-pub mod glyph;
-pub mod inductors;
 pub mod isolators;
 pub mod kemet_ceramic_caps;
 pub mod kemet_t491_series;
@@ -54,17 +47,11 @@ pub mod lvc_one_gate;
 pub mod murata_mlcc_caps;
 pub mod nippon_electrolytic_caps;
 pub mod panasonic_era_resistors;
-pub mod port;
-pub mod resistors;
-pub mod schematic;
-pub mod schematic_layout;
 pub mod schematic_manual_layout;
-pub mod smd;
 pub mod sn74_series_logic;
 pub mod tdk_c_series;
 pub mod tdk_cga_series;
 pub mod traco_power_tmr1_series;
-pub mod utils;
 pub mod wurth_led;
 pub mod yageo_cc_caps;
 pub mod yageo_resistor_series;
@@ -732,7 +719,7 @@ fn make_sample_library() -> Vec<CircuitNode> {
         make_ti_tps_7b84_regulator("TPS7B8450QDCYRQ1"),
         make_mcp_1799_regulator("MCP1799T-5002H/DB"),
         make_lt3092_current_source("LT3092EST#PBF"),
-        make_lvc_one_gate("SN74LVC1G86DCKR"),
+        make_lvc_one_gate("SN74LVC1G86DCK"),
         make_sn74_series("SN74HCT541PWR"),
         make_sn74_series("SN74HCT138PWR"),
         make_sn74_series("SN74HC151QDRQ1"),

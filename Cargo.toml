@@ -9,6 +9,8 @@ members = [
     "rust-hdl-alchitry-cu",
     "rust-hdl-pcb",
     "rust-hdl-ok-frontpanel-sys",
+    "rust-hdl-pcb-core",
+    "rust-hdl-pcb-svg",
 #    "rust-hdl-schem-layout",
     "rust-hdl-ok",
 ]

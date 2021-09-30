@@ -1,13 +1,4 @@
-use crate::bom::Manufacturer;
-use crate::capacitors::{
-    make_polarized_capacitor_outline, map_pf_to_label, map_three_digit_cap_to_pf, CapacitorKind,
-    CapacitorTolerance,
-};
-use crate::circuit::{Capacitor, CircuitNode, PartDetails};
-use crate::designator::{Designator, DesignatorKind};
-use crate::epin::EPin;
-use crate::smd::SizeCode;
-use crate::utils::pin_list;
+use rust_hdl_pcb_core::prelude::*;
 
 fn map_part_number_to_pf(part_number: &str) -> f64 {
     let pf_val = &part_number[5..8];

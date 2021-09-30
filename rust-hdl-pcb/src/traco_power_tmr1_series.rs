@@ -3,16 +3,7 @@ use std::fmt::{Display, Formatter};
 
 use enum_iterator::IntoEnumIterator;
 
-use crate::bom::Manufacturer;
-use crate::circuit::{CircuitNode, PartDetails, Regulator};
-use crate::designator::{Designator, DesignatorKind};
-use crate::epin::EPin;
-use crate::epin::{EdgeLocation, PinKind, PinLocation};
-use crate::glyph::TextJustification::{BottomLeft, TopLeft};
-use crate::glyph::{make_ic_body, make_label};
-use crate::pin;
-use crate::smd::SizeCode;
-use crate::utils::pin_list;
+use rust_hdl_pcb_core::prelude::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum InputType {
@@ -267,8 +258,8 @@ pub fn make_traco_tmr1_regulator(part_number: &str) -> CircuitNode {
             pins,
             outline: vec![
                 make_ic_body(-500, -200, 500, 300),
-                make_label(-500, 300, "V?", BottomLeft),
-                make_label(-500, -200, part_number, TopLeft),
+                make_label(-500, 300, "V?", TextJustification::BottomLeft),
+                make_label(-500, -200, part_number, TextJustification::TopLeft),
             ],
             size: SizeCode::Custom("TMR1-2415".into()),
         },

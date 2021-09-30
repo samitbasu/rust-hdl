@@ -1,8 +1,5 @@
-use crate::bom::Manufacturer;
-use crate::capacitors;
-use crate::capacitors::{make_mlcc, map_three_digit_cap_to_pf, CapacitorTolerance, DielectricCode};
-use crate::circuit::CircuitNode;
-use crate::smd::SizeCode;
+use rust_hdl_pcb_core::capacitors;
+use rust_hdl_pcb_core::prelude::*;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {
     match &part[3..4] {

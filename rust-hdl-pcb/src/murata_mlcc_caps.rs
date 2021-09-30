@@ -1,9 +1,4 @@
-use crate::bom::Manufacturer;
-use crate::capacitors::{
-    make_mlcc, map_pf_to_label, map_three_digit_cap_to_pf, CapacitorTolerance, DielectricCode,
-};
-use crate::circuit::CircuitNode;
-use crate::smd::SizeCode;
+use rust_hdl_pcb_core::prelude::*;
 
 fn make_murata_grt_188r61h_capacitor(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("GRT188R61H"));

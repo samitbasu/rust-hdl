@@ -1,13 +1,5 @@
+use rust_hdl_pcb_core::prelude::*;
 use std::collections::BTreeMap;
-
-use crate::bom::Manufacturer;
-use crate::circuit::{CircuitNode, PartDetails};
-use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, EdgeLocation, PinKind, PinLocation};
-use crate::glyph::{make_ic_body, make_label, TextJustification};
-use crate::pin;
-use crate::smd::SizeCode;
-use crate::utils::pin_list;
 
 fn make_passive_pins(count: u32, start_y: i32, delta_y: i32) -> BTreeMap<u64, EPin> {
     pin_list(

@@ -1,13 +1,4 @@
-use crate::bom::Manufacturer;
-use crate::circuit::{CircuitNode, Logic, LogicFunction, LogicSignalStandard, PartDetails};
-use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, PinKind};
-use crate::epin::{EdgeLocation, PinLocation};
-use crate::glyph::TextJustification::{BottomLeft, TopLeft};
-use crate::glyph::{make_ic_body, make_label};
-use crate::pin;
-use crate::smd::SizeCode;
-use crate::utils::pin_list;
+use rust_hdl_pcb_core::prelude::*;
 
 pub fn make_sn74hct138(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "SN74HCT138PWR");
@@ -39,8 +30,8 @@ pub fn make_sn74hct138(part_number: &str) -> CircuitNode {
             pins: pin_list(pinset),
             outline: vec![
                 make_ic_body(-600, -900, 600, 1000),
-                make_label(-600, 1000, "U?", BottomLeft),
-                make_label(-600, -900, part_number, TopLeft),
+                make_label(-600, 1000, "U?", TextJustification::BottomLeft),
+                make_label(-600, -900, part_number, TextJustification::TopLeft),
             ],
             size: SizeCode::TSSOP(16),
         },
@@ -85,8 +76,8 @@ pub fn make_sn74hct541(part_number: &str) -> CircuitNode {
             pins: pin_list(pinset),
             outline: vec![
                 make_ic_body(-700, -1200, 600, 1000),
-                make_label(-700, 1000, "U?", BottomLeft),
-                make_label(-700, -1200, part_number, TopLeft),
+                make_label(-700, 1000, "U?", TextJustification::BottomLeft),
+                make_label(-700, -1200, part_number, TextJustification::TopLeft),
             ],
             size: SizeCode::TSSOP(20),
         },
@@ -130,8 +121,8 @@ pub fn make_sn74hc151(part_number: &str) -> CircuitNode {
             pins: pin_list(pins),
             outline: vec![
                 make_ic_body(-500, -700, 400, 1200),
-                make_label(-500, 1200, "U?", BottomLeft),
-                make_label(-300, 1200, part_number, BottomLeft),
+                make_label(-500, 1200, "U?", TextJustification::BottomLeft),
+                make_label(-300, 1200, part_number, TextJustification::BottomLeft),
             ],
             size: SizeCode::SOIC(16),
         },
