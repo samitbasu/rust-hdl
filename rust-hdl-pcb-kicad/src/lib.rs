@@ -1,7 +1,10 @@
+#![allow(non_camel_case_types)]
+
 use std::fmt::Display;
 use std::str::FromStr;
 
-use crate::glyph::{pin, polyline, rectangle};
+use crate::glyph::{polyline, rectangle};
+use crate::pins::pin;
 use crate::serde_s::to_s_string;
 use serde::{ser, Serialize};
 use uuid::Uuid;
@@ -88,12 +91,11 @@ pub enum PinHide {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub enum Fields {
-    fields_autoplaced,
-}
+#[serde(rename = "fields_autoplaced")]
+pub struct AutoFields {}
 
-fn make_font_size(sze: f64) -> Vec<Effect> {
-    vec![Effect::font(vec![FontDetail::size(sze, sze)])]
+fn make_font_size(sze: f64) -> Effects {
+    Effects(vec![Effect::font(vec![FontDetail::size(sze, sze)])])
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -107,14 +109,22 @@ pub enum glyph {
         pts: Vec<xy>,
         _visuals: Vec<Visual>,
     },
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename = "effects")]
+pub struct Effects(Vec<Effect>);
+
+#[derive(Debug, Clone, Serialize)]
+pub enum pins {
     pin {
         _kind: PinKind,
         _appears: PinAppearance,
         at: (f64, f64, f64),
         length: f64,
         _hide: Option<PinHide>,
-        name: (String, Vec<Effect>),
-        number: (String, Vec<Effect>),
+        name: (String, Effects),
+        number: (String, Effects),
     },
 }
 
@@ -123,6 +133,13 @@ pub enum glyph {
 pub struct shape {
     _name: String,
     _elements: Vec<glyph>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename = "symbol")]
+pub struct pinout {
+    _name: String,
+    _elements: Vec<pins>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -140,7 +157,15 @@ pub struct symbol {
     in_bom: bool,
     on_board: bool,
     _properties: Vec<property>,
-    _shapes: Vec<shape>,
+    _shape: shape,
+    _pinout: pinout,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename = "path")]
+pub struct Page {
+    _path: String,
+    page: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -172,10 +197,13 @@ pub enum Element {
         unit: i32,
         in_bom: bool,
         on_board: bool,
-        _auto: Option<Fields>,
+        _auto: Option<AutoFields>,
         uuid: Uuid,
         _properties: Vec<property>,
         _pin: Vec<PinMap>,
+    },
+    sheet_instances {
+        _pages: Vec<Page>,
     },
 }
 
@@ -187,6 +215,7 @@ pub struct PinMap {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename = "kicad_sch")]
 pub struct KiCadSchematic {
     version: u64,
     generator: Generator,
@@ -213,7 +242,7 @@ fn test_schematic() {
                         _value: "U".to_string(),
                         id: 0,
                         at: (-7.62, 8.89, 0.0),
-                        effects: make_font_size(1.27),
+                        effects: make_font_size(1.27).0,
                     },
                     property {
                         _name: "Value".to_string(),
@@ -221,13 +250,13 @@ fn test_schematic() {
                         id: 1,
                         at: (11.43, 8.89, 0.0),
                         effects: {
-                            let mut r = make_font_size(1.27);
+                            let mut r = make_font_size(1.27).0;
                             r.push(Effect::justify(vec![Justification::right]));
                             r
                         },
                     },
                 ],
-                _shapes: vec![shape {
+                _shape: shape {
                     _name: "TMR2-2411WI_0_1".to_string(),
                     _elements: vec![
                         rectangle {
@@ -245,6 +274,11 @@ fn test_schematic() {
                                 Visual::fill(Fill(FillType::none)),
                             ],
                         },
+                    ],
+                },
+                _pinout: pinout {
+                    _name: "TMR2-2411WI_1_1".to_string(),
+                    _elements: vec![
                         pin {
                             _kind: PinKind::power_in,
                             _appears: PinAppearance::line,
@@ -273,7 +307,7 @@ fn test_schematic() {
                             number: ("7".to_string(), make_font_size(1.27)),
                         },
                     ],
-                }],
+                },
             }]),
             Element::junction {
                 at: (124.46, 57.15),
@@ -300,7 +334,7 @@ fn test_schematic() {
                 unit: 1,
                 in_bom: true,
                 on_board: true,
-                _auto: Some(Fields::fields_autoplaced),
+                _auto: Some(AutoFields {}),
                 uuid: Uuid::from_str("33abe0c8-3486-4c7c-a2ef-f55fc4bed422").unwrap(),
                 _properties: vec![property {
                     _name: "Reference".into(),
@@ -339,6 +373,12 @@ fn test_schematic() {
                         uuid: Uuid::from_str("9dffd0c4-c608-4a1d-9b31-9b886dcb2a90").unwrap(),
                     },
                 ],
+            },
+            Element::sheet_instances {
+                _pages: vec![Page {
+                    _path: "/".to_string(),
+                    page: "1".to_string(),
+                }],
             },
         ],
     };

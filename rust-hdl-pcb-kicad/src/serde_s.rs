@@ -395,7 +395,7 @@ impl<'a> ser::SerializeStructVariant for &'a mut SSerializer {
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        self.output += "))";
+        self.output += ")";
         Ok(())
     }
 }
