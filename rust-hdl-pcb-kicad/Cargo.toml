@@ -7,7 +7,7 @@ edition = "2018"
 
 [dependencies]
 rust-hdl-pcb-core = {path="../rust-hdl-pcb-core"}
-uuid = {version="0.8.2", features=["serde"]}
+uuid = {version="0.8.2", features=["serde", "v4"]}
 atoms = {version="^2"}
 serde = {version="^1", features=["derive"]}
 anyhow = "^1"
