@@ -5,7 +5,7 @@ use crate::pins::pin;
 use crate::serde_s::to_s_string;
 use crate::{
     pinout, property, shape, xy, AutoFields, Effect, Element, Fill, FillType, Generator,
-    Justification, KiCadSchematic, LibrarySymbol, Page, PinAppearance, PinHide, KPinKind, PinMap,
+    Justification, KPinKind, KiCadSchematic, LibrarySymbol, Page, PinAppearance, PinHide, PinMap,
     StrokeDetails, StrokeKind, Visual,
 };
 use std::str::FromStr;

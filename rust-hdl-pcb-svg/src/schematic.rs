@@ -9,7 +9,6 @@ use svg::Document;
 use rust_hdl_pcb_core::prelude::*;
 
 const EM: i32 = 85;
-const PIN_LENGTH: i32 = 200;
 
 fn add_pins(
     mut doc: Group,
@@ -370,57 +369,6 @@ pub fn estimate_instance_bounding_box(instance: &PartInstance, layout: &Schemati
         r = r.rot90();
     }
     r
-}
-
-fn map_pin_based_on_orientation(orient: &SchematicOrientation, x: i32, y: i32) -> (i32, i32) {
-    let cx = orient.center.0;
-    let cy = orient.center.1;
-    return match orient.rotation {
-        SchematicRotation::Horizontal => (x + cx, -(y + cy)),
-        SchematicRotation::Vertical => (-y + cx, -(x + cy)),
-    };
-}
-
-fn map_pin_based_on_outline_and_orientation(
-    pin: &EPin,
-    r: &Rect,
-    orientation: &SchematicOrientation,
-    len: i32,
-) -> (i32, i32) {
-    return match &pin.location.edge {
-        EdgeLocation::North => {
-            map_pin_based_on_orientation(&orientation, pin.location.offset, r.p1.y + len)
-        }
-        EdgeLocation::West => {
-            map_pin_based_on_orientation(&orientation, r.p0.x - len, pin.location.offset)
-        }
-        EdgeLocation::East => {
-            map_pin_based_on_orientation(&orientation, r.p1.x + len, pin.location.offset)
-        }
-        EdgeLocation::South => {
-            map_pin_based_on_orientation(&orientation, pin.location.offset, r.p0.y - len)
-        }
-    };
-}
-
-fn get_pin_net_location(circuit: &Circuit, layout: &SchematicLayout, pin: &PartPin) -> (i32, i32) {
-    for instance in &circuit.nodes {
-        if instance.id == pin.part_id {
-            let part = get_details_from_instance(instance, layout);
-            let schematic_orientation = layout.part(&instance.id);
-            let pin = &part.pins[&pin.pin];
-            return if let Glyph::OutlineRect(r) = &part.outline[0] {
-                map_pin_based_on_outline_and_orientation(pin, r, &schematic_orientation, PIN_LENGTH)
-            } else {
-                // Parts without an outline rect are just virtual...
-                (
-                    schematic_orientation.center.0,
-                    -schematic_orientation.center.1,
-                )
-            };
-        }
-    }
-    panic!("No pin found!")
 }
 
 pub fn write_circuit_to_svg(circuit: &Circuit, layout: &SchematicLayout, name: &str) {
