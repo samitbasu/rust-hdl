@@ -15,3 +15,4 @@ serde_yaml = "^0.8"
 serde_json = "^1"
 rust-hdl-pcb-core = {path="../rust-hdl-pcb-core"}
 rust-hdl-pcb-svg = {path="../rust-hdl-pcb-svg"}
+rust-hdl-pcb-kicad = {path="../rust-hdl-pcb-kicad"}

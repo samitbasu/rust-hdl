@@ -5,7 +5,7 @@ use crate::pins::pin;
 use crate::serde_s::to_s_string;
 use crate::{
     pinout, property, shape, xy, AutoFields, Effect, Element, Fill, FillType, Generator,
-    Justification, KiCadSchematic, LibrarySymbol, Page, PinAppearance, PinHide, PinKind, PinMap,
+    Justification, KiCadSchematic, LibrarySymbol, Page, PinAppearance, PinHide, KPinKind, PinMap,
     StrokeDetails, StrokeKind, Visual,
 };
 use std::str::FromStr;
@@ -66,7 +66,7 @@ fn test_schematic() {
                     _name: "TMR2-2411WI_1_1".to_string(),
                     _elements: vec![
                         pin {
-                            _kind: PinKind::power_in,
+                            _kind: KPinKind::power_in,
                             _appears: PinAppearance::line,
                             at: (-12.7, -5.08, 0.0),
                             length: 2.54,
@@ -75,7 +75,7 @@ fn test_schematic() {
                             number: ("1".to_string(), crate::make_font_size(1.27)),
                         },
                         pin {
-                            _kind: PinKind::power_in,
+                            _kind: KPinKind::power_in,
                             _appears: PinAppearance::line,
                             at: (-12.7, 5.08, 0.0),
                             length: 2.54,
@@ -84,7 +84,7 @@ fn test_schematic() {
                             number: ("2".to_string(), crate::make_font_size(1.27)),
                         },
                         pin {
-                            _kind: PinKind::no_connect,
+                            _kind: KPinKind::no_connect,
                             _appears: PinAppearance::line,
                             at: (10.16, 2.54, 180.0),
                             length: 2.54,

@@ -10,6 +10,8 @@ use uuid::Uuid;
 use crate::glyph::{polyline, rectangle};
 use crate::pins::pin;
 use crate::serde_s::to_s_string;
+use std::collections::BTreeMap;
+use rust_hdl_pcb_core::epin;
 
 pub mod serde_s;
 mod test;
@@ -76,12 +78,19 @@ pub struct xy(f64, f64);
 pub struct Fill(FillType);
 
 #[derive(Debug, Clone, Serialize)]
-pub enum PinKind {
+pub enum KPinKind {
     power_in,
     input,
     power_out,
     no_connect,
     output,
+    bidirectional,
+    tri_state,
+    passive,
+    unspecified,
+    open_collector,
+    open_emitter,
+    free
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -146,7 +155,7 @@ pub struct Effects(Vec<Effect>);
 #[derive(Debug, Clone, Serialize)]
 pub enum pins {
     pin {
-        _kind: PinKind,
+        _kind: KPinKind,
         _appears: PinAppearance,
         at: (f64, f64, f64),
         length: f64,
@@ -260,15 +269,89 @@ fn fmils_to_mm(x: f64) -> f64 {
     f64::from(x) / 1000.0 * 25.4
 }
 
+fn map_pin_kind(kind: epin::PinKind) -> KPinKind {
+    match kind {
+        PinKind::Input => KPinKind::input,
+        PinKind::InputInverted => KPinKind::input,
+        PinKind::Output => KPinKind::output,
+        PinKind::TriState => KPinKind::tri_state,
+        PinKind::Passive => KPinKind::passive,
+        PinKind::PassivePos => KPinKind::passive,
+        PinKind::PassiveNeg => KPinKind::passive,
+        PinKind::PowerSink => KPinKind::power_in,
+        PinKind::PowerSource => KPinKind::power_out,
+        PinKind::PowerReturn => KPinKind::power_in,
+        PinKind::OpenCollector => KPinKind::open_collector,
+        PinKind::OpenEmitter => KPinKind::open_emitter,
+        PinKind::NoConnect => KPinKind::no_connect,
+        PinKind::Free => KPinKind::free,
+        PinKind::Unspecified => KPinKind::unspecified,
+    }
+}
+
+const PIN_LENGTH_MILS : i32 = 200;
+
+fn map_pins_to_kicad(outline: &[Glyph], hide_pin_designators: bool, rpins: &BTreeMap<u64, EPin>) -> Vec<pins> {
+    if outline.len() == 0 {
+        return vec![];
+    }
+    let mut ret = vec![];
+    if let Glyph::OutlineRect(r) = &outline[0] {
+        if r.is_empty() {
+            return vec![];
+        }
+        for (num, p) in rpins {
+            let at =
+                match p.location.edge {
+                    EdgeLocation::North => {
+                        let pn_x = mils_to_mm(p.location.offset);
+                        let pn_y = mils_to_mm(r.p1.y);
+                        (pn_x, pn_y, 90.0)
+                    }
+                    EdgeLocation::West => {
+                        let pn_x = mils_to_mm(r.p0.x - PIN_LENGTH_MILS);
+                        let pn_y = mils_to_mm(p.location.offset);
+                        (pn_x, pn_y, 0.0)
+                    }
+                    EdgeLocation::East => {
+                        let pn_x = mils_to_mm(r.p1.x + PIN_LENGTH_MILS);
+                        let pn_y = mils_to_mm(p.location.offset);
+                        (pn_x, pn_y, 180.0)
+                    }
+                    EdgeLocation::South => {
+                        let pn_x = mils_to_mm(p.location.offset);
+                        let pn_y = mils_to_mm(r.p0.y - PIN_LENGTH_MILS);
+                        (pn_x, pn_y, 90.0)
+                    }
+                };
+            println!("Pin {:?} rect {:?} at {:?}", p, r, at);
+            ret.push(pins::pin{
+                _kind: map_pin_kind(p.kind),
+                _appears: PinAppearance::line, // TODO - add more details here
+                at,
+                length: mils_to_mm(PIN_LENGTH_MILS),
+                _hide: None,
+                name: (p.name.clone(), make_font_size(1.27)),
+                number: (format!("{}", num), make_font_size(1.27)),
+            })
+        }
+    }
+    ret
+}
+
 fn map_glyphs_to_shapes(glyphs: &[Glyph], hide_outline: bool) -> Vec<glyph> {
     let mut ret = vec![];
-    for x in &glyphs {
+    for x in glyphs {
         match x {
             Glyph::OutlineRect(r) => {
                 if !hide_outline {
+                    let start_x = mils_to_mm(r.p0.x).min(mils_to_mm(r.p1.x));
+                    let stop_x = mils_to_mm(r.p0.x).max(mils_to_mm(r.p1.x));
+                    let start_y = mils_to_mm(r.p0.y).min(mils_to_mm(r.p1.y));
+                    let stop_y = mils_to_mm(r.p0.y).max(mils_to_mm(r.p1.y));
                     ret.push(glyph::rectangle {
-                        start: (mils_to_mm(r.p0.x), -mils_to_mm(-r.p0.y)),
-                        end: (mils_to_mm(r.p1.x), -mils_to_mm(-r.p1.y)),
+                        start: (start_x, start_y),
+                        end: (stop_x, stop_y),
                         _visuals: vec![
                             Visual::stroke(crate::make_stroke_width(0.254)),
                             Visual::fill(Fill(FillType::background)),
@@ -278,8 +361,8 @@ fn map_glyphs_to_shapes(glyphs: &[Glyph], hide_outline: bool) -> Vec<glyph> {
             }
             Glyph::Line(l) => ret.push(glyph::polyline {
                 pts: vec![
-                    xy(mils_to_mm(l.p0.x), mils_to_mm(-l.p0.y)),
-                    xy(mils_to_mm(l.p1.x), mils_to_mm(-l.p1.y)),
+                    xy(mils_to_mm(l.p0.x), mils_to_mm(l.p0.y)),
+                    xy(mils_to_mm(l.p1.x), mils_to_mm(l.p1.y)),
                 ],
                 _visuals: vec![
                     Visual::stroke(crate::make_stroke_width(0.0)),
@@ -288,7 +371,7 @@ fn map_glyphs_to_shapes(glyphs: &[Glyph], hide_outline: bool) -> Vec<glyph> {
             }),
             Glyph::Text(t) => ret.push(glyph::text {
                 _text: t.text.clone(),
-                at: (mils_to_mm(t.p0.x), mils_to_mm(-t.p1.y), 0.0),
+                at: (mils_to_mm(t.p0.x), mils_to_mm(t.p0.y), 0.0),
                 _effects: Effects(vec![
                     Effect::font(vec![FontDetail::size(1.27, 1.27)]),
                     Effect::justify(match t.justify {
@@ -314,36 +397,61 @@ fn map_glyphs_to_shapes(glyphs: &[Glyph], hide_outline: bool) -> Vec<glyph> {
                 ]),
             }),
             Glyph::Arc(_) => {}
-            Glyph::Circle(c) => glyph::circle {
-                center: (mils_to_mm(c.p0.x), mils_to_mm(-c.p0.y)),
+            Glyph::Circle(c) => ret.push(glyph::circle {
+                center: (mils_to_mm(c.p0.x), mils_to_mm(c.p0.y)),
                 radius: fmils_to_mm(c.radius),
                 _visuals: vec![
                     Visual::stroke(crate::make_stroke_width(0.0)),
                     Visual::fill(Fill(FillType::none)),
                 ],
-            },
+            }),
         }
     }
     ret
 }
 
-fn map_part_to_library_symbols(part: &PartDetails) -> LibrarySymbol {
+fn map_part_to_library_symbols(instance: &PartInstance, layout: &SchematicLayout) -> LibrarySymbol {
+    let part = get_details_from_instance(instance, layout);
     LibrarySymbol {
-        _name: part.label.to_string(),
+        _name: instance.id.clone(),
         in_bom: true,
         on_board: true,
         _properties: vec![ // TODO - add these later
         ],
         _shape: shape {
-            _name: part.label.to_string(),
+            _name: format!("{}_0_1",instance.id.clone()),
             _elements: map_glyphs_to_shapes(&part.outline, part.hide_part_outline),
         },
         _pinout: pinout {
-            _name: part.label.to_string(),
-            _elements: vec![],
+            _name: format!("{}_1_1",instance.id.clone()),
+            _elements: map_pins_to_kicad(&part.outline, part.hide_pin_designators, &part.pins),
         },
     }
-    // The first symbol represents the
+}
+
+fn map_part_to_element(part: &PartInstance, layout: &SchematicLayout) -> Element {
+    let details = get_details_from_instance(part, layout);
+    let l = layout.part(&part.id);
+    let rotation = match l.rotation {
+        SchematicRotation::Vertical => 90.0,
+        SchematicRotation::Horizontal => 0.0,
+    };
+    let location = (mils_to_mm(l.center.0), -mils_to_mm(l.center.1), rotation);
+    Element::symbol {
+        lib_id: part.id.clone(),
+        at: location,
+        unit: 1,
+        in_bom: true,
+        on_board: true,
+        _auto: None,
+        uuid: Uuid::new_v4(),
+        _properties: vec![],
+        _pin: details.pins.iter()
+                .map(|(number, _epin)| PinMap {
+                    _number: format!("{}", number),
+                    uuid: Uuid::new_v4(),
+                }).collect()
+    }
 }
 
 pub fn write_circuit_to_kicad6(circuit: &Circuit, layout: &SchematicLayout, name: &str) {
@@ -354,8 +462,13 @@ pub fn write_circuit_to_kicad6(circuit: &Circuit, layout: &SchematicLayout, name
         paper: "A4".to_string(),
         _elements: vec![],
     };
-    for part in &circuit.nodes {
-        let part = get_details_from_instance(part, layout);
-        let symbols = map_part_to_library_symbols(&part);
-    }
+    let lib = circuit.nodes.iter()
+        .map(|part| map_part_to_library_symbols(part, layout))
+        .collect::<Vec<_>>();
+    let mut instances = circuit.nodes.iter()
+        .map(|part| map_part_to_element(part, layout))
+        .collect::<Vec<_>>();
+    schematic._elements.push(Element::lib_symbols(lib));
+    schematic._elements.append(&mut instances);
+    std::fs::write(name, to_s_string(&schematic).unwrap()).expect("Unable to write to file");
 }

@@ -8,6 +8,7 @@ use rust_hdl_pcb_core::schematic_layout::NetLayoutCmd::{
 };
 use rust_hdl_pcb_core::schematic_layout::SchematicRotation::{Horizontal, Vertical};
 use rust_hdl_pcb_svg::schematic::write_circuit_to_svg;
+use rust_hdl_pcb_kicad::write_circuit_to_kicad6;
 
 #[test]
 fn test_manual_layout() {
@@ -93,6 +94,8 @@ fn test_manual_layout() {
         nets: vec![vup_net, vin_net, gnd_net, vout_net],
     };
     write_circuit_to_svg(&circuit, &layout, "test_circuit_manual.svg");
+    //write_circuit_to_kicad6(&circuit, &layout, "test_circuit_manual.sch");
+    write_circuit_to_kicad6(&circuit, &layout, "/Users/cdsfsbasu/Devel/rust-hdl/junk/test1.kicad_sch");
     let layout_yaml = serde_yaml::to_string(&layout).unwrap();
     println!("Layout: {}", layout_yaml);
     let circuit = serde_json::to_string(&circuit).unwrap();
