@@ -10,8 +10,7 @@ use rust_hdl_pcb_core::schematic_layout::SchematicRotation::{Horizontal, Vertica
 use rust_hdl_pcb_kicad::write_circuit_to_kicad6;
 use rust_hdl_pcb_svg::schematic::write_circuit_to_svg;
 
-#[test]
-fn test_manual_layout() {
+pub fn test_ldo_circuit() -> (Circuit, SchematicLayout) {
     let in_power_port = make_port("+VIN", PinKind::PowerSink).instance("in_power_port");
     let out_power_port = make_port("+3V3_OUT", PinKind::PowerSource).instance("out_power_port");
     let gnd_port = make_port("GND", PinKind::PowerReturn).instance("gnd_port");
@@ -93,6 +92,12 @@ fn test_manual_layout() {
         ],
         nets: vec![vup_net, vin_net, gnd_net, vout_net],
     };
+    (circuit, layout)
+}
+
+#[test]
+fn test_manual_layout() {
+    let (circuit, layout) = test_ldo_circuit();
     write_circuit_to_svg(&circuit, &layout, "test_circuit_manual.svg");
     //write_circuit_to_kicad6(&circuit, &layout, "test_circuit_manual.sch");
     write_circuit_to_kicad6(

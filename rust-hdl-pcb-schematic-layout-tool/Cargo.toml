@@ -1,0 +1,11 @@
+[package]
+name = "rust-hdl-pcb-schematic-layout-tool"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+druid = { git = "https://github.com/linebender/druid.git" }
+rust-hdl-pcb-core = {path="../rust-hdl-pcb-core"}
+rust-hdl-pcb = {path="../rust-hdl-pcb"}
