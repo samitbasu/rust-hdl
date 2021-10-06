@@ -121,21 +121,29 @@ impl Widget<Schematic> for SchematicViewer {
                 if net_layout.len() == 0 {
                     net_layout = make_rat_layout(ports.len());
                 }
+                let mut lp = (0.0, 0.0);
                 for cmd in net_layout {
                     match cmd {
                         NetLayoutCmd::MoveToPort(n) => {
-                            path.move_to((ports[n - 1].0 as f64, -ports[n-1].1 as f64));
+                            lp = (ports[n - 1].0 as f64, -ports[n - 1].1 as f64);
+                            path.move_to(lp);
                         }
                         NetLayoutCmd::LineToPort(n) => {
-                            path.line_to((ports[n - 1].0 as f64, -ports[n-1].1 as f64));
+                            lp = (ports[n - 1].0 as f64, -ports[n - 1].1 as f64);
+                            path.line_to(lp);
                         }
                         NetLayoutCmd::MoveToCoords(x, y) => {
-                            path.move_to((x as f64, y as f64));
+                            lp = (x as f64, y as f64);
+                            path.move_to(lp);
                         }
                         NetLayoutCmd::LineToCoords(x, y) => {
-                            path.line_to((x as f64, y as f64));
+                            lp = (x as f64, y as f64);
+                            path.line_to(lp);
                         }
-                        _ => {}
+                        NetLayoutCmd::Junction => {
+                            let disk = druid::kurbo::Circle::new(lp, 25.0);
+                            ctx.fill(disk, &Color::from_hex_str("000080").unwrap());
+                        }
                     }
                 }
             }
