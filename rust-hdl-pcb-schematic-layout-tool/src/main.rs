@@ -1,3 +1,4 @@
+use druid::kurbo::BezPath;
 use druid::{
     kurbo::Line, Affine, AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx,
     FontDescriptor, FontFamily, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, RenderContext, Size,
@@ -108,6 +109,37 @@ impl Widget<Schematic> for SchematicViewer {
                     render_pin(ctx, num, pin, &part.outline, part.hide_pin_designators, env);
                 }
             });
+            let mut path = BezPath::new();
+            for net in &data.circuit.nets {
+                let ports = net
+                    .pins
+                    .iter()
+                    .map(|x| get_pin_net_location(&data.circuit, &data.layout, x))
+                    .collect::<Vec<_>>();
+                // Walk the layout
+                let mut net_layout = data.layout.net(&net.name);
+                if net_layout.len() == 0 {
+                    net_layout = make_rat_layout(ports.len());
+                }
+                for cmd in net_layout {
+                    match cmd {
+                        NetLayoutCmd::MoveToPort(n) => {
+                            path.move_to((ports[n - 1].0 as f64, -ports[n-1].1 as f64));
+                        }
+                        NetLayoutCmd::LineToPort(n) => {
+                            path.line_to((ports[n - 1].0 as f64, -ports[n-1].1 as f64));
+                        }
+                        NetLayoutCmd::MoveToCoords(x, y) => {
+                            path.move_to((x as f64, y as f64));
+                        }
+                        NetLayoutCmd::LineToCoords(x, y) => {
+                            path.line_to((x as f64, y as f64));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            ctx.stroke(path, &Color::from_hex_str("000080").unwrap(), 10.0);
         }
     }
 }
