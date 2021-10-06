@@ -141,7 +141,11 @@ impl Widget<Schematic> for SchematicViewer {
                 }
             }
             Event::Wheel(mouse) => {
+                let old_scale = data.scale;
                 data.scale *= (1.0 - mouse.wheel_delta.y / 100.0).max(0.9).min(1.1);
+                // Move the center of the page to zoom around the mouse
+                data.center.0 += (data.center.0 - mouse.pos.x) * (data.scale - old_scale) / old_scale;
+                data.center.1 += (data.center.1 - mouse.pos.y) * (data.scale - old_scale) / old_scale;
                 ctx.request_paint();
             }
             Event::KeyDown(key) => {
