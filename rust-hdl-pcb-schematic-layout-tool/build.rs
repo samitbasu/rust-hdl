@@ -120,28 +120,28 @@ mod examples {
     //         continue;
     //     }
 
-        // if let Some(example) = path.file_stem() {
-            let example_str = "rust_hdl_pcb_schematic_layout_tool";
+    // if let Some(example) = path.file_stem() {
+    let example_str = "rust_hdl_pcb_schematic_layout_tool";
 
-            // // Skip examples that are known to not work.
-            // if EXCEPTIONS.contains(&example_str.as_ref()) {
-            //     continue;
-            // }
+    // // Skip examples that are known to not work.
+    // if EXCEPTIONS.contains(&example_str.as_ref()) {
+    //     continue;
+    // }
 
-            // Record the valid example module we found to add to the generated examples.in
-            examples_in.push_str(&format!("    pub mod {};\n", example_str));
+    // Record the valid example module we found to add to the generated examples.in
+    examples_in.push_str(&format!("    pub mod {};\n", example_str));
 
-            // Add an entry to the index.html file.
-            let index_entry = format!(
-                "<li><a href=\"./html/{name}.html\">{name}</a></li>",
-                name = example_str
-            );
+    // Add an entry to the index.html file.
+    let index_entry = format!(
+        "<li><a href=\"./html/{name}.html\">{name}</a></li>",
+        name = example_str
+    );
 
-            index_html.push_str(&index_entry);
+    index_html.push_str(&index_entry);
 
-            // Create an html document for each example.
-            let html = format!(
-                r#"
+    // Create an html document for each example.
+    let html = format!(
+        r#"
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -170,20 +170,19 @@ mod examples {
         </script>
     </body>
 </html>"#,
-                name = example_str.to_string()
-            );
+        name = example_str.to_string()
+    );
 
-            // Write out the html file into a designated html directory located in crate root.
-            let html_dir = crate_dir.join("html");
-            if !html_dir.exists() {
-                fs::create_dir(&html_dir).unwrap_or_else(|_| {
-                    panic!("Failed to create output html directory: {:?}", &html_dir)
-                });
-            }
+    // Write out the html file into a designated html directory located in crate root.
+    let html_dir = crate_dir.join("html");
+    if !html_dir.exists() {
+        fs::create_dir(&html_dir)
+            .unwrap_or_else(|_| panic!("Failed to create output html directory: {:?}", &html_dir));
+    }
 
-            fs::write(html_dir.join(example_str).with_extension("html"), html)
-                .unwrap_or_else(|_| panic!("Failed to create {}.html", example_str));
-        // }
+    fs::write(html_dir.join(example_str).with_extension("html"), html)
+        .unwrap_or_else(|_| panic!("Failed to create {}.html", example_str));
+    // }
     // }
 
     examples_in.push('}');
