@@ -1,10 +1,11 @@
 use druid::kurbo::BezPath;
-use druid::{kurbo::Line, Affine, AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx, FontDescriptor, FontFamily, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, RenderContext, Size, TextAlignment, TextLayout, UpdateCtx, Widget, WidgetId, WindowDesc, KbKey};
+use druid::{kurbo::Line, kurbo::PathEl, Lens, WidgetExt, Affine, AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx, FontDescriptor, FontFamily, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, RenderContext, Size, TextAlignment, TextLayout, UpdateCtx, Widget, WidgetId, WindowDesc, KbKey};
+use druid::widget::{ Flex, Checkbox , LensWrap};
 use rust_hdl_pcb::adc::make_ads868x;
 use rust_hdl_pcb_core::prelude::*;
 use std::sync::{Arc, Mutex};
 
-#[derive(Data, Clone)]
+#[derive(Data, Clone, Lens)]
 struct Schematic {
     circuit: Arc<Circuit>,
     layout: Arc<Mutex<SchematicLayout>>,
@@ -13,6 +14,7 @@ struct Schematic {
     size: Size,
     scale: f64,
     selected: Option<String>,
+    orthogonal_traces: bool,
 }
 
 impl Schematic {
@@ -70,6 +72,29 @@ impl Schematic {
             layout.set_part(id, schematic_orientation);
         }
 
+    }
+}
+
+trait OrthoLineTo {
+    fn ortho_line_to<P: Into<druid::Point>>(&mut self, p: P);
+}
+
+impl OrthoLineTo for BezPath {
+    fn ortho_line_to<P: Into<druid::Point>>(&mut self, p: P){
+        let p3 = p.into();
+
+        let last = match self.elements().last().unwrap() {
+            PathEl::MoveTo(p) => p,
+            PathEl::LineTo(p) => p,
+            PathEl::QuadTo(p1, p2) => p2,
+            PathEl::CurveTo(p1, p2, p3) => p3,
+            PathEl::ClosePath =>  &druid::Point{x: f64::NAN, y: f64::NAN}
+        };
+        let p1 = (last.x + ( p3.x - last.x ) / 2.0, last.y);
+        let p2 = (last.x + ( p3.x - last.x  ) / 2.0, p3.y);
+        self.line_to(p1);
+        self.line_to(p2);
+        self.line_to(p3);
     }
 }
 
@@ -166,7 +191,9 @@ impl Widget<Schematic> for SchematicViewer {
     ) {
     }
 
-    fn update(&mut self, ctx: &mut UpdateCtx, old_data: &Schematic, data: &Schematic, env: &Env) {}
+    fn update(&mut self, ctx: &mut UpdateCtx, old_data: &Schematic, data: &Schematic, env: &Env) {
+        ctx.request_paint();
+    }
 
     fn layout(
         &mut self,
@@ -182,6 +209,8 @@ impl Widget<Schematic> for SchematicViewer {
             bc.constrain(size)
         }
     }
+
+
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &Schematic, env: &Env) {
         let size = ctx.size();
@@ -244,7 +273,8 @@ impl Widget<Schematic> for SchematicViewer {
                         }
                         NetLayoutCmd::LineToPort(n) => {
                             lp = (ports[n - 1].0 as f64, -ports[n - 1].1 as f64);
-                            path.line_to(lp);
+                            if (data.orthogonal_traces) { path.ortho_line_to(lp); }
+                            else { path.line_to(lp); }
                         }
                         NetLayoutCmd::MoveToCoords(x, y) => {
                             lp = (x as f64, y as f64);
@@ -252,7 +282,8 @@ impl Widget<Schematic> for SchematicViewer {
                         }
                         NetLayoutCmd::LineToCoords(x, y) => {
                             lp = (x as f64, y as f64);
-                            path.line_to(lp);
+                            if (data.orthogonal_traces) { path.ortho_line_to(lp); }
+                            else { path.line_to(lp); }
                         }
                         NetLayoutCmd::Junction => {
                             let disk = druid::kurbo::Circle::new(lp, 25.0);
@@ -570,7 +601,16 @@ fn render_glyph(ctx: &mut PaintCtx, g: &Glyph, hide_outline: bool, env: &Env, is
 }
 
 fn make_root() -> impl Widget<Schematic> {
-    SchematicViewer {}
+    let schematic_view = SchematicViewer {};
+    let ortho_check_box = LensWrap::new(Checkbox::new("orthogonal_traces"), Schematic::orthogonal_traces);
+
+    let mut col = Flex::column();
+    col.add_flex_child(schematic_view.expand_width().expand_height(),1.0);
+    col.add_child(
+        Flex::row().with_child(
+            ortho_check_box));
+
+    col
 }
 
 pub fn main() {
@@ -599,6 +639,7 @@ pub fn main() {
             },
             scale: 0.2,
             selected: None,
+            orthogonal_traces:false,
         })
         .expect("launch failed");
 }
