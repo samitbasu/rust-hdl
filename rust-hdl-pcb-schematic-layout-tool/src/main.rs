@@ -407,7 +407,7 @@ fn make_root() -> impl Widget<Schematic> {
     SchematicViewer {}
 }
 
-fn main() {
+pub fn main() {
     let window = WindowDesc::new(make_root())
         .window_size(Size {
             width: 800.0,
