@@ -1,39 +1,141 @@
 use druid::kurbo::BezPath;
-use druid::{
-    kurbo::Line, Affine, AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx,
-    FontDescriptor, FontFamily, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, RenderContext, Size,
-    TextAlignment, TextLayout, UpdateCtx, Widget, WidgetId, WindowDesc,
-};
+use druid::{kurbo::Line, Affine, AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx, FontDescriptor, FontFamily, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, RenderContext, Size, TextAlignment, TextLayout, UpdateCtx, Widget, WidgetId, WindowDesc, KbKey};
 use rust_hdl_pcb::adc::make_ads868x;
 use rust_hdl_pcb_core::prelude::*;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 #[derive(Data, Clone)]
 struct Schematic {
     circuit: Arc<Circuit>,
-    layout: Arc<SchematicLayout>,
+    layout: Arc<Mutex<SchematicLayout>>,
     center: (f64, f64),
     cursor: (f64, f64),
     size: Size,
     scale: f64,
+    selected: Option<String>,
+}
+
+impl Schematic {
+    pub fn to_screen(&self, pos: (f64, f64)) -> druid::kurbo::Point {
+        let mut px = pos.0;
+        let mut py = pos.1;
+        // Flip the y axis
+        py *= -1.0;
+        // Scale by the scale factor
+        px *= self.scale;
+        py *= self.scale;
+        // Translate to the center
+        px += self.center.0;
+        py += self.center.1;
+        druid::kurbo::Point { x: px, y: py }
+    }
+
+    pub fn shift_selected(&mut self, delta: (f64, f64)) {
+        if let Some(id) = &self.selected {
+            let mut layout = self.layout.lock().unwrap();
+            let mut schematic_orientation = layout.part(id);
+            schematic_orientation.center.0 += (delta.0 / self.scale) as i32;
+            schematic_orientation.center.1 += (-delta.1 / self.scale) as i32;
+            layout.set_part(id, schematic_orientation);
+        }
+    }
+
+    pub fn snap_selected(&mut self) {
+        if let Some(id) = &self.selected {
+            let mut layout = self.layout.lock().unwrap();
+            let mut schematic_orientation = layout.part(id);
+            schematic_orientation.center.0 = (schematic_orientation.center.0 / 100) * 100;
+            schematic_orientation.center.1 = (schematic_orientation.center.1 / 100) * 100;
+            layout.set_part(id, schematic_orientation);
+        }
+    }
+
+    pub fn orient_selected(&mut self, selector: &str) {
+        if let Some(id) = &self.selected {
+            let mut layout = self.layout.lock().unwrap();
+            let mut schematic_orientation = layout.part(id);
+            if selector == " " {
+                schematic_orientation.rotation = if schematic_orientation.rotation == SchematicRotation::Vertical {
+                    SchematicRotation::Horizontal
+                } else {
+                    SchematicRotation::Vertical
+                };
+            }
+            if selector == "x" {
+                schematic_orientation.flipped_lr = !schematic_orientation.flipped_lr;
+            }
+            if selector == "y" {
+                schematic_orientation.flipped_ud = !schematic_orientation.flipped_ud;
+            }
+            layout.set_part(id, schematic_orientation);
+        }
+
+    }
 }
 
 struct SchematicViewer;
 
+fn hit_test_circuit(data: &Schematic, pos: (f64, f64)) -> Option<String> {
+    let layout = data.layout.lock().unwrap();
+    for instance in &data.circuit.nodes {
+        let part = get_details_from_instance(instance, &layout);
+        let outline = &part.outline;
+        if outline.len() != 0 {
+            if let Glyph::OutlineRect(r) = &outline[0] {
+                // Get the center of this part
+                let schematic_orientation = layout.part(&instance.id);
+                let cx = schematic_orientation.center.0 as f64;
+                let cy = schematic_orientation.center.1 as f64;
+                let corners = if schematic_orientation.rotation == SchematicRotation::Horizontal {
+                    (
+                        (r.p0.x as f64 + cx, r.p0.y as f64 + cy),
+                        (r.p1.x as f64 + cx, r.p1.y as f64 + cy),
+                    )
+                } else {
+                    (
+                        (-r.p0.y as f64 + cx, r.p0.x as f64 + cy),
+                        (-r.p1.y as f64 + cx, r.p1.x as f64 + cy),
+                    )
+                };
+                let p1 = data.to_screen(corners.0);
+                let p2 = data.to_screen(corners.1);
+                let dr = druid::kurbo::Rect::from((p1, p2));
+                if dr.contains(pos.into()) {
+                    return Some(instance.id.clone());
+                }
+            }
+        }
+    }
+    None
+}
+
 impl Widget<Schematic> for SchematicViewer {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut Schematic, _env: &Env) {
+        ctx.request_focus();
         match event {
             Event::MouseDown(mouse) => {
                 ctx.set_active(true);
                 data.cursor = (mouse.pos.x, mouse.pos.y);
+                data.selected = hit_test_circuit(data, mouse.pos.into());
+                ctx.request_paint();
             }
             Event::MouseUp(mouse) => {
                 ctx.set_active(false);
+                data.snap_selected();
+                data.selected = None;
+                ctx.request_paint();
             }
             Event::MouseMove(mouse) => {
                 if ctx.is_active() {
-                    data.center.0 += (mouse.pos.x - data.cursor.0);
-                    data.center.1 += (mouse.pos.y - data.cursor.1);
+                    if data.selected.is_none() {
+                        data.center.0 += (mouse.pos.x - data.cursor.0);
+                        data.center.1 += (mouse.pos.y - data.cursor.1);
+                    } else {
+                        data.shift_selected((
+                            mouse.pos.x - data.cursor.0,
+                            mouse.pos.y - data.cursor.1,
+                        ));
+                    }
                     data.cursor = (mouse.pos.x, mouse.pos.y);
                     ctx.request_paint();
                 }
@@ -41,6 +143,12 @@ impl Widget<Schematic> for SchematicViewer {
             Event::Wheel(mouse) => {
                 data.scale *= (1.0 - mouse.wheel_delta.y / 100.0).max(0.9).min(1.1);
                 ctx.request_paint();
+            }
+            Event::KeyDown(key) => {
+                if ctx.is_active() && data.selected.is_some() {
+                    data.orient_selected(&key.key.to_string());
+                    ctx.request_paint();
+                }
             }
             Event::Zoom(x) => {
                 //dbg!(x);
@@ -81,14 +189,13 @@ impl Widget<Schematic> for SchematicViewer {
         // Clear the canvas
         ctx.fill(rect, &Color::from_hex_str("FFFCF8").unwrap());
         //dbg!(data.cursor);
-        let mc = (-data.center.0, -data.center.1);
         ctx.transform(Affine::translate(data.center));
         ctx.transform(Affine::scale(data.scale));
-        ctx.transform(Affine::translate(mc));
         ctx.transform(Affine::scale_non_uniform(1.0, -1.0));
+        let layout = data.layout.lock().unwrap();
         for instance in &data.circuit.nodes {
-            let part = get_details_from_instance(instance, &data.layout);
-            let schematic_orientation = data.layout.part(&instance.id);
+            let part = get_details_from_instance(instance, &layout);
+            let schematic_orientation = layout.part(&instance.id);
             ctx.with_save(|ctx| {
                 if schematic_orientation.rotation == SchematicRotation::Vertical {
                     ctx.transform(Affine::translate((
@@ -102,24 +209,31 @@ impl Widget<Schematic> for SchematicViewer {
                         schematic_orientation.center.1 as f64,
                     )));
                 }
+                let is_selected = if let Some(k) = &data.selected {
+                    k.eq(&instance.id)
+                } else {
+                    false
+                };
                 for path in &part.outline {
-                    render_glyph(ctx, path, part.hide_part_outline, env);
+                    render_glyph(ctx, path, part.hide_part_outline, env, is_selected);
                 }
                 for (num, pin) in &part.pins {
                     render_pin(ctx, num, pin, &part.outline, part.hide_pin_designators, env);
                 }
             });
             let mut path = BezPath::new();
+            let mut rat_nest = false;
             for net in &data.circuit.nets {
                 let ports = net
                     .pins
                     .iter()
-                    .map(|x| get_pin_net_location(&data.circuit, &data.layout, x))
+                    .map(|x| get_pin_net_location(&data.circuit, &layout, x))
                     .collect::<Vec<_>>();
                 // Walk the layout
-                let mut net_layout = data.layout.net(&net.name);
+                let mut net_layout = layout.net(&net.name);
                 if net_layout.len() == 0 {
                     net_layout = make_rat_layout(ports.len());
+                    rat_nest = true;
                 }
                 let mut lp = (0.0, 0.0);
                 for cmd in net_layout {
@@ -147,7 +261,11 @@ impl Widget<Schematic> for SchematicViewer {
                     }
                 }
             }
-            ctx.stroke(path, &Color::from_hex_str("000080").unwrap(), 10.0);
+            ctx.stroke(
+                path,
+                &Color::from_hex_str("000080").unwrap(),
+                if rat_nest { 5.0 } else { 10.0 },
+            )
         }
     }
 }
@@ -420,14 +538,22 @@ fn render_text(
     });
 }
 
-fn render_glyph(ctx: &mut PaintCtx, g: &Glyph, hide_outline: bool, env: &Env) {
+fn render_glyph(ctx: &mut PaintCtx, g: &Glyph, hide_outline: bool, env: &Env, is_selected: bool) {
     match g {
         Glyph::OutlineRect(r) => {
             if !hide_outline {
                 let rect =
                     druid::Rect::new(r.p0.x as f64, r.p0.y as f64, r.p1.x as f64, r.p1.y as f64);
-                let stroke_color = Color::from_hex_str("AE5E46").unwrap();
-                let fill_color = Color::from_hex_str("FFFDB0").unwrap();
+                let stroke_color = if !is_selected {
+                    Color::from_hex_str("AE5E46").unwrap()
+                } else {
+                    Color::from_hex_str("00FF00").unwrap()
+                };
+                let fill_color = if !is_selected {
+                    Color::from_hex_str("FFFDB0").unwrap()
+                } else {
+                    Color::from_hex_str("7F7D30").unwrap()
+                };
                 ctx.stroke(rect, &stroke_color, 5.0);
                 ctx.fill(rect, &fill_color);
             }
@@ -464,7 +590,7 @@ pub fn main() {
         .log_to_console()
         .launch(Schematic {
             circuit: Arc::new(circuit),
-            layout: Arc::new(layout),
+            layout: Arc::new(Mutex::new(SchematicLayout::default())),
             center: (0.0, 0.0),
             cursor: (0.0, 0.0),
             size: Size {
@@ -472,6 +598,7 @@ pub fn main() {
                 height: 800.0,
             },
             scale: 0.2,
+            selected: None,
         })
         .expect("launch failed");
 }
