@@ -4,6 +4,12 @@ use rust_hdl_pcb::adc::make_ads868x;
 use rust_hdl_pcb_core::prelude::*;
 use std::sync::{Arc, Mutex};
 
+#[derive(Data, Clone, PartialEq)]
+struct SnapPoint {
+    position: (f64, f64),
+    net_name: String,
+}
+
 #[derive(Data, Clone)]
 struct Schematic {
     circuit: Arc<Circuit>,
@@ -13,8 +19,9 @@ struct Schematic {
     cursor: (f64, f64),
     size: Size,
     scale: f64,
-    selected: Option<String>,
-    snap_point: Option<(f64, f64)>,
+    part_selected: Option<String>,
+    net_selected: Option<String>,
+    snap_point: Option<SnapPoint>,
     wire_mode: bool,
 }
 
@@ -47,7 +54,7 @@ impl Schematic {
     }
 
     pub fn shift_selected(&mut self, delta: (f64, f64)) {
-        if let Some(id) = &self.selected {
+        if let Some(id) = &self.part_selected {
             let mut layout = self.layout.lock().unwrap();
             let mut schematic_orientation = layout.part(id);
             schematic_orientation.center.0 += (delta.0 / self.scale) as i32;
@@ -57,7 +64,7 @@ impl Schematic {
     }
 
     pub fn snap_selected(&mut self) {
-        if let Some(id) = &self.selected {
+        if let Some(id) = &self.part_selected {
             let mut layout = self.layout.lock().unwrap();
             let mut schematic_orientation = layout.part(id);
             schematic_orientation.center.0 = (schematic_orientation.center.0 / 100) * 100;
@@ -67,7 +74,7 @@ impl Schematic {
     }
 
     pub fn orient_selected(&mut self, selector: &str) {
-        if let Some(id) = &self.selected {
+        if let Some(id) = &self.part_selected {
             let mut layout = self.layout.lock().unwrap();
             let mut schematic_orientation = layout.part(id);
             if selector == " " {
@@ -87,18 +94,23 @@ impl Schematic {
         }
     }
 
-    pub fn highlight_snap_points(& mut self, mouse: druid::kurbo::Point) -> Option<(f64, f64)> {
+    pub fn highlight_snap_points(& mut self, mouse: druid::kurbo::Point) -> Option<SnapPoint> {
         for net in &self.circuit.nets {
-            let ports = net.pins
-                .iter()
-                .map(|x| get_pin_net_location(&self.circuit, &self.layout.lock().unwrap(), x))
-                .collect::<Vec<_>>();
-            for p in ports {
-                let port_point = (p.0 as f64, -p.1 as f64);
-                let port_screen = self.to_screen(port_point);
-                if (port_screen.x - mouse.x).abs().max(
-                    (port_screen.y - mouse.y).abs()) < 10.0 {
-                    return Some(port_point)
+            if self.net_selected == Some(net.name.clone()) || self.net_selected.is_none() {
+                let ports = net.pins
+                    .iter()
+                    .map(|x| get_pin_net_location(&self.circuit, &self.layout.lock().unwrap(), x))
+                    .collect::<Vec<_>>();
+                for p in ports {
+                    let port_point = (p.0 as f64, -p.1 as f64);
+                    let port_screen = self.to_screen(port_point);
+                    if (port_screen.x - mouse.x).abs().max(
+                        (port_screen.y - mouse.y).abs()) < 10.0 {
+                        return Some(SnapPoint {
+                            position: port_point,
+                            net_name: net.name.clone(),
+                        })
+                    }
                 }
             }
         }
@@ -150,11 +162,12 @@ impl Widget<Schematic> for SchematicViewer {
                 ctx.set_active(true);
                 data.cursor = (mouse.pos.x, mouse.pos.y);
                 if !data.wire_mode {
-                    data.selected = data.hit_test(mouse.pos.into());
+                    data.part_selected = data.hit_test(mouse.pos.into());
                 } else {
                     let mut y = data.partial_net.iter().map(|x| x.clone()).collect::<Vec<_>>();
-                    if let Some(snap) = data.snap_point {
-                        y.push(snap);
+                    if let Some(snap) = &data.snap_point {
+                        y.push(snap.position);
+                        data.net_selected = Some(snap.net_name.clone());
                     } else {
                         y.push(data.from_screen(mouse.pos));
                     }
@@ -165,12 +178,12 @@ impl Widget<Schematic> for SchematicViewer {
             Event::MouseUp(mouse) => {
                 ctx.set_active(false);
                 data.snap_selected();
-                data.selected = None;
+                data.part_selected = None;
                 ctx.request_paint();
             }
             Event::MouseMove(mouse) => {
                 if ctx.is_active() {
-                    if data.selected.is_none() {
+                    if data.part_selected.is_none() {
                         data.center.0 += (mouse.pos.x - data.cursor.0);
                         data.center.1 += (mouse.pos.y - data.cursor.1);
                     } else {
@@ -198,7 +211,7 @@ impl Widget<Schematic> for SchematicViewer {
                 ctx.request_paint();
             }
             Event::KeyDown(key) => {
-                if ctx.is_active() && data.selected.is_some() {
+                if ctx.is_active() && data.part_selected.is_some() {
                     data.orient_selected(&key.key.to_string());
                 } else {
                     if key.key.to_string() == "w" {
@@ -274,7 +287,7 @@ impl Widget<Schematic> for SchematicViewer {
                         schematic_orientation.center.1 as f64,
                     )));
                 }
-                let is_selected = if let Some(k) = &data.selected {
+                let is_selected = if let Some(k) = &data.part_selected {
                     k.eq(&instance.id)
                 } else {
                     false
@@ -342,8 +355,8 @@ impl Widget<Schematic> for SchematicViewer {
                 path,
                 &Color::from_hex_str("7F0000").unwrap(),
                 10.0);
-            if let Some(p) = data.snap_point {
-                let disk = druid::kurbo::Circle::new(p, 20.0);
+            if let Some(p) = &data.snap_point {
+                let disk = druid::kurbo::Circle::new(p.position, 20.0);
                 ctx.stroke(disk, &Color::from_hex_str("101010").unwrap(), 1.0);
             }
         }
@@ -679,7 +692,8 @@ pub fn main() {
                 height: 800.0,
             },
             scale: 0.2,
-            selected: None,
+            part_selected: None,
+            net_selected: None,
             snap_point: None,
             wire_mode: false
         })
