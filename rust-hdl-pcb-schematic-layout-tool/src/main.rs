@@ -1,5 +1,5 @@
 use druid::kurbo::BezPath;
-use druid::{kurbo::Line, Affine, AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx, FontDescriptor, FontFamily, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, RenderContext, Size, TextAlignment, TextLayout, UpdateCtx, Widget, WidgetId, WindowDesc, KbKey};
+use druid::{kurbo::Line, Affine, AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx, FontDescriptor, FontFamily, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, RenderContext, Size, TextAlignment, TextLayout, UpdateCtx, Widget, WidgetId, WindowDesc, KbKey, Cursor};
 use rust_hdl_pcb::adc::make_ads868x;
 use rust_hdl_pcb_core::prelude::*;
 use std::sync::{Arc, Mutex};
@@ -8,14 +8,18 @@ use std::sync::{Arc, Mutex};
 struct Schematic {
     circuit: Arc<Circuit>,
     layout: Arc<Mutex<SchematicLayout>>,
+    partial_net: Arc<Vec<(f64, f64)>>,
     center: (f64, f64),
     cursor: (f64, f64),
     size: Size,
     scale: f64,
     selected: Option<String>,
+    snap_point: Option<(f64, f64)>,
+    wire_mode: bool,
 }
 
 impl Schematic {
+    // Map document coordinates to mouse coordinates
     pub fn to_screen(&self, pos: (f64, f64)) -> druid::kurbo::Point {
         let mut px = pos.0;
         let mut py = pos.1;
@@ -28,6 +32,18 @@ impl Schematic {
         px += self.center.0;
         py += self.center.1;
         druid::kurbo::Point { x: px, y: py }
+    }
+
+    // Map mouse coordinates to document coordinates
+    pub fn from_screen(&self, point: druid::kurbo::Point) -> (f64, f64) {
+        let mut px = point.x;
+        let mut py = point.y;
+        px -= self.center.0;
+        py -= self.center.1;
+        px /= self.scale;
+        py /= self.scale;
+        py *= -1.0;
+        (px, py)
     }
 
     pub fn shift_selected(&mut self, delta: (f64, f64)) {
@@ -69,45 +85,62 @@ impl Schematic {
             }
             layout.set_part(id, schematic_orientation);
         }
+    }
 
+    pub fn highlight_snap_points(& mut self, mouse: druid::kurbo::Point) -> Option<(f64, f64)> {
+        for net in &self.circuit.nets {
+            let ports = net.pins
+                .iter()
+                .map(|x| get_pin_net_location(&self.circuit, &self.layout.lock().unwrap(), x))
+                .collect::<Vec<_>>();
+            for p in ports {
+                let port_point = (p.0 as f64, -p.1 as f64);
+                let port_screen = self.to_screen(port_point);
+                if (port_screen.x - mouse.x).abs().max(
+                    (port_screen.y - mouse.y).abs()) < 10.0 {
+                    return Some(port_point)
+                }
+            }
+        }
+        None
+    }
+
+    pub fn hit_test(&self, pos: (f64, f64)) -> Option<String> {
+        let layout = self.layout.lock().unwrap();
+        for instance in &self.circuit.nodes {
+            let part = get_details_from_instance(instance, &layout);
+            let outline = &part.outline;
+            if outline.len() != 0 {
+                if let Glyph::OutlineRect(r) = &outline[0] {
+                    // Get the center of this part
+                    let schematic_orientation = layout.part(&instance.id);
+                    let cx = schematic_orientation.center.0 as f64;
+                    let cy = schematic_orientation.center.1 as f64;
+                    let corners = if schematic_orientation.rotation == SchematicRotation::Horizontal {
+                        (
+                            (r.p0.x as f64 + cx, r.p0.y as f64 + cy),
+                            (r.p1.x as f64 + cx, r.p1.y as f64 + cy),
+                        )
+                    } else {
+                        (
+                            (-r.p0.y as f64 + cx, r.p0.x as f64 + cy),
+                            (-r.p1.y as f64 + cx, r.p1.x as f64 + cy),
+                        )
+                    };
+                    let p1 = self.to_screen(corners.0);
+                    let p2 = self.to_screen(corners.1);
+                    let dr = druid::kurbo::Rect::from((p1, p2));
+                    if dr.contains(pos.into()) {
+                        return Some(instance.id.clone());
+                    }
+                }
+            }
+        }
+        None
     }
 }
 
 struct SchematicViewer;
-
-fn hit_test_circuit(data: &Schematic, pos: (f64, f64)) -> Option<String> {
-    let layout = data.layout.lock().unwrap();
-    for instance in &data.circuit.nodes {
-        let part = get_details_from_instance(instance, &layout);
-        let outline = &part.outline;
-        if outline.len() != 0 {
-            if let Glyph::OutlineRect(r) = &outline[0] {
-                // Get the center of this part
-                let schematic_orientation = layout.part(&instance.id);
-                let cx = schematic_orientation.center.0 as f64;
-                let cy = schematic_orientation.center.1 as f64;
-                let corners = if schematic_orientation.rotation == SchematicRotation::Horizontal {
-                    (
-                        (r.p0.x as f64 + cx, r.p0.y as f64 + cy),
-                        (r.p1.x as f64 + cx, r.p1.y as f64 + cy),
-                    )
-                } else {
-                    (
-                        (-r.p0.y as f64 + cx, r.p0.x as f64 + cy),
-                        (-r.p1.y as f64 + cx, r.p1.x as f64 + cy),
-                    )
-                };
-                let p1 = data.to_screen(corners.0);
-                let p2 = data.to_screen(corners.1);
-                let dr = druid::kurbo::Rect::from((p1, p2));
-                if dr.contains(pos.into()) {
-                    return Some(instance.id.clone());
-                }
-            }
-        }
-    }
-    None
-}
 
 impl Widget<Schematic> for SchematicViewer {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut Schematic, _env: &Env) {
@@ -116,7 +149,17 @@ impl Widget<Schematic> for SchematicViewer {
             Event::MouseDown(mouse) => {
                 ctx.set_active(true);
                 data.cursor = (mouse.pos.x, mouse.pos.y);
-                data.selected = hit_test_circuit(data, mouse.pos.into());
+                if !data.wire_mode {
+                    data.selected = data.hit_test(mouse.pos.into());
+                } else {
+                    let mut y = data.partial_net.iter().map(|x| x.clone()).collect::<Vec<_>>();
+                    if let Some(snap) = data.snap_point {
+                        y.push(snap);
+                    } else {
+                        y.push(data.from_screen(mouse.pos));
+                    }
+                    data.partial_net = Arc::new(y);
+                }
                 ctx.request_paint();
             }
             Event::MouseUp(mouse) => {
@@ -138,6 +181,12 @@ impl Widget<Schematic> for SchematicViewer {
                     }
                     data.cursor = (mouse.pos.x, mouse.pos.y);
                     ctx.request_paint();
+                } else if data.wire_mode {
+                    let pt = data.highlight_snap_points(mouse.pos);
+                    if data.snap_point != pt {
+                        data.snap_point = pt;
+                        ctx.request_paint();
+                    }
                 }
             }
             Event::Wheel(mouse) => {
@@ -147,14 +196,26 @@ impl Widget<Schematic> for SchematicViewer {
             Event::KeyDown(key) => {
                 if ctx.is_active() && data.selected.is_some() {
                     data.orient_selected(&key.key.to_string());
-                    ctx.request_paint();
+                } else {
+                    if key.key.to_string() == "w" {
+                        data.wire_mode = true;
+                    }
+                    if key.key == KbKey::Escape {
+                        data.wire_mode = false;
+                    }
                 }
+                ctx.request_paint();
             }
             Event::Zoom(x) => {
                 //dbg!(x);
             }
             _ => (),
         }
+        ctx.set_cursor(if data.wire_mode {
+            &Cursor::Crosshair
+        } else {
+            &Cursor::Arrow
+        });
     }
 
     fn lifecycle(
@@ -264,8 +325,23 @@ impl Widget<Schematic> for SchematicViewer {
             ctx.stroke(
                 path,
                 &Color::from_hex_str("000080").unwrap(),
-                if rat_nest { 5.0 } else { 10.0 },
-            )
+                if rat_nest { 1.0 } else { 10.0 },
+            );
+            let mut path = BezPath::new();
+            if data.partial_net.len() != 0 {
+                path.move_to(data.partial_net[0]);
+                for n in 1..data.partial_net.len() {
+                    path.line_to(data.partial_net[n]);
+                }
+            }
+            ctx.stroke(
+                path,
+                &Color::from_hex_str("7F0000").unwrap(),
+                10.0);
+            if let Some(p) = data.snap_point {
+                let disk = druid::kurbo::Circle::new(p, 20.0);
+                ctx.stroke(disk, &Color::from_hex_str("101010").unwrap(), 1.0);
+            }
         }
     }
 }
@@ -591,6 +667,7 @@ pub fn main() {
         .launch(Schematic {
             circuit: Arc::new(circuit),
             layout: Arc::new(Mutex::new(SchematicLayout::default())),
+            partial_net: Arc::new(vec![]),
             center: (0.0, 0.0),
             cursor: (0.0, 0.0),
             size: Size {
@@ -599,6 +676,8 @@ pub fn main() {
             },
             scale: 0.2,
             selected: None,
+            snap_point: None,
+            wire_mode: false
         })
         .expect("launch failed");
 }
