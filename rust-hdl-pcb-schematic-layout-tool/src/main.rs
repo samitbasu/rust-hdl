@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use druid::kurbo::BezPath;
 use druid::{kurbo::Line, Affine, AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx, FontDescriptor, FontFamily, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, RenderContext, Size, TextAlignment, TextLayout, UpdateCtx, Widget, WidgetId, WindowDesc, KbKey, Cursor, kurbo::PathEl, Lens, WidgetExt};
 use druid::widget::{ Flex, Checkbox , LensWrap};
@@ -7,6 +8,7 @@ use std::sync::{Arc, Mutex};
 
 #[derive(Data, Clone, PartialEq)]
 struct SnapPoint {
+    port: usize,
     position: (f64, f64),
     net_name: String,
 }
@@ -15,7 +17,7 @@ struct SnapPoint {
 struct Schematic {
     circuit: Arc<Circuit>,
     layout: Arc<Mutex<SchematicLayout>>,
-    partial_net: Arc<Vec<(f64, f64)>>,
+    partial_net: Arc<Vec<SnapPoint>>,
     center: (f64, f64),
     cursor: (f64, f64),
     size: Size,
@@ -27,9 +29,34 @@ struct Schematic {
     wire_mode: bool,
 }
 
+fn grid(x: f64) -> i32 {
+    ((x / 100.0).round() * 100.0) as i32
+}
+
+fn is_layout_complete(net: &[NetLayoutCmd], port_count: usize) -> bool {
+    let mut cover = HashSet::new();
+    for cmd in net {
+        match cmd {
+            NetLayoutCmd::MoveToPort(n) => {
+                cover.insert(n);
+            }
+            NetLayoutCmd::LineToPort(n) => {
+                cover.insert(n);
+            }
+            _ => {}
+        }
+    }
+    for check in 1..=port_count {
+        if !cover.contains(&check) {
+            return false;
+        }
+    }
+    true
+}
+
 impl Schematic {
     // Map document coordinates to mouse coordinates
-    pub fn to_screen(&self, pos: (f64, f64)) -> druid::kurbo::Point {
+    pub fn map_doc_to_screen(&self, pos: (f64, f64)) -> druid::kurbo::Point {
         let mut px = pos.0;
         let mut py = pos.1;
         // Flip the y axis
@@ -44,7 +71,7 @@ impl Schematic {
     }
 
     // Map mouse coordinates to document coordinates
-    pub fn from_screen(&self, point: druid::kurbo::Point) -> (f64, f64) {
+    pub fn map_screen_to_doc(&self, point: druid::kurbo::Point) -> (f64, f64) {
         let mut px = point.x;
         let mut py = point.y;
         px -= self.center.0;
@@ -103,12 +130,13 @@ impl Schematic {
                     .iter()
                     .map(|x| get_pin_net_location(&self.circuit, &self.layout.lock().unwrap(), x))
                     .collect::<Vec<_>>();
-                for p in ports {
+                for (ndx,p) in ports.iter().enumerate() {
                     let port_point = (p.0 as f64, -p.1 as f64);
-                    let port_screen = self.to_screen(port_point);
+                    let port_screen = self.map_doc_to_screen(port_point);
                     if (port_screen.x - mouse.x).abs().max(
                         (port_screen.y - mouse.y).abs()) < 10.0 {
                         return Some(SnapPoint {
+                            port: ndx + 1,
                             position: port_point,
                             net_name: net.name.clone(),
                         })
@@ -118,6 +146,40 @@ impl Schematic {
         }
         None
     }
+
+    pub fn abandon_wire_mode(&mut self) {
+        self.partial_net = Arc::new(vec![]);
+        self.net_selected = None;
+    }
+
+    pub fn end_wire_mode(&mut self) {
+        if self.partial_net.len() != 0 {
+            let mut cmds = vec![];
+            let mut net_name = String::new();
+            for (ndx, pt) in self.partial_net.iter().enumerate() {
+                if ndx == 0 {
+                    cmds.push(NetLayoutCmd::MoveToPort(pt.port));
+                    net_name = pt.net_name.clone();
+                } else {
+                    if pt.port != 0 {
+                        cmds.push(NetLayoutCmd::LineToPort(pt.port))
+                    } else {
+                        cmds.push(NetLayoutCmd::LineToCoords(grid(pt.position.0),
+                                                                  grid(pt.position.1) ))
+                    }
+                }
+            }
+            if net_name.len() != 0 {
+                let mut layout = self.layout.lock().unwrap();
+                let mut prev_cmds = layout.net(&net_name);
+                cmds.append(&mut prev_cmds);
+                layout.set_net(&net_name, cmds);
+            }
+        }
+        self.partial_net = Arc::new(vec![]);
+        self.net_selected = None;
+    }
+
     pub fn hit_test(&self, pos: (f64, f64)) -> Option<String> {
         let layout = self.layout.lock().unwrap();
         for instance in &self.circuit.nodes {
@@ -141,8 +203,8 @@ impl Schematic {
                             (-r.p1.y as f64 + cx, r.p1.x as f64 + cy),
                         )
                     };
-                    let p1 = self.to_screen(corners.0);
-                    let p2 = self.to_screen(corners.1);
+                    let p1 = self.map_doc_to_screen(corners.0);
+                    let p2 = self.map_doc_to_screen(corners.1);
                     let dr = druid::kurbo::Rect::from((p1, p2));
                     if dr.contains(pos.into()) {
                         return Some(instance.id.clone());
@@ -190,18 +252,29 @@ impl Widget<Schematic> for SchematicViewer {
                 if !data.wire_mode {
                     data.part_selected = data.hit_test(mouse.pos.into());
                 } else {
-                    let mut y = data.partial_net.iter().map(|x| x.clone()).collect::<Vec<_>>();
+                    let mut y = data.partial_net
+                        .iter()
+                        .map(|x| x.clone()).collect::<Vec<_>>();
+                    let mut can_close = false;
                     if let Some(snap) = &data.snap_point {
-                        y.push(snap.position);
+                        y.push(snap.clone());
                         data.net_selected = Some(snap.net_name.clone());
+                        can_close = y.len() >= 2;
                     } else {
-                        y.push(data.from_screen(mouse.pos));
+                        y.push(SnapPoint {
+                            port: 0,
+                            position: data.map_screen_to_doc(mouse.pos),
+                            net_name: String::new(),
+                        });
                     }
                     data.partial_net = Arc::new(y);
+                    if can_close {
+                        data.end_wire_mode();
+                    }
                 }
                 ctx.request_paint();
             }
-            Event::MouseUp(mouse) => {
+            Event::MouseUp(_mouse) => {
                 ctx.set_active(false);
                 data.snap_selected();
                 data.part_selected = None;
@@ -210,8 +283,8 @@ impl Widget<Schematic> for SchematicViewer {
             Event::MouseMove(mouse) => {
                 if ctx.is_active() {
                     if data.part_selected.is_none() {
-                        data.center.0 += (mouse.pos.x - data.cursor.0);
-                        data.center.1 += (mouse.pos.y - data.cursor.1);
+                        data.center.0 += mouse.pos.x - data.cursor.0;
+                        data.center.1 += mouse.pos.y - data.cursor.1;
                     } else {
                         data.shift_selected((
                             mouse.pos.x - data.cursor.0,
@@ -244,13 +317,14 @@ impl Widget<Schematic> for SchematicViewer {
                         data.wire_mode = true;
                     }
                     if key.key == KbKey::Escape {
+                        data.abandon_wire_mode();
                         data.wire_mode = false;
                     }
                 }
                 ctx.request_paint();
             }
-            Event::Zoom(x) => {
-                //dbg!(x);
+            Event::Zoom(_x) => {
+                // TODO?
             }
             _ => (),
         }
@@ -263,23 +337,23 @@ impl Widget<Schematic> for SchematicViewer {
 
     fn lifecycle(
         &mut self,
-        ctx: &mut LifeCycleCtx,
-        event: &LifeCycle,
-        data: &Schematic,
-        env: &Env,
+        _ctx: &mut LifeCycleCtx,
+        _event: &LifeCycle,
+        _data: &Schematic,
+        _env: &Env,
     ) {
     }
 
-    fn update(&mut self, ctx: &mut UpdateCtx, old_data: &Schematic, data: &Schematic, env: &Env) {
+    fn update(&mut self, ctx: &mut UpdateCtx, _old_data: &Schematic, _data: &Schematic, _env: &Env) {
         ctx.request_paint();
     }
 
     fn layout(
         &mut self,
-        ctx: &mut LayoutCtx,
+        _ctx: &mut LayoutCtx,
         bc: &BoxConstraints,
-        data: &Schematic,
-        env: &Env,
+        _data: &Schematic,
+        _env: &Env,
     ) -> Size {
         if bc.is_width_bounded() && bc.is_height_bounded() {
             bc.max()
@@ -329,9 +403,10 @@ impl Widget<Schematic> for SchematicViewer {
                     render_pin(ctx, num, pin, &part.outline, part.hide_pin_designators, env);
                 }
             });
-            let mut path = BezPath::new();
-            let mut rat_nest = false;
+            // Make two passes through the nets.  First, draw the completed nets
+
             for net in &data.circuit.nets {
+                let mut path = BezPath::new();
                 let ports = net
                     .pins
                     .iter()
@@ -340,8 +415,8 @@ impl Widget<Schematic> for SchematicViewer {
                 // Walk the layout
                 let mut net_layout = layout.net(&net.name);
                 if net_layout.len() == 0 {
-                    net_layout = make_rat_layout(ports.len());
-                    rat_nest = true;
+                    continue;
+
                 }
                 let mut lp = (0.0, 0.0);
                 for cmd in net_layout {
@@ -370,17 +445,67 @@ impl Widget<Schematic> for SchematicViewer {
                         }
                     }
                 }
+                ctx.stroke(
+                    path,
+                    &Color::from_hex_str("008000").unwrap(),
+                    10.0);
             }
-            ctx.stroke(
-                path,
-                &Color::from_hex_str("000080").unwrap(),
-                if rat_nest { 1.0 } else { 10.0 },
-            );
+            // Second pass is only the rats nest nets...
+            for net in &data.circuit.nets {
+                if let Some(n) = &data.net_selected {
+                    if !net.name.eq(n)  {
+                        continue;
+                    }
+                }
+                let mut path = BezPath::new();
+                let ports = net
+                    .pins
+                    .iter()
+                    .map(|x| get_pin_net_location(&data.circuit, &layout, x))
+                    .collect::<Vec<_>>();
+                // Walk the layout
+                let mut net_layout = layout.net(&net.name);
+                let complete_net = is_layout_complete(&net_layout, ports.len());
+                if net_layout.len() != 0 && complete_net {
+                    continue;
+                }
+                let net_layout = make_rat_layout(ports.len());
+                let mut lp = (0.0, 0.0);
+                for cmd in net_layout {
+                    match cmd {
+                        NetLayoutCmd::MoveToPort(n) => {
+                            lp = (ports[n - 1].0 as f64, -ports[n - 1].1 as f64);
+                            path.move_to(lp);
+                        }
+                        NetLayoutCmd::LineToPort(n) => {
+                            lp = (ports[n - 1].0 as f64, -ports[n - 1].1 as f64);
+                            path.line_to(lp);
+                        }
+                        NetLayoutCmd::MoveToCoords(x, y) => {
+                            lp = (x as f64, y as f64);
+                            path.move_to(lp);
+                        }
+                        NetLayoutCmd::LineToCoords(x, y) => {
+                            lp = (x as f64, y as f64);
+                            path.line_to(lp);
+                        }
+                        NetLayoutCmd::Junction => {
+                            let disk = druid::kurbo::Circle::new(lp, 25.0);
+                            ctx.fill(disk, &Color::from_hex_str("000080").unwrap());
+                        }
+                    }
+                }
+                ctx.stroke(
+                    path,
+                    &Color::from_hex_str("000080").unwrap(),
+                    1.0
+                );
+            }
             let mut path = BezPath::new();
             if data.partial_net.len() != 0 {
-                path.move_to(data.partial_net[0]);
+                path.move_to(data.partial_net[0].position);
                 for n in 1..data.partial_net.len() {
-                    path.line_to(data.partial_net[n]);
+                    path.line_to(data.partial_net[n].position);
                 }
             }
             ctx.stroke(
