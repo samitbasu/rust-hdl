@@ -5,13 +5,13 @@ use rust_hdl_pcb::adc::make_ads868x;
 use rust_hdl_pcb_core::prelude::*;
 use std::sync::{Arc, Mutex};
 
-#[derive(Data, Clone, PartialEq, Lens)]
+#[derive(Data, Clone, PartialEq)]
 struct SnapPoint {
     position: (f64, f64),
     net_name: String,
 }
 
-
+#[derive(Data, Clone, Lens)]
 struct Schematic {
     circuit: Arc<Circuit>,
     layout: Arc<Mutex<SchematicLayout>>,
@@ -118,29 +118,6 @@ impl Schematic {
         }
         None
     }
-
-    fn ortho_line_to<P: Into<druid::Point>>(&mut self, p: P);
-}
-
-impl OrthoLineTo for BezPath {
-    fn ortho_line_to<P: Into<druid::Point>>(&mut self, p: P){
-        let p3 = p.into();
-
-        let last = match self.elements().last().unwrap() {
-            PathEl::MoveTo(p) => p,
-            PathEl::LineTo(p) => p,
-            PathEl::QuadTo(p1, p2) => p2,
-            PathEl::CurveTo(p1, p2, p3) => p3,
-            PathEl::ClosePath =>  &druid::Point{x: f64::NAN, y: f64::NAN}
-        };
-        let p1 = (last.x + ( p3.x - last.x ) / 2.0, last.y);
-        let p2 = (last.x + ( p3.x - last.x  ) / 2.0, p3.y);
-        self.line_to(p1);
-        self.line_to(p2);
-        self.line_to(p3);
-    }
-}
-
     pub fn hit_test(&self, pos: (f64, f64)) -> Option<String> {
         let layout = self.layout.lock().unwrap();
         for instance in &self.circuit.nodes {
@@ -176,6 +153,30 @@ impl OrthoLineTo for BezPath {
         None
     }
 }
+trait OrthoLineTo {
+    fn ortho_line_to<P: Into<druid::Point>>(&mut self, p: P);
+}
+
+impl OrthoLineTo for BezPath {
+    fn ortho_line_to<P: Into<druid::Point>>(&mut self, p: P){
+        let p3 = p.into();
+
+        let last = match self.elements().last().unwrap() {
+            PathEl::MoveTo(p) => p,
+            PathEl::LineTo(p) => p,
+            PathEl::QuadTo(p1, p2) => p2,
+            PathEl::CurveTo(p1, p2, p3) => p3,
+            PathEl::ClosePath =>  &druid::Point{x: f64::NAN, y: f64::NAN}
+        };
+        let p1 = (last.x + ( p3.x - last.x ) / 2.0, last.y);
+        let p2 = (last.x + ( p3.x - last.x  ) / 2.0, p3.y);
+        self.line_to(p1);
+        self.line_to(p2);
+        self.line_to(p3);
+    }
+}
+
+
 
 struct SchematicViewer;
 
