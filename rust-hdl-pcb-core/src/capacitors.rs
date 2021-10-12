@@ -135,9 +135,9 @@ pub fn make_polarized_capacitor_outline(label: &str) -> Vec<Glyph> {
     let line1: String = label.split(" ").take(2).collect::<Vec<_>>().join(" ");
     let line2: String = label.split(" ").skip(2).collect::<Vec<_>>().join(" ");
     vec![
-        make_ic_body(-100, -70, 100, 70),
+        make_ic_body(-30, -70, 100, 70),
         make_line(30, 70, 30, -70),
-        make_line(30, 0, 0, 0),
+        make_line(30, 0, -30, 0),
         make_line(70, 0, 100, 0),
         make_line(-10, 60, -10, 20),
         make_line(-30, 40, 10, 40),
