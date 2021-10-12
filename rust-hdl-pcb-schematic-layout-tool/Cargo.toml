@@ -1,0 +1,23 @@
+[package]
+name = "rust-hdl-pcb-schematic-layout-tool"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "rust-hdl-pcb-schematic-layout-tool"
+path = "src/main.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+druid = { git = "https://github.com/linebender/druid.git" }
+rust-hdl-pcb-core = {path="../rust-hdl-pcb-core"}
+rust-hdl-pcb = {path="../rust-hdl-pcb"}
+uuid = {version="0.8.2", features=["serde", "v4", "wasm-bindgen"]}
+getrandom = { version = "0.2.3", features = ["js"] }
+wasm-bindgen = "0.2.67"
+console_error_panic_hook = "0.1.6"
+

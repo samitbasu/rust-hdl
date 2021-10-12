@@ -1,26 +1,26 @@
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use crate::ast::VerilogLiteral;
+use crate::ast::{VerilogLink, VerilogLinkDetails, VerilogLiteral};
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
-use crate::clock::{Clock, Domain};
-use crate::constraint::{Constraint, PinConstraint};
+use crate::clock::Clock;
+use crate::constraint::{Constraint, PinConstraint, SignalType};
 use crate::direction::{Direction, In, Out};
-use crate::logic::Logic;
+use crate::logic::{Logic, LogicLink};
+use crate::prelude::InOut;
 use crate::probe::Probe;
 use crate::synth::{Synth, VCDValue};
-use crate::tagged::Tagged;
 
 static GLOBAL_THREAD_COUNT: AtomicUsize = AtomicUsize::new(1);
 
-fn get_signal_id() -> usize {
+pub fn get_signal_id() -> usize {
     GLOBAL_THREAD_COUNT.fetch_add(1, Ordering::SeqCst)
 }
 
 #[derive(Clone, Debug)]
-pub struct Signal<D: Direction, T: Synth, F: Domain> {
-    pub next: Tagged<T, F>,
+pub struct Signal<D: Direction, T: Synth> {
+    pub next: T,
     val: T,
     prev: T,
     pub changed: bool,
@@ -28,12 +28,69 @@ pub struct Signal<D: Direction, T: Synth, F: Domain> {
     id: usize,
     constraints: Vec<PinConstraint>,
     dir: std::marker::PhantomData<D>,
-    domain: std::marker::PhantomData<F>,
 }
 
-impl<D: Direction, T: Synth, F: Domain> Signal<D, T, F> {
-    pub fn val(&self) -> Tagged<T, F> {
-        Tagged(self.val, Default::default())
+impl<T: Synth> LogicLink for Signal<In, T> {
+    fn link(&mut self, other: &mut Self) {
+        other.next = self.val();
+    }
+    fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+        let details = VerilogLinkDetails {
+            my_name: my_name.into(),
+            owner_name: owner_name.into(),
+            other_name: other_name.into(),
+        };
+        vec![VerilogLink::Forward(details)]
+    }
+    fn link_connect_source(&mut self) {
+        // Does nothing
+    }
+    fn link_connect_dest(&mut self) {
+        self.connect();
+    }
+}
+
+impl<T: Synth> LogicLink for Signal<Out, T> {
+    fn link(&mut self, other: &mut Self) {
+        self.next = other.val();
+    }
+    fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+        let details = VerilogLinkDetails {
+            my_name: my_name.into(),
+            owner_name: owner_name.into(),
+            other_name: other_name.into(),
+        };
+        vec![VerilogLink::Backward(details)]
+    }
+    fn link_connect_source(&mut self) {
+        self.connect();
+    }
+    fn link_connect_dest(&mut self) {}
+}
+
+impl<T: Synth> LogicLink for Signal<InOut, T> {
+    fn link(&mut self, _other: &mut Self) {
+        // Do nothing for bidirectional signals...
+    }
+    fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+        let details = VerilogLinkDetails {
+            my_name: my_name.into(),
+            owner_name: owner_name.into(),
+            other_name: other_name.into(),
+        };
+        vec![VerilogLink::Bidirectional(details)]
+    }
+    fn link_connect_source(&mut self) {
+        self.connect();
+    }
+    fn link_connect_dest(&mut self) {
+        self.connect();
+    }
+}
+
+impl<D: Direction, T: Synth> Signal<D, T> {
+    pub fn val(&self) -> T {
+        self.val
     }
 
     pub fn add_constraint(&mut self, constraint: PinConstraint) {
@@ -46,9 +103,15 @@ impl<D: Direction, T: Synth, F: Domain> Signal<D, T, F> {
             constraint: Constraint::Location(location.to_owned()),
         });
     }
+    pub fn add_signal_type(&mut self, index: usize, signal: SignalType) {
+        self.constraints.push(PinConstraint {
+            index,
+            constraint: Constraint::Kind(signal),
+        });
+    }
 }
 
-impl<D: Direction, T: Synth, F: Domain> Atom for Signal<D, T, F> {
+impl<D: Direction, T: Synth> Atom for Signal<D, T> {
     fn bits(&self) -> usize {
         T::BITS
     }
@@ -94,21 +157,21 @@ impl<D: Direction, T: Synth, F: Domain> Atom for Signal<D, T, F> {
     }
 }
 
-impl<D: Direction, T: Synth, F: Domain> Logic for Signal<D, T, F> {
+impl<D: Direction, T: Synth> Logic for Signal<D, T> {
     fn update(&mut self) {}
     fn connect(&mut self) {
         self.claimed = true;
     }
 }
 
-impl<D: Direction, T: Synth, F: Domain> Block for Signal<D, T, F> {
+impl<D: Direction, T: Synth> Block for Signal<D, T> {
     fn connect_all(&mut self) {}
 
     fn update_all(&mut self) {
-        self.changed = self.val != self.next.0;
+        self.changed = self.val != self.next;
         if self.changed {
             self.prev = self.val;
-            self.val = self.next.0;
+            self.val = self.next;
         }
     }
 
@@ -121,7 +184,7 @@ impl<D: Direction, T: Synth, F: Domain> Block for Signal<D, T, F> {
     }
 }
 
-impl<D: Domain> Signal<In, Clock, D> {
+impl Signal<In, Clock> {
     #[inline(always)]
     pub fn pos_edge(&self) -> bool {
         self.changed && self.val.0 && !self.prev.0
@@ -132,26 +195,25 @@ impl<D: Domain> Signal<In, Clock, D> {
     }
 }
 
-impl<T: Synth, F: Domain> Signal<Out, T, F> {
-    pub fn new_with_default(init: T) -> Signal<Out, T, F> {
+impl<T: Synth> Signal<Out, T> {
+    pub fn new_with_default(init: T) -> Signal<Out, T> {
         Self {
-            next: Tagged::default(),
+            next: init,
             val: init,
             prev: init,
-            changed: true,
+            changed: false,
             claimed: false,
             id: get_signal_id(),
             constraints: vec![],
             dir: PhantomData,
-            domain: PhantomData,
         }
     }
 }
 
-impl<D: Direction, T: Synth, F: Domain> Default for Signal<D, T, F> {
+impl<D: Direction, T: Synth> Default for Signal<D, T> {
     fn default() -> Self {
         Self {
-            next: Tagged::default(),
+            next: T::default(),
             val: T::default(),
             prev: T::default(),
             changed: false,
@@ -159,7 +221,6 @@ impl<D: Direction, T: Synth, F: Domain> Default for Signal<D, T, F> {
             id: get_signal_id(),
             constraints: vec![],
             dir: PhantomData,
-            domain: PhantomData,
         }
     }
 }

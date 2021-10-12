@@ -4,16 +4,21 @@ use crate::block::Block;
 use crate::constraint::PinConstraint;
 use crate::logic::Logic;
 use crate::probe::Probe;
+use crate::signal::get_signal_id;
 use crate::synth::{Synth, VCDValue};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Constant<T: Synth> {
     val: T,
+    id: usize,
 }
 
 impl<T: Synth> Constant<T> {
     pub fn new(val: T) -> Constant<T> {
-        Constant { val }
+        Constant {
+            val,
+            id: get_signal_id(),
+        }
     }
     pub fn val(&self) -> T {
         self.val
@@ -64,7 +69,7 @@ impl<T: Synth> Atom for Constant<T> {
     }
 
     fn id(&self) -> usize {
-        0_usize
+        self.id
     }
 
     fn constraints(&self) -> Vec<PinConstraint> {

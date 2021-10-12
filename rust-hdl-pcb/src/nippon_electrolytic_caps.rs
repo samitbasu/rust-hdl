@@ -1,13 +1,4 @@
-use crate::bom::Manufacturer;
-use crate::capacitors::{
-    make_polarized_capacitor_outline, map_pf_to_label, map_three_digit_cap_to_uf, CapacitorKind,
-    CapacitorTolerance,
-};
-use crate::circuit::{Capacitor, CircuitNode, PartDetails};
-use crate::designator::{Designator, DesignatorKind};
-use crate::epin::EPin;
-use crate::smd::SizeCode;
-use crate::utils::pin_list;
+use rust_hdl_pcb_core::prelude::*;
 
 // Source: https://www.chemi-con.co.jp/products/relatedfiles/capacitor/catalog/HXDRA-e.PDF
 fn match_hxd_esr(voltage: f64, cap_pf: f64, size_code: &str) -> i32 {
@@ -102,11 +93,6 @@ pub fn make_nippon_hxd_capacitor(part_number: &str) -> CircuitNode {
             hide_part_outline: true,
             pins: pin_list(vec![EPin::passive_pos(), EPin::passive_neg()]),
             outline: make_polarized_capacitor_outline(&label),
-            suppliers: vec![],
-            designator: Designator {
-                kind: DesignatorKind::Capacitor,
-                index: None,
-            },
             size,
         },
         value_pf,

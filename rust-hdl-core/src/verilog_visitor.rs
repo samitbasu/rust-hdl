@@ -1,7 +1,7 @@
 use crate::ast::{
     VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
-    VerilogIndexAssignment, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary,
-    VerilogStatement,
+    VerilogIndexAssignment, VerilogLink, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp,
+    VerilogOpUnary, VerilogStatement,
 };
 
 pub trait VerilogVisitor {
@@ -55,6 +55,10 @@ pub trait VerilogVisitor {
         // Terminal
     }
 
+    fn visit_link(&mut self, _c: &[VerilogLink]) {
+        // Terminal
+    }
+
     fn visit_case(&mut self, c: &VerilogCase) {
         walk_case(self, c);
     }
@@ -87,11 +91,11 @@ pub trait VerilogVisitor {
         walk_cast(self, a, b);
     }
 
-    fn visit_index(&mut self, a: &str, b: &VerilogExpression) {
+    fn visit_index(&mut self, a: &VerilogExpression, b: &VerilogExpression) {
         walk_index(self, a, b);
     }
 
-    fn visit_slice(&mut self, a: &str, b: &usize, c: &VerilogExpression) {
+    fn visit_slice(&mut self, a: &VerilogExpression, b: &usize, c: &VerilogExpression) {
         walk_slice(self, a, b, c);
     }
 
@@ -118,16 +122,20 @@ pub fn walk_index_replacement<V: VerilogVisitor + ?Sized>(
 
 pub fn walk_slice<V: VerilogVisitor + ?Sized>(
     visitor: &mut V,
-    a: &str,
+    a: &VerilogExpression,
     _b: &usize,
     c: &VerilogExpression,
 ) {
-    visitor.visit_signal(a);
+    visitor.visit_expression(a);
     visitor.visit_expression(c);
 }
 
-pub fn walk_index<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &str, b: &VerilogExpression) {
-    visitor.visit_signal(a);
+pub fn walk_index<V: VerilogVisitor + ?Sized>(
+    visitor: &mut V,
+    a: &VerilogExpression,
+    b: &VerilogExpression,
+) {
+    visitor.visit_expression(a);
     visitor.visit_expression(b);
 }
 
@@ -196,6 +204,9 @@ pub fn walk_statement<V: VerilogVisitor + ?Sized>(visitor: &mut V, s: &VerilogSt
         }
         VerilogStatement::Loop(l) => {
             visitor.visit_loop(l);
+        }
+        VerilogStatement::Link(l) => {
+            visitor.visit_link(l);
         }
     }
 }

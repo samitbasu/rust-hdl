@@ -20,6 +20,8 @@ pub fn simulate<B: Block>(uut: &mut B, max_iters: usize) -> bool {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SimError {
     SimTerminated,
+    MaxTimeReached,
+    SimHalted,
 }
 
 impl From<RecvError> for SimError {
@@ -41,11 +43,12 @@ enum TriggerType<T> {
     Time(u64),
     Function(Box<dyn Fn(&T) -> bool + Send>),
     Clock(u64),
+    Halt,
 }
 
 struct Message<T> {
     kind: TriggerType<T>,
-    circuit: T,
+    circuit: Box<T>,
 }
 
 struct Worker<T> {
@@ -72,6 +75,7 @@ struct NextTime {
     time: u64,
     idx: usize,
     clocks_only: bool,
+    halted: bool,
 }
 
 impl<T: Send + 'static + Block> Simulation<T> {
@@ -87,7 +91,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
     }
     pub fn add_clock<F>(&mut self, interval: u64, clock_fn: F)
     where
-        F: Fn(&mut T) -> () + Send + 'static,
+        F: Fn(&mut Box<T>) -> () + Send + 'static,
     {
         self.add_testbench(move |mut ep: Sim<T>| {
             let mut x = ep.init()?;
@@ -120,7 +124,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
             time: 0,
         }
     }
-    fn dispatch(&mut self, idx: usize, x: T) -> Result<T> {
+    fn dispatch(&mut self, idx: usize, x: Box<T>) -> Result<Box<T>> {
         let worker = &mut self.workers[idx];
         worker.channel_to_worker.send(Message {
             kind: TriggerType::Time(self.time),
@@ -143,6 +147,14 @@ impl<T: Send + 'static + Block> Simulation<T> {
         let mut only_clock_waiters = true;
         for worker in self.workers.iter() {
             match &worker.kind {
+                TriggerType::Halt => {
+                    return NextTime {
+                        halted: true,
+                        time: !0,
+                        idx: !0,
+                        clocks_only: false,
+                    }
+                }
                 TriggerType::Never => {}
                 TriggerType::Time(t) => {
                     only_clock_waiters = false;
@@ -171,6 +183,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
             time: min_time,
             idx: min_idx,
             clocks_only: only_clock_waiters,
+            halted: false,
         }
     }
     fn terminate(&mut self) {
@@ -179,53 +192,69 @@ impl<T: Send + 'static + Block> Simulation<T> {
             let _ = handle.join().unwrap();
         }
     }
-    pub fn run(&mut self, mut x: T, max_time: u64) -> Result<()> {
-        check_connected(&mut x);
+    pub fn run(&mut self, mut x: Box<T>, max_time: u64) -> Result<()> {
+        check_connected(x.as_mut());
         // First initialize the workers.
         for id in 0..self.workers.len() {
             x = self.dispatch(id, x)?;
         }
         // Next run until we have no one else waiting
+        let mut halted = false;
         while self.time < max_time {
             let next = self.scan_workers(&x);
-            if next.time == !0 || next.clocks_only {
+            if next.time == !0 || next.clocks_only || next.halted {
+                halted = next.halted;
                 break;
             }
             self.time = next.time;
             x = self.dispatch(next.idx, x)?;
         }
         self.terminate();
+        if self.time >= max_time {
+            return Err(SimError::MaxTimeReached);
+        }
+        if halted {
+            return Err(SimError::SimHalted);
+        }
         Ok(())
     }
-    pub fn run_traced<W: Write>(&mut self, mut x: T, max_time: u64, trace: W) -> Result<()> {
-        check_connected(&mut x);
-        let mut vcd = write_vcd_header(trace, &x);
+    pub fn run_traced<W: Write>(&mut self, mut x: Box<T>, max_time: u64, trace: W) -> Result<()> {
+        check_connected(x.as_mut());
+        let mut vcd = write_vcd_header(trace, x.as_ref());
         // First initialize the workers.
         for id in 0..self.workers.len() {
             x = self.dispatch(id, x)?;
         }
-        vcd = write_vcd_dump(vcd, &x);
+        vcd = write_vcd_dump(vcd, x.as_ref());
+        let mut halted = false;
         // Next run until we have no one else waiting
         while self.time < max_time {
-            let next = self.scan_workers(&x);
-            if next.time == !0 || next.clocks_only {
+            let next = self.scan_workers(x.as_ref());
+            if next.time == !0 || next.clocks_only || next.halted {
+                halted = next.halted;
                 break;
             }
             self.time = next.time;
             x = self.dispatch(next.idx, x)?;
             vcd.timestamp(next.time).unwrap();
-            vcd = write_vcd_change(vcd, &x);
+            vcd = write_vcd_change(vcd, x.as_ref());
         }
         self.terminate();
+        if self.time >= max_time {
+            return Err(SimError::MaxTimeReached);
+        }
+        if halted {
+            return Err(SimError::SimHalted);
+        }
         Ok(())
     }
 }
 
 impl<T> Sim<T> {
-    pub fn init(&self) -> Result<T> {
+    pub fn init(&self) -> Result<Box<T>> {
         Ok(self.from_sim.recv()?.circuit)
     }
-    pub fn watch<S>(&mut self, check: S, x: T) -> Result<T>
+    pub fn watch<S>(&mut self, check: S, x: Box<T>) -> Result<Box<T>>
     where
         S: Fn(&T) -> bool + Send + 'static,
     {
@@ -234,9 +263,12 @@ impl<T> Sim<T> {
             circuit: x,
         })?;
         let t = self.from_sim.recv()?;
+        if let TriggerType::Time(t0) = t.kind {
+            self.time = t0;
+        }
         Ok(t.circuit)
     }
-    pub fn clock(&mut self, delta: u64, x: T) -> Result<T> {
+    pub fn clock(&mut self, delta: u64, x: Box<T>) -> Result<Box<T>> {
         self.to_sim.send(Message {
             kind: TriggerType::Clock(delta + self.time),
             circuit: x,
@@ -247,7 +279,7 @@ impl<T> Sim<T> {
         }
         Ok(t.circuit)
     }
-    pub fn wait(&mut self, delta: u64, x: T) -> Result<T> {
+    pub fn wait(&mut self, delta: u64, x: Box<T>) -> Result<Box<T>> {
         self.to_sim.send(Message {
             kind: TriggerType::Time(delta + self.time),
             circuit: x,
@@ -258,14 +290,63 @@ impl<T> Sim<T> {
         }
         Ok(t.circuit)
     }
-    pub fn done(&self, x: T) -> Result<()> {
+    pub fn done(&self, x: Box<T>) -> Result<()> {
         self.to_sim.send(Message {
             kind: TriggerType::Never,
             circuit: x,
         })?;
         Ok(())
     }
+    pub fn halt(&self, x: Box<T>) -> Result<()> {
+        self.to_sim.send(Message {
+            kind: TriggerType::Halt,
+            circuit: x,
+        })?;
+        Err(SimError::SimHalted)
+    }
     pub fn time(&self) -> u64 {
         self.time
     }
+}
+
+#[macro_export]
+macro_rules! wait_clock_true {
+    ($sim: ident, $clock: ident, $me: expr) => {
+        $me = $sim.watch(|x| x.$clock.val().0, $me)?
+    };
+}
+
+#[macro_export]
+macro_rules! wait_clock_false {
+    ($sim: ident, $clock: ident, $me: expr) => {
+        $me = $sim.watch(|x| !x.$clock.val().0, $me)?
+    };
+}
+
+#[macro_export]
+macro_rules! wait_clock_cycle {
+    ($sim: ident, $clock: ident, $me: expr) => {
+        if $me.$clock.val().0 {
+            wait_clock_false!($sim, $clock, $me);
+            wait_clock_true!($sim, $clock, $me);
+        } else {
+            wait_clock_true!($sim, $clock, $me);
+            wait_clock_false!($sim, $clock, $me);
+        }
+    };
+    ($sim: ident, $clock: ident, $me: expr, $count: expr) => {
+        for _i in 0..$count {
+            wait_clock_cycle!($sim, $clock, $me);
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! sim_assert {
+    ($sim: ident, $test: expr, $circuit: ident) => {
+        if !($test) {
+            println!("HALT {}", stringify!($test));
+            return $sim.halt($circuit);
+        }
+    };
 }

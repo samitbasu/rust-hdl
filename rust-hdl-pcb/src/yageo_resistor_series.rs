@@ -1,14 +1,7 @@
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 
-use crate::bom::Manufacturer;
-use crate::circuit::CircuitNode;
-use crate::resistors::{
-    make_resistor, map_resistance_letter_code_to_value, map_resistance_to_string, PowerWatt,
-    ResistorKind,
-};
-use crate::smd::{PTHResistor, SizeCode, TolerancedDim};
-use crate::utils;
+use rust_hdl_pcb_core::prelude::*;
 
 fn map_part_number_to_size(part: &str) -> SizeCode {
     (&part[2..=5]).parse().unwrap()
@@ -35,7 +28,7 @@ fn map_part_number_to_tempco(part: &str) -> Option<f64> {
 }
 
 fn map_part_number_to_resistance_code(part: &str) -> &str {
-    utils::drop_char(&part[11..])
+    drop_char(&part[11..])
 }
 
 fn map_part_number_to_resistance(part: &str) -> f64 {

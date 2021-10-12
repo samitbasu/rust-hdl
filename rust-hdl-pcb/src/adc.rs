@@ -1,11 +1,4 @@
-use crate::bom::Manufacturer;
-use crate::circuit::{CircuitNode, PartDetails};
-use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, EdgeLocation, PinKind, PinLocation};
-use crate::glyph::{make_ic_body, make_label, TextJustification};
-use crate::pin;
-use crate::smd::SizeCode;
-use crate::utils::pin_list;
+use rust_hdl_pcb_core::prelude::*;
 
 pub fn make_ads868x(part_number: &str) -> CircuitNode {
     assert!(part_number.starts_with("ADS868"));
@@ -44,11 +37,6 @@ pub fn make_ads868x(part_number: &str) -> CircuitNode {
             make_label(-800, 1200, "U?", TextJustification::BottomLeft),
             make_label(-800, -1400, part_number, TextJustification::TopLeft),
         ],
-        suppliers: vec![],
-        designator: Designator {
-            kind: DesignatorKind::IntegratedCircuit,
-            index: None,
-        },
         size: SizeCode::TSSOP(16),
     })
 }

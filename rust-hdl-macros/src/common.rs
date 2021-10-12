@@ -18,7 +18,9 @@ pub(crate) fn get_field_names(input: &syn::DeriveInput) -> syn::Result<Vec<TS>> 
                 let name = &field.ident.as_ref();
                 let qname = quote!(#name);
                 let qname_string = qname.to_string();
-                if ["config", "wire", "reg", "module", "edge"].contains(&qname_string.as_str()) {
+                if ["config", "wire", "reg", "module", "edge", "disable"]
+                    .contains(&qname_string.as_str())
+                {
                     return Err(syn::Error::new(
                         field.span(),
                         "Cannot use an HDL keyword here",
@@ -77,8 +79,9 @@ pub fn fixup_ident(x: String) -> String {
     let y = x
         .replace(" ", "")
         .replace("self.", "")
-        .replace(".", "_")
-        .replace("::", "_");
+        .replace(".", "$")
+        .replace("::", "$")
+        .replace("&mut", "");
     assert_ne!(y, "config");
     assert_ne!(y, "input");
     assert_ne!(y, "output");

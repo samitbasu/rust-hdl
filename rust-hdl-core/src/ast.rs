@@ -3,11 +3,24 @@ use num_bigint::BigUint;
 use std::fmt::{Display, Formatter, LowerHex};
 
 #[derive(Debug, Clone)]
+pub struct BlackBox {
+    pub code: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct Wrapper {
+    pub code: String,
+    pub cores: String,
+}
+
+#[derive(Debug, Clone)]
 pub enum Verilog {
     Empty,
     Combinatorial(VerilogBlock),
     Custom(String),
-    Blackbox(String),
+    Blackbox(BlackBox),
+    Wrapper(Wrapper),
 }
 
 impl Default for Verilog {
@@ -31,6 +44,21 @@ pub enum VerilogStatement {
     Match(VerilogMatch),
     Loop(VerilogLoop),
     Comment(String),
+    Link(Vec<VerilogLink>),
+}
+
+#[derive(Debug, Clone)]
+pub enum VerilogLink {
+    Forward(VerilogLinkDetails),
+    Backward(VerilogLinkDetails),
+    Bidirectional(VerilogLinkDetails),
+}
+
+#[derive(Debug, Clone)]
+pub struct VerilogLinkDetails {
+    pub my_name: String,
+    pub owner_name: String,
+    pub other_name: String,
 }
 
 #[derive(Debug, Clone)]
@@ -164,8 +192,8 @@ pub enum VerilogExpression {
     Paren(Box<VerilogExpression>),
     Binary(Box<VerilogExpression>, VerilogOp, Box<VerilogExpression>),
     Unary(VerilogOpUnary, Box<VerilogExpression>),
-    Index(String, Box<VerilogExpression>),
-    Slice(String, usize, Box<VerilogExpression>),
+    Index(Box<VerilogExpression>, Box<VerilogExpression>),
+    Slice(Box<VerilogExpression>, usize, Box<VerilogExpression>),
     IndexReplace(
         Box<VerilogExpression>,
         Box<VerilogExpression>,
@@ -199,4 +227,5 @@ pub enum VerilogOpUnary {
     Neg,
     All,
     Any,
+    Xor,
 }

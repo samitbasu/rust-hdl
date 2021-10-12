@@ -1,11 +1,4 @@
-use crate::bom::Manufacturer;
-use crate::circuit::CircuitNode;
-use crate::resistors::{
-    make_resistor, map_resistance_letter_code_to_value, map_resistance_to_string, PowerWatt,
-    ResistorKind,
-};
-use crate::smd::SizeCode;
-use crate::utils::drop_char;
+use rust_hdl_pcb_core::prelude::*;
 
 fn map_erj_to_size(part_number: &str) -> SizeCode {
     match &part_number[3..=4] {

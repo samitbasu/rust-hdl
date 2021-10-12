@@ -274,7 +274,7 @@ fn hdl_cast(cast: &syn::ExprCast) -> Result<TS> {
 
 fn hdl_call(call: &syn::ExprCall) -> Result<TS> {
     let funcname = quote!(#call).to_string();
-    if funcname.starts_with("bit_cast") {
+    if funcname.starts_with("bit_cast") || funcname.starts_with("tagged_bit_cast") {
         hdl_compute(&call.args[0])
     } else if funcname.starts_with("all_true") {
         let arg = hdl_compute(&call.args[0])?;
@@ -326,6 +326,14 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
                replacement: #value,
            }
         }));
+    } else if method_name == "link" {
+        let expr = method.receiver.as_ref();
+        let signal = common::fixup_ident(quote!(#expr).to_string());
+        let target = method.args.index(0);
+        let target = common::fixup_ident(quote!(#target).to_string());
+        return Ok(quote!(
+            rust_hdl_core::ast::VerilogStatement::Link(#expr.link_hdl(#signal, #signal, #target))
+        ));
     }
     Err(syn::Error::new(
         method.span(),
@@ -359,7 +367,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
     match method_name.as_ref() {
         "get_bits" => {
             let expr = method.receiver.as_ref();
-            let signal = common::fixup_ident(quote!(#expr).to_string());
+            let target = hdl_compute(expr)?;
             if method.turbofish.is_none() {
                 return Err(syn::Error::new(method.span(), "get_bits needs a type argument to indicate the width of the slice (e.g., x.get_bits::<Bits4>(ndx))"));
             }
@@ -367,7 +375,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                 return Err(syn::Error::new(method.span(), "get_bits needs a type argument to indicate the width of the slice (e.g., x.get_bits::<Bits4>(ndx))"));
             }
             let width_type = method.turbofish.as_ref().unwrap().args.first().unwrap();
-            let width = quote!(#width_type::bits());
+            let width = quote!(#width_type);
             if method.args.len() != 1 {
                 return Err(syn::Error::new(
                     method.span(),
@@ -376,12 +384,11 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
             }
             let offset = hdl_compute(&method.args[0])?;
             Ok(quote!({
-               rust_hdl_core::ast::VerilogExpression::Slice(#signal.to_string(), #width, Box::new(#offset))
+               rust_hdl_core::ast::VerilogExpression::Slice(Box::new(#target), #width, Box::new(#offset))
             }))
         }
         "get_bit" => {
-            let expr = method.receiver.as_ref();
-            let signal = common::fixup_ident(quote!(#expr).to_string());
+            let signal = hdl_compute(method.receiver.as_ref())?;
             if method.args.is_empty() {
                 return Err(syn::Error::new(
                     method.span(),
@@ -390,7 +397,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
             }
             let index = hdl_compute(method.args.first().unwrap())?;
             Ok(quote!({
-               rust_hdl_core::ast::VerilogExpression::Index(#signal.to_string(), Box::new(#index))
+               rust_hdl_core::ast::VerilogExpression::Index(Box::new(#signal), Box::new(#index))
             }))
         }
         "replace_bit" => {
@@ -407,15 +414,27 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                rust_hdl_core::ast::VerilogExpression::IndexReplace(Box::new(#receiver), Box::new(#index), Box::new(#value))
             }))
         }
-        "any" => {
-            let receiver = method.receiver.as_ref();
-            let signal = common::fixup_ident(quote!(#receiver).to_string());
+        "all" => {
+            let target = hdl_compute(method.receiver.as_ref())?;
             Ok(quote!({
-            rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::Any,
-                Box::new(rust_hdl_core::ast::VerilogExpression::Signal(#signal.to_string())))
+                rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::All, Box::new(#target))
             }))
         }
-        "val" | "into" | "raw" => {
+        "any" => {
+            let target = hdl_compute(method.receiver.as_ref())?;
+            Ok(quote!({
+            rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::Any,
+                Box::new(#target))
+            }))
+        }
+        "xor" => {
+            let target = hdl_compute(method.receiver.as_ref())?;
+            Ok(quote!({
+                rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::Xor,
+                Box::new(#target))
+            }))
+        }
+        "val" | "into" | "index" => {
             let receiver = method.receiver.as_ref();
             hdl_compute(receiver)
         }
@@ -482,7 +501,7 @@ fn hdl_macro(x: &syn::ExprMacro) -> Result<TS> {
         }
         _ => Err(syn::Error::new(
             x.span(),
-            "Unsupported macro invokation in HDL",
+            "Unsupported macro invocation in HDL",
         )),
     }
 }

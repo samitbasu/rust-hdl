@@ -1,4 +1,3 @@
-use rust_hdl_alchitry_cu::pins::Mhz100;
 use rust_hdl_core::prelude::*;
 use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface};
 use std::fs::File;
@@ -14,24 +13,24 @@ impl VerilogVisitor for SignalLister {
 #[test]
 fn test_write_modules_nested_ports() {
     #[derive(Clone, Debug, Default, LogicInterface)]
-    struct MyBus<F: Domain> {
-        pub data: FIFORead<F, 8>,
-        pub cmd: FIFORead<F, 3>,
+    struct MyBus {
+        pub data: FIFORead<8>,
+        pub cmd: FIFORead<3>,
     }
 
     #[derive(Clone, Debug, Default, LogicInterface)]
-    struct FIFORead<F: Domain, const D: usize> {
-        pub read: Signal<In, Bit, F>,
-        pub output: Signal<Out, Bits<D>, F>,
-        pub empty: Signal<Out, Bit, F>,
-        pub almost_empty: Signal<Out, Bit, F>,
-        pub underflow: Signal<Out, Bit, F>,
+    struct FIFORead<const D: usize> {
+        pub read: Signal<In, Bit>,
+        pub output: Signal<Out, Bits<D>>,
+        pub empty: Signal<Out, Bit>,
+        pub almost_empty: Signal<Out, Bit>,
+        pub underflow: Signal<Out, Bit>,
     }
 
     #[derive(Clone, Debug, Default, LogicBlock)]
     struct Widget {
-        pub clock: Signal<In, Clock, Mhz100>,
-        pub bus: MyBus<Mhz100>,
+        pub clock: Signal<In, Clock>,
+        pub bus: MyBus,
     }
 
     impl Logic for Widget {
@@ -51,11 +50,11 @@ fn test_write_modules_nested_ports() {
 
     #[derive(Clone, Debug, Default, LogicBlock)]
     struct UUT {
-        pub bus: MyBus<Mhz100>,
+        pub bus: MyBus,
         widget_a: Widget,
         widget_b: Widget,
-        pub clock: Signal<In, Clock, Mhz100>,
-        pub select: Signal<In, Bit, Mhz100>,
+        pub clock: Signal<In, Clock>,
+        pub select: Signal<In, Bit>,
     }
 
     impl Logic for UUT {
@@ -64,7 +63,7 @@ fn test_write_modules_nested_ports() {
             self.widget_a.clock.next = self.clock.val();
             self.widget_b.clock.next = self.clock.val();
 
-            if self.select.val().raw() {
+            if self.select.val() {
                 self.bus.cmd.underflow.next = self.widget_a.bus.cmd.underflow.val();
                 self.bus.cmd.almost_empty.next = self.widget_a.bus.cmd.almost_empty.val();
                 self.bus.cmd.empty.next = self.widget_a.bus.cmd.empty.val();

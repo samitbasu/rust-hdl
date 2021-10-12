@@ -1,6 +1,6 @@
 use crate::ast::{
     VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
-    VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary,
+    VerilogLink, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary,
 };
 use crate::code_writer::CodeWriter;
 use crate::verilog_visitor::{walk_block, VerilogVisitor};
@@ -16,6 +16,7 @@ struct LoopVariable {
 pub struct VerilogCodeGenerator {
     io: CodeWriter,
     loops: Vec<LoopVariable>,
+    links: Vec<VerilogLink>,
 }
 
 impl VerilogCodeGenerator {
@@ -23,6 +24,7 @@ impl VerilogCodeGenerator {
         Self {
             io: CodeWriter::new(),
             loops: vec![],
+            links: vec![],
         }
     }
 
@@ -36,7 +38,7 @@ impl VerilogCodeGenerator {
             if x.len() == 2 {
                 if let Some(txt) = x.get(1) {
                     let arg = evalexpr::eval_with_context(txt.as_str(), &context).unwrap();
-                    return re.replace(a, format!("_{}", arg)).to_string();
+                    return re.replace(a, format!("$${}", arg)).to_string();
                 }
             }
         }
@@ -54,9 +56,9 @@ impl VerilogCodeGenerator {
             x.remove(0);
         }
         x = x
-            .replace(".", "_")
-            .replace("::", "_")
-            .trim_end_matches("_next")
+            .replace(".", "$")
+            .replace("::", "$")
+            .trim_end_matches("$next")
             .to_owned();
         if x.contains('[') {
             x = self.array_index_simplification(&x);
@@ -74,7 +76,54 @@ impl ToString for VerilogCodeGenerator {
 pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
     let mut gen = VerilogCodeGenerator::new();
     gen.visit_block(code);
-    format!("always @(*) {}", gen.to_string())
+
+    // add forward links to the code
+    let links = gen
+        .links
+        .iter()
+        .map(|x| {
+            match x {
+                VerilogLink::Forward(x) => {
+                    format!(
+                        "always @(*) {}${} = {}${};",
+                        x.other_name, x.my_name, x.owner_name, x.my_name
+                    )
+                }
+                VerilogLink::Backward(x) => {
+                    format!(
+                        "always @(*) {}${} = {}${};",
+                        x.owner_name, x.my_name, x.other_name, x.my_name
+                    )
+                }
+                VerilogLink::Bidirectional(x) => {
+                    format!(
+                        "assign {}${} = {}${};",
+                        x.owner_name, x.my_name, x.other_name, x.my_name
+                    )
+                }
+            }
+            .to_string()
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    /*
+    let links = gen
+        .links
+        .iter()
+        .map(|x| {
+            x.replace("link!(", "")
+                .replace(")", "")
+                .replace(",", "=")
+                .replace("self.", "")
+                .replace(".", "_")
+        })
+        .map(|x| format!("assign {};", x))
+        .collect::<Vec<_>>()
+        .join("\n");
+     */
+    format!("always @(*) {}\n{}", gen.to_string(), links)
+    //    format!("always @(*) {}\n", gen.to_string())
 }
 
 impl VerilogVisitor for VerilogCodeGenerator {
@@ -157,6 +206,12 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.write(v.to_string());
     }
 
+    fn visit_link(&mut self, l: &[VerilogLink]) {
+        for link in l {
+            self.links.push(link.clone());
+        }
+    }
+
     fn visit_case(&mut self, c: &VerilogCase) {
         self.io.write(self.ident_fixup(&c.condition));
         self.io.writeln(":");
@@ -196,6 +251,7 @@ impl VerilogVisitor for VerilogCodeGenerator {
             VerilogOpUnary::Neg => "-",
             VerilogOpUnary::All => "&",
             VerilogOpUnary::Any => "|",
+            VerilogOpUnary::Xor => "^",
         });
         self.visit_expression(r);
     }
@@ -220,15 +276,15 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.write(format!(") & {}'h{:x}", bits, mask))
     }
 
-    fn visit_index(&mut self, a: &str, b: &VerilogExpression) {
-        self.visit_signal(a);
+    fn visit_index(&mut self, a: &VerilogExpression, b: &VerilogExpression) {
+        self.visit_expression(a);
         self.io.write("[");
         self.visit_expression(b);
         self.io.write("]");
     }
 
-    fn visit_slice(&mut self, sig: &str, width: &usize, offset: &VerilogExpression) {
-        self.visit_signal(sig);
+    fn visit_slice(&mut self, sig: &VerilogExpression, width: &usize, offset: &VerilogExpression) {
+        self.visit_expression(sig);
         self.io.write("[(");
         self.visit_expression(offset);
         self.io.write(format!(")+:({})]", width));
@@ -265,7 +321,7 @@ fn test_array_replacement() {
             if let Some(txt) = x.get(1) {
                 let arg = evalexpr::eval_with_context(txt.as_str(), &context).unwrap();
                 println!("Replace {} -> {}", txt.as_str(), arg);
-                println!("Update {}", re.replace(test, format!("_{}", arg)))
+                println!("Update {}", re.replace(test, format!("$${}", arg)))
             }
         }
     }

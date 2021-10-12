@@ -1,3 +1,4 @@
+use rust_hdl_core::prelude::*;
 use std::env::temp_dir;
 use std::fs::{create_dir, remove_dir_all, File};
 use std::io::{Error, Write};
@@ -7,6 +8,8 @@ use std::process::Command;
 pub enum SynthError {
     SynthesisFailed { stdout: String, stderr: String },
     LatchingWriteToSignal(Vec<String>),
+    ImplicitlyDeclared(Vec<String>),
+    DuplicateModule(Vec<String>),
     IOError(std::io::Error),
 }
 
@@ -38,8 +41,25 @@ pub fn yosys_validate(prefix: &str, translation: &str) -> Result<(), SynthError>
         let mut dump = File::create("yosys.v")?;
         write!(dump, "{}", translation).unwrap();
     }
+    if stdout.contains("Re-dfinition of") {
+        let regex = regex::Regex::new(r#"Re-definition of module (\S*)"#).unwrap();
+        let mut signal_name = vec![];
+        if regex.is_match(&stdout) {
+            for capture in regex.captures(&stdout).unwrap().iter() {
+                signal_name.push(capture.unwrap().as_str().to_string());
+            }
+        }
+        return Err(SynthError::DuplicateModule(signal_name));
+    }
     if stdout.contains("implicitly declared.") {
-        return Err(SynthError::SynthesisFailed { stdout, stderr });
+        let regex = regex::Regex::new(r#"Identifier (\S*) is implicitly declared"#).unwrap();
+        let mut signal_name = vec![];
+        if regex.is_match(&stdout) {
+            for capture in regex.captures(&stdout).unwrap().iter() {
+                signal_name.push(capture.unwrap().as_str().to_string());
+            }
+        }
+        return Err(SynthError::ImplicitlyDeclared(signal_name));
     }
     if stdout.contains("Latch inferred for") {
         let regex = regex::Regex::new(r#"Latch inferred for signal (\S*)"#).unwrap();
@@ -55,4 +75,32 @@ pub fn yosys_validate(prefix: &str, translation: &str) -> Result<(), SynthError>
         return Err(SynthError::SynthesisFailed { stdout, stderr });
     }
     Ok(())
+}
+
+#[macro_export]
+macro_rules! top_wrap {
+    ($kind: ty, $name: ident) => {
+        #[derive(LogicBlock, Default)]
+        struct $name {
+            uut: $kind,
+        }
+        impl Logic for $name {
+            fn update(&mut self) {}
+        }
+    };
+}
+
+#[derive(LogicBlock)]
+pub struct TopWrap<U: Block> {
+    pub uut: U,
+}
+
+impl<U: Block> TopWrap<U> {
+    pub fn new(uut: U) -> Self {
+        Self { uut }
+    }
+}
+
+impl<U: Block> Logic for TopWrap<U> {
+    fn update(&mut self) {}
 }

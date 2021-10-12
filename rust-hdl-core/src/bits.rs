@@ -10,14 +10,21 @@ use std::num::Wrapping;
 // The short value must be less than 2^N
 // N <= SHORT_BITS --> Short repr, otherwise Long repr
 
+// Compute the minimum number of bits to represent a container with t items.
+// This is basically ceil(log2(t)) as a constant (compile time computable) function.
 pub const fn clog2(t: usize) -> usize {
     let mut p = 0;
     let mut b = 1;
-    while b <= t {
+    while b < t {
         p += 1;
         b *= 2;
     }
     p
+}
+
+#[test]
+fn test_clog2_is_correct() {
+    assert_eq!(clog2(1024), 10);
 }
 
 #[derive(Clone, Debug, Copy)]
@@ -130,8 +137,28 @@ impl<const N: usize> Bits<N> {
     }
 
     #[inline(always)]
+    pub fn xor(&self) -> bool {
+        match self {
+            Bits::Short(x) => x.xor(),
+            Bits::Long(x) => x.xor(),
+        }
+    }
+
+    pub fn index(&self) -> usize {
+        match self {
+            Bits::Short(x) => x.short() as usize,
+            Bits::Long(_x) => panic!("Cannot map long bit vector to index type"),
+        }
+    }
+
+    #[inline(always)]
     pub fn len(&self) -> usize {
         N
+    }
+
+    // Warning!! this can overflow
+    pub fn count() -> usize {
+        1 << N
     }
 
     #[inline(always)]
@@ -383,13 +410,24 @@ impl<const N: usize> std::cmp::PartialEq<Bits<N>> for Bits<N> {
     }
 }
 
-impl<const N: usize> std::cmp::PartialEq<u32> for Bits<N> {
-    #[inline(always)]
-    fn eq(&self, other: &u32) -> bool {
-        let other_as_bits: Bits<N> = (*other).into();
-        self.eq(&other_as_bits)
-    }
+macro_rules! partial_eq_with_uint {
+    ($kind: ty) => {
+        impl<const N: usize> std::cmp::PartialEq<$kind> for Bits<N> {
+            #[inline(always)]
+            fn eq(&self, other: &$kind) -> bool {
+                let other_as_bits: Bits<N> = (*other).into();
+                self.eq(&other_as_bits)
+            }
+        }
+    };
 }
+
+partial_eq_with_uint!(u8);
+partial_eq_with_uint!(u16);
+partial_eq_with_uint!(u32);
+partial_eq_with_uint!(u64);
+partial_eq_with_uint!(u128);
+partial_eq_with_uint!(usize);
 
 impl std::cmp::PartialEq<bool> for Bits<1> {
     #[inline(always)]
@@ -518,6 +556,14 @@ mod tests {
         assert_eq!(c_u32, 10234_u32 + 19423_u32);
     }
     #[test]
+    fn add_int_works() {
+        let a: Bits<32> = 10234_u32.into();
+        let b = 19423_u32;
+        let c: Bits<32> = a + b;
+        let c_u32: u32 = c.into();
+        assert_eq!(c_u32, 10234_u32 + 19423_u32);
+    }
+    #[test]
     fn add_works_with_overflow() {
         let x = 2_042_102_334_u32;
         let y = 2_942_142_512_u32;
@@ -533,6 +579,16 @@ mod tests {
         let y = 2_942_142_512_u32;
         let a: Bits<32> = x.into();
         let b: Bits<32> = y.into();
+        let c = a - b;
+        let c_u32: u32 = c.into();
+        assert_eq!(Wrapping(c_u32), Wrapping(x) - Wrapping(y));
+    }
+    #[test]
+    fn sub_int_works() {
+        let x = 2_042_102_334_u32;
+        let y = 2_942_142_512_u32;
+        let a: Bits<32> = x.into();
+        let b: u32 = y.into();
         let c = a - b;
         let c_u32: u32 = c.into();
         assert_eq!(Wrapping(c_u32), Wrapping(x) - Wrapping(y));
@@ -634,7 +690,7 @@ mod tests {
         let a = bits::<A_WIDTH>(153);
         println!("{:x}", a);
         assert_eq!(a.len(), 8);
-        assert_eq!(clog2(1024), 11);
+        assert_eq!(clog2(1024), 10);
     }
     #[test]
     fn test_clog2_inline() {

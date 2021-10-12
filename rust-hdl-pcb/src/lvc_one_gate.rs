@@ -1,13 +1,4 @@
-use crate::bom::Manufacturer;
-use crate::circuit::{CircuitNode, Logic, LogicFunction, LogicSignalStandard, PartDetails};
-use crate::designator::{Designator, DesignatorKind};
-use crate::epin::{EPin, PinKind};
-use crate::epin::{EdgeLocation, PinLocation};
-use crate::glyph::TextJustification::{BottomLeft, TopLeft};
-use crate::glyph::{make_ic_body, make_label};
-use crate::pin;
-use crate::smd::SizeCode;
-use crate::utils::pin_list;
+use rust_hdl_pcb_core::prelude::*;
 
 pub fn make_sn74lvc1g125se7(part_number: &str) -> CircuitNode {
     assert_eq!(part_number, "74LVC1G125SE-7");
@@ -31,14 +22,9 @@ pub fn make_sn74lvc1g125se7(part_number: &str) -> CircuitNode {
             ]),
             outline: vec![
                 make_ic_body(-400, -400, 400, 400),
-                make_label(-400, 400, "V?", BottomLeft),
-                make_label(-400, -400, part_number, TopLeft),
+                make_label(-400, 400, "U?", TextJustification::BottomLeft),
+                make_label(-400, -400, part_number, TextJustification::TopLeft),
             ],
-            suppliers: vec![],
-            designator: Designator {
-                kind: DesignatorKind::Resistor,
-                index: None,
-            },
             size: SizeCode::SOT353,
         },
         drive_current_ma: 24.0,
@@ -72,14 +58,18 @@ pub fn make_sn74lvc1g86dck(part_number: &str) -> CircuitNode {
             ]),
             outline: vec![
                 make_ic_body(-500, -500, 600, 500),
-                make_label(-500, 500, "V?", BottomLeft),
-                make_label(-500, -500, part_number, TopLeft),
+                make_label(-500, 500, "U?", TextJustification::BottomLeft),
+                make_label(-500, -500, part_number, TextJustification::TopLeft),
+                make_arc(-560, 0, 400.0, 330.0, 60.0),
+                make_arc(-490, 0, 400.0, 330.0, 60.0),
+                make_line(-140, 200, 0, 200),
+                make_line(-140, -200, 0, -200),
+                make_arc(0, 180, 380.0, 270.0, 60.0),
+                make_arc(0, -180, 380.0, 30.0, 60.0),
+                make_line(-270, 100, -180, 100),
+                make_line(-270, -100, -180, -100),
+                make_line(330, 0, 400, 0),
             ],
-            suppliers: vec![],
-            designator: Designator {
-                kind: DesignatorKind::IntegratedCircuit,
-                index: None,
-            },
             size: SizeCode::SC70,
         },
         drive_current_ma: 32.0,

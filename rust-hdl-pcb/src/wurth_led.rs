@@ -1,11 +1,4 @@
-use crate::bom::Manufacturer;
-use crate::circuit::{CircuitNode, Diode, PartDetails};
-use crate::designator::{Designator, DesignatorKind};
-use crate::diode::DiodeKind;
-use crate::epin::EPin;
-use crate::glyph::{make_ic_body, make_label, make_line, TextJustification};
-use crate::smd::SizeCode;
-use crate::utils::pin_list;
+use rust_hdl_pcb_core::prelude::*;
 
 pub fn make_wurth_led(part_number: &str) -> CircuitNode {
     // Only one supported type for now...
@@ -39,11 +32,6 @@ pub fn make_wurth_led(part_number: &str) -> CircuitNode {
                 make_label(-200, 220, "D?", TextJustification::BottomLeft),
                 make_label(-200, -90, part_number, TextJustification::TopLeft),
             ],
-            suppliers: vec![],
-            designator: Designator {
-                kind: DesignatorKind::Diode,
-                index: None,
-            },
             size: SizeCode::I0603,
         },
         forward_drop_volts: 3.2,

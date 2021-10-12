@@ -4,6 +4,7 @@ use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
 use crate::code_writer::CodeWriter;
 use crate::named_path::NamedPath;
+use crate::prelude::check_connected;
 use crate::probe::Probe;
 use crate::verilog_gen::verilog_combinatorial;
 use std::collections::BTreeMap;
@@ -39,12 +40,13 @@ struct AtomDetails {
 
 fn verilog_atom_name(x: &AtomKind) -> &str {
     match x {
-        AtomKind::InputParameter => "input",
+        AtomKind::InputParameter => "input wire",
         AtomKind::OutputParameter => "output reg",
         AtomKind::StubInputSignal => "reg",
         AtomKind::StubOutputSignal => "wire",
         AtomKind::Constant => "localparam",
-        AtomKind::LocalSignal => "wire",
+        AtomKind::LocalSignal => "reg",
+        AtomKind::InOutParameter => "inout wire",
     }
 }
 
@@ -100,7 +102,11 @@ impl ModuleDefines {
             })
             .filter(|x| x.discriminant.len() != 0)
             .collect::<Vec<_>>();
-        entry.enums.extend(enum_values.into_iter())
+        for x in enum_values {
+            if !entry.enums.contains(&x) {
+                entry.enums.push(x);
+            }
+        }
     }
     fn add_code(&mut self, module: &str, code: Verilog) {
         let entry = self.details.entry(module.into()).or_default();
@@ -113,6 +119,12 @@ impl Probe for ModuleDefines {
         let top_level = self.path.to_string();
         self.path.push(name);
         self.namespace.reset();
+        println!(
+            "Add submodule: top_level {} name {} kind {}",
+            top_level,
+            name,
+            &self.path.to_string()
+        );
         self.add_submodule(&top_level, name, &self.path.to_string());
         self.add_code(&self.path.to_string(), node.hdl());
     }
@@ -122,21 +134,24 @@ impl Probe for ModuleDefines {
     }
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
+        // TODO - add proper logging
+        /*
         println!(
             "Atom: name {} path {} namespace {} enum {} type {}",
             name,
             self.path.to_string(),
-            self.namespace.flat("_"),
+            self.namespace.flat("$"),
             signal.is_enum(),
             signal.type_name()
         );
+         */
         let module_path = self.path.to_string();
         let module_name = self.path.last();
-        let namespace = self.namespace.flat("_");
+        let namespace = self.namespace.flat("$");
         let name = if namespace.is_empty() {
             name.to_owned()
         } else {
-            format!("{}_{}", namespace, name)
+            format!("{}${}", namespace, name)
         };
         let param = AtomDetails {
             name: name.clone(),
@@ -151,7 +166,7 @@ impl Probe for ModuleDefines {
                 StubOutputSignal
             };
             let parent_param = AtomDetails {
-                name: format!("{}_{}", module_name, name.to_owned()),
+                name: format!("{}${}", module_name, name.to_owned()),
                 kind,
                 width: signal.bits(),
                 const_val: signal.verilog(),
@@ -161,6 +176,8 @@ impl Probe for ModuleDefines {
         }
         if signal.is_enum() {
             self.add_enum(&module_path, signal);
+            let parent_name = self.path.parent();
+            self.add_enum(&parent_name, signal);
         }
         self.add_atom(&module_path, param);
     }
@@ -221,8 +238,9 @@ impl ModuleDefines {
                     io.add("\n// Enums");
                     module_details.enums.iter().for_each(|x| {
                         io.add(format!(
-                            "localparam {}_{} = {}",
-                            x.type_name, x.discriminant, x.value
+                            "localparam {} = {};",
+                            x.discriminant.replace("::", "$"),
+                            x.value
                         ))
                     });
                 }
@@ -238,19 +256,21 @@ impl ModuleDefines {
                     io.add("\n// Sub module instances");
                     for child in submodules {
                         let entry = self.details.get(&child.kind).unwrap();
-                        if !matches!(entry.code, Verilog::Blackbox(_)) {
-                            let child_args = entry
-                                .atoms
-                                .iter()
-                                .filter(|x| {
-                                    x.kind == AtomKind::InputParameter
-                                        || x.kind == AtomKind::OutputParameter
-                                })
-                                .map(|x| format!(".{}({}_{})", x.name, child.name, x.name))
-                                .collect::<Vec<_>>()
-                                .join(",");
-                            io.add(format!("{} {}({});", child.kind, child.name, child_args))
-                        }
+                        let submodule_kind = match &entry.code {
+                            Verilog::Blackbox(b) => &b.name,
+                            _ => &child.kind,
+                        };
+                        let child_args = entry
+                            .atoms
+                            .iter()
+                            .filter(|x| x.kind.is_parameter())
+                            .map(|x| format!(".{}({}${})", x.name, child.name, x.name))
+                            .collect::<Vec<_>>()
+                            .join(",");
+                        io.add(format!(
+                            "{} {}({});",
+                            submodule_kind, child.name, child_args
+                        ))
                     }
                 }
                 match &module_details.code {
@@ -262,25 +282,33 @@ impl ModuleDefines {
                         io.add("\n// Update code (custom)");
                         io.add(code);
                     }
+                    Verilog::Wrapper(c) => {
+                        io.add("\n// Update code (wrapper)");
+                        io.add(&c.code);
+                    }
                     Verilog::Blackbox(_) => {}
                     Verilog::Empty => {}
                 }
                 io.pop();
                 io.add(format!("endmodule // {}", module_name));
             });
-        self.details
-            .iter()
-            .filter(|x| matches!(x.1.code, Verilog::Blackbox(_)))
-            .for_each(|k| {
-                if let Verilog::Blackbox(b) = &k.1.code {
-                    io.add(b)
-                }
-            });
+        self.details.iter().for_each(|x| match &x.1.code {
+            Verilog::Blackbox(b) => io.add(&b.code),
+            Verilog::Wrapper(w) => io.add(&w.cores),
+            _ => {}
+        });
         io.to_string()
     }
 }
 
 pub fn generate_verilog<U: Block>(uut: &U) -> String {
+    let mut defines = ModuleDefines::default();
+    check_connected(uut);
+    uut.accept("top", &mut defines);
+    defines.defines()
+}
+
+pub fn generate_verilog_unchecked<U: Block>(uut: &U) -> String {
     let mut defines = ModuleDefines::default();
     uut.accept("top", &mut defines);
     defines.defines()

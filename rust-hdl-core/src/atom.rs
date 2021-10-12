@@ -10,12 +10,13 @@ pub enum AtomKind {
     StubOutputSignal,
     Constant,
     LocalSignal,
+    InOutParameter,
 }
 
 impl AtomKind {
     pub fn is_parameter(&self) -> bool {
         match self {
-            AtomKind::InputParameter | AtomKind::OutputParameter => true,
+            AtomKind::InputParameter | AtomKind::OutputParameter | AtomKind::InOutParameter => true,
             _ => false,
         }
     }

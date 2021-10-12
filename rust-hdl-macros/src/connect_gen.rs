@@ -1,5 +1,6 @@
 use crate::common::TS;
 use quote::quote;
+use std::ops::Index;
 use syn::spanned::Spanned;
 use syn::{Expr, Member, Result};
 
@@ -37,6 +38,7 @@ fn connect_inner_statement(expr: &syn::Expr) -> Result<TS> {
         Expr::If(x) => connect_conditional(x),
         Expr::Match(x) => connect_match(x),
         Expr::ForLoop(x) => connect_for_loop(x),
+        Expr::MethodCall(x) => connect_method_call(x),
         _ => Ok(TS::new()),
     }
 }
@@ -48,6 +50,21 @@ fn connect_for_loop(node: &syn::ExprForLoop) -> Result<TS> {
     Ok(quote!(for #ndx in #range {
         #body
     }))
+}
+
+fn connect_method_call(node: &syn::ExprMethodCall) -> Result<TS> {
+    let source = &node.receiver;
+    let method_name = node.method.to_string();
+    if method_name == "link" {
+        let target = node.args.index(0);
+        if let Expr::Reference(t) = target {
+            let target = &t.expr;
+            return Ok(quote!(
+                rust_hdl_core::logic::logic_connect_link_fn(&mut #source, &mut #target);
+            ));
+        }
+    }
+    Ok(TS::new())
 }
 
 fn connect_assignment(node: &syn::ExprAssign) -> Result<TS> {

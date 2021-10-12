@@ -24,20 +24,8 @@ impl std::ops::Not for Clock {
     }
 }
 
-pub trait Domain: PartialEq {
-    const FREQ: u64;
+impl From<bool> for Clock {
+    fn from(x: bool) -> Clock {
+        Clock(x)
+    }
 }
-
-#[macro_export]
-macro_rules! make_domain {
-    ($name: ident, $freq: expr) => {
-        #[derive(Clone, Copy, Debug, Default, PartialEq)]
-        pub struct $name {}
-
-        impl Domain for $name {
-            const FREQ: u64 = $freq;
-        }
-    };
-}
-
-make_domain!(Async, 0);

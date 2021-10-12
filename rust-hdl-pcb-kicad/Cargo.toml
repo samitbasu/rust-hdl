@@ -1,0 +1,13 @@
+[package]
+name = "rust-hdl-pcb-kicad"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust-hdl-pcb-core = {path="../rust-hdl-pcb-core"}
+uuid = {version="0.8.2", features=["serde", "v4"]}
+atoms = {version="^2"}
+serde = {version="^1", features=["derive"]}
+anyhow = "^1"

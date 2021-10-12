@@ -3,11 +3,9 @@ use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::sync_rom::SyncROM;
 use std::collections::BTreeMap;
 
-make_domain!(Mhz1, 1_000_000);
-
 #[derive(LogicBlock)]
 struct SyncROMTest {
-    rom: SyncROM<Bits<4>, Bits<4>, Mhz1>,
+    rom: SyncROM<Bits<4>, 4>,
 }
 
 impl SyncROMTest {
@@ -31,6 +29,7 @@ fn test_synthesis_sync_rom() {
     let mut uut = SyncROMTest::new();
     uut.rom.address.connect();
     uut.rom.clock.connect();
+    uut.connect_all();
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
     yosys_validate("srom", &vlog).unwrap();

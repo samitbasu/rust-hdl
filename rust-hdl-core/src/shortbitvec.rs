@@ -9,6 +9,10 @@ pub const SHORT_BITS: usize = 32;
 pub struct ShortBitVec<const N: usize>(ShortType);
 
 impl<const N: usize> ShortBitVec<N> {
+    pub fn short(&self) -> ShortType {
+        self.0
+    }
+
     #[inline(always)]
     pub fn replace_bit(&self, index: usize, val: bool) -> Self {
         assert!(index < N);
@@ -43,6 +47,17 @@ impl<const N: usize> ShortBitVec<N> {
     #[inline(always)]
     pub fn all(&self) -> bool {
         self.0 == Self::bit_mask()
+    }
+
+    #[inline(always)]
+    pub fn xor(&self) -> bool {
+        let mut ret = false;
+        let mut x = self.0;
+        for _ in 0..N {
+            ret = ret ^ (x & 0x1 != 0);
+            x = x >> 1;
+        }
+        ret
     }
 }
 
