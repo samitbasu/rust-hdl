@@ -1,10 +1,9 @@
-use crate::ads868x_sim::ADS868XSimulator;
+use rust_hdl_sim_chips::ad7193_sim::{AD7193Config, AD7193Simulator};
 use rust_hdl_core::prelude::*;
 use rust_hdl_synth::yosys_validate;
-use rust_hdl_widgets::spi_master::SPIConfig;
 
 #[derive(LogicBlock)]
-pub struct MuxedADS868XSimulators<const N: usize> {
+pub struct MuxedAD7193Simulators {
     // Input SPI bus
     pub mosi: Signal<In, Bit>,
     pub mclk: Signal<In, Bit>,
@@ -12,12 +11,11 @@ pub struct MuxedADS868XSimulators<const N: usize> {
     pub miso: Signal<Out, Bit>,
     pub addr: Signal<In, Bits<3>>,
     pub clock: Signal<In, Clock>,
-    adcs: [ADS868XSimulator; N],
+    adcs: [AD7193Simulator; 8],
 }
 
-impl<const N: usize> MuxedADS868XSimulators<N> {
-    pub fn new(config: SPIConfig) -> Self {
-        assert!(N <= 8);
+impl MuxedAD7193Simulators {
+    pub fn new(config: AD7193Config) -> Self {
         Self {
             mosi: Default::default(),
             mclk: Default::default(),
@@ -25,17 +23,26 @@ impl<const N: usize> MuxedADS868XSimulators<N> {
             miso: Default::default(),
             addr: Default::default(),
             clock: Default::default(),
-            adcs: array_init::array_init(|_| ADS868XSimulator::new(config)),
+            adcs: [
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+                AD7193Simulator::new(config),
+            ],
         }
     }
 }
 
-impl<const N: usize> Logic for MuxedADS868XSimulators<N> {
+impl Logic for MuxedAD7193Simulators {
     #[hdl_gen]
     fn update(&mut self) {
         // Latch prevention
         self.miso.next = true;
-        for i in 0_usize..N {
+        for i in 0_usize..8_usize {
             self.adcs[i].clock.next = self.clock.val();
             self.adcs[i].mosi.next = self.mosi.val();
             self.adcs[i].mclk.next = self.mclk.val();
@@ -50,8 +57,7 @@ impl<const N: usize> Logic for MuxedADS868XSimulators<N> {
 
 #[test]
 fn test_mux_is_synthesizable() {
-    let mut uut: MuxedADS868XSimulators<8> =
-        MuxedADS868XSimulators::new(ADS868XSimulator::spi_hw());
+    let mut uut = MuxedAD7193Simulators::new(AD7193Config::hw());
     uut.mclk.connect();
     uut.mosi.connect();
     uut.msel.connect();
@@ -59,5 +65,5 @@ fn test_mux_is_synthesizable() {
     uut.clock.connect();
     uut.connect_all();
     println!("{}", generate_verilog(&uut));
-    yosys_validate("mux_8689", &generate_verilog(&uut)).unwrap();
+    yosys_validate("mux_7193", &generate_verilog(&uut)).unwrap();
 }

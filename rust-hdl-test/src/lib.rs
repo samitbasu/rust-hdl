@@ -1,14 +1,12 @@
 use std::fs::File;
+use std::time::Duration;
 
 use rust_hdl_core::prelude::*;
 use rust_hdl_macros::LogicBlock;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::Shot;
 use rust_hdl_widgets::strobe::Strobe;
-use std::time::Duration;
 
-pub mod ad7193_sim;
-pub mod ads868x_sim;
 pub mod alchitry_cu_icepll;
 pub mod alchitry_cu_pulser;
 pub mod alchitry_cu_pulser_pll;
@@ -19,8 +17,6 @@ pub mod base_tests;
 pub mod edge_detector;
 pub mod expander;
 pub mod fifo;
-pub mod muxed_ad7193_sim;
-pub mod muxed_ads868x_sim;
 pub mod nested_ports;
 #[cfg(feature = "fpga_hw_test")]
 pub mod ok_tools;

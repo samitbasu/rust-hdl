@@ -1,4 +1,4 @@
-use crate::ad7193_sim::{AD7193Config, AD7193Simulator};
+use rust_hdl_sim_chips::ad7193_sim::{AD7193Config, AD7193Simulator};
 use crate::ok_tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::prelude::*;

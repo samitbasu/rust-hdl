@@ -5,13 +5,14 @@ members = [
     "rust-hdl-macros",
     "rust-hdl-test",
     "rust-hdl-widgets",
-    "rust-hdl-synth",
-    "rust-hdl-alchitry-cu",
+    "rust-hdl-yosys-synth",
+    "rust-hdl-bsp-alchitry-cu",
     "rust-hdl-pcb",
     "rust-hdl-ok-frontpanel-sys",
     "rust-hdl-pcb-core",
     "rust-hdl-pcb-svg",
     "rust-hdl-pcb-kicad",
     "rust-hdl-pcb-schematic-layout-tool",
-    "rust-hdl-ok",
+    "rust-hdl-ok-widgets",
+    "rust-hdl-sim-chips"
 ]

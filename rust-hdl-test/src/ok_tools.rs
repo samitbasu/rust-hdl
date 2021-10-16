@@ -1,4 +1,4 @@
-use crate::ad7193_sim::AD7193_REG_WIDTHS;
+use rust_hdl_sim_chips::ad7193_sim::AD7193_REG_WIDTHS;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::prelude::*;
 use rust_hdl_ok::spi::OKSPIMasterAddressConfig;
