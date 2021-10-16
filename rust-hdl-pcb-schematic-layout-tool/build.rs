@@ -16,7 +16,6 @@ use std::io::{ErrorKind, Result};
 use std::path::{Path, PathBuf};
 use std::{env, fs};
 
-
 fn main() -> Result<()> {
     let crate_dir = PathBuf::from(&env::var("CARGO_MANIFEST_DIR").unwrap());
     let src_dir = crate_dir.join("src");
@@ -37,7 +36,6 @@ fn main() -> Result<()> {
         <ul>
 "#
     .to_string();
-
 
     // if let Some(example) = path.file_stem() {
     let example_str = "rust_hdl_pcb_schematic_layout_tool";

@@ -1,9 +1,14 @@
-use std::collections::HashSet;
 use druid::kurbo::BezPath;
-use druid::{kurbo::Line, Affine, AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx, FontDescriptor, FontFamily, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, RenderContext, Size, TextAlignment, TextLayout, UpdateCtx, Widget, WidgetId, WindowDesc, KbKey, Cursor, kurbo::PathEl, Lens, WidgetExt};
-use druid::widget::{ Flex, Checkbox , LensWrap};
+use druid::widget::{Checkbox, Flex, LensWrap};
+use druid::{
+    kurbo::Line, kurbo::PathEl, Affine, AppLauncher, BoxConstraints, Color, Cursor, Data, Env,
+    Event, EventCtx, FontDescriptor, FontFamily, KbKey, LayoutCtx, Lens, LifeCycle, LifeCycleCtx,
+    PaintCtx, RenderContext, Size, TextAlignment, TextLayout, UpdateCtx, Widget, WidgetExt,
+    WidgetId, WindowDesc,
+};
 use rust_hdl_pcb::adc::make_ads868x;
 use rust_hdl_pcb_core::prelude::*;
+use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
 #[derive(Data, Clone, PartialEq)]
@@ -107,11 +112,12 @@ impl Schematic {
             let mut layout = self.layout.lock().unwrap();
             let mut schematic_orientation = layout.part(id);
             if selector == " " {
-                schematic_orientation.rotation = if schematic_orientation.rotation == SchematicRotation::Vertical {
-                    SchematicRotation::Horizontal
-                } else {
-                    SchematicRotation::Vertical
-                };
+                schematic_orientation.rotation =
+                    if schematic_orientation.rotation == SchematicRotation::Vertical {
+                        SchematicRotation::Horizontal
+                    } else {
+                        SchematicRotation::Vertical
+                    };
             }
             if selector == "x" {
                 schematic_orientation.flipped_lr = !schematic_orientation.flipped_lr;
@@ -123,23 +129,27 @@ impl Schematic {
         }
     }
 
-    pub fn highlight_snap_points(& mut self, mouse: druid::kurbo::Point) -> Option<SnapPoint> {
+    pub fn highlight_snap_points(&mut self, mouse: druid::kurbo::Point) -> Option<SnapPoint> {
         for net in &self.circuit.nets {
             if self.net_selected == Some(net.name.clone()) || self.net_selected.is_none() {
-                let ports = net.pins
+                let ports = net
+                    .pins
                     .iter()
                     .map(|x| get_pin_net_location(&self.circuit, &self.layout.lock().unwrap(), x))
                     .collect::<Vec<_>>();
-                for (ndx,p) in ports.iter().enumerate() {
+                for (ndx, p) in ports.iter().enumerate() {
                     let port_point = (p.0 as f64, -p.1 as f64);
                     let port_screen = self.map_doc_to_screen(port_point);
-                    if (port_screen.x - mouse.x).abs().max(
-                        (port_screen.y - mouse.y).abs()) < 10.0 {
+                    if (port_screen.x - mouse.x)
+                        .abs()
+                        .max((port_screen.y - mouse.y).abs())
+                        < 10.0
+                    {
                         return Some(SnapPoint {
                             port: ndx + 1,
                             position: port_point,
                             net_name: net.name.clone(),
-                        })
+                        });
                     }
                 }
             }
@@ -164,8 +174,10 @@ impl Schematic {
                     if pt.port != 0 {
                         cmds.push(NetLayoutCmd::LineToPort(pt.port))
                     } else {
-                        cmds.push(NetLayoutCmd::LineToCoords(grid(pt.position.0),
-                                                                  grid(pt.position.1) ))
+                        cmds.push(NetLayoutCmd::LineToCoords(
+                            grid(pt.position.0),
+                            grid(pt.position.1),
+                        ))
                     }
                 }
             }
@@ -183,7 +195,6 @@ impl Schematic {
     pub fn hit_test(&self, pos: (f64, f64)) -> Option<String> {
         let layout = self.layout.lock().unwrap();
         for instance in &self.circuit.nodes {
-
             let part = get_details_from_instance(instance, &layout);
             let outline = &part.outline;
             if outline.len() != 0 {
@@ -192,7 +203,8 @@ impl Schematic {
                     let schematic_orientation = layout.part(&instance.id);
                     let cx = schematic_orientation.center.0 as f64;
                     let cy = schematic_orientation.center.1 as f64;
-                    let corners = if schematic_orientation.rotation == SchematicRotation::Horizontal {
+                    let corners = if schematic_orientation.rotation == SchematicRotation::Horizontal
+                    {
                         (
                             (r.p0.x as f64 + cx, r.p0.y as f64 + cy),
                             (r.p1.x as f64 + cx, r.p1.y as f64 + cy),
@@ -220,7 +232,7 @@ trait OrthoLineTo {
 }
 
 impl OrthoLineTo for BezPath {
-    fn ortho_line_to<P: Into<druid::Point>>(&mut self, p: P){
+    fn ortho_line_to<P: Into<druid::Point>>(&mut self, p: P) {
         let p3 = p.into();
 
         let last = match self.elements().last().unwrap() {
@@ -228,17 +240,18 @@ impl OrthoLineTo for BezPath {
             PathEl::LineTo(p) => p,
             PathEl::QuadTo(p1, p2) => p2,
             PathEl::CurveTo(p1, p2, p3) => p3,
-            PathEl::ClosePath =>  &druid::Point{x: f64::NAN, y: f64::NAN}
+            PathEl::ClosePath => &druid::Point {
+                x: f64::NAN,
+                y: f64::NAN,
+            },
         };
-        let p1 = (last.x + ( p3.x - last.x ) / 2.0, last.y);
-        let p2 = (last.x + ( p3.x - last.x  ) / 2.0, p3.y);
+        let p1 = (last.x + (p3.x - last.x) / 2.0, last.y);
+        let p2 = (last.x + (p3.x - last.x) / 2.0, p3.y);
         self.line_to(p1);
         self.line_to(p2);
         self.line_to(p3);
     }
 }
-
-
 
 struct SchematicViewer;
 
@@ -252,9 +265,11 @@ impl Widget<Schematic> for SchematicViewer {
                 if !data.wire_mode {
                     data.part_selected = data.hit_test(mouse.pos.into());
                 } else {
-                    let mut y = data.partial_net
+                    let mut y = data
+                        .partial_net
                         .iter()
-                        .map(|x| x.clone()).collect::<Vec<_>>();
+                        .map(|x| x.clone())
+                        .collect::<Vec<_>>();
                     let mut can_close = false;
                     if let Some(snap) = &data.snap_point {
                         y.push(snap.clone());
@@ -305,8 +320,10 @@ impl Widget<Schematic> for SchematicViewer {
                 let old_scale = data.scale;
                 data.scale *= (1.0 - mouse.wheel_delta.y / 100.0).max(0.9).min(1.1);
                 // Move the center of the page to zoom around the mouse
-                data.center.0 += (data.center.0 - mouse.pos.x) * (data.scale - old_scale) / old_scale;
-                data.center.1 += (data.center.1 - mouse.pos.y) * (data.scale - old_scale) / old_scale;
+                data.center.0 +=
+                    (data.center.0 - mouse.pos.x) * (data.scale - old_scale) / old_scale;
+                data.center.1 +=
+                    (data.center.1 - mouse.pos.y) * (data.scale - old_scale) / old_scale;
                 ctx.request_paint();
             }
             Event::KeyDown(key) => {
@@ -344,7 +361,13 @@ impl Widget<Schematic> for SchematicViewer {
     ) {
     }
 
-    fn update(&mut self, ctx: &mut UpdateCtx, _old_data: &Schematic, _data: &Schematic, _env: &Env) {
+    fn update(
+        &mut self,
+        ctx: &mut UpdateCtx,
+        _old_data: &Schematic,
+        _data: &Schematic,
+        _env: &Env,
+    ) {
         ctx.request_paint();
     }
 
@@ -362,8 +385,6 @@ impl Widget<Schematic> for SchematicViewer {
             bc.constrain(size)
         }
     }
-
-
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &Schematic, env: &Env) {
         let size = ctx.size();
@@ -416,7 +437,6 @@ impl Widget<Schematic> for SchematicViewer {
                 let mut net_layout = layout.net(&net.name);
                 if net_layout.len() == 0 {
                     continue;
-
                 }
                 let mut lp = (0.0, 0.0);
                 for cmd in net_layout {
@@ -427,8 +447,11 @@ impl Widget<Schematic> for SchematicViewer {
                         }
                         NetLayoutCmd::LineToPort(n) => {
                             lp = (ports[n - 1].0 as f64, -ports[n - 1].1 as f64);
-                            if (data.orthogonal_traces) { path.ortho_line_to(lp); }
-                            else { path.line_to(lp); }
+                            if (data.orthogonal_traces) {
+                                path.ortho_line_to(lp);
+                            } else {
+                                path.line_to(lp);
+                            }
                         }
                         NetLayoutCmd::MoveToCoords(x, y) => {
                             lp = (x as f64, y as f64);
@@ -436,8 +459,11 @@ impl Widget<Schematic> for SchematicViewer {
                         }
                         NetLayoutCmd::LineToCoords(x, y) => {
                             lp = (x as f64, y as f64);
-                            if (data.orthogonal_traces) { path.ortho_line_to(lp); }
-                            else { path.line_to(lp); }
+                            if (data.orthogonal_traces) {
+                                path.ortho_line_to(lp);
+                            } else {
+                                path.line_to(lp);
+                            }
                         }
                         NetLayoutCmd::Junction => {
                             let disk = druid::kurbo::Circle::new(lp, 25.0);
@@ -445,15 +471,12 @@ impl Widget<Schematic> for SchematicViewer {
                         }
                     }
                 }
-                ctx.stroke(
-                    path,
-                    &Color::from_hex_str("008000").unwrap(),
-                    10.0);
+                ctx.stroke(path, &Color::from_hex_str("008000").unwrap(), 10.0);
             }
             // Second pass is only the rats nest nets...
             for net in &data.circuit.nets {
                 if let Some(n) = &data.net_selected {
-                    if !net.name.eq(n)  {
+                    if !net.name.eq(n) {
                         continue;
                     }
                 }
@@ -495,11 +518,7 @@ impl Widget<Schematic> for SchematicViewer {
                         }
                     }
                 }
-                ctx.stroke(
-                    path,
-                    &Color::from_hex_str("000080").unwrap(),
-                    1.0
-                );
+                ctx.stroke(path, &Color::from_hex_str("000080").unwrap(), 1.0);
             }
             let mut path = BezPath::new();
             if data.partial_net.len() != 0 {
@@ -508,10 +527,7 @@ impl Widget<Schematic> for SchematicViewer {
                     path.line_to(data.partial_net[n].position);
                 }
             }
-            ctx.stroke(
-                path,
-                &Color::from_hex_str("7F0000").unwrap(),
-                10.0);
+            ctx.stroke(path, &Color::from_hex_str("7F0000").unwrap(), 10.0);
             if let Some(p) = &data.snap_point {
                 let disk = druid::kurbo::Circle::new(p.position, 20.0);
                 ctx.stroke(disk, &Color::from_hex_str("101010").unwrap(), 1.0);
@@ -821,13 +837,14 @@ fn render_glyph(ctx: &mut PaintCtx, g: &Glyph, hide_outline: bool, env: &Env, is
 
 fn make_root() -> impl Widget<Schematic> {
     let schematic_view = SchematicViewer {};
-    let ortho_check_box = LensWrap::new(Checkbox::new("orthogonal_traces"), Schematic::orthogonal_traces);
+    let ortho_check_box = LensWrap::new(
+        Checkbox::new("orthogonal_traces"),
+        Schematic::orthogonal_traces,
+    );
 
     let mut col = Flex::column();
-    col.add_flex_child(schematic_view.expand_width().expand_height(),1.0);
-    col.add_child(
-        Flex::row().with_child(
-            ortho_check_box));
+    col.add_flex_child(schematic_view.expand_width().expand_height(), 1.0);
+    col.add_child(Flex::row().with_child(ortho_check_box));
 
     col
 }
@@ -859,10 +876,10 @@ pub fn main() {
             },
             scale: 0.2,
             part_selected: None,
-            orthogonal_traces:false,
+            orthogonal_traces: false,
             net_selected: None,
             snap_point: None,
-            wire_mode: false
+            wire_mode: false,
         })
         .expect("launch failed");
 }
