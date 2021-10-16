@@ -1,5 +1,5 @@
-use rust_hdl_sim_chips::ads868x_sim::ADS868XSimulator;
 use rust_hdl_core::prelude::*;
+use rust_hdl_sim_chips::ads868x_sim::ADS868XSimulator;
 use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::spi_master::SPIConfig;
 

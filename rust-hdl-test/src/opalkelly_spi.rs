@@ -1,9 +1,9 @@
-use rust_hdl_sim_chips::ad7193_sim::{AD7193Config, AD7193Simulator};
 use crate::ok_tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::prelude::*;
 use rust_hdl_ok::spi::OKSPIMaster;
 use rust_hdl_ok_frontpanel_sys::OkError;
+use rust_hdl_sim_chips::ad7193_sim::{AD7193Config, AD7193Simulator};
 use rust_hdl_synth::yosys_validate;
 use std::thread::sleep;
 use std::time::Duration;

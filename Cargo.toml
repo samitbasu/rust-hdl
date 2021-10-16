@@ -14,5 +14,7 @@ members = [
     "rust-hdl-pcb-kicad",
     "rust-hdl-pcb-schematic-layout-tool",
     "rust-hdl-ok-widgets",
-    "rust-hdl-sim-chips"
+    "rust-hdl-sim-chips",
+    "rust-hdl-bsp-ok-xem6010",
+    "rust-hdl-bsp-ok-xem7010",
 ]

@@ -1,5 +1,3 @@
-use rust_hdl_sim_chips::ad7193_sim::AD7193Config;
-use rust_hdl_sim_chips::muxed_ad7193_sim::MuxedAD7193Simulators;
 use crate::ok_tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::bsp::{OpalKellyBSP, XEM6010, XEM7010};
@@ -8,6 +6,8 @@ use rust_hdl_ok::ok_host::OpalKellyHost;
 use rust_hdl_ok::ok_wire::WireIn;
 use rust_hdl_ok::spi::OKSPIMaster;
 use rust_hdl_ok_frontpanel_sys::OkError;
+use rust_hdl_sim_chips::ad7193_sim::AD7193Config;
+use rust_hdl_sim_chips::muxed_ad7193_sim::MuxedAD7193Simulators;
 use std::thread::sleep;
 use std::time::Duration;
 

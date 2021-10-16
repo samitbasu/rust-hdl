@@ -11,7 +11,6 @@ enum MAX31856State {
     DoWrite,
 }
 
-
 #[derive(LogicBlock)]
 pub struct MAX31856Simulator {
     // Slave SPI bus
@@ -37,11 +36,16 @@ pub struct MAX31856Simulator {
     reg_write_index: DFF<Bits<4>>,
 }
 
-const MAX31856_REG_INITS: [u8; 16] = [0x00, 0x03, 0xFF, 0x7F, 0xC0, 0x7F, 0xFF, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+const MAX31856_REG_INITS: [u8; 16] = [
+    0x00, 0x03, 0xFF, 0x7F, 0xC0, 0x7F, 0xFF, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+];
 
 impl MAX31856Simulator {
     pub fn new(config: SPIConfig) -> Self {
-        let reg_ram = MAX31856_REG_INITS.iter().map(|x| Bits::<8>::from(*x)).into();
+        let reg_ram = MAX31856_REG_INITS
+            .iter()
+            .map(|x| Bits::<8>::from(*x))
+            .into();
         Self {
             mosi: Default::default(),
             mclk: Default::default(),
@@ -57,7 +61,7 @@ impl MAX31856Simulator {
             rw_flag: Default::default(),
             spi_slave: SPISlave::new(config),
             state: DFF::new(MAX31856State::Ready),
-            reg_write_index: Default::default()
+            reg_write_index: Default::default(),
         }
     }
 }

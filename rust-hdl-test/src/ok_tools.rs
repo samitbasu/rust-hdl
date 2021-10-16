@@ -1,8 +1,8 @@
-use rust_hdl_sim_chips::ad7193_sim::AD7193_REG_WIDTHS;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::prelude::*;
 use rust_hdl_ok::spi::OKSPIMasterAddressConfig;
 use rust_hdl_ok_frontpanel_sys::{OkError, OkHandle};
+use rust_hdl_sim_chips::ad7193_sim::AD7193_REG_WIDTHS;
 use std::path::Path;
 use std::thread::sleep;
 use std::time::Duration;
