@@ -25,11 +25,7 @@ pub mod ok_wire;
 pub mod pins;
 pub mod prelude;
 pub mod spi;
-pub mod synth_6010;
-pub mod synth_7010;
 pub mod synth_common;
-pub mod ucf_gen;
-pub mod xdc_gen;
 
 const MHZ48: u64 = 48_000_000;
 
@@ -77,7 +73,7 @@ fn test_ok_host_synthesizable() {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
-    let ucf = crate::ucf_gen::generate_ucf(&uut);
+    let ucf = rust_hdl_toolchain_ise::ucf_gen::generate_ucf(&uut);
     println!("{}", ucf);
     rust_hdl_synth::yosys_validate("vlog", &vlog).unwrap();
 }

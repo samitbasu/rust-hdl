@@ -1,3 +1,5 @@
+pub mod ucf_gen;
+
 #[cfg(test)]
 mod tests {
     #[test]

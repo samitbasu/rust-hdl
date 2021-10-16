@@ -1,5 +1,5 @@
 [package]
-name = "rust_hdl_ok"
+name = "rust_hdl_ok_core"
 version = "0.1.0"
 edition = "2018"
 

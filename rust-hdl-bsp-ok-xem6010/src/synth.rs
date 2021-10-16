@@ -5,8 +5,8 @@ use std::process::Command;
 
 use rust_hdl_core::prelude::*;
 
-use crate::synth_common;
-use crate::ucf_gen::generate_ucf;
+use rust_hdl_ok::synth_common;
+use rust_hdl_toolchain_ise::ucf_gen::generate_ucf;
 
 #[derive(Clone, Debug)]
 pub struct ISEOptions {

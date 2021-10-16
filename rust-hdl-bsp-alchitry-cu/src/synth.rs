@@ -1,4 +1,4 @@
-use crate::pcf_gen::generate_pcf;
+use rust_hdl_toolchain_icestorm::pcf_gen::generate_pcf;
 use rust_hdl_core::check_connected::check_connected;
 use rust_hdl_core::prelude::{generate_verilog, Block};
 use std::fs::{create_dir, remove_dir_all, File};

@@ -1,3 +1,5 @@
+pub mod xdc_gen;
+
 #[cfg(test)]
 mod tests {
     #[test]

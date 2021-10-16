@@ -1,3 +1,5 @@
+pub mod synth;
+
 #[cfg(test)]
 mod tests {
     #[test]
