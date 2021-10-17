@@ -77,13 +77,13 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Logic for FIFOReduce
 
 #[test]
 fn fifo_reducer_is_synthesizable() {
-    rust_hdl_synth::top_wrap!(FIFOReducer<8, 4, false>, Wrapper);
+    rust_hdl_yosys_synth::top_wrap!(FIFOReducer<8, 4, false>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.empty.connect();
     dev.uut.full.connect();
     dev.uut.data_in.connect();
     dev.uut.clock.connect();
     dev.connect_all();
-    rust_hdl_synth::yosys_validate("fifo_reducer", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("fifo_reducer", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev));
 }

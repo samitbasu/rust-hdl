@@ -81,14 +81,14 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 
 #[test]
 fn component_fifo_is_synthesizable() {
-    rust_hdl_synth::top_wrap!(SynchronousFIFO<Bits<8>, 4, 5, 1>, Wrapper);
+    rust_hdl_yosys_synth::top_wrap!(SynchronousFIFO<Bits<8>, 4, 5, 1>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.clock.connect();
     dev.uut.read.connect();
     dev.uut.write.connect();
     dev.uut.data_in.connect();
     dev.connect_all();
-    rust_hdl_synth::yosys_validate("fifo", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("fifo", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev));
 }
 

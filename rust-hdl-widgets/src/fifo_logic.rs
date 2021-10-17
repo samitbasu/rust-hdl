@@ -113,14 +113,14 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Default
 
 #[test]
 fn fifo_read_is_synthesizable() {
-    rust_hdl_synth::top_wrap!(FIFOReadLogic<Bits<8>, 8, 9, 4>, Wrapper);
+    rust_hdl_yosys_synth::top_wrap!(FIFOReadLogic<Bits<8>, 8, 9, 4>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.write_address_delayed.connect();
     dev.uut.ram_read_data.connect();
     dev.uut.clock.connect();
     dev.uut.read.connect();
     dev.connect_all();
-    rust_hdl_synth::yosys_validate("fifo_read", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("fifo_read", &generate_verilog(&dev)).unwrap();
 }
 
 #[derive(LogicBlock)]
@@ -241,12 +241,12 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 
 #[test]
 fn fifo_write_is_synthesizable() {
-    rust_hdl_synth::top_wrap!(FIFOWriteLogic<Bits<8>, 8, 9, 4>, Wrapper);
+    rust_hdl_yosys_synth::top_wrap!(FIFOWriteLogic<Bits<8>, 8, 9, 4>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.read_address.connect();
     dev.uut.clock.connect();
     dev.uut.data_in.connect();
     dev.uut.write.connect();
     dev.connect_all();
-    rust_hdl_synth::yosys_validate("fifo_write", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("fifo_write", &generate_verilog(&dev)).unwrap();
 }

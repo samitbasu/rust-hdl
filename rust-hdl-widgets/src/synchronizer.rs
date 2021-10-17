@@ -24,12 +24,12 @@ impl Logic for BitSynchronizer {
 
 #[test]
 fn sync_is_synthesizable() {
-    rust_hdl_synth::top_wrap!(BitSynchronizer, Wrapper);
+    rust_hdl_yosys_synth::top_wrap!(BitSynchronizer, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.clock.connect();
     dev.uut.sig_in.connect();
     dev.connect_all();
-    rust_hdl_synth::yosys_validate("sync", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("sync", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev));
 }
 
@@ -103,7 +103,7 @@ impl<T: Synth> Logic for SyncSender<T> {
 
 #[test]
 fn sync_sender_is_synthesizable() {
-    rust_hdl_synth::top_wrap!(SyncSender<Bits<8>>, Wrapper);
+    rust_hdl_yosys_synth::top_wrap!(SyncSender<Bits<8>>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.clock.connect();
     dev.uut.sig_in.connect();
@@ -111,7 +111,7 @@ fn sync_sender_is_synthesizable() {
     dev.uut.send.connect();
     dev.connect_all();
     println!("{}", generate_verilog(&dev));
-    rust_hdl_synth::yosys_validate("sync_send", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("sync_send", &generate_verilog(&dev)).unwrap();
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
@@ -173,14 +173,14 @@ impl<T: Synth> Logic for SyncReceiver<T> {
 
 #[test]
 fn sync_receiver_is_synthesizable() {
-    rust_hdl_synth::top_wrap!(SyncReceiver<Bits<8>>, Wrapper);
+    rust_hdl_yosys_synth::top_wrap!(SyncReceiver<Bits<8>>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.clock.connect();
     dev.uut.sig_cross.connect();
     dev.uut.flag_in.connect();
     dev.connect_all();
     println!("{}", generate_verilog(&dev));
-    rust_hdl_synth::yosys_validate("sync_recv", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("sync_recv", &generate_verilog(&dev)).unwrap();
 }
 
 #[derive(LogicBlock, Default)]
@@ -221,12 +221,12 @@ impl<T: Synth> Logic for VectorSynchronizer<T> {
 
 #[test]
 fn test_vec_sync_synthesizable() {
-    rust_hdl_synth::top_wrap!(VectorSynchronizer<Bits<8>>, Wrapper);
+    rust_hdl_yosys_synth::top_wrap!(VectorSynchronizer<Bits<8>>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.clock_in.connect();
     dev.uut.sig_in.connect();
     dev.uut.send.connect();
     dev.uut.clock_out.connect();
     dev.connect_all();
-    rust_hdl_synth::yosys_validate("vsync", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("vsync", &generate_verilog(&dev)).unwrap();
 }

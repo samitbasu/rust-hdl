@@ -1,5 +1,4 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok::synth_common::filter_blackbox_directives;
 use rust_hdl_toolchain_vivado::xdc_gen::generate_xdc;
 use std::fs::{copy, create_dir, remove_dir_all, File};
 use std::io::Write;

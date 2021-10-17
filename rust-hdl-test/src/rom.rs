@@ -1,6 +1,6 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::rom::ROM;
+use rust_hdl_yosys_synth::yosys_validate;
 use std::collections::BTreeMap;
 use std::fs::File;
 

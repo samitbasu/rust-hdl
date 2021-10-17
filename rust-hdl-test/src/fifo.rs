@@ -1,8 +1,8 @@
 use rand::Rng;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::fifo_reducer::FIFOReducer;
 use rust_hdl_widgets::prelude::*;
+use rust_hdl_yosys_synth::yosys_validate;
 
 #[derive(LogicBlock, Default)]
 struct SyncVecTest {
@@ -73,7 +73,7 @@ fn test_sync_vec() {
 
 #[test]
 fn test_vector_synchronizer() {
-    rust_hdl_synth::top_wrap!(VectorSynchronizer<Bits<8>>, TestCircuit);
+    rust_hdl_yosys_synth::top_wrap!(VectorSynchronizer<Bits<8>>, TestCircuit);
     let mut dev: TestCircuit = Default::default();
     dev.uut.clock_in.connect();
     dev.uut.clock_out.connect();

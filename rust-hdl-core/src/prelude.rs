@@ -27,6 +27,7 @@ pub use crate::simulate::{Sim, SimError, Simulation};
 pub use crate::synth::Synth;
 pub use crate::synth::VCDValue;
 pub use crate::vcd_probe::{write_vcd_change, write_vcd_dump, write_vcd_header};
+pub use crate::verilog_gen::filter_blackbox_directives;
 pub use crate::verilog_gen::VerilogCodeGenerator;
 pub use crate::verilog_visitor::VerilogVisitor;
 pub use crate::wait_clock_cycle;

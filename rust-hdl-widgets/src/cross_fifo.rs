@@ -117,7 +117,7 @@ fn cross_widen_fifo_is_synthesizable() {
     dev.uut.read.connect();
     dev.uut.read_clock.connect();
     dev.connect_all();
-    rust_hdl_synth::yosys_validate("cross_wide", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("cross_wide", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev))
 }
 
@@ -233,7 +233,7 @@ fn cross_narrow_fifo_is_synthesizable() {
     dev.uut.read.connect();
     dev.uut.read_clock.connect();
     dev.connect_all();
-    rust_hdl_synth::yosys_validate("cross_narrow", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("cross_narrow", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev))
 }
 

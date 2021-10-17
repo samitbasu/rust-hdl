@@ -24,6 +24,5 @@ pub mod ok_trigger;
 pub mod ok_wire;
 pub mod prelude;
 pub mod spi;
-pub mod synth_common;
 
 pub const MHZ48: u64 = 48_000_000;

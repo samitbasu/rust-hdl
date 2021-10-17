@@ -1,6 +1,6 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::edge_detector::EdgeDetector;
+use rust_hdl_yosys_synth::yosys_validate;
 
 #[test]
 fn test_rising_edge_detector_works() {

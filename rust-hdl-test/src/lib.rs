@@ -2,10 +2,8 @@ use std::fs::File;
 use std::time::Duration;
 
 use rust_hdl_core::prelude::*;
-use rust_hdl_macros::LogicBlock;
-use rust_hdl_synth::yosys_validate;
-use rust_hdl_widgets::prelude::Shot;
-use rust_hdl_widgets::strobe::Strobe;
+use rust_hdl_widgets::prelude::*;
+use rust_hdl_yosys_synth::yosys_validate;
 
 pub mod alchitry_cu_icepll;
 pub mod alchitry_cu_pulser;

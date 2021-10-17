@@ -1,9 +1,7 @@
+use crate::pins::*;
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::ok_hi::OpalKellyHostInterface;
-use rust_hdl_ok_core::ok_host::OpalKellyHost;
 use rust_hdl_ok_core::prelude::*;
-use rust_hdl_ok_core::MHZ48;
-use rust_hdl_widgets::pulser::Pulser;
+use rust_hdl_widgets::prelude::*;
 use std::time::Duration;
 
 pub mod pins;

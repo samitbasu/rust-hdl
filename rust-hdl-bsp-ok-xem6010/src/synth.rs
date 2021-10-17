@@ -5,7 +5,6 @@ use std::process::Command;
 
 use rust_hdl_core::prelude::*;
 
-use rust_hdl_ok::synth_common;
 use rust_hdl_toolchain_ise::ucf_gen::generate_ucf;
 
 #[derive(Clone, Debug)]
@@ -46,7 +45,7 @@ impl Default for ISEOptions {
 pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, options: ISEOptions) {
     uut.connect_all();
     check_connected(&uut);
-    let verilog_text = synth_common::filter_blackbox_directives(&generate_verilog(&uut));
+    let verilog_text = filter_blackbox_directives(&generate_verilog(&uut));
     let ucf_text = generate_ucf(&uut);
     let dir = PathBuf::from(prefix);
     let _ = remove_dir_all(&dir);

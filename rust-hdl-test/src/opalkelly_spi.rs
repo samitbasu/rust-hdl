@@ -4,7 +4,7 @@ use rust_hdl_ok::prelude::*;
 use rust_hdl_ok::spi::OKSPIMaster;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_sim_chips::ad7193_sim::{AD7193Config, AD7193Simulator};
-use rust_hdl_synth::yosys_validate;
+use rust_hdl_yosys_synth::yosys_validate;
 use std::thread::sleep;
 use std::time::Duration;
 

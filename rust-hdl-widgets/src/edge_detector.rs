@@ -41,5 +41,5 @@ fn test_edge_detector_synthesizes() {
     uut.input_signal.connect();
     uut.clock.connect();
     uut.connect_all();
-    rust_hdl_synth::yosys_validate("edge", &generate_verilog(&uut)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("edge", &generate_verilog(&uut)).unwrap();
 }

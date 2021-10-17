@@ -1,8 +1,8 @@
 use crate::snore::snore;
 use rust_hdl_core::check_connected::check_connected;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::*;
+use rust_hdl_yosys_synth::yosys_validate;
 use std::collections::BTreeMap;
 
 #[derive(LogicBlock)]

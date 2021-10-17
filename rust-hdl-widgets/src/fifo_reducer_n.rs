@@ -120,6 +120,6 @@ fn fifo_reducern_is_synthesizable() {
     dev.uut.data_in.connect();
     dev.uut.clock.connect();
     dev.connect_all();
-    rust_hdl_synth::yosys_validate("fifo_reducern", &generate_verilog(&dev)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("fifo_reducern", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev));
 }
