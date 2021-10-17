@@ -6,18 +6,18 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust_hdl_core = {path="../rust-hdl-core"}
-rust_hdl_macros = {path="../rust-hdl-macros"}
-rust_hdl_widgets = {path="../rust-hdl-widgets"}
-rust_hdl_synth = {path= "../rust-hdl-yosys-synth" }
-rust_hdl_alchitry_cu = {path= "../rust-hdl-bsp-alchitry-cu" }
-rust_hdl_ok_core = {path= "../rust-hdl-ok-core" }
-rust_hdl_ok_frontpanel_sys = {path= "../rust-hdl-ok-frontpanel-sys", optional=true}
+rust-hdl-core = {path="../rust-hdl-core"}
+rust-hdl-macros = {path="../rust-hdl-macros"}
+rust-hdl-widgets = {path="../rust-hdl-widgets"}
+rust-hdl-yosys-synth = {path= "../rust-hdl-yosys-synth" }
+rust-hdl-alchitry-cu = {path= "../rust-hdl-bsp-alchitry-cu" }
+rust-hdl-ok-core = {path= "../rust-hdl-ok-core" }
+rust-hdl-ok-frontpanel-sys = {path= "../rust-hdl-ok-frontpanel-sys", optional=true}
 num-bigint = "0.4.0"
 rand = "0.8.4"
 array-init = "2.0.0"
 regex = "^1"
 
 [features]
-fpga_hw_test = ["rust_hdl_ok_frontpanel_sys"]
+fpga_hw_test = ["rust-hdl-ok-frontpanel-sys"]
 ise_synth = []

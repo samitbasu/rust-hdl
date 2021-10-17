@@ -1,8 +1,4 @@
-use rust_hdl_core::bits::Bits;
-use rust_hdl_core::clock::Clock;
-use rust_hdl_core::constraint::{Constraint, PeriodicTiming, PinConstraint, SignalType, Timing};
-use rust_hdl_core::direction::{In, Out};
-use rust_hdl_core::signal::Signal;
+use rust_hdl_core::prelude::*;
 
 pub fn xem_6010_leds() -> Signal<Out, Bits<8>> {
     let mut x = Signal::default();

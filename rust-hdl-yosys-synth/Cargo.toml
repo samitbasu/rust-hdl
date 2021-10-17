@@ -1,5 +1,5 @@
 [package]
-name = "rust_hdl_synth"
+name = "rust-hdl-yosys-synth"
 version = "0.1.0"
 edition = "2018"
 
@@ -7,4 +7,4 @@ edition = "2018"
 
 [dependencies]
 regex = "1.5.4"
-rust_hdl_core = {path="../rust-hdl-core"}
+rust-hdl-core = {path="../rust-hdl-core"}

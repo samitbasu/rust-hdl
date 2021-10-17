@@ -1,5 +1,5 @@
 [package]
-name = "rust_hdl_macros"
+name = "rust-hdl-macros"
 version = "0.1.0"
 edition = "2018"
 
