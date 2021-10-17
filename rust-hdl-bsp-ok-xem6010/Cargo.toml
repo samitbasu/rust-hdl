@@ -7,3 +7,6 @@ edition = "2018"
 
 [dependencies]
 rust-hdl-core = {path="../rust-hdl-core"}
+rust-hdl-toolchain-ise = {path="../rust-hdl-toolchain-ise"}
+rust-hdl-ok-core = {path="../rust-hdl-ok-core"}
+rust-hdl-widgets = {path="../rust-hdl-widgets"}

@@ -1,6 +1,6 @@
 use crate::dff::DFF;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::TopWrap;
+use rust_hdl_yosys_synth::TopWrap;
 
 pub enum WordOrder {
     LeastSignificantFirst,

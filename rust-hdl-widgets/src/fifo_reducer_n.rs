@@ -1,7 +1,7 @@
 use crate::dff::DFF;
 use crate::fifo_expander_n::WordOrder;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::TopWrap;
+use rust_hdl_yosys_synth::TopWrap;
 
 #[derive(LogicBlock)]
 pub struct FIFOReducerN<const DW: usize, const DN: usize> {

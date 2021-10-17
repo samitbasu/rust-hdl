@@ -1,5 +1,5 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::{yosys_validate, TopWrap};
+use rust_hdl_yosys_synth::{yosys_validate, TopWrap};
 
 #[derive(LogicBlock, Default)]
 pub struct OpalKellySystemClock7 {

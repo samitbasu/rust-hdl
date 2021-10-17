@@ -15,4 +15,5 @@ members = [
     "rust-hdl-toolchain-ise",
     "rust-hdl-toolchain-vivado",
     "rust-hdl-toolchain-icestorm",
+    "rust-hdl-toolchain-common",
 ]

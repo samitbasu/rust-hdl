@@ -6,3 +6,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rust-hdl-core = {path="../rust-hdl-core"}
+rust-hdl-widgets = {path="../rust-hdl-widgets"}
+rust-hdl-yosys-synth = {path="../rust-hdl-yosys-synth"}
+array-init = "2.0.0"

@@ -129,13 +129,14 @@ fn test_ok_spi_master_synthesizes() {
         cpha: true,
         cpol: true,
     };
-    let mut uut = rust_hdl_synth::TopWrap::new(OKSPIMaster::new(Default::default(), spi_config));
+    let mut uut =
+        rust_hdl_yosys_synth::TopWrap::new(OKSPIMaster::new(Default::default(), spi_config));
     uut.uut.wires.link_connect_dest();
     uut.uut.ok1.connect();
     uut.uut.clock.connect();
     uut.connect_all();
     println!("{}", generate_verilog(&uut));
-    rust_hdl_synth::yosys_validate("ok_spi_synth", &generate_verilog(&uut)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("ok_spi_synth", &generate_verilog(&uut)).unwrap();
 }
 
 #[test]
@@ -196,7 +197,7 @@ fn test_ok_spi_master_works() {
     uut.slave.continued_transaction.connect();
     uut.slave.disabled.connect();
     uut.connect_all();
-    rust_hdl_synth::yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
+    rust_hdl_yosys_synth::yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<TopOK>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<TopOK>| {

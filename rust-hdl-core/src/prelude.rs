@@ -23,7 +23,7 @@ pub use crate::probe::Probe;
 pub use crate::signal::Signal;
 pub use crate::sim_assert;
 pub use crate::simulate::simulate;
-pub use crate::simulate::{Sim, Simulation};
+pub use crate::simulate::{Sim, SimError, Simulation};
 pub use crate::synth::Synth;
 pub use crate::synth::VCDValue;
 pub use crate::vcd_probe::{write_vcd_change, write_vcd_dump, write_vcd_header};

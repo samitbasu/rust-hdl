@@ -1,7 +1,7 @@
 // Wrap the MIG (Memory Interface Generator) into a RustHDL object
 use rust_hdl_core::direction::Direction;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::TopWrap;
+use rust_hdl_yosys_synth::TopWrap;
 
 #[derive(Clone, LogicInterface, Default)]
 pub struct MCBInterface1GDDR2 {

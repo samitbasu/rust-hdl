@@ -8,4 +8,5 @@ edition = "2018"
 [dependencies]
 rust-hdl-core = {path="../rust-hdl-core"}
 rust-hdl-yosys-synth = {path= "../rust-hdl-yosys-synth" }
+rust-hdl-toolchain-icestorm = {path="../rust-hdl-toolchain-icestorm"}
 

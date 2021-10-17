@@ -1,5 +1,6 @@
-use rust_hdl_core::prelude::*;
 use std::collections::HashMap;
+
+use rust_hdl_core::prelude::*;
 
 #[derive(Default)]
 struct UCFGenerator {
@@ -46,24 +47,6 @@ pub fn substitute_refs(
     ret
 }
 
-pub fn map_signal_type_to_xilinx_string(k: &SignalType) -> &str {
-    match k {
-        SignalType::LowVoltageCMOS_1v8 => "LVCMOS18",
-        SignalType::LowVoltageCMOS_3v3 => "LVCMOS33",
-        SignalType::StubSeriesTerminatedLogic_II => "SSTL18_II",
-        SignalType::DifferentialStubSeriesTerminatedLogic_II => "DIFF_SSTL18_II",
-        SignalType::StubSeriesTerminatedLogic_II_No_Termination => "SSTL18_II | IN_TERM=NONE",
-        SignalType::DifferentialStubSeriesTerminatedLogic_II_No_Termination => {
-            "DIFF_SSTL18_II | IN_TERM=NONE"
-        }
-        SignalType::Custom(c) => c,
-        SignalType::LowVoltageDifferentialSignal_2v5 => "LVDS_25",
-        SignalType::StubSeriesTerminatedLogic_1v5 => "SSTL15",
-        SignalType::LowVoltageCMOS_1v5 => "LVCMOS15",
-        SignalType::DifferentialStubSeriesTerminatedLogic_1v5 => "DIFF_SSTL15",
-    }
-}
-
 impl Probe for UCFGenerator {
     fn visit_start_scope(&mut self, name: &str, _node: &dyn Block) {
         let _top_level = self.path.to_string();
@@ -92,7 +75,7 @@ impl Probe for UCFGenerator {
                     self.ucf.push(format!("{} LOC={}", prefix, l));
                 }
                 Constraint::Kind(k) => {
-                    let name = map_signal_type_to_xilinx_string(k);
+                    let name = rust_hdl_toolchain_common::map_signal_type_to_xilinx_string(k);
                     self.ucf.push(format!("{} IOSTANDARD={}", prefix, name))
                 }
                 Constraint::Timing(t) => {

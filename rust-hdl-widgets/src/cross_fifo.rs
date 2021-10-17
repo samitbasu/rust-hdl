@@ -3,7 +3,7 @@ use crate::fifo_expander_n::WordOrder;
 use crate::prelude::{FIFOExpanderN, FIFOReducerN};
 use crate::sync_fifo::SynchronousFIFO;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::TopWrap;
+use rust_hdl_yosys_synth::TopWrap;
 
 #[derive(LogicBlock)]
 pub struct CrossWidenFIFO<

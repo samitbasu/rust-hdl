@@ -1,9 +1,6 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_core::simulate::SimError;
-use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::prelude::*;
-use rust_hdl_widgets::spi_master::{SPIConfig, SPIMaster};
-use rust_hdl_widgets::spi_slave::SPISlave;
+use rust_hdl_yosys_synth::yosys_validate;
 use std::time::Duration;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]

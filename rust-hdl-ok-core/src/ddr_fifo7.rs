@@ -2,10 +2,10 @@ use crate::ddr_fifo::DDRFIFOState;
 use crate::mcb_if::MCBInterface4GDDR3;
 use crate::mig7::MemoryInterfaceGenerator7Series;
 use rust_hdl_core::prelude::*;
-use rust_hdl_synth::yosys_validate;
 use rust_hdl_widgets::cross_fifo::CrossWidenFIFO;
 use rust_hdl_widgets::dff::DFF;
 use rust_hdl_widgets::prelude::CrossNarrowFIFO;
+use rust_hdl_yosys_synth::yosys_validate;
 
 #[derive(LogicState, Debug, Copy, Clone, PartialEq)]
 pub enum DDR7FIFOState {
@@ -148,7 +148,7 @@ impl<const N: usize> Logic for DDR7FIFO<N> {
 
 #[test]
 fn test_ddr7_fifo_gen() {
-    use rust_hdl_synth::TopWrap;
+    use rust_hdl_yosys_synth::TopWrap;
     let mut ddr = TopWrap::new(DDR7FIFO::<32>::default());
     ddr.uut.sys_clock_n.connect();
     ddr.uut.sys_clock_p.connect();
