@@ -1,9 +1,15 @@
-use crate::pins::*;
+use std::time::Duration;
+
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok_core::prelude::*;
 use rust_hdl_widgets::prelude::*;
-use std::time::Duration;
 
+use crate::pins::*;
+
+pub mod ddr_fifo;
+pub mod mcb_if;
+pub mod mig;
+pub mod ok_download_ddr;
 pub mod pins;
 pub mod synth;
 

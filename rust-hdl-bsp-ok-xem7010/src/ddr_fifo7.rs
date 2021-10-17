@@ -1,11 +1,9 @@
-use crate::ddr_fifo::DDRFIFOState;
 use crate::mcb_if::MCBInterface4GDDR3;
-use crate::mig7::MemoryInterfaceGenerator7Series;
 use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::cross_fifo::CrossWidenFIFO;
-use rust_hdl_widgets::dff::DFF;
-use rust_hdl_widgets::prelude::CrossNarrowFIFO;
+use rust_hdl_widgets::prelude::*;
 use rust_hdl_yosys_synth::yosys_validate;
+
+use crate::mig7::MemoryInterfaceGenerator7Series;
 
 #[derive(LogicState, Debug, Copy, Clone, PartialEq)]
 pub enum DDR7FIFOState {

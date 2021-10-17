@@ -1,8 +1,9 @@
+use std::collections::BTreeMap;
+
 use crate::mcb_if::MCBInterface4GDDR3;
 use rust_hdl_core::ast::Wrapper;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::dff::DFF;
-use std::collections::BTreeMap;
 
 #[derive(LogicBlock, Default)]
 pub struct MemoryInterfaceGenerator7Series {

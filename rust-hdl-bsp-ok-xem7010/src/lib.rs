@@ -1,4 +1,3 @@
-use crate::pins::*;
 use rust_hdl_core::bits::Bits;
 use rust_hdl_core::clock::Clock;
 use rust_hdl_core::direction::{In, Out};
@@ -6,6 +5,13 @@ use rust_hdl_core::prelude::Signal;
 use rust_hdl_ok_core::bsp::OpalKellyBSP;
 use rust_hdl_ok_core::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok_core::ok_host::OpalKellyHost;
+
+use crate::pins::*;
+
+pub mod ddr_fifo7;
+mod mcb_if;
+pub mod mig7;
+pub mod ok_download_ddr7;
 pub mod pins;
 pub mod synth;
 
