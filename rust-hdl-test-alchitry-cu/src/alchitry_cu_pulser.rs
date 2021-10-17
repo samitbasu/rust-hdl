@@ -1,6 +1,6 @@
-use rust_hdl_alchitry_cu::synth::generate_bitstream;
+use rust_hdl_bsp_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::pulser::Pulser;
+use rust_hdl_widgets::prelude::*;
 use std::time::Duration;
 
 const MHZ100: u64 = 100_000_000;
@@ -29,8 +29,8 @@ impl Default for AlchitryCuPulser {
         let pulser = Pulser::new(MHZ100, 1.0, Duration::from_millis(250));
         Self {
             pulser,
-            clock: rust_hdl_alchitry_cu::pins::clock(),
-            leds: rust_hdl_alchitry_cu::pins::leds(),
+            clock: rust_hdl_bsp_alchitry_cu::pins::clock(),
+            leds: rust_hdl_bsp_alchitry_cu::pins::leds(),
         }
     }
 }

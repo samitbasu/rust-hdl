@@ -1,5 +1,5 @@
 [package]
-name = "rust-hdl-alchitry-cu"
+name = "rust-hdl-bsp-alchitry-cu"
 version = "0.1.0"
 edition = "2018"
 

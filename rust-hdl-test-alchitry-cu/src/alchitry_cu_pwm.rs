@@ -1,5 +1,4 @@
-use crate::snore::snore;
-use rust_hdl_core::check_connected::check_connected;
+use rust_hdl_test::snore::snore;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_yosys_synth::yosys_validate;
@@ -45,9 +44,9 @@ impl<const P: usize> AlchitryCuPWM<P> {
             .collect::<BTreeMap<_, _>>();
         Self {
             pwm: PulseWidthModulator::default(),
-            clock: rust_hdl_alchitry_cu::pins::clock(),
+            clock: rust_hdl_bsp_alchitry_cu::pins::clock(),
             strobe: Strobe::new(clock_freq, 60.0),
-            leds: rust_hdl_alchitry_cu::pins::leds(),
+            leds: rust_hdl_bsp_alchitry_cu::pins::leds(),
             rom: ROM::new(rom),
             counter: DFF::new(0_u8.into()),
         }
@@ -62,5 +61,5 @@ fn test_pwm_synthesizes() {
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
     yosys_validate("pwm_cu2", &vlog).unwrap();
-    rust_hdl_alchitry_cu::synth::generate_bitstream(uut, "pwm_cu2");
+    rust_hdl_bsp_alchitry_cu::synth::generate_bitstream(uut, "pwm_cu2");
 }

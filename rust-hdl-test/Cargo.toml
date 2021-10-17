@@ -1,5 +1,5 @@
 [package]
-name = "rust_hdl_test"
+name = "rust-hdl-test"
 version = "0.1.0"
 edition = "2018"
 
@@ -10,9 +10,10 @@ rust-hdl-core = {path="../rust-hdl-core"}
 rust-hdl-macros = {path="../rust-hdl-macros"}
 rust-hdl-widgets = {path="../rust-hdl-widgets"}
 rust-hdl-yosys-synth = {path= "../rust-hdl-yosys-synth" }
-rust-hdl-alchitry-cu = {path= "../rust-hdl-bsp-alchitry-cu" }
+#rust-hdl-alchitry-cu = {path= "../rust-hdl-bsp-alchitry-cu" }
 rust-hdl-ok-core = {path= "../rust-hdl-ok-core" }
 rust-hdl-ok-frontpanel-sys = {path= "../rust-hdl-ok-frontpanel-sys", optional=true}
+rust-hdl-sim-chips = {path="../rust-hdl-sim-chips"}
 num-bigint = "0.4.0"
 rand = "0.8.4"
 array-init = "2.0.0"

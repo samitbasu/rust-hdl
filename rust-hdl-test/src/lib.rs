@@ -5,12 +5,6 @@ use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_yosys_synth::yosys_validate;
 
-pub mod alchitry_cu_icepll;
-pub mod alchitry_cu_pulser;
-pub mod alchitry_cu_pulser_pll;
-pub mod alchitry_cu_pwm;
-pub mod alchitry_cu_pwm_vec;
-pub mod alchitry_cu_pwm_vec_srom;
 pub mod base_tests;
 pub mod edge_detector;
 pub mod expander;
