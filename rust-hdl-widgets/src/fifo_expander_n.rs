@@ -1,6 +1,5 @@
 use crate::dff::DFF;
 use rust_hdl_core::prelude::*;
-use rust_hdl_yosys_synth::TopWrap;
 
 pub enum WordOrder {
     LeastSignificantFirst,
@@ -107,6 +106,7 @@ impl<const DN: usize, const DW: usize> FIFOExpanderN<DN, DW> {
 
 #[test]
 fn fifo_expandern_is_synthesizable() {
+    use rust_hdl_yosys_synth::TopWrap;
     let mut dev = TopWrap::new(FIFOExpanderN::<4, 32>::new(WordOrder::MostSignificantFirst));
     dev.uut.empty.connect();
     dev.uut.full.connect();

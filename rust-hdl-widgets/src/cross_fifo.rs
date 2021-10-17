@@ -3,7 +3,6 @@ use crate::fifo_expander_n::WordOrder;
 use crate::prelude::{FIFOExpanderN, FIFOReducerN};
 use crate::sync_fifo::SynchronousFIFO;
 use rust_hdl_core::prelude::*;
-use rust_hdl_yosys_synth::TopWrap;
 
 #[derive(LogicBlock)]
 pub struct CrossWidenFIFO<
@@ -108,6 +107,7 @@ impl<
 
 #[test]
 fn cross_widen_fifo_is_synthesizable() {
+    use rust_hdl_yosys_synth::TopWrap;
     let mut dev = TopWrap::new(CrossWidenFIFO::<16, 8, 9, 128, 5, 6>::new(
         WordOrder::MostSignificantFirst,
     ));
@@ -224,6 +224,7 @@ impl<
 
 #[test]
 fn cross_narrow_fifo_is_synthesizable() {
+    use rust_hdl_yosys_synth::TopWrap;
     let mut dev = TopWrap::new(CrossNarrowFIFO::<128, 5, 6, 16, 8, 9>::new(
         WordOrder::MostSignificantFirst,
     ));

@@ -1,7 +1,6 @@
 use crate::mcb_if::MCBInterface4GDDR3;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::prelude::*;
-use rust_hdl_yosys_synth::yosys_validate;
 
 use crate::mig7::MemoryInterfaceGenerator7Series;
 
@@ -146,6 +145,7 @@ impl<const N: usize> Logic for DDR7FIFO<N> {
 
 #[test]
 fn test_ddr7_fifo_gen() {
+    use rust_hdl_yosys_synth::yosys_validate;
     use rust_hdl_yosys_synth::TopWrap;
     let mut ddr = TopWrap::new(DDR7FIFO::<32>::default());
     ddr.uut.sys_clock_n.connect();

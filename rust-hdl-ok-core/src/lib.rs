@@ -1,14 +1,9 @@
 #![allow(non_camel_case_types)]
 
-use std::time::Duration;
-
 use ok_hi::OpalKellyHostInterface;
 use ok_host::OpalKellyHost;
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::pulser::Pulser;
 
 pub mod bsp;
-pub mod mcb_if;
 pub mod ok_download;
 pub mod ok_hi;
 pub mod ok_host;

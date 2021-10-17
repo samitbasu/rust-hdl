@@ -1,5 +1,4 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_yosys_synth::{yosys_validate, TopWrap};
 
 #[derive(LogicBlock, Default)]
 pub struct OpalKellySystemClock7 {
@@ -171,6 +170,7 @@ endmodule
 
 #[test]
 fn test_synth() {
+    use rust_hdl_yosys_synth::{yosys_validate, TopWrap};
     let mut uut = TopWrap::new(OpalKellySystemClock7::default());
     uut.uut.clock_n.connect();
     uut.uut.clock_p.connect();

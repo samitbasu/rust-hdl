@@ -1,6 +1,5 @@
 use crate::ad7193_sim::{AD7193Config, AD7193Simulator};
 use rust_hdl_core::prelude::*;
-use rust_hdl_yosys_synth::yosys_validate;
 
 #[derive(LogicBlock)]
 pub struct MuxedAD7193Simulators {
@@ -57,6 +56,7 @@ impl Logic for MuxedAD7193Simulators {
 
 #[test]
 fn test_mux_is_synthesizable() {
+    use rust_hdl_yosys_synth::yosys_validate;
     let mut uut = MuxedAD7193Simulators::new(AD7193Config::hw());
     uut.mclk.connect();
     uut.mosi.connect();

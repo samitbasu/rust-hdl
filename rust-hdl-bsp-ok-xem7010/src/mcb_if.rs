@@ -1,6 +1,4 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::mcb_if;
-use rust_hdl_yosys_synth::TopWrap;
 
 #[derive(Clone, LogicInterface, Default)]
 pub struct MCBInterface4GDDR3 {
@@ -156,6 +154,7 @@ impl MCBInterface4GDDR3 {
 
 #[test]
 fn test_dram7_if_xdc() {
+    use rust_hdl_yosys_synth::TopWrap;
     let uut = TopWrap::new(MCBInterface4GDDR3::xem_7010_constrained());
     let xdc = rust_hdl_toolchain_vivado::xdc_gen::generate_xdc(&uut);
     println!("{}", xdc);

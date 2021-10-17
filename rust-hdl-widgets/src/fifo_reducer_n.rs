@@ -1,7 +1,6 @@
 use crate::dff::DFF;
 use crate::fifo_expander_n::WordOrder;
 use rust_hdl_core::prelude::*;
-use rust_hdl_yosys_synth::TopWrap;
 
 #[derive(LogicBlock)]
 pub struct FIFOReducerN<const DW: usize, const DN: usize> {
@@ -114,6 +113,7 @@ impl<const DW: usize, const DN: usize> FIFOReducerN<DW, DN> {
 
 #[test]
 fn fifo_reducern_is_synthesizable() {
+    use rust_hdl_yosys_synth::TopWrap;
     let mut dev = TopWrap::new(FIFOReducerN::<32, 4>::new(WordOrder::MostSignificantFirst));
     dev.uut.empty.connect();
     dev.uut.full.connect();

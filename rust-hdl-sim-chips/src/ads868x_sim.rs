@@ -1,6 +1,5 @@
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::prelude::*;
-use rust_hdl_yosys_synth::yosys_validate;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum ADS868XState {
@@ -223,6 +222,7 @@ impl Logic for ADS868XSimulator {
 
 #[test]
 fn test_ads8689_synthesizes() {
+    use rust_hdl_yosys_synth::yosys_validate;
     let mut uut = ADS868XSimulator::new(ADS868XSimulator::spi_sw());
     uut.mosi.connect();
     uut.mclk.connect();
@@ -299,6 +299,7 @@ fn mk_test8689() -> Test8689 {
 
 #[test]
 fn test_yosys_validate_test_fixture() {
+    use rust_hdl_yosys_synth::yosys_validate;
     let uut = mk_test8689();
     yosys_validate("8689_1", &generate_verilog(&uut)).unwrap();
 }

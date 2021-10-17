@@ -1,6 +1,5 @@
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::prelude::*;
-use rust_hdl_yosys_synth::yosys_validate;
 use std::time::Duration;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -235,6 +234,7 @@ impl Logic for AD7193Simulator {
 
 #[test]
 fn test_ad7193_synthesizes() {
+    use rust_hdl_yosys_synth::yosys_validate;
     let mut uut = AD7193Simulator::new(AD7193Config::sw());
     uut.mosi.connect();
     uut.mclk.connect();
@@ -343,6 +343,7 @@ fn mk_test7193() -> Test7193 {
 
 #[test]
 fn test_yosys_validate_test_fixture() {
+    use rust_hdl_yosys_synth::yosys_validate;
     let uut = mk_test7193();
     yosys_validate("7193_1", &generate_verilog(&uut)).unwrap();
 }
