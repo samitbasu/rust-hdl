@@ -3,7 +3,7 @@
 members = [
     "rust-hdl-core",
     "rust-hdl-macros",
-    "rust-hdl-test",
+    "rust-hdl-test-core",
     "rust-hdl-widgets",
     "rust-hdl-yosys-synth",
     "rust-hdl-bsp-alchitry-cu",

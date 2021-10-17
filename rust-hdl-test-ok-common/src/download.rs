@@ -1,9 +1,10 @@
-use crate::ok_tools::ok_test_prelude;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok::ok_download::{OpalKellyDownload32FIFO, OpalKellyDownloadFIFO};
-use rust_hdl_ok::prelude::*;
+use rust_hdl_core::bits::{Bit, bit_cast, Bits};
+use rust_hdl_core::direction::Local;
+use rust_hdl_core::logic::Logic;
+use rust_hdl_core::signal::Signal;
+use rust_hdl_macros::{hdl_gen, logic_block as LogicBlock};
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, make_u32_buffer, OkError};
-use rust_hdl_widgets::prelude::*;
+use rust_hdl_widgets::dff::DFF;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyDownload32FIFOTest {
@@ -42,24 +43,8 @@ impl OpalKellyDownload32FIFOTest {
     }
 }
 
-#[test]
-fn test_opalkelly_xem_6010_synth_download32() {
-    let mut uut = OpalKellyDownload32FIFOTest::new::<XEM6010>();
-    uut.hi.link_connect_dest();
-    uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "xem_6010_download32");
-}
-
-#[test]
-fn test_opalkelly_xem_7010_synth_download32() {
-    let mut uut = OpalKellyDownload32FIFOTest::new::<XEM7010>();
-    uut.hi.link_connect_dest();
-    uut.connect_all();
-    crate::ok_tools::synth_obj_7010(uut, "xem_7010_download32");
-}
-
 #[cfg(test)]
-fn test_opalkelly_download32_runtime(bit_file: &str) -> Result<(), OkError> {
+pub fn test_opalkelly_download32_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     // Read the data in 256*2 = 512 byte blocks
     let mut data = vec![0_u8; 1024 * 128];
@@ -75,16 +60,6 @@ fn test_opalkelly_download32_runtime(bit_file: &str) -> Result<(), OkError> {
         }
     }
     Ok(())
-}
-
-#[test]
-fn test_opalkelly_xem_6010_download32_runtime() -> Result<(), OkError> {
-    test_opalkelly_download32_runtime("xem_6010_download32/top.bit")
-}
-
-#[test]
-fn test_opalkelly_xem_7010_download32_runtime() -> Result<(), OkError> {
-    test_opalkelly_download32_runtime("xem_7010_download32/top.bit")
 }
 
 #[derive(LogicBlock)]
@@ -124,24 +99,8 @@ impl OpalKellyDownloadFIFOTest {
     }
 }
 
-#[test]
-fn test_opalkelly_xem_6010_synth_download() {
-    let mut uut = OpalKellyDownloadFIFOTest::new::<XEM6010>();
-    uut.hi.link_connect_dest();
-    uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "xem_6010_download");
-}
-
-#[test]
-fn test_opalkelly_xem_7010_synth_download() {
-    let mut uut = OpalKellyDownloadFIFOTest::new::<XEM7010>();
-    uut.hi.link_connect_dest();
-    uut.connect_all();
-    crate::ok_tools::synth_obj_7010(uut, "xem_7010_download");
-}
-
 #[cfg(test)]
-fn test_opalkelly_download_runtime(bit_file: &str) -> Result<(), OkError> {
+pub fn test_opalkelly_download_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     // Read the data in 256*2 = 512 byte blocks
     let mut data = vec![0_u8; 1024 * 128];
@@ -151,14 +110,4 @@ fn test_opalkelly_download_runtime(bit_file: &str) -> Result<(), OkError> {
         assert_eq!(((ndx as u128) & 0xFFFF_u128) as u16, *val);
     }
     Ok(())
-}
-
-#[test]
-fn test_opalkelly_xem_6010_download_runtime() -> Result<(), OkError> {
-    test_opalkelly_download_runtime("xem_6010_download/top.bit")
-}
-
-#[test]
-fn test_opalkelly_xem_7010_download_runtime() -> Result<(), OkError> {
-    test_opalkelly_download_runtime("xem_7010_download/top.bit")
 }

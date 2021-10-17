@@ -1,15 +1,12 @@
-use crate::ok_tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok::bsp::{OpalKellyBSP, XEM6010, XEM7010};
-use rust_hdl_ok::ok_hi::OpalKellyHostInterface;
-use rust_hdl_ok::ok_host::OpalKellyHost;
-use rust_hdl_ok::ok_wire::WireIn;
-use rust_hdl_ok::spi::OKSPIMaster;
+use std::thread::sleep;
+use std::time::Duration;
+
+use rust_hdl_core::bits::bit_cast;
+use rust_hdl_core::logic::Logic;
+use rust_hdl_macros::{hdl_gen, logic_block as LogicBlock};
 use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_sim_chips::ad7193_sim::AD7193Config;
 use rust_hdl_sim_chips::muxed_ad7193_sim::MuxedAD7193Simulators;
-use std::thread::sleep;
-use std::time::Duration;
 
 #[derive(LogicBlock)]
 pub struct OpalKellySPIMuxTest {
@@ -54,24 +51,8 @@ impl OpalKellySPIMuxTest {
     }
 }
 
-#[test]
-fn test_opalkelly_xem_6010_mux_spi() {
-    let mut uut = OpalKellySPIMuxTest::new::<XEM6010>();
-    uut.hi.link_connect_dest();
-    uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "xem_6010_mux_spi");
-}
-
-#[test]
-fn test_opalkelly_xem_7010_mux_spi() {
-    let mut uut = OpalKellySPIMuxTest::new::<XEM7010>();
-    uut.hi.link_connect_dest();
-    uut.connect_all();
-    crate::ok_tools::synth_obj_7010(uut, "xem_7010_mux_spi");
-}
-
 #[cfg(test)]
-fn test_opalkelly_mux_spi_runtime(bit_file: &str) -> Result<(), OkError> {
+pub fn test_opalkelly_mux_spi_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     for addr in 0..8 {
         hnd.set_wire_in(3, addr);
@@ -102,14 +83,4 @@ fn test_opalkelly_mux_spi_runtime(bit_file: &str) -> Result<(), OkError> {
     }
     hnd.close();
     Ok(())
-}
-
-#[test]
-fn test_opalkelly_xem_6010_mux_spi_runtime() -> Result<(), OkError> {
-    test_opalkelly_mux_spi_runtime("xem_6010_mux_spi/top.bit")
-}
-
-#[test]
-fn test_opalkelly_xem_7010_mux_spi_runtime() -> Result<(), OkError> {
-    test_opalkelly_mux_spi_runtime("xem_7010_mux_spi/top.bit")
 }

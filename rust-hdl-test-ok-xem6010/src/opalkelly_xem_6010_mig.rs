@@ -1,4 +1,4 @@
-use crate::ok_tools::ok_test_prelude;
+use rust_hdl_test_ok_common::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::mcb_if::MCBInterface1GDDR2;
 use rust_hdl_ok::mig::MemoryInterfaceGenerator;
@@ -113,7 +113,7 @@ fn test_opalkelly_xem_6010_mig() {
     uut.mcb.link_connect_dest();
     uut.raw_clock.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_mig");
+    rust_hdl_test_ok_common::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_mig");
 }
 
 #[test]

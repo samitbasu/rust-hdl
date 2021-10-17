@@ -1,4 +1,4 @@
-use crate::ok_tools::ok_test_prelude;
+use rust_hdl_test_ok_common::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::mcb_if::MCBInterface4GDDR3;
 use rust_hdl_ok::mig7::MemoryInterfaceGenerator7Series;
@@ -172,7 +172,7 @@ fn test_opalkelly_xem_7010_mig() {
     uut.sys_clock_neg.connect();
     uut.cmd_done.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj_7010(uut, "xem7010_mig");
+    rust_hdl_test_ok_common::ok_tools::synth_obj_7010(uut, "xem7010_mig");
 }
 
 #[test]

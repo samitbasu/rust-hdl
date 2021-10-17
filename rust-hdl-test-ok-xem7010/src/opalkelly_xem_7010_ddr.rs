@@ -1,5 +1,5 @@
-use crate::ok_tools::ok_test_prelude;
-use crate::opalkelly_xem_6010_ddr::test_opalkelly_ddr_stress_runtime;
+use rust_hdl_test_ok_common::ok_tools::ok_test_prelude;
+use rust_hdl_test_ok_xem6010::opalkelly_xem_6010_ddr::test_opalkelly_ddr_stress_runtime;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::ddr_fifo7::DDR7FIFO;
 use rust_hdl_ok::mcb_if::MCBInterface4GDDR3;
@@ -80,7 +80,7 @@ fn test_synthesis_of_xem7010_ddr() {
     uut.sys_clock_p.connect();
     uut.sys_clock_n.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj_7010(uut, "xem_7010_ddr");
+    rust_hdl_test_ok_common::ok_tools::synth_obj_7010(uut, "xem_7010_ddr");
 }
 
 #[test]
@@ -177,7 +177,7 @@ fn test_opalkelly_xem_7010_ddr_stress_synth() {
     uut.sys_clock_p.connect();
     uut.sys_clock_n.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj_7010(uut, "xem_7010_ddr_stress");
+    rust_hdl_test_ok_common::ok_tools::synth_obj_7010(uut, "xem_7010_ddr_stress");
 }
 
 #[test]

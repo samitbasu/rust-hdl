@@ -1,7 +1,8 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok::prelude::*;
-
-use crate::alchitry_cu_pwm_vec_srom::FaderWithSyncROM;
+use rust_hdl_core::bits::Bits;
+use rust_hdl_core::direction::{Local, Out};
+use rust_hdl_core::logic::Logic;
+use rust_hdl_core::signal::Signal;
+use rust_hdl_macros::{hdl_gen, logic_block as LogicBlock};
 
 #[derive(LogicBlock)]
 pub struct OpalKellyWave {
@@ -51,26 +52,4 @@ impl OpalKellyWave {
             led: B::leds(),
         }
     }
-}
-
-#[test]
-fn test_opalkelly_xem_6010_synth_wave() {
-    let mut uut = OpalKellyWave::new::<XEM6010>();
-    uut.hi.sig_in.connect();
-    uut.hi.sig_out.connect();
-    uut.hi.sig_inout.connect();
-    uut.hi.sig_aa.connect();
-    uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "xem_6010_wave");
-}
-
-#[test]
-fn test_opalkelly_xem_7010_synth_wave() {
-    let mut uut = OpalKellyWave::new::<XEM7010>();
-    uut.hi.sig_in.connect();
-    uut.hi.sig_out.connect();
-    uut.hi.sig_inout.connect();
-    uut.hi.sig_aa.connect();
-    uut.connect_all();
-    crate::ok_tools::synth_obj_7010(uut, "xem_7010_wave");
 }

@@ -1,4 +1,4 @@
-use crate::ok_tools::ok_test_prelude;
+use rust_hdl_test_ok_common::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::mcb_if::MCBInterface1GDDR2;
 use rust_hdl_ok::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
@@ -74,11 +74,11 @@ fn test_opalkelly_xem_6010_synth_ddr_stress() {
     uut.mcb.link_connect_dest();
     uut.raw_sys_clock.connect();
     uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_ddr_stress");
+    rust_hdl_test_ok_common::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_ddr_stress");
 }
 
 #[cfg(test)]
-pub(crate) fn test_opalkelly_ddr_stress_runtime(bit_file: &str) -> Result<(), OkError> {
+pub fn test_opalkelly_ddr_stress_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     hnd.reset_firmware(0);
     sleep(Duration::from_millis(100));

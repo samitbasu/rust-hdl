@@ -1,10 +1,12 @@
-use crate::ok_tools::ok_test_prelude;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok::ok_trigger::{TriggerIn, TriggerOut};
-use rust_hdl_ok::prelude::*;
-use rust_hdl_ok_frontpanel_sys::OkError;
-use rust_hdl_widgets::prelude::DFF;
 use std::time::Duration;
+
+use rust_hdl_core::bits::{bit_cast, Bits};
+use rust_hdl_core::direction::Out;
+use rust_hdl_core::logic::Logic;
+use rust_hdl_core::signal::Signal;
+use rust_hdl_macros::{hdl_gen, logic_block as LogicBlock};
+use rust_hdl_ok_frontpanel_sys::OkError;
+use rust_hdl_widgets::dff::DFF;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyWireTest {
@@ -68,24 +70,8 @@ impl Logic for OpalKellyWireTest {
     }
 }
 
-#[test]
-fn test_opalkelly_xem_6010_synth_wire() {
-    let mut uut = OpalKellyWireTest::new::<XEM6010>();
-    uut.hi.link_connect_dest();
-    uut.connect_all();
-    crate::ok_tools::synth_obj_6010(uut, "xem_6010_wire");
-}
-
-#[test]
-fn test_opalkelly_xem_7010_synth_wire() {
-    let mut uut = OpalKellyWireTest::new::<XEM7010>();
-    uut.hi.link_connect_dest();
-    uut.connect_all();
-    crate::ok_tools::synth_obj_7010(uut, "xem_7010_wire");
-}
-
 #[cfg(test)]
-fn test_opalkelly_xem_wire_runtime(filename: &str) -> Result<(), OkError> {
+pub fn test_opalkelly_xem_wire_runtime(filename: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(filename)?;
     hnd.set_wire_in(0x00, 0x45);
     hnd.update_wire_ins();
@@ -105,14 +91,4 @@ fn test_opalkelly_xem_wire_runtime(filename: &str) -> Result<(), OkError> {
         }
     }
     Ok(())
-}
-
-#[test]
-fn test_opalkelly_xem_6010_wire_runtime() -> Result<(), OkError> {
-    test_opalkelly_xem_wire_runtime("xem_6010_wire/top.bit")
-}
-
-#[test]
-fn test_opalkelly_xem_7010_wire_runtime() -> Result<(), OkError> {
-    test_opalkelly_xem_wire_runtime("xem_7010_wire/top.bit")
 }
