@@ -10,3 +10,6 @@ rust-hdl-core = {path="../rust-hdl-core"}
 rust-hdl-yosys-synth = {path= "../rust-hdl-yosys-synth" }
 rust-hdl-toolchain-icestorm = {path="../rust-hdl-toolchain-icestorm"}
 
+[dev-dependencies]
+rust-hdl-widgets = {path="../rust-hdl-widgets"}
+rust-hdl-test-core = {path="../rust-hdl-test-core"}
