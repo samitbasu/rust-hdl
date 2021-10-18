@@ -1,9 +1,9 @@
 mod blinky;
 mod download;
 #[cfg(feature = "fpga_hw_test")]
-pub mod opalkelly_xem_6010_ddr;
+pub mod ddr;
 #[cfg(feature = "fpga_hw_test")]
-pub mod opalkelly_xem_6010_mig;
+pub mod mig;
 mod mux_spi;
 mod pipe;
 mod spi;

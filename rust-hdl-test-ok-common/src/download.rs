@@ -1,10 +1,8 @@
-use rust_hdl_core::bits::{Bit, bit_cast, Bits};
-use rust_hdl_core::direction::Local;
-use rust_hdl_core::logic::Logic;
-use rust_hdl_core::signal::Signal;
-use rust_hdl_macros::{hdl_gen, logic_block as LogicBlock};
+use rust_hdl_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, make_u32_buffer, OkError};
-use rust_hdl_widgets::dff::DFF;
+use rust_hdl_widgets::prelude::*;
+use rust_hdl_ok_core::prelude::*;
+
 
 #[derive(LogicBlock)]
 pub struct OpalKellyDownload32FIFOTest {

@@ -17,6 +17,7 @@ pub mod rom;
 pub mod snore;
 pub mod spi;
 pub mod sync_rom;
+pub mod fader;
 
 const MHZ1: u64 = 1_000_000;
 

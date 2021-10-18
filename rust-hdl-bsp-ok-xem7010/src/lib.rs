@@ -11,9 +11,10 @@ use crate::pins::*;
 pub mod ddr_fifo7;
 mod mcb_if;
 pub mod mig7;
-pub mod ok_download_ddr7;
+pub mod download;
 pub mod pins;
 pub mod synth;
+pub mod sys_clock;
 
 #[derive(Clone, Debug)]
 pub struct XEM7010 {}

@@ -20,3 +20,4 @@ pub use crate::spi_slave::SPISlave;
 pub use crate::strobe::Strobe;
 pub use crate::sync_fifo::SynchronousFIFO;
 pub use crate::synchronizer::{BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer};
+pub use crate::sync_rom::SyncROM;

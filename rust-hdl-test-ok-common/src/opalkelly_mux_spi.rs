@@ -1,12 +1,10 @@
 use std::thread::sleep;
 use std::time::Duration;
-
-use rust_hdl_core::bits::bit_cast;
-use rust_hdl_core::logic::Logic;
-use rust_hdl_macros::{hdl_gen, logic_block as LogicBlock};
+use rust_hdl_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_sim_chips::ad7193_sim::AD7193Config;
 use rust_hdl_sim_chips::muxed_ad7193_sim::MuxedAD7193Simulators;
+use rust_hdl_ok_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct OpalKellySPIMuxTest {

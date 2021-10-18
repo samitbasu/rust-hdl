@@ -1,12 +1,10 @@
 use std::thread::sleep;
 use std::time::Duration;
-
-use rust_hdl_core::logic::Logic;
-use rust_hdl_core::module_defines::generate_verilog;
-use rust_hdl_macros::{hdl_gen, logic_block as LogicBlock};
+use rust_hdl_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_sim_chips::ad7193_sim::{AD7193Config, AD7193Simulator};
 use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl_ok_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct OpalKellySPITest {

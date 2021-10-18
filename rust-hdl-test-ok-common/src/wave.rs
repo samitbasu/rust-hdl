@@ -1,8 +1,6 @@
-use rust_hdl_core::bits::Bits;
-use rust_hdl_core::direction::{Local, Out};
-use rust_hdl_core::logic::Logic;
-use rust_hdl_core::signal::Signal;
-use rust_hdl_macros::{hdl_gen, logic_block as LogicBlock};
+use rust_hdl_core::prelude::*;
+use rust_hdl_ok_core::prelude::*;
+use rust_hdl_test_core::fader::FaderWithSyncROM;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyWave {

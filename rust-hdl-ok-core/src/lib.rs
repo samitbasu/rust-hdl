@@ -8,7 +8,6 @@ pub mod ok_download;
 pub mod ok_hi;
 pub mod ok_host;
 pub mod ok_pipe;
-pub mod ok_sys_clock7;
 pub mod ok_trigger;
 pub mod ok_wire;
 pub mod prelude;

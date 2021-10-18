@@ -1,11 +1,7 @@
 use std::time::Duration;
-
-use rust_hdl_core::bits::Bits;
-use rust_hdl_core::direction::Out;
-use rust_hdl_core::logic::Logic;
-use rust_hdl_core::signal::Signal;
-use rust_hdl_macros::{hdl_gen, logic_block as LogicBlock};
-use rust_hdl_widgets::pulser::Pulser;
+use rust_hdl_core::prelude::*;
+use rust_hdl_widgets::prelude::*;
+use rust_hdl_ok_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyBlinky {
