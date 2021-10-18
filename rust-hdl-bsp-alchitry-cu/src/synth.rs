@@ -1,7 +1,7 @@
 use rust_hdl_core::check_connected::check_connected;
 use rust_hdl_core::prelude::{generate_verilog, Block};
 use rust_hdl_toolchain_icestorm::pcf_gen::generate_pcf;
-use std::fs::{create_dir, remove_dir_all, File};
+use std::fs::{create_dir, remove_dir_all, File, create_dir_all};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Output};
@@ -24,7 +24,7 @@ pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
     let pcf_text = generate_pcf(&uut);
     let dir = PathBuf::from_str(prefix).unwrap();
     let _ = remove_dir_all(&dir);
-    let _ = create_dir(&dir);
+    let _ = create_dir_all(&dir);
     let mut v_file = File::create(dir.clone().join("top.v")).unwrap();
     write!(v_file, "{}", verilog_text).unwrap();
     let pcf_filename = format!("top.pcf");

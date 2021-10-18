@@ -1,6 +1,7 @@
 use rust_hdl_bsp_alchitry_cu::ice_pll::ICE40PLLBlock;
 use rust_hdl_core::prelude::*;
 use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl_test_core::target_path;
 
 #[test]
 fn test_pll_synthesizable() {
@@ -13,5 +14,6 @@ fn test_pll_synthesizable() {
     let vlog = generate_verilog(&uut);
     yosys_validate("vlog", &vlog).unwrap();
     println!("{}", vlog);
-    rust_hdl_bsp_alchitry_cu::synth::generate_bitstream(uut, "pll_cu");
+    println!("{}", target_path!("alchitry_cu/pll_cu"));
+    rust_hdl_bsp_alchitry_cu::synth::generate_bitstream(uut, target_path!("alchitry_cu/pll_cu"));
 }

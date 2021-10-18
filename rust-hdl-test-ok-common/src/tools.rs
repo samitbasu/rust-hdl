@@ -1,11 +1,11 @@
 use std::path::Path;
+use std::path::PathBuf;
 use std::thread::sleep;
 use std::time::Duration;
 
 use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{OkError, OkHandle};
 use rust_hdl_sim_chips::ad7193_sim::AD7193_REG_WIDTHS;
-use std::path::PathBuf;
 
 pub fn ok_test_prelude(filename: &str) -> Result<OkHandle, OkError> {
     let hnd = OkHandle::new();
@@ -106,12 +106,4 @@ pub fn ok_reg_write(handle: &OkHandle, reg_index: u32, reg_value: u64) -> Result
 pub fn ok_adc_reset(handle: &OkHandle) -> Result<(), OkError> {
     ok_do_spi_txn(handle, 64, 0xFFFF_FFFF_FFFF_FFFF_u64, false)?;
     Ok(())
-}
-
-pub fn target_path(build: &str) -> String {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("firmware")
-        .join(build)
-        .to_string_lossy()
-        .to_string()
 }

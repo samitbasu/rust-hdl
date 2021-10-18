@@ -8,6 +8,7 @@ use rust_hdl_test_core::snore::snore;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_widgets::sync_rom::SyncROM;
 use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl_test_core::target_path;
 
 const MHZ25: u64 = 25_000_000;
 const MHZ100: u64 = 100_000_000;
@@ -66,5 +67,5 @@ fn test_pwm_vec_sync_rom_synthesizes() {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
     yosys_validate("pwm_cu_srom", &vlog).unwrap();
-    rust_hdl_bsp_alchitry_cu::synth::generate_bitstream(uut, "pwm_cu_srom");
+    rust_hdl_bsp_alchitry_cu::synth::generate_bitstream(uut, target_path!("alchitry_cu/pwm_cu_srom"));
 }

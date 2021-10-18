@@ -4,6 +4,7 @@ use rust_hdl_core::prelude::*;
 use rust_hdl_test_core::snore;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl_test_core::target_path;
 
 #[derive(LogicBlock)]
 pub struct Fader {
@@ -100,5 +101,5 @@ fn test_pwm_vec_synthesizes() {
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
     yosys_validate("pwm_cu", &vlog).unwrap();
-    rust_hdl_bsp_alchitry_cu::synth::generate_bitstream(uut, "pwm_cu");
+    rust_hdl_bsp_alchitry_cu::synth::generate_bitstream(uut, target_path!("alchitry_cu/pwm_cu"));
 }
