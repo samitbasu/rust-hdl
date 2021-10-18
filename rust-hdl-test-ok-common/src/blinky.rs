@@ -1,7 +1,7 @@
-use std::time::Duration;
 use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
 use rust_hdl_ok_core::prelude::*;
+use rust_hdl_widgets::prelude::*;
+use std::time::Duration;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyBlinky {

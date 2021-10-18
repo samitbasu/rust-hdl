@@ -8,4 +8,5 @@ pub trait OpalKellyBSP {
     fn ok_host() -> OpalKellyHost;
     fn leds() -> Signal<Out, Bits<8>>;
     fn clocks() -> Vec<Signal<In, Clock>>;
+    fn synth<U: Block>(uut: U, dir: &str);
 }

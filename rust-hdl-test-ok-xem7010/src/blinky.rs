@@ -1,9 +1,10 @@
-use std::time::Duration;
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::pulser::Pulser;
 use rust_hdl_bsp_ok_xem7010::sys_clock::OpalKellySystemClock7;
 use rust_hdl_bsp_ok_xem7010::XEM7010;
+use rust_hdl_core::prelude::*;
 use rust_hdl_ok_core::prelude::*;
+use rust_hdl_test_ok_common::prelude::*;
+use rust_hdl_widgets::prelude::*;
+use std::time::Duration;
 
 #[test]
 fn test_opalkelly_xem_7010_synth_blinky() {

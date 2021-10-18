@@ -1,42 +1,11 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-use rust_hdl_ok_frontpanel_sys::{OkError, OkHandle};
-use rust_hdl_sim_chips::ad7193_sim::AD7193_REG_WIDTHS;
 use std::path::Path;
 use std::thread::sleep;
 use std::time::Duration;
 
-pub fn find_ok_bus_collisions(vlog: &str) {
-    let expr = regex::Regex::new(r#"\.ep_addr\(8'h(\w+)\)"#).unwrap();
-    let mut addr_list = vec![];
-    for capture in expr.captures_iter(vlog) {
-        let port = capture.get(1).unwrap().as_str();
-        assert!(
-            !addr_list.contains(&port.to_string()),
-            "Found duplicate port! {}",
-            port
-        );
-        addr_list.push(port.to_owned());
-    }
-}
-
-pub fn synth_obj_7010<U: Block>(uut: U, dir: &str) {
-    check_connected(&uut);
-    let vlog = generate_verilog(&uut);
-    find_ok_bus_collisions(&vlog);
-    let _xcd = rust_hdl_toolchain_vivado::xdc_gen::generate_xdc(&uut);
-    rust_hdl_yosys_synth::yosys_validate("vlog", &vlog).unwrap();
-    generate_bitstream_xem_7010(uut, dir, Default::default());
-}
-
-pub fn synth_obj_6010<U: Block>(uut: U, dir: &str) {
-    check_connected(&uut);
-    let vlog = generate_verilog(&uut);
-    find_ok_bus_collisions(&vlog);
-    let _ucf = rust_hdl_toolchain_ise::ucf_gen::generate_ucf(&uut);
-    rust_hdl_yosys_synth::yosys_validate("vlog", &vlog).unwrap();
-    generate_bitstream_xem_6010(uut, dir, Default::default());
-}
+use rust_hdl_ok_core::prelude::*;
+use rust_hdl_ok_frontpanel_sys::{OkError, OkHandle};
+use rust_hdl_sim_chips::ad7193_sim::AD7193_REG_WIDTHS;
+use std::path::PathBuf;
 
 pub fn ok_test_prelude(filename: &str) -> Result<OkHandle, OkError> {
     let hnd = OkHandle::new();
@@ -137,4 +106,12 @@ pub fn ok_reg_write(handle: &OkHandle, reg_index: u32, reg_value: u64) -> Result
 pub fn ok_adc_reset(handle: &OkHandle) -> Result<(), OkError> {
     ok_do_spi_txn(handle, 64, 0xFFFF_FFFF_FFFF_FFFF_u64, false)?;
     Ok(())
+}
+
+pub fn target_path(build: &str) -> String {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("firmware")
+        .join(build)
+        .to_string_lossy()
+        .to_string()
 }

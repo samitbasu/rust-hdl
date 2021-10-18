@@ -1,5 +1,6 @@
 use std::num::Wrapping;
 
+use crate::tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
@@ -61,7 +62,6 @@ fn sum_vec(t: &[u16]) -> u16 {
     ret.0
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_pipe_in_runtime(bit_name: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_name)?;
     let data = (0..1024 * 1024)
@@ -89,7 +89,7 @@ pub struct OpalKellyPipeRAMTest {
 }
 
 impl OpalKellyPipeRAMTest {
-    fn new<B: OpalKellyBSP>() -> Self {
+    pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),
             ok_host: B::ok_host(),
@@ -132,7 +132,6 @@ impl Logic for OpalKellyPipeRAMTest {
     }
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_pipe_ram_runtime(bitfile: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bitfile)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
@@ -157,7 +156,7 @@ pub struct OpalKellyPipeFIFOTest {
 }
 
 impl OpalKellyPipeFIFOTest {
-    fn new<B: OpalKellyBSP>() -> Self {
+    pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),
             ok_host: B::ok_host(),
@@ -193,7 +192,6 @@ impl Logic for OpalKellyPipeFIFOTest {
     }
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_pipe_fifo_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
@@ -206,7 +204,6 @@ pub fn test_opalkelly_pipe_fifo_runtime(bit_file: &str) -> Result<(), OkError> {
     Ok(())
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_pipe_afifo_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();

@@ -1,4 +1,3 @@
-use rust_hdl_test_ok_common::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::mcb_if::MCBInterface1GDDR2;
 use rust_hdl_ok::mig::MemoryInterfaceGenerator;
@@ -9,6 +8,7 @@ use rust_hdl_ok::ok_trigger::{TriggerIn, TriggerOut};
 use rust_hdl_ok::ok_wire::WireIn;
 use rust_hdl_ok::prelude::xem_6010_base_clock;
 use rust_hdl_ok_frontpanel_sys::OkError;
+use rust_hdl_test_ok_common::ok_tools::ok_test_prelude;
 use rust_hdl_widgets::prelude::*;
 use std::thread::sleep;
 use std::time::Duration;
@@ -113,7 +113,7 @@ fn test_opalkelly_xem_6010_mig() {
     uut.mcb.link_connect_dest();
     uut.raw_clock.connect();
     uut.connect_all();
-    rust_hdl_test_ok_common::ok_tools::synth_obj_6010(uut, "opalkelly_xem_6010_mig");
+    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, "opalkelly_xem_6010_mig");
 }
 
 #[test]

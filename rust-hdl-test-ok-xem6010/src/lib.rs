@@ -1,7 +1,7 @@
 mod blinky;
-mod download;
 #[cfg(feature = "fpga_hw_test")]
 pub mod ddr;
+mod download;
 #[cfg(feature = "fpga_hw_test")]
 pub mod mig;
 mod mux_spi;

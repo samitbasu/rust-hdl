@@ -1,10 +1,10 @@
-use std::fs::{copy, create_dir, remove_dir_all, File};
+use std::fs::{copy, create_dir, create_dir_all, remove_dir_all, File};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
 use rust_hdl_core::prelude::*;
-
+use rust_hdl_ok_core::prelude::find_ok_bus_collisions;
 use rust_hdl_toolchain_ise::ucf_gen::generate_ucf;
 
 #[derive(Clone, Debug)]
@@ -49,7 +49,7 @@ pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, options: 
     let ucf_text = generate_ucf(&uut);
     let dir = PathBuf::from(prefix);
     let _ = remove_dir_all(&dir);
-    let _ = create_dir(&dir);
+    let _ = create_dir_all(&dir);
     let mut assets: Vec<String> = options.assets.clone();
     if options.add_mig {
         assets.extend_from_slice(&add_mig_core_xem_6010(prefix, options.clone()));
@@ -252,4 +252,13 @@ GENERATE
     .iter()
     .map(|p| dir.clone().join(p).to_string_lossy().to_string())
     .collect()
+}
+
+pub fn synth_obj<U: Block>(uut: U, dir: &str) {
+    check_connected(&uut);
+    let vlog = generate_verilog(&uut);
+    find_ok_bus_collisions(&vlog);
+    let _ucf = rust_hdl_toolchain_ise::ucf_gen::generate_ucf(&uut);
+    rust_hdl_yosys_synth::yosys_validate("vlog", &vlog).unwrap();
+    generate_bitstream_xem_6010(uut, dir, Default::default());
 }

@@ -1,9 +1,11 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_toolchain_vivado::xdc_gen::generate_xdc;
 use std::fs::{copy, create_dir, remove_dir_all, File};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
+
+use rust_hdl_core::prelude::*;
+use rust_hdl_ok_core::prelude::find_ok_bus_collisions;
+use rust_hdl_toolchain_vivado::xdc_gen::generate_xdc;
 
 #[derive(Clone, Debug)]
 pub struct VivadoOptions {
@@ -262,4 +264,13 @@ exit
         dir.clone().join("top.bit"),
     )
     .unwrap();
+}
+
+pub fn synth_obj<U: Block>(uut: U, dir: &str) {
+    check_connected(&uut);
+    let vlog = generate_verilog(&uut);
+    find_ok_bus_collisions(&vlog);
+    let _xcd = rust_hdl_toolchain_vivado::xdc_gen::generate_xdc(&uut);
+    rust_hdl_yosys_synth::yosys_validate("vlog", &vlog).unwrap();
+    generate_bitstream_xem_7010(uut, dir, Default::default());
 }

@@ -1,13 +1,12 @@
+use rust_hdl_bsp_ok_xem7010::pins::{xem_7010_leds, xem_7010_neg_clock, xem_7010_pos_clock};
+use rust_hdl_bsp_ok_xem7010::sys_clock::OpalKellySystemClock7;
+use rust_hdl_bsp_ok_xem7010::XEM7010;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
 use rust_hdl_widgets::prelude::*;
-use rust_hdl_bsp_ok_xem7010::XEM7010;
-use rust_hdl_bsp_ok_xem7010::sys_clock::OpalKellySystemClock7;
-use rust_hdl_bsp_ok_xem7010::pins::{xem_7010_pos_clock, xem_7010_leds, xem_7010_neg_clock};
 
 declare_async_fifo!(OKTestAFIFO2, Bits<16>, 1024, 256);
-
 
 #[test]
 fn test_opalkelly_xem_7010_synth_pipe() {
@@ -85,8 +84,6 @@ fn test_opalkelly_xem_7010_btpipe_runtime() -> Result<(), OkError> {
     }
     Ok(())
 }
-
-
 
 #[derive(LogicBlock)]
 pub struct OpalKellyBTPipeOut7Test {

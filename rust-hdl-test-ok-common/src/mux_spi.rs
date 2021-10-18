@@ -1,10 +1,11 @@
-use std::thread::sleep;
-use std::time::Duration;
+use crate::tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
 use rust_hdl_core::prelude::*;
+use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_sim_chips::ad7193_sim::AD7193Config;
 use rust_hdl_sim_chips::muxed_ad7193_sim::MuxedAD7193Simulators;
-use rust_hdl_ok_core::prelude::*;
+use std::thread::sleep;
+use std::time::Duration;
 
 #[derive(LogicBlock)]
 pub struct OpalKellySPIMuxTest {
@@ -37,7 +38,7 @@ impl Logic for OpalKellySPIMuxTest {
 }
 
 impl OpalKellySPIMuxTest {
-    fn new<B: OpalKellyBSP>() -> Self {
+    pub fn new<B: OpalKellyBSP>() -> Self {
         let adc_config = AD7193Config::hw();
         Self {
             hi: B::hi(),
@@ -49,7 +50,6 @@ impl OpalKellySPIMuxTest {
     }
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_mux_spi_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     for addr in 0..8 {

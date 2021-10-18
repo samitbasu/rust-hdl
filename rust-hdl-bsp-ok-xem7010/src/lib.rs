@@ -9,9 +9,9 @@ use rust_hdl_ok_core::ok_host::OpalKellyHost;
 use crate::pins::*;
 
 pub mod ddr_fifo7;
+pub mod download;
 mod mcb_if;
 pub mod mig7;
-pub mod download;
 pub mod pins;
 pub mod synth;
 pub mod sys_clock;

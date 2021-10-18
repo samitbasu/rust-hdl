@@ -11,3 +11,4 @@ rust-hdl-core = {path="../rust-hdl-core"}
 rust-hdl-widgets = {path="../rust-hdl-widgets"}
 rust-hdl-ok-core = {path="../rust-hdl-ok-core"}
 rust-hdl-bsp-ok-xem6010 = {path="../rust-hdl-bsp-ok-xem6010"}
+rust-hdl-test-ok-common = {path="../rust-hdl-test-ok-common"}

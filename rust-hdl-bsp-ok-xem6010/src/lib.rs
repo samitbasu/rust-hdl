@@ -30,6 +30,10 @@ impl OpalKellyBSP for XEM6010 {
     fn clocks() -> Vec<Signal<In, Clock>> {
         vec![xem_6010_base_clock()]
     }
+
+    fn synth<U: Block>(uut: U, dir: &str) {
+        crate::synth::synth_obj(uut, dir)
+    }
 }
 
 #[derive(LogicBlock)]

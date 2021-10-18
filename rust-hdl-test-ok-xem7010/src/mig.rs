@@ -1,9 +1,9 @@
-use rust_hdl_test_ok_common::ok_tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok::mcb_if::MCBInterface4GDDR3;
 use rust_hdl_ok::mig7::MemoryInterfaceGenerator7Series;
 use rust_hdl_ok::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
+use rust_hdl_test_ok_common::ok_tools::ok_test_prelude;
 use rust_hdl_widgets::prelude::*;
 use std::thread::sleep;
 use std::time::Duration;

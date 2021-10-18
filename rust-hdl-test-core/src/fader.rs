@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::prelude::*;
+use std::collections::BTreeMap;
 
 use crate::snore::snore;
 

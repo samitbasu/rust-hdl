@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
 use rust_hdl_core::prelude::*;
+use rust_hdl_test_core::snore;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_yosys_synth::yosys_validate;
-use rust_hdl_test_core::snore;
 
 #[derive(LogicBlock)]
 pub struct Fader {

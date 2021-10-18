@@ -1,8 +1,8 @@
+use crate::tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
+use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, make_u32_buffer, OkError};
 use rust_hdl_widgets::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-
 
 #[derive(LogicBlock)]
 pub struct OpalKellyDownload32FIFOTest {
@@ -30,7 +30,7 @@ impl Logic for OpalKellyDownload32FIFOTest {
 }
 
 impl OpalKellyDownload32FIFOTest {
-    fn new<B: OpalKellyBSP>() -> Self {
+    pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),
             ok_host: B::ok_host(),
@@ -41,7 +41,6 @@ impl OpalKellyDownload32FIFOTest {
     }
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_download32_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     // Read the data in 256*2 = 512 byte blocks
@@ -86,7 +85,7 @@ impl Logic for OpalKellyDownloadFIFOTest {
 }
 
 impl OpalKellyDownloadFIFOTest {
-    fn new<B: OpalKellyBSP>() -> Self {
+    pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),
             ok_host: B::ok_host(),
@@ -97,7 +96,6 @@ impl OpalKellyDownloadFIFOTest {
     }
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_download_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     // Read the data in 256*2 = 512 byte blocks

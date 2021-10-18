@@ -31,7 +31,7 @@ impl Logic for OpalKellyWave {
 }
 
 impl OpalKellyWave {
-    fn new<B: OpalKellyBSP>() -> Self {
+    pub fn new<B: OpalKellyBSP>() -> Self {
         let faders: [FaderWithSyncROM; 8] = [
             FaderWithSyncROM::new(MHZ48, 0),
             FaderWithSyncROM::new(MHZ48, 18),

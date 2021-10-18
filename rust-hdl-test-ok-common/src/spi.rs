@@ -1,10 +1,10 @@
-use std::thread::sleep;
-use std::time::Duration;
+use crate::tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
 use rust_hdl_core::prelude::*;
+use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_sim_chips::ad7193_sim::{AD7193Config, AD7193Simulator};
-use rust_hdl_yosys_synth::yosys_validate;
-use rust_hdl_ok_core::prelude::*;
+use std::thread::sleep;
+use std::time::Duration;
 
 #[derive(LogicBlock)]
 pub struct OpalKellySPITest {
@@ -15,7 +15,7 @@ pub struct OpalKellySPITest {
 }
 
 impl OpalKellySPITest {
-    fn new<B: OpalKellyBSP>() -> Self {
+    pub fn new<B: OpalKellyBSP>() -> Self {
         let adc_config = AD7193Config::hw();
         Self {
             hi: B::hi(),
@@ -43,13 +43,13 @@ impl Logic for OpalKellySPITest {
 
 #[test]
 fn test_synth() {
+    use rust_hdl_yosys_synth::yosys_validate;
     let mut uut = OpalKellySPITest::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.connect_all();
     yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_spi_reg_read_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();
@@ -63,7 +63,6 @@ pub fn test_opalkelly_spi_reg_read_runtime(bit_file: &str) -> Result<(), OkError
     Ok(())
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_spi_reg_write_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();
@@ -80,7 +79,6 @@ pub fn test_opalkelly_spi_reg_write_runtime(bit_file: &str) -> Result<(), OkErro
     Ok(())
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_spi_single_conversion_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();

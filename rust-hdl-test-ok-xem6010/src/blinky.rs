@@ -1,4 +1,7 @@
-use rust_hdl_core::check_connected::check_connected;
+use rust_hdl_bsp_ok_xem6010::XEM6010;
+use rust_hdl_core::prelude::*;
+use rust_hdl_ok_core::prelude::*;
+use rust_hdl_test_ok_common::prelude::*;
 
 #[test]
 fn test_opalkelly_xem_6010_synth_blinky() {
@@ -6,5 +9,5 @@ fn test_opalkelly_xem_6010_synth_blinky() {
     uut.hi.link_connect_dest();
     uut.connect_all();
     check_connected(&uut);
-    rust_hdl_test_ok_common::ok_tools::synth_obj_6010(uut, "xem_6010_blinky");
+    XEM6010::synth(uut, &target_path("xem_6010_blinky"));
 }

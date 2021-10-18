@@ -1,17 +1,12 @@
-#[cfg(feature = "fpga_hw_test")]
-pub mod tools;
-mod blinky;
-mod download;
-mod opalkelly_mux_spi;
-mod pipe;
-mod spi;
-mod wave;
-mod wire;
+use std::path::PathBuf;
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+pub mod blinky;
+pub mod ddr;
+pub mod download;
+pub mod mux_spi;
+pub mod pipe;
+pub mod prelude;
+pub mod spi;
+pub mod tools;
+pub mod wave;
+pub mod wire;

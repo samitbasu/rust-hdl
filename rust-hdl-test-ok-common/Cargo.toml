@@ -13,3 +13,5 @@ rust-hdl-sim-chips = {path="../rust-hdl-sim-chips"}
 rust-hdl-yosys-synth = {path="../rust-hdl-yosys-synth"}
 rust-hdl-ok-core = {path="../rust-hdl-ok-core"}
 rust-hdl-test-core = {path="../rust-hdl-test-core"}
+regex = "1.5.4"
+rand = "0.8.4"

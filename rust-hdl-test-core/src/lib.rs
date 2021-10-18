@@ -8,6 +8,7 @@ use rust_hdl_yosys_synth::yosys_validate;
 pub mod base_tests;
 pub mod edge_detector;
 pub mod expander;
+pub mod fader;
 pub mod fifo;
 pub mod nested_ports;
 pub mod pwm;
@@ -17,7 +18,6 @@ pub mod rom;
 pub mod snore;
 pub mod spi;
 pub mod sync_rom;
-pub mod fader;
 
 const MHZ1: u64 = 1_000_000;
 

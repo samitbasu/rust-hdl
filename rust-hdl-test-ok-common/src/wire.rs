@@ -1,8 +1,9 @@
-use std::time::Duration;
+use crate::tools::ok_test_prelude;
 use rust_hdl_core::prelude::*;
+use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_widgets::prelude::*;
-use rust_hdl_ok_core::prelude::*;
+use std::time::Duration;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyWireTest {
@@ -66,7 +67,6 @@ impl Logic for OpalKellyWireTest {
     }
 }
 
-#[cfg(test)]
 pub fn test_opalkelly_xem_wire_runtime(filename: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(filename)?;
     hnd.set_wire_in(0x00, 0x45);
