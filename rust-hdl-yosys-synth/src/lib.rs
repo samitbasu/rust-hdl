@@ -35,10 +35,10 @@ pub fn yosys_validate(prefix: &str, translation: &str) -> Result<(), SynthError>
     let stdout = String::from_utf8(output.stdout).unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
     {
-        let mut debug = File::create("yosys.stdout")?;
+        let mut debug = File::create(dir.join("yosys.stdout"))?;
         write!(debug, "{}", stdout).unwrap();
         write!(debug, "{}", stderr).unwrap();
-        let mut dump = File::create("yosys.v")?;
+        let mut dump = File::create(dir.join("yosys.v"))?;
         write!(dump, "{}", translation).unwrap();
     }
     if stdout.contains("Re-definition of") {

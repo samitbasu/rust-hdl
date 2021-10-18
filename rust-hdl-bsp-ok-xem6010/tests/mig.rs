@@ -8,6 +8,7 @@ use rust_hdl_test_ok_common::prelude::*;
 use rust_hdl_widgets::prelude::*;
 use std::thread::sleep;
 use std::time::Duration;
+use rust_hdl_test_core::target_path;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010MIGTest {
@@ -109,12 +110,13 @@ fn test_opalkelly_xem_6010_mig() {
     uut.mcb.link_connect_dest();
     uut.raw_clock.connect();
     uut.connect_all();
-    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, "opalkelly_xem_6010_mig");
+    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, target_path!("xem_6010/mig"));
+    test_opalkelly_xem_6010_mig_runtime().unwrap();
 }
 
-#[test]
+#[cfg(test)]
 fn test_opalkelly_xem_6010_mig_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("opalkelly_xem_6010_mig/top.bit")?;
+    let hnd = ok_test_prelude(target_path!("xem_6010/mig/top.bit"))?;
     hnd.reset_firmware(0);
     let data = (64..(128 + 64)).collect::<Vec<u8>>();
     hnd.write_to_pipe_in(0x80, &data).unwrap();

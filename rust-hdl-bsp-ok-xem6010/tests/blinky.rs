@@ -4,17 +4,6 @@ use rust_hdl_ok_core::prelude::*;
 use rust_hdl_test_core::target_path;
 use rust_hdl_test_ok_common::prelude::*;
 
-#[cfg(feature = "fpga_hw_test")]
-pub mod ddr;
-mod download;
-#[cfg(feature = "fpga_hw_test")]
-pub mod mig;
-mod mux_spi;
-mod pipe;
-mod spi;
-mod wave;
-mod wire;
-
 #[test]
 fn test_opalkelly_xem_6010_synth_blinky() {
     let mut uut = OpalKellyBlinky::new::<XEM6010>();

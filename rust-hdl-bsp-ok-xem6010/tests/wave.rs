@@ -1,6 +1,7 @@
 use rust_hdl_bsp_ok_xem6010::XEM6010;
 use rust_hdl_core::prelude::*;
 use rust_hdl_test_ok_common::prelude::*;
+use rust_hdl_test_core::target_path;
 
 #[test]
 fn test_opalkelly_xem_6010_synth_wave() {
@@ -10,5 +11,5 @@ fn test_opalkelly_xem_6010_synth_wave() {
     uut.hi.sig_inout.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, "xem_6010_wave");
+    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, target_path!("xem_6010/wave"));
 }
