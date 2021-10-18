@@ -11,7 +11,7 @@ fn test_opalkelly_xem_6010_synth_pipe() {
     let mut uut = OpalKellyPipeTest::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, "xem_6010_pipe");
+    XEM6010::synth(uut, &target_path("xem_6010/pipe"));
 }
 
 #[test]
@@ -24,7 +24,7 @@ fn test_opalkelly_xem_6010_synth_pipe_ram() {
     let mut uut = OpalKellyPipeRAMTest::new::<XEM6010>();
     uut.hi.link_connect_dest();
     uut.connect_all();
-    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, "xem_6010_pipe_ram");
+    XEM6010::synth(uut, &target_path("xem_6010/pipe_ram"));
 }
 
 #[test]
@@ -40,7 +40,7 @@ fn test_opalkelly_xem_6010_synth_pipe_fifo() {
     uut.hi.sig_out.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, "xem_6010_fifo");
+    XEM6010::synth(uut, &target_path("xem_6010/fifo"));
 }
 
 #[test]
@@ -54,7 +54,7 @@ fn test_opalkelly_xem_6010_synth_pipe_afifo() {
     uut.hi.link_connect_dest();
     uut.fast_clock.connect();
     uut.connect_all();
-    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, "xem_6010_afifo");
+    XEM6010::synth(uut, &target_path("xem_6010/afifo"));
 }
 
 #[test]
@@ -68,7 +68,7 @@ fn test_opalkelly_xem_6010_synth_btpipe() {
     uut.hi.link_connect_dest();
     uut.fast_clock.connect();
     uut.connect_all();
-    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, "opalkelly_xem_6010_btpipe");
+    XEM6010::synth(uut, &target_path("xem_6010/btpipe"));
 }
 
 #[test]
