@@ -200,7 +200,6 @@ impl<T: Send + 'static + Block> Simulation<T> {
         }))
     }
     pub fn run(&mut self, mut x: Box<T>, max_time: u64) -> Result<()> {
-        Self::install_panic_handler();
         check_connected(x.as_mut());
         // First initialize the workers.
         for id in 0..self.workers.len() {
@@ -227,7 +226,6 @@ impl<T: Send + 'static + Block> Simulation<T> {
         Ok(())
     }
     pub fn run_traced<W: Write>(&mut self, mut x: Box<T>, max_time: u64, trace: W) -> Result<()> {
-        Self::install_panic_handler();
         check_connected(x.as_mut());
         let mut vcd = write_vcd_header(trace, x.as_ref());
         // First initialize the workers.

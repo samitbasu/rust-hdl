@@ -334,6 +334,15 @@ macro_rules! op {
             }
         }
 
+        impl<const N: usize> std::ops::$method<u64> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: u64) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
         impl<const N: usize> std::ops::$method<Bits<N>> for usize {
             type Output = Bits<N>;
 

@@ -8,10 +8,19 @@ enum MAX31856State {
     Start,
     Ready,
     GettingCmd,
+    RegFetchRead,
     ReadCmd,
-    WaitSlaveIdle,
+    WaitReadComplete,
     WriteCmd,
     DoWrite,
+}
+
+#[derive(Copy, Clone, PartialEq, Debug, LogicState)]
+enum DAQState {
+    Idle,
+    Convert,
+    Copy0,
+    Copy1,
 }
 
 #[derive(LogicBlock)]
@@ -30,15 +39,18 @@ pub struct MAX31856Simulator {
     auto_conversion_counter: DFF<Bits<19>>,
     // Separate bits out of the SPI message
     cmd: Signal<Local, Bits<8>>,
-    reg_index: Signal<Local, Bits<4>>,
     rw_flag: Signal<Local, Bit>,
+    reg_index: Signal<Local, Bits<4>>,
     // The SPI slave device
     spi_slave: SPISlave<64>,
     // FSM state:
     state: DFF<MAX31856State>,
+    reg_read_index: DFF<Bits<4>>,
     reg_write_index: DFF<Bits<4>>,
     // Boot timer
     boot: DFF<Bits<4>>,
+    // DAQ state:
+    dstate: DFF<DAQState>,
 }
 
 const MAX31856_REG_INITS: [u8; 16] = [
@@ -59,15 +71,17 @@ impl MAX31856Simulator {
             clock: Default::default(),
             reg_ram,
             auto_conversions_enabled: Default::default(),
-            auto_conversion_strobe: Strobe::new(config.clock_speed, 10.0),
+            auto_conversion_strobe: Strobe::new(config.clock_speed, 100.0),
             auto_conversion_counter: Default::default(),
             cmd: Default::default(),
-            reg_index: Default::default(),
             rw_flag: Default::default(),
             spi_slave: SPISlave::new(config),
             state: DFF::new(MAX31856State::Start),
+            reg_read_index: Default::default(),
             reg_write_index: Default::default(),
             boot: DFF::default(),
+            reg_index: Default::default(),
+            dstate: DFF::new(DAQState::Idle),
         }
     }
 }
@@ -89,12 +103,17 @@ impl Logic for MAX31856Simulator {
         self.spi_slave.clock.next = self.clock.val();
         self.state.clk.next = self.clock.val();
         self.reg_write_index.clk.next = self.clock.val();
+        self.reg_read_index.clk.next = self.clock.val();
         self.boot.clk.next = self.clock.val();
+        self.dstate.clk.next = self.clock.val();
         // Latch prevention
         self.auto_conversions_enabled.d.next = self.auto_conversions_enabled.q.val();
         self.auto_conversion_counter.d.next = self.auto_conversion_counter.q.val();
         self.state.d.next = self.state.q.val();
+        self.dstate.d.next = self.dstate.q.val();
         self.reg_write_index.d.next = self.reg_write_index.q.val();
+        self.reg_read_index.d.next = self.reg_read_index.q.val();
+        self.boot.d.next = self.boot.q.val();
         // Set default values
         self.spi_slave.start_send.next = false;
         self.spi_slave.continued_transaction.next = false;
@@ -103,9 +122,9 @@ impl Logic for MAX31856Simulator {
         self.reg_ram.write_enable.next = false;
         self.spi_slave.disabled.next = false;
         self.cmd.next = self.spi_slave.data_inbound.val().get_bits::<8>(0_usize);
-        self.rw_flag.next = self.cmd.val().get_bit(7_usize);
         self.reg_index.next = self.cmd.val().get_bits::<4>(0_usize);
-        self.reg_ram.read_address.next = self.reg_index.val();
+        self.rw_flag.next = self.cmd.val().get_bit(7_usize);
+        self.reg_ram.read_address.next = self.reg_read_index.q.val();
         self.reg_ram.write_address.next = self.reg_write_index.q.val();
         self.reg_ram.write_data.next = self.spi_slave.data_inbound.val().get_bits::<8>(0_usize);
         self.auto_conversion_strobe.enable.next = self.auto_conversions_enabled.q.val();
@@ -126,23 +145,31 @@ impl Logic for MAX31856Simulator {
             MAX31856State::GettingCmd => {
                 if self.spi_slave.transfer_done.val() {
                     if !self.rw_flag.val() {
-                        self.state.d.next = MAX31856State::ReadCmd;
+                        self.reg_read_index.d.next = self.reg_index.val();
+                        self.state.d.next = MAX31856State::RegFetchRead;
                     } else {
                         self.reg_write_index.d.next = self.reg_index.val();
                         self.state.d.next = MAX31856State::WriteCmd;
                     }
                 }
             }
+            MAX31856State::RegFetchRead => {
+                self.state.d.next = MAX31856State::ReadCmd;
+            }
             MAX31856State::ReadCmd => {
                 self.spi_slave.continued_transaction.next = true;
                 self.spi_slave.bits.next = 8_usize.into();
                 self.spi_slave.data_outbound.next = bit_cast::<64, 8>(self.reg_ram.read_data.val());
                 self.spi_slave.start_send.next = true;
-                self.state.d.next = MAX31856State::WaitSlaveIdle;
+                self.state.d.next = MAX31856State::WaitReadComplete;
             }
-            MAX31856State::WaitSlaveIdle => {
-                if !self.spi_slave.busy.val() {
+            MAX31856State::WaitReadComplete => {
+                if !self.spi_slave.busy.val() & self.spi_slave.transfer_done.val() {
                     self.state.d.next = MAX31856State::Ready;
+                }
+                if self.spi_slave.busy.val() & self.spi_slave.transfer_done.val() {
+                    self.reg_read_index.d.next = self.reg_read_index.q.val() + 1_usize;
+                    self.state.d.next = MAX31856State::RegFetchRead;
                 }
             }
             MAX31856State::WriteCmd => {
@@ -153,10 +180,53 @@ impl Logic for MAX31856Simulator {
                 self.state.d.next = MAX31856State::DoWrite;
             }
             MAX31856State::DoWrite => {
-                if self.spi_slave.transfer_done.val() {
+                if !self.spi_slave.busy.val() & self.spi_slave.transfer_done.val() {
+                    if !self.reg_write_index.q.val().any() {
+                        self.auto_conversions_enabled.d.next =
+                            self.spi_slave.data_inbound.val().get_bit(7_usize);
+                    }
                     self.reg_ram.write_enable.next = true;
-                    self.state.d.next = MAX31856State::WaitSlaveIdle;
+                    self.state.d.next = MAX31856State::Ready;
                 }
+                if self.spi_slave.busy.val() & self.spi_slave.transfer_done.val() {
+                    self.reg_ram.write_enable.next = true;
+                    self.reg_write_index.d.next = self.reg_write_index.q.val() + 1_usize;
+                    self.state.d.next = MAX31856State::WriteCmd;
+                }
+            }
+        }
+        // Warning! There is a contention between writes from the SPI bus and
+        // writes from the DAQ...  A more sophisticated model would segment
+        // the register ram into 2 blocks, and limit SPI writes to the lower block.
+        match self.dstate.q.val() {
+            DAQState::Idle => {
+                if self.auto_conversion_strobe.strobe.val() {
+                    self.auto_conversion_counter.d.next =
+                        self.auto_conversion_counter.q.val() + 1_u32;
+                    self.dstate.d.next = DAQState::Convert;
+                }
+            }
+            DAQState::Convert => {
+                self.reg_ram.write_address.next = 0x0E_u8.into();
+                self.reg_ram.write_data.next =
+                    bit_cast::<8, 3>(self.auto_conversion_counter.q.val().get_bits::<3>(0_usize))
+                        << 5_usize;
+                self.reg_ram.write_enable.next = true;
+                self.dstate.d.next = DAQState::Copy0;
+            }
+            DAQState::Copy0 => {
+                self.reg_ram.write_address.next = 0x0D_u8.into();
+                self.reg_ram.write_data.next =
+                    self.auto_conversion_counter.q.val().get_bits::<8>(3_usize);
+                self.reg_ram.write_enable.next = true;
+                self.dstate.d.next = DAQState::Copy1;
+            }
+            DAQState::Copy1 => {
+                self.reg_ram.write_address.next = 0x0C_u8.into();
+                self.reg_ram.write_data.next =
+                    self.auto_conversion_counter.q.val().get_bits::<8>(11_usize);
+                self.reg_ram.write_enable.next = true;
+                self.dstate.d.next = DAQState::Idle;
             }
         }
     }
@@ -248,12 +318,10 @@ fn do_spi_txn(
     x.master.start_send.next = true;
     wait_clock_cycle!(sim, clock, x);
     x.master.start_send.next = false;
-    x = sim
-        .watch(
-            |x| x.clock.val().0 && x.master.transfer_done.val().into(),
-            x,
-        )
-        .unwrap();
+    x = sim.watch(
+        |x| x.clock.val().0 && x.master.transfer_done.val().into(),
+        x,
+    )?;
     let ret = x.master.data_inbound.val();
     wait_clock_true!(sim, clock, x);
     wait_clock_cycles!(sim, clock, x, 50);
@@ -280,6 +348,54 @@ fn test_yosys_validate_test_fixture() {
 }
 
 #[test]
+fn test_multireg_reads() {
+    let uut = mk_test31856();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
+    sim.add_testbench(move |mut sim: Sim<Test31856>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        wait_clock_cycles!(sim, clock, x, 20);
+        let cmd = 1_u64 << 32_u64;
+        let result = do_spi_txn(40, cmd, false, x, &mut sim)?;
+        x = result.1;
+        sim_assert!(
+            sim,
+            result.0 & 0xFF_FF_FF_FF_u64 == Bits::<64>::from(0x03_FF_7F_C0_u32),
+            x
+        );
+        sim.done(x)
+    });
+    sim.run(Box::new(uut), 100_000).unwrap();
+}
+
+#[test]
+fn test_multireg_write() {
+    let uut = mk_test31856();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
+    sim.add_testbench(move |mut sim: Sim<Test31856>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        wait_clock_cycles!(sim, clock, x, 20);
+        let cmd = 0x81_u64 << 32_u64 | 0xDEADBEEF_u64;
+        println!("CMD = {:x}", cmd);
+        let result = do_spi_txn(40, cmd, false, x, &mut sim)?;
+        x = result.1;
+        let cmd = 0x1_u64 << 32_u64;
+        let result = do_spi_txn(40, cmd, false, x, &mut sim)?;
+        x = result.1;
+        sim_assert!(
+            sim,
+            result.0 & 0xFF_FF_FF_FF_u64 == Bits::<64>::from(0xDEADBEEF_u32),
+            x
+        );
+        sim.done(x)
+    });
+    sim.run(Box::new(uut), 100_000).unwrap();
+}
+
+#[test]
 fn test_reg_reads() {
     let uut = mk_test31856();
     let mut sim = Simulation::new();
@@ -302,6 +418,7 @@ fn test_reg_reads() {
         }
         sim.done(x)
     });
+    //    sim.run_traced(Box::new(uut), 1_000_000, std::fs::File::create("max3.vcd").unwrap()).unwrap();
     sim.run(Box::new(uut), 1_000_000).unwrap();
 }
 
@@ -345,7 +462,6 @@ fn test_reg_writes() {
     sim.run(Box::new(uut), 1_000_000).unwrap();
 }
 
-/*
 #[test]
 fn test_single_conversion() {
     let uut = mk_test31856();
@@ -353,27 +469,18 @@ fn test_single_conversion() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
-        // Initialize the chip...
-        let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, &mut sim)?;
+        wait_clock_true!(sim, clock, x);
+        wait_clock_cycles!(sim, clock, x, 50);
+        x = reg_write(0, 0x80, x, &mut sim)?;
+        x = sim.wait(200_000, x)?;
+        let result = reg_read(0x0E, x, &mut sim)?;
         x = result.1;
-        for n in 0..3 {
-            wait_clock_cycle!(sim, clock, x, 100);
-            let result = do_spi_txn(32, 0x8382006, true, x, &mut sim)?;
-            x = result.1;
-            wait_clock_cycle!(sim, clock, x, 100);
-            sim_assert!(sim, x.master.wires.miso.val(), x);
-            x = sim.watch(|x| !x.master.wires.miso.val(), x)?;
-            wait_clock_cycle!(sim, clock, x, 100);
-            let result = reg_read(3, x, &mut sim)?;
-            println!("Conversion {} -> {:x}", n, result.0);
-            x = result.1;
-            sim_assert!(sim, result.0 == Bits::<64>::from((n * 0x100) as u32), x);
-            println!("Conversion {} completed", n);
-        }
+        sim_assert!(sim, result.0 & 0xFF_u64 == 0x40_u64, x);
+        let cmd = 0xC_u64 << 24_u64;
+        let result = do_spi_txn(32, cmd, false, x, &mut sim)?;
+        x = result.1;
+        sim_assert!(sim, result.0 & 0xFFFFFF_u64 == 0x40_u64, x);
         sim.done(x)
     });
-    sim.run(Box::new(uut), 10_000_000).unwrap();
+    sim.run(Box::new(uut), 1_000_000).unwrap();
 }
-
-
- */
