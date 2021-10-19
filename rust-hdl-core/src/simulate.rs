@@ -192,7 +192,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
             let _ = handle.join().unwrap();
         }
     }
-    fn install_panic_handler() {
+    pub fn install_panic_handler() {
         let orig_hook = std::panic::take_hook();
         std::panic::set_hook(Box::new(move |panic_info| {
             orig_hook(panic_info);

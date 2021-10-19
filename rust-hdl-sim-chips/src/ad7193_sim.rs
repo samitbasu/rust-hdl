@@ -273,6 +273,7 @@ impl Default for Test7193 {
     }
 }
 
+#[cfg(test)]
 fn reg_read(
     reg_index: u32,
     x: Box<Test7193>,
@@ -289,6 +290,7 @@ fn reg_read(
     Ok((reg_val, result.1))
 }
 
+#[cfg(test)]
 fn reg_write(
     reg_index: u32,
     reg_value: u64,
@@ -305,6 +307,7 @@ fn reg_write(
     Ok(ret.1)
 }
 
+#[cfg(test)]
 fn do_spi_txn(
     bits: u16,
     value: u64,

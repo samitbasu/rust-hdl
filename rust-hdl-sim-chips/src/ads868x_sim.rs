@@ -261,6 +261,7 @@ impl Default for Test8689 {
     }
 }
 
+#[cfg(test)]
 fn do_spi_txn(
     bits: u16,
     value: u64,

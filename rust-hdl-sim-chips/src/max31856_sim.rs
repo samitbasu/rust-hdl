@@ -1,7 +1,6 @@
 use crate::ad7193_sim::AD7193Config;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::prelude::*;
-use std::num::Wrapping;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum MAX31856State {
@@ -280,6 +279,7 @@ impl Default for Test31856 {
     }
 }
 
+#[cfg(test)]
 fn reg_read(
     reg_index: u32,
     x: Box<Test31856>,
@@ -291,6 +291,7 @@ fn reg_read(
     Ok((reg_val, result.1))
 }
 
+#[cfg(test)]
 fn reg_write(
     reg_index: u32,
     reg_value: u64,
@@ -303,6 +304,7 @@ fn reg_write(
     Ok(ret.1)
 }
 
+#[cfg(test)]
 fn do_spi_txn(
     bits: u16,
     value: u64,
@@ -424,6 +426,7 @@ fn test_reg_reads() {
 
 #[test]
 fn test_reg_writes() {
+    use std::num::Wrapping;
     let uut = mk_test31856();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
