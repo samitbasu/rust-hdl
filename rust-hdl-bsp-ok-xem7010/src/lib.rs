@@ -7,10 +7,12 @@ use rust_hdl_ok_core::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok_core::ok_host::OpalKellyHost;
 
 use crate::pins::*;
+use rust_hdl_core::block::Block;
+use crate::synth::synth_obj;
 
 pub mod ddr_fifo7;
 pub mod download;
-mod mcb_if;
+pub mod mcb_if;
 pub mod mig7;
 pub mod pins;
 pub mod synth;
@@ -32,5 +34,9 @@ impl OpalKellyBSP for XEM7010 {
     }
     fn clocks() -> Vec<Signal<In, Clock>> {
         vec![xem_7010_pos_clock(), xem_7010_neg_clock()]
+    }
+
+    fn synth<U: Block>(uut: U, dir: &str) {
+        synth_obj(uut, dir)
     }
 }

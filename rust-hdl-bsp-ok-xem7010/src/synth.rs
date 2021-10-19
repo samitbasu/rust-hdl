@@ -1,4 +1,4 @@
-use std::fs::{copy, create_dir, remove_dir_all, File};
+use std::fs::{copy, create_dir, remove_dir_all, File, create_dir_all};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
@@ -185,8 +185,15 @@ pub fn generate_bitstream_xem_7010<U: Block>(mut uut: U, prefix: &str, options: 
     let verilog_text = filter_blackbox_directives(&generate_verilog(&uut));
     let xdc_text = generate_xdc(&uut);
     let dir = PathBuf::from(prefix);
+    let out_file = dir.join("top.out");
+    if out_file.exists() {
+        if String::from_utf8_lossy(&std::fs::read(out_file).unwrap()).contains("Vivado Run Complete") {
+            println!("Skipped synthesis!  Bitfile should exist");
+            return;
+        }
+    }
     let _ = remove_dir_all(&dir);
-    let _ = create_dir(&dir);
+    let _ = create_dir_all(&dir);
     let assets: Vec<String> = options.assets.clone();
     std::fs::write(dir.clone().join("top.v"), verilog_text).unwrap();
     std::fs::write(dir.clone().join("top.xdc"), xdc_text).unwrap();

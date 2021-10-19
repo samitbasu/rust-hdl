@@ -1,12 +1,14 @@
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok::mcb_if::MCBInterface4GDDR3;
-use rust_hdl_ok::mig7::MemoryInterfaceGenerator7Series;
-use rust_hdl_ok::prelude::*;
+use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
-use rust_hdl_test_ok_common::ok_tools::ok_test_prelude;
 use rust_hdl_widgets::prelude::*;
 use std::thread::sleep;
 use std::time::Duration;
+use rust_hdl_bsp_ok_xem7010::mcb_if::MCBInterface4GDDR3;
+use rust_hdl_bsp_ok_xem7010::mig7::MemoryInterfaceGenerator7Series;
+use rust_hdl_test_core::target_path;
+use rust_hdl_test_ok_common::prelude::*;
+use rust_hdl_bsp_ok_xem7010::XEM7010;
 
 declare_expanding_fifo!(FrontPorch, 16, 4096, 128, 256);
 declare_narrowing_fifo!(BackPorch, 128, 256, 16, 4096);
@@ -172,12 +174,13 @@ fn test_opalkelly_xem_7010_mig() {
     uut.sys_clock_neg.connect();
     uut.cmd_done.connect();
     uut.connect_all();
-    rust_hdl_test_ok_common::ok_tools::synth_obj_7010(uut, "xem7010_mig");
+    XEM7010::synth(uut, target_path!("xem7010/mig"));
+    test_opalkelly_xem_7010_mig_runtime().unwrap();
 }
 
-#[test]
+#[cfg(test)]
 fn test_opalkelly_xem_7010_mig_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("xem7010_mig/top.bit")?;
+    let hnd = ok_test_prelude(target_path!("xem7010/mig/top.bit"))?;
     hnd.reset_firmware(0);
     let data = (0..64).collect::<Vec<u8>>();
     println!("Input data {:?}", data);

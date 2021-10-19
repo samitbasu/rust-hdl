@@ -1,14 +1,17 @@
+use std::time::Instant;
+
+use rust_hdl_bsp_ok_xem7010::ddr_fifo7::DDR7FIFO;
+use rust_hdl_bsp_ok_xem7010::download::OpalKellyDDRBackedDownloadFIFO7Series;
+use rust_hdl_bsp_ok_xem7010::pins::xem_7010_leds;
 use rust_hdl_core::prelude::*;
-use rust_hdl_ok::ddr_fifo7::DDR7FIFO;
-use rust_hdl_ok::mcb_if::MCBInterface4GDDR3;
-use rust_hdl_ok::ok_download_ddr7::OpalKellyDDRBackedDownloadFIFO7Series;
-use rust_hdl_ok::prelude::*;
+use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
-use rust_hdl_test_ok_common::ok_tools::ok_test_prelude;
-use rust_hdl_test_ok_xem6010::opalkelly_xem_6010_ddr::test_opalkelly_ddr_stress_runtime;
+use rust_hdl_test_ok_common::prelude::*;
 use rust_hdl_widgets::dff::DFF;
 use rust_hdl_widgets::prelude::*;
-use std::time::Instant;
+use rust_hdl_bsp_ok_xem7010::XEM7010;
+use rust_hdl_test_core::target_path;
+use rust_hdl_bsp_ok_xem7010::mcb_if::MCBInterface4GDDR3;
 
 #[derive(LogicBlock)]
 struct OpalKellyDDR7Test {
@@ -80,12 +83,13 @@ fn test_synthesis_of_xem7010_ddr() {
     uut.sys_clock_p.connect();
     uut.sys_clock_n.connect();
     uut.connect_all();
-    rust_hdl_test_ok_common::ok_tools::synth_obj_7010(uut, "xem_7010_ddr");
+    XEM7010::synth(uut, target_path!("xem_7010/ddr"));
+    test_opalkelly_xem_7010_ddr_runtime().unwrap()
 }
 
-#[test]
+#[cfg(test)]
 fn test_opalkelly_xem_7010_ddr_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude("xem_7010_ddr/top.bit")?;
+    let hnd = ok_test_prelude(target_path!("xem_7010/ddr/top.bit"))?;
     hnd.reset_firmware(0);
     let test_size = 1024 * 1024 * 10;
     let mut data = (0..test_size)
@@ -108,79 +112,4 @@ fn test_opalkelly_xem_7010_ddr_runtime() -> Result<(), OkError> {
         assert_eq!(data[i], out_data[i]);
     }
     Ok(())
-}
-
-#[derive(LogicBlock)]
-struct OpalKellyDownloadDDRFIFO7SeriesStressTest {
-    mcb: MCBInterface4GDDR3,
-    hi: OpalKellyHostInterface,
-    ok_host: OpalKellyHost,
-    download: OpalKellyDDRBackedDownloadFIFO7Series,
-    count_in: DFF<Bits<32>>,
-    sys_clock_p: Signal<In, Clock>,
-    sys_clock_n: Signal<In, Clock>,
-    strobe: Strobe<32>,
-    will_write: Signal<Local, Bit>,
-    reset: WireIn,
-    enable: WireIn,
-}
-
-impl Default for OpalKellyDownloadDDRFIFO7SeriesStressTest {
-    fn default() -> Self {
-        Self {
-            mcb: Default::default(),
-            hi: OpalKellyHostInterface::xem_7010(),
-            ok_host: OpalKellyHost::xem_7010(),
-            download: OpalKellyDDRBackedDownloadFIFO7Series::new(0xA0),
-            count_in: Default::default(),
-            sys_clock_p: Default::default(),
-            sys_clock_n: Default::default(),
-            strobe: Strobe::new(48_000_000, 4_000_000.0),
-            will_write: Default::default(),
-            reset: WireIn::new(0x0),
-            enable: WireIn::new(0x1),
-        }
-    }
-}
-
-impl Logic for OpalKellyDownloadDDRFIFO7SeriesStressTest {
-    #[hdl_gen]
-    fn update(&mut self) {
-        self.hi.link(&mut self.ok_host.hi);
-        self.mcb.link(&mut self.download.mcb);
-        self.download.reset.next = self.reset.dataout.val().any();
-        self.download.sys_clock_p.next = self.sys_clock_p.val();
-        self.download.sys_clock_n.next = self.sys_clock_n.val();
-        self.download.ti_clk.next = self.ok_host.ti_clk.val();
-        self.count_in.clk.next = self.ok_host.ti_clk.val();
-        self.strobe.clock.next = self.ok_host.ti_clk.val();
-        self.download.write_clock.next = self.ok_host.ti_clk.val();
-        // Data source - counts on each strobe pulse and writes it to the input FIFO.
-        self.will_write.next =
-            self.strobe.strobe.val() & !self.download.full.val() & self.enable.dataout.val().any();
-        self.count_in.d.next = self.count_in.q.val() + self.will_write.val();
-        self.download.data_in.next = self.count_in.q.val();
-        self.download.write.next = self.will_write.val();
-        self.download.ok1.next = self.ok_host.ok1.val();
-        self.reset.ok1.next = self.ok_host.ok1.val();
-        self.enable.ok1.next = self.ok_host.ok1.val();
-        self.ok_host.ok2.next = self.download.ok2.val();
-        self.strobe.enable.next = self.enable.dataout.val().any();
-    }
-}
-
-#[test]
-fn test_opalkelly_xem_7010_ddr_stress_synth() {
-    let mut uut = OpalKellyDownloadDDRFIFO7SeriesStressTest::default();
-    uut.hi.link_connect_dest();
-    uut.mcb.link_connect_dest();
-    uut.sys_clock_p.connect();
-    uut.sys_clock_n.connect();
-    uut.connect_all();
-    rust_hdl_test_ok_common::ok_tools::synth_obj_7010(uut, "xem_7010_ddr_stress");
-}
-
-#[test]
-fn test_opalkelly_xem_7010_ddr_stress() -> Result<(), OkError> {
-    test_opalkelly_ddr_stress_runtime("xem_7010_ddr_stress/top.bit")
 }

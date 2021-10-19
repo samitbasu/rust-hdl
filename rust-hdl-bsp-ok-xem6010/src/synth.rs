@@ -48,6 +48,16 @@ pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, options: 
     let verilog_text = filter_blackbox_directives(&generate_verilog(&uut));
     let ucf_text = generate_ucf(&uut);
     let dir = PathBuf::from(prefix);
+    let out_file = dir.join("top.out");
+    if out_file.exists() {
+        let fs_contents = std::fs::read(out_file).unwrap();
+        let out_contents = String::from_utf8_lossy(&fs_contents);
+        if out_contents.contains(r#"Process "Generate Programming File" completed successfully"#) &
+            out_contents.contains(r#"All constraints were met."#) {
+            println!("Output firmware exists!  Synthesis skipped");
+            return;
+        }
+    }
     let _ = remove_dir_all(&dir);
     let _ = create_dir_all(&dir);
     let mut assets: Vec<String> = options.assets.clone();
