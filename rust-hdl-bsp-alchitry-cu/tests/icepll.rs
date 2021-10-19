@@ -1,7 +1,7 @@
 use rust_hdl_bsp_alchitry_cu::ice_pll::ICE40PLLBlock;
 use rust_hdl_core::prelude::*;
-use rust_hdl_yosys_synth::yosys_validate;
 use rust_hdl_test_core::target_path;
+use rust_hdl_yosys_synth::yosys_validate;
 
 #[test]
 fn test_pll_synthesizable() {

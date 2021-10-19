@@ -1,4 +1,4 @@
-use std::fs::{copy, create_dir, remove_dir_all, File, create_dir_all};
+use std::fs::{copy, create_dir, create_dir_all, remove_dir_all, File};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
@@ -187,7 +187,9 @@ pub fn generate_bitstream_xem_7010<U: Block>(mut uut: U, prefix: &str, options: 
     let dir = PathBuf::from(prefix);
     let out_file = dir.join("top.out");
     if out_file.exists() {
-        if String::from_utf8_lossy(&std::fs::read(out_file).unwrap()).contains("Vivado Run Complete") {
+        if String::from_utf8_lossy(&std::fs::read(out_file).unwrap())
+            .contains("Vivado Run Complete")
+        {
             println!("Skipped synthesis!  Bitfile should exist");
             return;
         }

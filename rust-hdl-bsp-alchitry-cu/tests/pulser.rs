@@ -1,8 +1,8 @@
 use rust_hdl_bsp_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_core::prelude::*;
+use rust_hdl_test_core::target_path;
 use rust_hdl_widgets::prelude::*;
 use std::time::Duration;
-use rust_hdl_test_core::target_path;
 
 const MHZ100: u64 = 100_000_000;
 

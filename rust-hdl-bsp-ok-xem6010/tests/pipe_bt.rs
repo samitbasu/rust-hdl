@@ -9,9 +9,6 @@ use rust_hdl_test_core::target_path;
 use rust_hdl_test_ok_common::prelude::*;
 use rust_hdl_widgets::prelude::*;
 
-
-
-
 declare_async_fifo!(OKTestAFIFO2, Bits<16>, 1024, 256);
 
 #[derive(LogicBlock)]

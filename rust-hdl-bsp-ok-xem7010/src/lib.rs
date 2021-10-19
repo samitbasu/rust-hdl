@@ -7,8 +7,8 @@ use rust_hdl_ok_core::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok_core::ok_host::OpalKellyHost;
 
 use crate::pins::*;
-use rust_hdl_core::block::Block;
 use crate::synth::synth_obj;
+use rust_hdl_core::block::Block;
 
 pub mod ddr_fifo7;
 pub mod download;

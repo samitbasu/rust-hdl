@@ -1,9 +1,9 @@
 use rust_hdl_bsp_ok_xem7010::XEM7010;
-use rust_hdl_ok_frontpanel_sys::OkError;
-use rust_hdl_test_ok_common::pipe::{OpalKellyPipeTest, test_opalkelly_pipe_in_runtime};
-use rust_hdl_ok_core::prelude::*;
 use rust_hdl_core::prelude::*;
+use rust_hdl_ok_core::prelude::*;
+use rust_hdl_ok_frontpanel_sys::OkError;
 use rust_hdl_test_core::target_path;
+use rust_hdl_test_ok_common::pipe::{test_opalkelly_pipe_in_runtime, OpalKellyPipeTest};
 
 #[test]
 fn test_opalkelly_xem_7010_synth_pipe() {

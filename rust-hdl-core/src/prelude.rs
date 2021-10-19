@@ -31,6 +31,7 @@ pub use crate::verilog_gen::filter_blackbox_directives;
 pub use crate::verilog_gen::VerilogCodeGenerator;
 pub use crate::verilog_visitor::VerilogVisitor;
 pub use crate::wait_clock_cycle;
+pub use crate::wait_clock_cycles;
 pub use crate::wait_clock_false;
 pub use crate::wait_clock_true;
 pub use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface, LogicState};

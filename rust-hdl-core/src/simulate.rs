@@ -192,7 +192,15 @@ impl<T: Send + 'static + Block> Simulation<T> {
             let _ = handle.join().unwrap();
         }
     }
+    fn install_panic_handler() {
+        let orig_hook = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |panic_info| {
+            orig_hook(panic_info);
+            std::process::exit(1);
+        }))
+    }
     pub fn run(&mut self, mut x: Box<T>, max_time: u64) -> Result<()> {
+        Self::install_panic_handler();
         check_connected(x.as_mut());
         // First initialize the workers.
         for id in 0..self.workers.len() {
@@ -219,6 +227,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
         Ok(())
     }
     pub fn run_traced<W: Write>(&mut self, mut x: Box<T>, max_time: u64, trace: W) -> Result<()> {
+        Self::install_panic_handler();
         check_connected(x.as_mut());
         let mut vcd = write_vcd_header(trace, x.as_ref());
         // First initialize the workers.
@@ -334,6 +343,15 @@ macro_rules! wait_clock_cycle {
             wait_clock_false!($sim, $clock, $me);
         }
     };
+    ($sim: ident, $clock: ident, $me: expr, $count: expr) => {
+        for _i in 0..$count {
+            wait_clock_cycle!($sim, $clock, $me);
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! wait_clock_cycles {
     ($sim: ident, $clock: ident, $me: expr, $count: expr) => {
         for _i in 0..$count {
             wait_clock_cycle!($sim, $clock, $me);

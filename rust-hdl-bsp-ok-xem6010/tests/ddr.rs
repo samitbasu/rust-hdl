@@ -7,10 +7,10 @@ use rust_hdl_bsp_ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
+use rust_hdl_test_core::target_path;
 use rust_hdl_test_ok_common::ddr;
 use rust_hdl_test_ok_common::prelude::*;
 use rust_hdl_widgets::prelude::*;
-use rust_hdl_test_core::target_path;
 
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFOStressTest {
@@ -78,4 +78,3 @@ fn test_opalkelly_xem_6010_synth_ddr_stress() {
     rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, target_path!("xem_6010/ddr_stress"));
     ddr::test_opalkelly_ddr_stress_runtime(target_path!("xem_6010/ddr_stress/top.bit")).unwrap()
 }
-

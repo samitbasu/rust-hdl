@@ -52,8 +52,9 @@ pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, options: 
     if out_file.exists() {
         let fs_contents = std::fs::read(out_file).unwrap();
         let out_contents = String::from_utf8_lossy(&fs_contents);
-        if out_contents.contains(r#"Process "Generate Programming File" completed successfully"#) &
-            out_contents.contains(r#"All constraints were met."#) {
+        if out_contents.contains(r#"Process "Generate Programming File" completed successfully"#)
+            & out_contents.contains(r#"All constraints were met."#)
+        {
             println!("Output firmware exists!  Synthesis skipped");
             return;
         }

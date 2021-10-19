@@ -4,11 +4,11 @@ use rust_hdl_bsp_ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
+use rust_hdl_test_core::target_path;
 use rust_hdl_test_ok_common::prelude::*;
 use rust_hdl_widgets::prelude::*;
 use std::thread::sleep;
 use std::time::Duration;
-use rust_hdl_test_core::target_path;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010MIGTest {

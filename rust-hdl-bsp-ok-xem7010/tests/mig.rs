@@ -1,14 +1,14 @@
+use rust_hdl_bsp_ok_xem7010::mcb_if::MCBInterface4GDDR3;
+use rust_hdl_bsp_ok_xem7010::mig7::MemoryInterfaceGenerator7Series;
+use rust_hdl_bsp_ok_xem7010::XEM7010;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
+use rust_hdl_test_core::target_path;
+use rust_hdl_test_ok_common::prelude::*;
 use rust_hdl_widgets::prelude::*;
 use std::thread::sleep;
 use std::time::Duration;
-use rust_hdl_bsp_ok_xem7010::mcb_if::MCBInterface4GDDR3;
-use rust_hdl_bsp_ok_xem7010::mig7::MemoryInterfaceGenerator7Series;
-use rust_hdl_test_core::target_path;
-use rust_hdl_test_ok_common::prelude::*;
-use rust_hdl_bsp_ok_xem7010::XEM7010;
 
 declare_expanding_fifo!(FrontPorch, 16, 4096, 128, 256);
 declare_narrowing_fifo!(BackPorch, 128, 256, 16, 4096);

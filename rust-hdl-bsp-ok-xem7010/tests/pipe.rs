@@ -4,10 +4,9 @@ use rust_hdl_bsp_ok_xem7010::XEM7010;
 use rust_hdl_core::prelude::*;
 use rust_hdl_ok_core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
-use rust_hdl_widgets::prelude::*;
-use rust_hdl_test_ok_common::prelude::*;
 use rust_hdl_test_core::target_path;
-
+use rust_hdl_test_ok_common::prelude::*;
+use rust_hdl_widgets::prelude::*;
 
 declare_async_fifo!(OKTestAFIFO2, Bits<16>, 1024, 256);
 
@@ -125,4 +124,3 @@ fn test_opalkelly_xem_7010_btpipe_runtime() -> Result<(), OkError> {
     }
     Ok(())
 }
-

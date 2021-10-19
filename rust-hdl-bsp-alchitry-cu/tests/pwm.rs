@@ -1,9 +1,9 @@
 use rust_hdl_core::prelude::*;
 use rust_hdl_test_core::snore::snore;
+use rust_hdl_test_core::target_path;
 use rust_hdl_widgets::prelude::*;
 use rust_hdl_yosys_synth::yosys_validate;
 use std::collections::BTreeMap;
-use rust_hdl_test_core::target_path;
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPWM<const P: usize> {
