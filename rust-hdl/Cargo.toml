@@ -1,0 +1,24 @@
+[package]
+name = "rust-hdl"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust-hdl-core = {path="../rust-hdl-core"}
+rust-hdl-widgets = {path="../rust-hdl-widgets"}
+rust-hdl-yosys-synth = {path="../rust-hdl-yosys-synth"}
+rust-hdl-bsp-ok-xem6010 = {path="../rust-hdl-bsp-ok-xem6010", optional=true}
+rust-hdl-bsp-ok-xem7010 = {path="../rust-hdl-bsp-ok-xem7010", optional=true}
+rust-hdl-ok-core = {path="../rust-hdl-ok-core", optional=true}
+rust-hdl-ok-frontpanel-sys = {path="../rust-hdl-ok-frontpanel-sys", optional=true}
+rust-hdl-toolchain-common = {path="../rust-hdl-toolchain-common", optional=true}
+rust-hdl-toolchain-ise = {path="../rust-hdl-toolchain-ise", optional=true}
+rust-hdl-toolchain-vivado = {path="../rust-hdl-toolchain-vivado", optional=true}
+rust-hdl-sim-chips = {path="../rust-hdl-sim-chips", optional=true}
+
+[features]
+default = ["ok", "sim"]
+ok = []
+sim = []

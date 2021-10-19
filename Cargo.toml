@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "rust-hdl",
     "rust-hdl-core",
     "rust-hdl-macros",
     "rust-hdl-test-core",
