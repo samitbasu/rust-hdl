@@ -1,6 +1,6 @@
 pub use rust_hdl_core::prelude::*;
 pub use rust_hdl_widgets::prelude::*;
-pub use rust_hdl_yosys::*;
+pub use rust_hdl_yosys_synth::*;
 #[cfg(feature = "ok")]
 pub use rust_hdl_bsp_ok_xem6010;
 #[cfg(feature = "ok")]
