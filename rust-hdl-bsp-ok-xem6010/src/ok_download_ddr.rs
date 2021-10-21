@@ -22,6 +22,8 @@ pub struct OpalKellyDDRBackedDownloadFIFO {
     pub ti_clk: Signal<In, Clock>,
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
+    // A monitor signal that indicates data has transferred
+    pub did_read: Signal<Out, Bit>,
     //  The DDR-backed FIFO
     ddr_fifo: DDRFIFO,
     reducer: FIFOReducer<32, 16, false>,
@@ -44,6 +46,7 @@ impl OpalKellyDDRBackedDownloadFIFO {
             ti_clk: Default::default(),
             ok1: Default::default(),
             ok2: Default::default(),
+            did_read: Default::default(),
             ddr_fifo: Default::default(),
             reducer: Default::default(),
             fifo_out: Default::default(),
@@ -79,6 +82,7 @@ impl Logic for OpalKellyDDRBackedDownloadFIFO {
         // Add a 1 cycle delay between the output pipe and the read delay
         self.fifo_out.read.next = self.read_delay.q.val();
         self.read_delay.d.next = self.o_pipe.read.val();
+        self.did_read.next = self.o_pipe.read.val();
         self.o_pipe.ready.next = !self.fifo_out.almost_empty.val();
         self.o_pipe.datain.next = self.fifo_out.data_out.val();
         self.o_pipe.ok1.next = self.ok1.val();
