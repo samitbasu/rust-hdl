@@ -7,6 +7,7 @@ edition = "2018"
 
 [dependencies]
 rust-hdl-core = {path="../rust-hdl-core"}
+rust-hdl-macros = {path="../rust-hdl-macros"}
 rust-hdl-widgets = {path="../rust-hdl-widgets"}
 rust-hdl-yosys-synth = {path="../rust-hdl-yosys-synth"}
 rust-hdl-bsp-ok-xem6010 = {path="../rust-hdl-bsp-ok-xem6010", optional=true}
