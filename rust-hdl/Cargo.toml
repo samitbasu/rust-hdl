@@ -16,11 +16,15 @@ rust-hdl-ok-frontpanel-sys = {path="../rust-hdl-ok-frontpanel-sys", optional=tru
 rust-hdl-toolchain-common = {path="../rust-hdl-toolchain-common", optional=true}
 rust-hdl-toolchain-ise = {path="../rust-hdl-toolchain-ise", optional=true}
 rust-hdl-toolchain-vivado = {path="../rust-hdl-toolchain-vivado", optional=true}
+rust-hdl-toolchain-icestorm = {path="../rust-hdl-toolchain-icestorm", optional=true}
 rust-hdl-sim-chips = {path="../rust-hdl-sim-chips", optional=true}
+rust-hdl-bsp-alchitry-cu = {path="../rust-hdl-bsp-alchitry-cu", optional=true}
 
 [features]
-default = ["ok", "sim", "toolchains"]
+default = ["ok", "sim", "ise", "vivado", "icestorm", "alchitry_cu"]
 ok = ["rust-hdl-bsp-ok-xem6010", "rust-hdl-bsp-ok-xem7010", "rust-hdl-ok-core", "rust-hdl-ok-frontpanel-sys"]
 sim = ["rust-hdl-sim-chips"]
-toolchains = ["rust-hdl-toolchain-ise", "rust-hdl-toolchain-common", "rust-hdl-toolchain-vivado"]
-
+ise = ["rust-hdl-toolchain-ise", "rust-hdl-toolchain-common"]
+vivado = ["rust-hdl-toolchain-vivado", "rust-hdl-toolchain-common"]
+icestorm = ["rust-hdl-toolchain-icestorm", "rust-hdl-toolchain-common"]
+alchitry_cu = ["rust-hdl-bsp-alchitry-cu"]
