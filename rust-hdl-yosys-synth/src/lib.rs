@@ -1,6 +1,6 @@
 use rust_hdl_core::prelude::*;
 use std::env::temp_dir;
-use std::fs::{create_dir, create_dir_all, remove_dir_all, File};
+use std::fs::{create_dir_all, remove_dir_all, File};
 use std::io::{Error, Write};
 use std::process::Command;
 
