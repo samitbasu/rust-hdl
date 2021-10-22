@@ -2,11 +2,17 @@
 name = "rust-hdl-ok-core"
 version = "0.1.0"
 edition = "2018"
+license = "MIT"
+description = "OpalKelly FrontPanel support components of the RustHDL crate."
+homepage = "https://rusthdl.org"
+repository = "https://github.com/SmithsDigitalForge/rust-hdl"
+keywords = ["fpga", "verilog", "hardware"]
+authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl-core = {path="../rust-hdl-core"}
-rust-hdl-yosys-synth = {path= "../rust-hdl-yosys-synth" }
-rust-hdl-widgets = {path="../rust-hdl-widgets"}
+rust-hdl-core = "^0.1"
+rust-hdl-yosys-synth = "^0.1"
+rust-hdl-widgets = "^0.1"
 regex = "1.5.4"
