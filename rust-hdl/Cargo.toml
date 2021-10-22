@@ -13,7 +13,6 @@ rust-hdl-yosys-synth = {path="../rust-hdl-yosys-synth"}
 rust-hdl-bsp-ok-xem6010 = {path="../rust-hdl-bsp-ok-xem6010", optional=true}
 rust-hdl-bsp-ok-xem7010 = {path="../rust-hdl-bsp-ok-xem7010", optional=true}
 rust-hdl-ok-core = {path="../rust-hdl-ok-core", optional=true}
-rust-hdl-ok-frontpanel-sys = {path="../rust-hdl-ok-frontpanel-sys", optional=true}
 rust-hdl-toolchain-common = {path="../rust-hdl-toolchain-common", optional=true}
 rust-hdl-toolchain-ise = {path="../rust-hdl-toolchain-ise", optional=true}
 rust-hdl-toolchain-vivado = {path="../rust-hdl-toolchain-vivado", optional=true}
@@ -26,8 +25,7 @@ rust-hdl-test-ok-common = {path="../rust-hdl-test-ok-common", optional=true}
 
 [features]
 default = ["ok", "sim", "ise", "vivado", "icestorm", "alchitry_cu", "test_tools"]
-ok = ["rust-hdl-bsp-ok-xem6010", "rust-hdl-bsp-ok-xem7010", "rust-hdl-ok-core",
-    "rust-hdl-ok-frontpanel-sys", "rust-hdl-test-ok-common"]
+ok = ["rust-hdl-bsp-ok-xem6010", "rust-hdl-bsp-ok-xem7010", "rust-hdl-ok-core", "rust-hdl-test-ok-common"]
 sim = ["rust-hdl-sim-chips"]
 ise = ["rust-hdl-toolchain-ise", "rust-hdl-toolchain-common"]
 vivado = ["rust-hdl-toolchain-vivado", "rust-hdl-toolchain-common"]

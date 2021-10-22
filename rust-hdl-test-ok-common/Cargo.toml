@@ -10,12 +10,12 @@ keywords = ["fpga", "verilog", "hardware"]
 authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
-rust-hdl-core = {path="../rust-hdl-core"}
-rust-hdl-widgets = {path="../rust-hdl-widgets"}
-rust-hdl-ok-frontpanel-sys = {path="../rust-hdl-ok-frontpanel-sys"}
-rust-hdl-sim-chips = {path="../rust-hdl-sim-chips"}
-rust-hdl-yosys-synth = {path="../rust-hdl-yosys-synth"}
-rust-hdl-ok-core = {path="../rust-hdl-ok-core"}
-rust-hdl-test-core = {path="../rust-hdl-test-core"}
+rust-hdl-core = "^0.1"
+rust-hdl-widgets = "^0.1"
+rust-hdl-ok-frontpanel-sys = "^0.1"
+rust-hdl-sim-chips = "^0.1"
+rust-hdl-yosys-synth = "^0.1"
+rust-hdl-ok-core = "^0.1"
+rust-hdl-test-core = "^0.1"
 regex = "1.5.4"
 rand = "0.8.4"
