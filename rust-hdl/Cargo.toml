@@ -19,6 +19,8 @@ rust-hdl-toolchain-vivado = {path="../rust-hdl-toolchain-vivado", optional=true}
 rust-hdl-toolchain-icestorm = {path="../rust-hdl-toolchain-icestorm", optional=true}
 rust-hdl-sim-chips = {path="../rust-hdl-sim-chips", optional=true}
 rust-hdl-bsp-alchitry-cu = {path="../rust-hdl-bsp-alchitry-cu", optional=true}
+rust-hdl-test-core = {path="../rust-hdl-test-core", optional=true}
+
 
 [features]
 default = ["ok", "sim", "ise", "vivado", "icestorm", "alchitry_cu"]
@@ -28,3 +30,4 @@ ise = ["rust-hdl-toolchain-ise", "rust-hdl-toolchain-common"]
 vivado = ["rust-hdl-toolchain-vivado", "rust-hdl-toolchain-common"]
 icestorm = ["rust-hdl-toolchain-icestorm", "rust-hdl-toolchain-common"]
 alchitry_cu = ["rust-hdl-bsp-alchitry-cu"]
+test_tools = ["rust-hdl-test-core"]
