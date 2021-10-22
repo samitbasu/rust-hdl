@@ -2,17 +2,21 @@
 name = "rust-hdl-bsp-ok-xem6010"
 version = "0.1.0"
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
+description = "Core components of the RustHDL crate."
+homepage = "https://rusthdl.org"
+repository = "https://github.com/SmithsDigitalForge/rust-hdl"
+keywords = ["fpga", "verilog", "hardware"]
+authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
-rust-hdl-core = {path="../rust-hdl-core"}
-rust-hdl-toolchain-ise = {path="../rust-hdl-toolchain-ise"}
-rust-hdl-ok-core = {path="../rust-hdl-ok-core"}
-rust-hdl-widgets = {path="../rust-hdl-widgets"}
-rust-hdl-yosys-synth = {path="../rust-hdl-yosys-synth"}
+rust-hdl-core = "^0.1"
+rust-hdl-toolchain-ise = "^0.1"
+rust-hdl-ok-core = "^0.1"
+rust-hdl-widgets = "^0.1"
+rust-hdl-yosys-synth = "^0.1"
 
 [dev-dependencies]
-rust-hdl-test-ok-common = {path="../rust-hdl-test-ok-common"}
+rust-hdl-test-ok-common = "^0.1"
 rust-hdl-ok-frontpanel-sys = "^0.1"
 
