@@ -13,7 +13,9 @@ pub use rust_hdl_ok_frontpanel_sys as ok_frontpanel_sys;
 pub use rust_hdl_sim_chips as sim_chips;
 #[cfg(feature = "test_tools")]
 pub use rust_hdl_test_core as test_core;
-#[cfg(all(feature = "test_tools", feature = "ok"))]
+#[cfg(feature = "test_tools")]
+pub use rust_hdl_test_core::target_path;
+#[cfg(feature = "ok")]
 pub use rust_hdl_test_ok_common as test_ok_common;
 #[cfg(feature = "icestorm")]
 pub use rust_hdl_toolchain_icestorm as toolchain_icestorm;

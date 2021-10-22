@@ -1,6 +1,6 @@
 use rust_hdl_core::prelude::*;
 use std::env::temp_dir;
-use std::fs::{create_dir, remove_dir_all, File};
+use std::fs::{create_dir, create_dir_all, remove_dir_all, File};
 use std::io::{Error, Write};
 use std::process::Command;
 
@@ -22,7 +22,7 @@ impl From<std::io::Error> for SynthError {
 pub fn yosys_validate(prefix: &str, translation: &str) -> Result<(), SynthError> {
     let dir = temp_dir().as_path().join(prefix);
     let _ = remove_dir_all(&dir);
-    let _ = create_dir(&dir);
+    let _ = create_dir_all(&dir);
     let mut v_file = File::create(dir.clone().join("top.v")).unwrap();
     write!(v_file, "{}", translation).unwrap();
     let output = Command::new("yosys")

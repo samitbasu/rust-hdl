@@ -270,6 +270,6 @@ pub fn synth_obj<U: Block>(uut: U, dir: &str) {
     let vlog = generate_verilog(&uut);
     find_ok_bus_collisions(&vlog);
     let _ucf = rust_hdl_toolchain_ise::ucf_gen::generate_ucf(&uut);
-    rust_hdl_yosys_synth::yosys_validate("vlog", &vlog).unwrap();
+    rust_hdl_yosys_synth::yosys_validate(dir, &vlog).unwrap();
     generate_bitstream_xem_6010(uut, dir, Default::default());
 }
