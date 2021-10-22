@@ -1,4 +1,3 @@
-use crate::ad7193_sim::AD7193Config;
 use crate::max31856_sim::MAX31856Simulator;
 use rust_hdl_core::prelude::*;
 use rust_hdl_widgets::prelude::SPIConfig;
