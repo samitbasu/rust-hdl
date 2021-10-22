@@ -2,10 +2,14 @@
 name = "rust-hdl-widgets"
 version = "0.1.0"
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
+description = "Base widgets used by RustHDL"
+homepage = "https://rusthdl.org"
+repository = "https://github.com/SmithsDigitalForge/rust-hdl"
+keywords = ["fpga", "verilog", "hardware"]
+authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
-rust-hdl-core = {path="../rust-hdl-core"}
-rust-hdl-macros = {path="../rust-hdl-macros"}
-rust-hdl-yosys-synth = {path= "../rust-hdl-yosys-synth" }
+rust-hdl-core = "^0.1"
+rust-hdl-macros = "^0.1"
+rust-hdl-yosys-synth = "^0.1"
