@@ -14,19 +14,19 @@ pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<T
     let name = &input.ident;
     let (impl_generics, ty_generics, _where_clause) = &input.generics.split_for_impl();
     Ok(quote! {
-        impl #impl_generics rust_hdl_core::logic::Logic for #name #ty_generics {
+        impl #impl_generics logic::Logic for #name #ty_generics {
             fn update(&mut self) {}
             fn connect(&mut self) {}
         }
 
-        impl #impl_generics rust_hdl_core::block::Block for #name #ty_generics {
+        impl #impl_generics block::Block for #name #ty_generics {
             #connect_all
             #update_all
             #has_changed
             #accept
         }
 
-        impl #impl_generics rust_hdl_core::logic::LogicLink for #name #ty_generics {
+        impl #impl_generics logic::LogicLink for #name #ty_generics {
             #link
             #link_hdl
         }
@@ -50,7 +50,7 @@ fn get_link(fields: Vec<TS>) -> Result<TS> {
 fn get_link_hdl(fields: Vec<TS>) -> Result<TS> {
     let fields_as_strings = fields.iter().map(|x| x.to_string()).collect::<Vec<_>>();
     Ok(quote! {
-        fn link_hdl(&self, my_name: &str, this: &str, that: &str) -> Vec<rust_hdl_core::ast::VerilogLink> {
+        fn link_hdl(&self, my_name: &str, this: &str, that: &str) -> Vec<ast::VerilogLink> {
             let mut ret = vec![];
             #(ret.append(&mut self.#fields.link_hdl(#fields_as_strings, this, that));)*
             ret
@@ -61,7 +61,7 @@ fn get_link_hdl(fields: Vec<TS>) -> Result<TS> {
 fn get_accept(fields: Vec<TS>) -> Result<TS> {
     let fields_as_strings = fields.iter().map(|x| x.to_string()).collect::<Vec<_>>();
     Ok(quote! {
-        fn accept(&self, name: &str, probe: &mut dyn rust_hdl_core::probe::Probe) {
+        fn accept(&self, name: &str, probe: &mut dyn probe::Probe) {
             probe.visit_start_namespace(name, self);
             #(self.#fields.accept(#fields_as_strings, probe);)*
             probe.visit_end_namespace(name, self);

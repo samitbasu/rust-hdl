@@ -60,7 +60,7 @@ fn connect_method_call(node: &syn::ExprMethodCall) -> Result<TS> {
         if let Expr::Reference(t) = target {
             let target = &t.expr;
             return Ok(quote!(
-                rust_hdl_core::logic::logic_connect_link_fn(&mut #source, &mut #target);
+                logic::logic_connect_link_fn(&mut #source, &mut #target);
             ));
         }
     }
@@ -73,7 +73,7 @@ fn connect_assignment(node: &syn::ExprAssign) -> Result<TS> {
             if nxt.eq("next") {
                 let lhs = &field.base;
                 return Ok(quote!(
-                    rust_hdl_core::logic::logic_connect_fn(&mut #lhs)
+                    logic::logic_connect_fn(&mut #lhs)
                 ));
             }
         }

@@ -18,8 +18,8 @@ pub(crate) fn hdl_gen_process(item: syn::ItemFn) -> Result<TS> {
     }
     let body = hdl_block(&item.block)?;
     Ok(quote! {
-    fn hdl(&self) -> rust_hdl_core::ast::Verilog {
-       rust_hdl_core::ast::Verilog::Combinatorial(#body)
+    fn hdl(&self) -> ast::Verilog {
+       ast::Verilog::Combinatorial(#body)
     }
     })
 }
@@ -57,8 +57,8 @@ fn hdl_for_loop(expr: &syn::ExprForLoop) -> Result<TS> {
                     let block = hdl_block(&expr.body)?;
                     let loop_index = quote!(#loop_index).to_string();
                     return Ok(quote!(
-                    rust_hdl_core::ast::VerilogStatement::Loop(
-                        rust_hdl_core::ast::VerilogLoop {
+                    ast::VerilogStatement::Loop(
+                        ast::VerilogLoop {
                             index: #loop_index.into(),
                             from: #from.into(),
                             to: #to.into(),
@@ -113,7 +113,7 @@ fn hdl_non_indexed_assignment(expr: &syn::ExprAssign) -> Result<TS> {
     }
     let value = hdl_compute(expr.right.as_ref())?;
     Ok(quote!({
-       rust_hdl_core::ast::VerilogStatement::Assignment(#target, #value)
+       ast::VerilogStatement::Assignment(#target, #value)
     }))
 }
 
@@ -125,7 +125,7 @@ fn hdl_map_field_assign(expr: &syn::ExprField) -> Result<TS> {
             "Do not assign to .val in HDL.  Use .next instead.",
         ));
     }
-    Ok(quote!(rust_hdl_core::ast::VerilogExpression::Signal(#expr_expanded.to_string())))
+    Ok(quote!(ast::VerilogExpression::Signal(#expr_expanded.to_string())))
 }
 
 fn hdl_map_field(expr: &syn::ExprField) -> Result<TS> {
@@ -136,27 +136,27 @@ fn hdl_map_field(expr: &syn::ExprField) -> Result<TS> {
             "Do not read from .next in HDL.  Use .val instead.",
         ));
     }
-    Ok(quote!(rust_hdl_core::ast::VerilogExpression::Signal(#expr_expanded.to_string())))
+    Ok(quote!(ast::VerilogExpression::Signal(#expr_expanded.to_string())))
 }
 
 fn hdl_map_path(expr: &syn::ExprPath) -> Result<TS> {
     let expr_expanded = common::fixup_ident(quote!(#expr).to_string());
-    Ok(quote!(rust_hdl_core::ast::VerilogExpression::Signal(#expr_expanded.to_string())))
+    Ok(quote!(ast::VerilogExpression::Signal(#expr_expanded.to_string())))
 }
 
 fn hdl_conditional(conditions: &syn::ExprIf) -> Result<TS> {
     let test_condition = hdl_compute(&conditions.cond)?;
     let then_branch = hdl_block(&conditions.then_branch)?;
-    let mut else_branch = quote!({ rust_hdl_core::ast::VerilogBlockOrConditional::None });
+    let mut else_branch = quote!({ ast::VerilogBlockOrConditional::None });
     if let Some((_, e_branch)) = &conditions.else_branch {
         match e_branch.as_ref() {
             Expr::Block(block) => {
                 let else_branch_block = hdl_block(&block.block)?;
-                else_branch = quote!({rust_hdl_core::ast::VerilogBlockOrConditional::Block(#else_branch_block)});
+                else_branch = quote!({ast::VerilogBlockOrConditional::Block(#else_branch_block)});
             }
             Expr::If(cond) => {
                 let else_branch_block = hdl_conditional(cond)?;
-                else_branch = quote!({rust_hdl_core::ast::VerilogBlockOrConditional::Conditional(Box::new(#else_branch_block))});
+                else_branch = quote!({ast::VerilogBlockOrConditional::Conditional(Box::new(#else_branch_block))});
             }
             _ => {
                 return Err(syn::Error::new(
@@ -167,7 +167,7 @@ fn hdl_conditional(conditions: &syn::ExprIf) -> Result<TS> {
         }
     }
     Ok(quote!({
-       rust_hdl_core::ast::VerilogStatement::If(rust_hdl_core::ast::VerilogConditional{test: #test_condition, then: #then_branch, otherwise: #else_branch})
+       ast::VerilogStatement::If(ast::VerilogConditional{test: #test_condition, then: #then_branch, otherwise: #else_branch})
     }))
 }
 
@@ -182,8 +182,8 @@ fn hdl_match(m: &syn::ExprMatch) -> Result<TS> {
     Ok(quote!({
        {
           let mut cases = vec![];
-          #(cases.push(rust_hdl_core::ast::VerilogCase{condition: #condition.to_string(), block: #blocks}));*;
-          rust_hdl_core::ast::VerilogStatement::Match(rust_hdl_core::ast::VerilogMatch{test: #test, cases: cases})
+          #(cases.push(ast::VerilogCase{condition: #condition.to_string(), block: #blocks}));*;
+          ast::VerilogStatement::Match(ast::VerilogMatch{test: #test, cases: cases})
        }
     }))
 }
@@ -194,7 +194,7 @@ fn hdl_compute(m: &syn::Expr) -> Result<TS> {
         Expr::Field(field) => hdl_map_field(field),
         Expr::Paren(paren) => {
             let inner = hdl_compute(&paren.expr)?;
-            Ok(quote!(rust_hdl_core::ast::VerilogExpression::Paren(Box::new(#inner))))
+            Ok(quote!(ast::VerilogExpression::Paren(Box::new(#inner))))
         }
         Expr::Binary(binop) => hdl_binop(binop),
         Expr::Unary(unop) => hdl_unop(unop),
@@ -212,8 +212,8 @@ fn hdl_compute(m: &syn::Expr) -> Result<TS> {
 fn hdl_unop(unop: &syn::ExprUnary) -> Result<TS> {
     let arg = hdl_compute(&unop.expr)?;
     let op = match &unop.op {
-        UnOp::Not(_) => quote!(rust_hdl_core::ast::VerilogOpUnary::Not),
-        UnOp::Neg(_) => quote!(rust_hdl_core::ast::VerilogOpUnary::Neg),
+        UnOp::Not(_) => quote!(ast::VerilogOpUnary::Not),
+        UnOp::Neg(_) => quote!(ast::VerilogOpUnary::Neg),
         _ => {
             return Err(syn::Error::new(
                 unop.span(),
@@ -222,7 +222,7 @@ fn hdl_unop(unop: &syn::ExprUnary) -> Result<TS> {
         }
     };
     Ok(quote!({
-      rust_hdl_core::ast::VerilogExpression::Unary(#op, Box::new(#arg))
+      ast::VerilogExpression::Unary(#op, Box::new(#arg))
     }))
 }
 
@@ -230,22 +230,22 @@ fn hdl_binop(binop: &syn::ExprBinary) -> Result<TS> {
     let left = hdl_compute(&binop.left)?;
     let right = hdl_compute(&binop.right)?;
     let op = match &binop.op {
-        BinOp::Add(_) => quote!(rust_hdl_core::ast::VerilogOp::Add),
-        BinOp::Sub(_) => quote!(rust_hdl_core::ast::VerilogOp::Sub),
-        BinOp::Mul(_) => quote!(rust_hdl_core::ast::VerilogOp::Mul),
-        BinOp::And(_) => quote!(rust_hdl_core::ast::VerilogOp::LogicalAnd),
-        BinOp::Or(_) => quote!(rust_hdl_core::ast::VerilogOp::LogicalOr),
-        BinOp::BitXor(_) => quote!(rust_hdl_core::ast::VerilogOp::BitXor),
-        BinOp::BitAnd(_) => quote!(rust_hdl_core::ast::VerilogOp::BitAnd),
-        BinOp::BitOr(_) => quote!(rust_hdl_core::ast::VerilogOp::BitOr),
-        BinOp::Shl(_) => quote!(rust_hdl_core::ast::VerilogOp::Shl),
-        BinOp::Shr(_) => quote!(rust_hdl_core::ast::VerilogOp::Shr),
-        BinOp::Eq(_) => quote!(rust_hdl_core::ast::VerilogOp::Eq),
-        BinOp::Lt(_) => quote!(rust_hdl_core::ast::VerilogOp::Lt),
-        BinOp::Le(_) => quote!(rust_hdl_core::ast::VerilogOp::Le),
-        BinOp::Ne(_) => quote!(rust_hdl_core::ast::VerilogOp::Ne),
-        BinOp::Ge(_) => quote!(rust_hdl_core::ast::VerilogOp::Ge),
-        BinOp::Gt(_) => quote!(rust_hdl_core::ast::VerilogOp::Gt),
+        BinOp::Add(_) => quote!(ast::VerilogOp::Add),
+        BinOp::Sub(_) => quote!(ast::VerilogOp::Sub),
+        BinOp::Mul(_) => quote!(ast::VerilogOp::Mul),
+        BinOp::And(_) => quote!(ast::VerilogOp::LogicalAnd),
+        BinOp::Or(_) => quote!(ast::VerilogOp::LogicalOr),
+        BinOp::BitXor(_) => quote!(ast::VerilogOp::BitXor),
+        BinOp::BitAnd(_) => quote!(ast::VerilogOp::BitAnd),
+        BinOp::BitOr(_) => quote!(ast::VerilogOp::BitOr),
+        BinOp::Shl(_) => quote!(ast::VerilogOp::Shl),
+        BinOp::Shr(_) => quote!(ast::VerilogOp::Shr),
+        BinOp::Eq(_) => quote!(ast::VerilogOp::Eq),
+        BinOp::Lt(_) => quote!(ast::VerilogOp::Lt),
+        BinOp::Le(_) => quote!(ast::VerilogOp::Le),
+        BinOp::Ne(_) => quote!(ast::VerilogOp::Ne),
+        BinOp::Ge(_) => quote!(ast::VerilogOp::Ge),
+        BinOp::Gt(_) => quote!(ast::VerilogOp::Gt),
         _ => {
             return Err(syn::Error::new(
                 binop.span(),
@@ -254,13 +254,13 @@ fn hdl_binop(binop: &syn::ExprBinary) -> Result<TS> {
         }
     };
     Ok(quote!({
-      rust_hdl_core::ast::VerilogExpression::Binary(Box::new(#left), #op, Box::new(#right))
+      ast::VerilogExpression::Binary(Box::new(#left), #op, Box::new(#right))
     }))
 }
 
 fn hdl_literal(lit: &syn::ExprLit) -> Result<TS> {
     Ok(quote!({
-       rust_hdl_core::ast::VerilogExpression::Literal(#lit.into())
+       ast::VerilogExpression::Literal(#lit.into())
     }))
 }
 
@@ -268,7 +268,7 @@ fn hdl_cast(cast: &syn::ExprCast) -> Result<TS> {
     let expr = hdl_compute(cast.expr.as_ref())?;
     let dtype = cast.ty.as_ref();
     Ok(quote!({
-       rust_hdl_core::ast::VerilogExpression::Cast(Box::new(#expr), #dtype::bits())
+       ast::VerilogExpression::Cast(Box::new(#expr), #dtype::bits())
     }))
 }
 
@@ -279,11 +279,11 @@ fn hdl_call(call: &syn::ExprCall) -> Result<TS> {
     } else if funcname.starts_with("all_true") {
         let arg = hdl_compute(&call.args[0])?;
         Ok(quote!({
-        rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::All, Box::new(#arg))
+        ast::VerilogExpression::Unary(ast::VerilogOpUnary::All, Box::new(#arg))
         }))
     } else {
         Ok(quote!({
-        rust_hdl_core::ast::VerilogExpression::Literal(#call.into())
+        ast::VerilogExpression::Literal(#call.into())
         }))
     }
 }
@@ -306,10 +306,10 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
         let offset = quote!(#expr.#get_offset_name());
         let value = hdl_compute(method.args.index(0))?;
         return Ok(quote!({
-           rust_hdl_core::ast::VerilogStatement::SliceAssignment{
+           ast::VerilogStatement::SliceAssignment{
                base: #signal.to_string(),
                width: #width,
-               offset: rust_hdl_core::ast::VerilogExpression::Literal(#offset.into()),
+               offset: ast::VerilogExpression::Literal(#offset.into()),
                replacement: #value,
            }
         }));
@@ -319,7 +319,7 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
         let index = hdl_compute(method.args.index(0))?;
         let value = hdl_compute(method.args.index(1))?;
         return Ok(quote!({
-           rust_hdl_core::ast::VerilogStatement::SliceAssignment{
+           ast::VerilogStatement::SliceAssignment{
                base: #signal.to_string(),
                width: 1,
                offset: #index,
@@ -332,7 +332,7 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
         let target = method.args.index(0);
         let target = common::fixup_ident(quote!(#target).to_string());
         return Ok(quote!(
-            rust_hdl_core::ast::VerilogStatement::Link(#expr.link_hdl(#signal, #signal, #target))
+            ast::VerilogStatement::Link(#expr.link_hdl(#signal, #signal, #target))
         ));
     }
     Err(syn::Error::new(
@@ -361,7 +361,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
         let width = quote!(#expr.#get_width_name());
         let offset = quote!(#expr.#get_offset_name());
         return Ok(quote!({
-           rust_hdl_core::ast::VerilogExpression::Slice(#signal.to_string(), #width, Box::new(rust_hdl_core::ast::VerilogExpression::Literal(#offset.into())))
+           ast::VerilogExpression::Slice(#signal.to_string(), #width, Box::new(ast::VerilogExpression::Literal(#offset.into())))
         }));
     }
     match method_name.as_ref() {
@@ -384,7 +384,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
             }
             let offset = hdl_compute(&method.args[0])?;
             Ok(quote!({
-               rust_hdl_core::ast::VerilogExpression::Slice(Box::new(#target), #width, Box::new(#offset))
+               ast::VerilogExpression::Slice(Box::new(#target), #width, Box::new(#offset))
             }))
         }
         "get_bit" => {
@@ -397,7 +397,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
             }
             let index = hdl_compute(method.args.first().unwrap())?;
             Ok(quote!({
-               rust_hdl_core::ast::VerilogExpression::Index(Box::new(#signal), Box::new(#index))
+               ast::VerilogExpression::Index(Box::new(#signal), Box::new(#index))
             }))
         }
         "replace_bit" => {
@@ -411,26 +411,26 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
             let index = hdl_compute(method.args.index(0))?;
             let value = hdl_compute(method.args.index(1))?;
             Ok(quote!({
-               rust_hdl_core::ast::VerilogExpression::IndexReplace(Box::new(#receiver), Box::new(#index), Box::new(#value))
+               ast::VerilogExpression::IndexReplace(Box::new(#receiver), Box::new(#index), Box::new(#value))
             }))
         }
         "all" => {
             let target = hdl_compute(method.receiver.as_ref())?;
             Ok(quote!({
-                rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::All, Box::new(#target))
+                ast::VerilogExpression::Unary(ast::VerilogOpUnary::All, Box::new(#target))
             }))
         }
         "any" => {
             let target = hdl_compute(method.receiver.as_ref())?;
             Ok(quote!({
-            rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::Any,
+            ast::VerilogExpression::Unary(ast::VerilogOpUnary::Any,
                 Box::new(#target))
             }))
         }
         "xor" => {
             let target = hdl_compute(method.receiver.as_ref())?;
             Ok(quote!({
-                rust_hdl_core::ast::VerilogExpression::Unary(rust_hdl_core::ast::VerilogOpUnary::Xor,
+                ast::VerilogExpression::Unary(ast::VerilogOpUnary::Xor,
                 Box::new(#target))
             }))
         }
@@ -479,25 +479,19 @@ fn hdl_macro(x: &syn::ExprMacro) -> Result<TS> {
             let invocation_as_string = invocation_as_string
                 .replace("println ! (\"", "")
                 .replace("\")", "");
-            Ok(
-                quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())),
-            )
+            Ok(quote!(ast::VerilogStatement::Comment(#invocation_as_string.to_string())))
         }
         "comment" => {
             let invocation_as_string = invocation_as_string
                 .replace("comment ! (\"", "")
                 .replace("\")", "");
-            Ok(
-                quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())),
-            )
+            Ok(quote!(ast::VerilogStatement::Comment(#invocation_as_string.to_string())))
         }
         "assert" => {
             let invocation_as_string = invocation_as_string
                 .replace("assert ! (\"", "")
                 .replace("\")", "");
-            Ok(
-                quote!(rust_hdl_core::ast::VerilogStatement::Comment(#invocation_as_string.to_string())),
-            )
+            Ok(quote!(ast::VerilogStatement::Comment(#invocation_as_string.to_string())))
         }
         _ => Err(syn::Error::new(
             x.span(),
