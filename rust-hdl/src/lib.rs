@@ -7,6 +7,8 @@ pub use rust_hdl_bsp_ok_xem7010 as bsp_ok_xem7010;
 pub use rust_hdl_core as core;
 #[cfg(feature = "ok")]
 pub use rust_hdl_ok_core as ok_core;
+#[cfg(feature = "ok")]
+pub use rust_hdl_ok_frontpanel_sys as ok_frontpanel_sys;
 #[cfg(feature = "sim")]
 pub use rust_hdl_sim_chips as sim_chips;
 #[cfg(feature = "test_tools")]
