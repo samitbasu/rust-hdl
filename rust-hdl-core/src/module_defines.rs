@@ -201,15 +201,13 @@ impl Probe for ModuleDefines {
 impl ModuleDefines {
     pub fn defines(&self) -> String {
         let mut io = CodeWriter::new();
-        // Look for the wrapper case
-        let is_wrapper =
-            self.details.iter()
-                .any(|x| matches!(x.1.code, Verilog::Wrapper(_)));
         self.details
             .iter()
             .filter(|x| x.0.len() != 0)
             .filter(|x| !matches!(x.1.code, Verilog::Blackbox(_)))
             .for_each(|k| {
+                // Look for the wrapper case
+                let is_wrapper = matches!(k.1.code, Verilog::Wrapper(_));
                 let module_name = k.0;
                 let module_details = k.1;
                 let atoms = &module_details.atoms;

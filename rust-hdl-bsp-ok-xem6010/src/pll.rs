@@ -99,20 +99,9 @@ impl Logic for PLLFreqSynthesis {
     }
 
     fn hdl(&self) -> Verilog {
-        Verilog::Blackbox(
-            BlackBox {
+        Verilog::Wrapper(
+            Wrapper {
                 code: format!(r#"
-module pll_freq_synth(clock_in, clock_out0, clock_out1, clock_out2, clock_out3, clock_out4, clock_out5, locked, reset);
-
-input wire clock_in;
-output wire clock_out0;
-output wire clock_out1;
-output wire clock_out2;
-output wire clock_out3;
-output wire clock_out4;
-output wire clock_out5;
-output wire locked;
-input wire reset;
 
 wire clock_feedback;
 
@@ -172,9 +161,17 @@ pll_adv_inst (
       .DI			(16'h0000),        		    // dynamic reconfig data input (16-bits)
       .DWE			(1'b0),                		// dynamic reconfig write enable input
       .RST			(reset),               		// asynchronous pll reset
-      .REL			(1'b0)) ;    			    // used to force the state of the PFD outputs (test only)
-endmodule
-
+      .REL			(1'b0)) ;    			    // used to force the state of the PFD outputs (test only)"#,
+                              PLLX = self._settings.pll_mult,
+                              CLKIN_PERIOD = self._settings.clkin_period_ns,
+                              CLK0_DIV = self._settings.output_divs[0],
+                              CLK1_DIV = self._settings.output_divs[1],
+                              CLK2_DIV = self._settings.output_divs[2],
+                              CLK3_DIV = self._settings.output_divs[3],
+                              CLK4_DIV = self._settings.output_divs[4],
+                              CLK5_DIV = self._settings.output_divs[5],
+                              PLLD = self._settings.pll_div),
+                cores: r#"
 (* blackbox *)
 module PLL_ADV (
         CLKFBDCM,
@@ -285,18 +282,7 @@ input [15:0] DI;
 input [4:0] DADDR;
 
 endmodule
-                "#,
-                    PLLX = self._settings.pll_mult,
-                    CLKIN_PERIOD = self._settings.clkin_period_ns,
-                    CLK0_DIV = self._settings.output_divs[0],
-                    CLK1_DIV = self._settings.output_divs[1],
-                    CLK2_DIV = self._settings.output_divs[2],
-                    CLK3_DIV = self._settings.output_divs[3],
-                    CLK4_DIV = self._settings.output_divs[4],
-                    CLK5_DIV = self._settings.output_divs[5],
-                    PLLD = self._settings.pll_div,
-                ),
-                name: "pll_freq_synth".into()
+                "#.into(),
             }
         )
     }
