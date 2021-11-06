@@ -11,6 +11,7 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
 rust-hdl-core = "^0.1"
+#rust-hdl-core = {path="../rust-hdl-core"}
 rust-hdl-toolchain-ise = "^0.1"
 rust-hdl-ok-core = "^0.1"
 rust-hdl-widgets = "^0.1"
@@ -18,5 +19,6 @@ rust-hdl-yosys-synth = "^0.1"
 
 [dev-dependencies]
 rust-hdl-test-ok-common = "^0.1"
+rust-hdl-test-core = "^0.1"
 rust-hdl-ok-frontpanel-sys = "^0.1"
 

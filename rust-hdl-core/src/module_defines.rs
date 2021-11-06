@@ -38,10 +38,15 @@ struct AtomDetails {
     const_val: VerilogLiteral,
 }
 
-fn verilog_atom_name(x: &AtomKind) -> &str {
+fn verilog_atom_name(x: &AtomKind, is_wrapper: bool) -> &str {
     match x {
         AtomKind::InputParameter => "input wire",
-        AtomKind::OutputParameter => "output reg",
+        AtomKind::OutputParameter =>
+            if !is_wrapper {
+                "output reg"
+            } else {
+                "output wire"
+            },
         AtomKind::StubInputSignal => "reg",
         AtomKind::StubOutputSignal => "wire",
         AtomKind::Constant => "localparam",
@@ -50,21 +55,21 @@ fn verilog_atom_name(x: &AtomKind) -> &str {
     }
 }
 
-fn decl(x: &AtomDetails) -> String {
+fn decl(x: &AtomDetails, is_wrapper: bool) -> String {
     if x.kind == AtomKind::Constant {
         format!(
             "{} {} = {};",
-            verilog_atom_name(&x.kind),
+            verilog_atom_name(&x.kind, is_wrapper),
             x.name,
             x.const_val
         )
     } else {
         if x.width == 1 {
-            format!("{} {};", verilog_atom_name(&x.kind), x.name)
+            format!("{} {};", verilog_atom_name(&x.kind, is_wrapper), x.name)
         } else {
             format!(
                 "{} [{}:0] {};",
-                verilog_atom_name(&x.kind),
+                verilog_atom_name(&x.kind, is_wrapper),
                 x.width - 1,
                 x.name
             )
@@ -196,6 +201,10 @@ impl Probe for ModuleDefines {
 impl ModuleDefines {
     pub fn defines(&self) -> String {
         let mut io = CodeWriter::new();
+        // Look for the wrapper case
+        let is_wrapper =
+            self.details.iter()
+                .any(|x| matches!(x.1.code, Verilog::Wrapper(_)));
         self.details
             .iter()
             .filter(|x| x.0.len() != 0)
@@ -229,12 +238,12 @@ impl ModuleDefines {
                 io.push();
                 if !args.is_empty() {
                     io.add("\n// Module arguments");
-                    args.iter().for_each(|x| io.add(decl(x)));
+                    args.iter().for_each(|x| io.add(decl(x, is_wrapper)));
                 }
                 let submodules = &module_details.sub_modules;
                 if !consts.is_empty() {
                     io.add("\n// Constant declarations");
-                    consts.iter().for_each(|x| io.add(decl(x)));
+                    consts.iter().for_each(|x| io.add(decl(x, is_wrapper)));
                 }
                 if !module_details.enums.is_empty() {
                     io.add("\n// Enums");
@@ -248,11 +257,11 @@ impl ModuleDefines {
                 }
                 if !stubs.is_empty() {
                     io.add("\n// Stub signals");
-                    stubs.iter().for_each(|x| io.add(decl(x)));
+                    stubs.iter().for_each(|x| io.add(decl(x, is_wrapper)));
                 }
                 if !locals.is_empty() {
                     io.add("\n// Local signals");
-                    locals.iter().for_each(|x| io.add(decl(x)));
+                    locals.iter().for_each(|x| io.add(decl(x, is_wrapper)));
                 }
                 if !submodules.is_empty() {
                     io.add("\n// Sub module instances");

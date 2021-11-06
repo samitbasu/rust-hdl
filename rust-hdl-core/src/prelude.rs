@@ -39,3 +39,4 @@ pub use crate::wait_clock_cycles;
 pub use crate::wait_clock_false;
 pub use crate::wait_clock_true;
 pub use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface, LogicState};
+pub use crate::ast::Wrapper;

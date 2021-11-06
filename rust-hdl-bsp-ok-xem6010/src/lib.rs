@@ -12,6 +12,9 @@ pub mod mig;
 pub mod ok_download_ddr;
 pub mod pins;
 pub mod synth;
+pub mod serdes;
+pub mod pll;
+pub mod clock_buffer;
 
 #[derive(Clone, Debug)]
 pub struct XEM6010 {}
