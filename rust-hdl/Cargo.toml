@@ -10,8 +10,7 @@ keywords = ["fpga", "verilog", "hardware"]
 authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
-rust-hdl-core = "^0.1"
-rust-hdl-macros = "^0.1"
+#rust-hdl-macros = "^0.1"
 rust-hdl-widgets = "^0.1"
 rust-hdl-yosys-synth = "^0.1"
 rust-hdl-bsp-ok-xem6010 = {version="^0.1", optional=true}
@@ -26,6 +25,15 @@ rust-hdl-bsp-alchitry-cu = {version="^0.1", optional=true}
 rust-hdl-test-core = {version="^0.1", optional=true}
 rust-hdl-test-ok-common = {version="^0.1", optional=true}
 rust-hdl-ok-frontpanel-sys = {version="^0.1", optional=true}
+
+rust-hdl-macros = "^0.1.0"
+crossbeam = "0.8.1"
+num-bigint = "0.4.0"
+vcd = "0.6.1"
+evalexpr = "6.3.0"
+regex = "1.5.4"
+
+
 
 
 [features]

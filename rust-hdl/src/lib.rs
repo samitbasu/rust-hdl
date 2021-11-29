@@ -49,7 +49,7 @@
 //! - OK Core - Wrappers for the OpalKelly FrontPanel firmware components. If
 //! you used devices from OpalKelly, this may prove useful to you.
 //! - Test - some various test infrastructure firmware and tools for testing.
-//! 
+//!
 
 #[cfg(feature = "alchitry_cu")]
 pub use rust_hdl_bsp_alchitry_cu as bsp_alchitry_cu;
@@ -57,7 +57,7 @@ pub use rust_hdl_bsp_alchitry_cu as bsp_alchitry_cu;
 pub use rust_hdl_bsp_ok_xem6010 as bsp_ok_xem6010;
 #[cfg(feature = "ok")]
 pub use rust_hdl_bsp_ok_xem7010 as bsp_ok_xem7010;
-pub use rust_hdl_core as core;
+pub mod core;
 #[cfg(feature = "ok")]
 pub use rust_hdl_ok_core as ok_core;
 #[cfg(feature = "ok")]
