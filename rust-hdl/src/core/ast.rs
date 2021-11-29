@@ -1,7 +1,6 @@
 use crate::core::bits::Bits;
 use num_bigint::BigUint;
 use std::fmt::{Display, Formatter, LowerHex};
-use crate::core::yosys::SynthError;
 
 /// The BlackBox struct provides a way to wrap a blackbox,
 /// externally provided IP core.
@@ -63,7 +62,7 @@ use crate::core::yosys::SynthError;
 /// IP core.
 ///
 /// ```rust
-/// # use rust_hdl_core::prelude::*;
+/// # use crate::core::prelude::*;
 /// pub struct ClockDriver {
 ///    pub I: Signal<In, Clock>,
 ///    pub B: Signal<In, Clock>,
@@ -76,7 +75,7 @@ use crate::core::yosys::SynthError;
 /// The [Logic] trait for this circuit will need to be implemented
 /// by hand.
 /// ```rust
-/// # use rust_hdl_core:: prelude::*;
+/// # use crate::core:: prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub I: Signal<In, Clock>,
@@ -111,7 +110,7 @@ use crate::core::yosys::SynthError;
 /// connected.  For our black box, the [Logic::connect] trait implementation
 /// is very simple:
 /// ```rust
-/// # use rust_hdl_core:: prelude::*;
+/// # use crate::core:: prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub I: Signal<In, Clock>,
@@ -138,7 +137,7 @@ use crate::core::yosys::SynthError;
 /// That is where we need the [BlackBox] struct.
 ///
 /// ```rust
-/// # use rust_hdl_core:: prelude::*;
+/// # use crate::core:: prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub I: Signal<In, Clock>,
@@ -179,7 +178,7 @@ use crate::core::yosys::SynthError;
 /// example:
 ///
 /// ```rust
-/// # use rust_hdl_core::prelude::*;
+/// # use crate::core::prelude::*;
 ///
 /// #[derive(LogicBlock, Default)]
 /// pub struct ClockDriver {
@@ -240,7 +239,7 @@ use crate::core::yosys::SynthError;
 /// To see how that works, let's create a minimum example.  For fun, we will
 /// use a single bit inverter.
 /// ```rust
-/// # use rust_hdl_core::prelude::*;
+/// # use crate::core::prelude::*;
 ///
 /// // First a basic inverter example
 /// #[derive(LogicBlock, Default)]
@@ -354,7 +353,7 @@ pub struct BlackBox {
 /// of it, and add a simulation model.
 ///
 /// ```rust
-/// # use rust_hdl_core::prelude::*;
+/// # use crate::core::prelude::*;
 /// pub struct ClockDriver {
 ///    pub clock_p: Signal<In, Clock>,
 ///    pub clock_n: Signal<In, Clock>,
@@ -378,7 +377,7 @@ pub struct BlackBox {
 /// by hand.
 ///
 /// ```rust
-/// # use rust_hdl_core:: prelude::*;
+/// # use crate::core::prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub clock_p: Signal<In, Clock>,
@@ -430,7 +429,7 @@ pub struct BlackBox {
 /// (not a good idea in practice, but for simulations it's fine).
 ///
 /// ```rust
-/// # use rust_hdl_core:: prelude::*;
+/// # use crate::core:: prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub clock_p: Signal<In, Clock>,
@@ -457,7 +456,7 @@ pub struct BlackBox {
 /// That is where we need the [Wrapper] struct.
 ///
 /// ```rust
-/// # use rust_hdl_core::prelude::*;
+/// # use crate::core::prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub clock_p: Signal<In, Clock>,
@@ -498,7 +497,7 @@ pub struct BlackBox {
 /// example:
 ///
 /// ```rust
-/// # use rust_hdl_core::prelude::*;
+/// # use crate::core::prelude::*;
 ///
 /// #[derive(LogicBlock, Default)]
 /// pub struct ClockDriver {

@@ -2,20 +2,8 @@
 
 members = [
     "rust-hdl",
-    "rust-hdl-core",
     "rust-hdl-macros",
     "rust-hdl-test-core",
-    "rust-hdl-widgets",
-    "rust-hdl-yosys-synth",
-    "rust-hdl-bsp-alchitry-cu",
 #    "rust-hdl-ok-frontpanel-sys",
-    "rust-hdl-ok-core",
-    "rust-hdl-sim-chips",
-    "rust-hdl-bsp-ok-xem6010",
-    "rust-hdl-bsp-ok-xem7010",
     "rust-hdl-test-ok-common",
-    "rust-hdl-toolchain-ise",
-    "rust-hdl-toolchain-vivado",
-    "rust-hdl-toolchain-icestorm",
-    "rust-hdl-toolchain-common",
 ]

@@ -32,6 +32,7 @@ num-bigint = "0.4.0"
 vcd = "0.6.1"
 evalexpr = "6.3.0"
 regex = "1.5.4"
+array-init = "2.0.0"
 
 
 
