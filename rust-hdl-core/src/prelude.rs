@@ -1,5 +1,6 @@
 pub use crate::ast;
 pub use crate::ast::BlackBox;
+pub use crate::ast::Wrapper;
 pub use crate::ast::Verilog;
 pub use crate::ast::VerilogLiteral;
 pub use crate::atom::{Atom, AtomKind};
@@ -39,3 +40,5 @@ pub use crate::wait_clock_cycles;
 pub use crate::wait_clock_false;
 pub use crate::wait_clock_true;
 pub use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface, LogicState};
+#[cfg(feature = "yosys")]
+pub use crate::yosys::*;

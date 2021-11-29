@@ -2,6 +2,7 @@ use crate::ast::VerilogLiteral;
 use crate::constraint::PinConstraint;
 use crate::synth::VCDValue;
 
+#[doc(hidden)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AtomKind {
     InputParameter,
@@ -28,6 +29,7 @@ impl AtomKind {
     }
 }
 
+#[doc(hidden)]
 pub trait Atom {
     fn bits(&self) -> usize;
     fn connected(&self) -> bool;

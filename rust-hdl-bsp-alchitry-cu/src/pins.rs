@@ -1,5 +1,7 @@
 use rust_hdl_core::prelude::*;
 
+pub const CLOCK_SPEED_100MHZ: u64 = 100_000_000;
+
 pub fn clock() -> Signal<In, Clock> {
     let mut x = Signal::default();
     x.add_location(0, "P7");

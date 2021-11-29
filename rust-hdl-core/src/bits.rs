@@ -10,8 +10,31 @@ use std::num::Wrapping;
 // The short value must be less than 2^N
 // N <= SHORT_BITS --> Short repr, otherwise Long repr
 
-// Compute the minimum number of bits to represent a container with t items.
-// This is basically ceil(log2(t)) as a constant (compile time computable) function.
+/// Compute the minimum number of bits to represent a container with t items.
+/// This is basically `ceil(log2(t))` as a constant (compile time computable) function.
+/// You can use it where a const generic (bit width) argument is required.
+///
+/// Example
+///
+/// Unfortunately, with stable Rust, this function is not of much use.
+/// For now, const generic arguments cannot be used in expressions yet.
+/// Suppose we want to design a simple state machine that counts from
+/// from 0 to some maximum number N-1, and then cycles again.  We
+/// want to specify the maximum number, not the number of bits needed
+/// to represent it.  In this case, we would like to use the
+/// compile time `clog2` function to compute the bit width of
+/// the signal that holds the count.
+///
+/// ```rust, compile_fail
+/// # use rust_hdl_core::prelude::*;
+///
+/// #[derive(LogicBlock, Default)]
+/// struct CountToN<const N: usize> {
+///     signal_out: Signal<Out, Bits<{clog2({N})}>>,
+/// }
+/// ```
+///
+///
 pub const fn clog2(t: usize) -> usize {
     let mut p = 0;
     let mut b = 1;
@@ -731,4 +754,5 @@ mod tests {
     }
 }
 
+/// A type alias for a simple bool.  You can use them interchangeably.
 pub type Bit = bool;

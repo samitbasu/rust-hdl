@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-core"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
 license = "MIT"
 description = "Core components of the RustHDL crate."
@@ -16,3 +16,7 @@ num-bigint = "0.4.0"
 vcd = "0.6.1"
 evalexpr = "6.3.0"
 regex = "1.5.4"
+
+[features]
+default = ["yosys"]
+yosys = []

@@ -1,0 +1,10 @@
+[book]
+language = "en"
+multilingual = false
+src = "src"
+title = "FPGA Programming With RustHDL"
+author = "Samit Basu"
+description = "FPGA Programming with RustHDL"
+
+[output.html]
+git-repository-url = "https://github.com/rust-hdl/guide"

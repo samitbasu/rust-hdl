@@ -1,4 +1,3 @@
-use rust_hdl_bsp_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_core::prelude::*;
 use rust_hdl_test_core::target_path;
 use rust_hdl_widgets::prelude::*;
@@ -27,7 +26,9 @@ impl Logic for AlchitryCuPulser {
 
 impl Default for AlchitryCuPulser {
     fn default() -> Self {
-        let pulser = Pulser::new(MHZ100, 1.0, Duration::from_millis(250));
+        let pulser = Pulser::new(rust_hdl_bsp_alchitry_cu::pins::CLOCK_SPEED_100MHZ,
+                                 1.0,
+                                 Duration::from_millis(250));
         Self {
             pulser,
             clock: rust_hdl_bsp_alchitry_cu::pins::clock(),
@@ -39,5 +40,5 @@ impl Default for AlchitryCuPulser {
 #[test]
 fn synthesize_alchitry_cu_pulser() {
     let uut = AlchitryCuPulser::default();
-    generate_bitstream(uut, target_path!("alchitry_cu/pulser"));
+    rust_hdl_bsp_alchitry_cu::synth::generate_bitstream(uut, target_path!("alchitry_cu/pulser"));
 }

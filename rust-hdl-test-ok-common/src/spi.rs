@@ -41,15 +41,6 @@ impl Logic for OpalKellySPITest {
     }
 }
 
-#[test]
-fn test_synth() {
-    use rust_hdl_yosys_synth::yosys_validate;
-    let mut uut = OpalKellySPITest::new::<XEM6010>();
-    uut.hi.link_connect_dest();
-    uut.connect_all();
-    yosys_validate("ok_spi", &generate_verilog(&uut)).unwrap();
-}
-
 pub fn test_opalkelly_spi_reg_read_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();

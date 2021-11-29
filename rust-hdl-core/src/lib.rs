@@ -1,3 +1,7 @@
+//! Core Crate for RustHDL Support
+//!
+//! This crate contains the core RustHDL components, traits, and data structures.
+//!
 pub mod ast;
 pub mod atom;
 pub mod bits;
@@ -22,3 +26,5 @@ pub mod synth;
 pub mod vcd_probe;
 pub mod verilog_gen;
 pub mod verilog_visitor;
+#[cfg(feature = "yosys")]
+pub mod yosys;
