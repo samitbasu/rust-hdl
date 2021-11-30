@@ -1,17 +1,19 @@
 use std::time::Instant;
 
-use rust_hdl_bsp_ok_xem7010::ddr_fifo7::DDR7FIFO;
-use rust_hdl_bsp_ok_xem7010::download::OpalKellyDDRBackedDownloadFIFO7Series;
-use rust_hdl_bsp_ok_xem7010::mcb_if::MCBInterface4GDDR3;
-use rust_hdl_bsp_ok_xem7010::pins::xem_7010_leds;
-use rust_hdl_bsp_ok_xem7010::XEM7010;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
+use std::thread::sleep;
+
+mod test_common;
+use test_common::tools::*;
+
+use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+use rust_hdl::bsp::ok_xem7010::mcb_if::MCBInterface4GDDR3;
+use rust_hdl::bsp::ok_xem7010::ddr_fifo7::DDR7FIFO;
+use rust_hdl::bsp::ok_xem7010::pins::xem_7010_leds;
+use rust_hdl::bsp::ok_xem7010::XEM7010;
 use rust_hdl_ok_frontpanel_sys::OkError;
-use rust_hdl_test_core::target_path;
-use rust_hdl_test_ok_common::prelude::*;
-use rust_hdl_widgets::dff::DFF;
-use rust_hdl_widgets::prelude::*;
+
 
 #[derive(LogicBlock)]
 struct OpalKellyDDR7Test {

@@ -1,11 +1,12 @@
-use std::time::Duration;
+use rust_hdl::core::prelude::*;
+use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+mod test_common;
 
-use rust_hdl_bsp_ok_xem7010::sys_clock::OpalKellySystemClock7;
-use rust_hdl_bsp_ok_xem7010::XEM7010;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-use rust_hdl_test_core::target_path;
-use rust_hdl_widgets::prelude::*;
+use test_common::blinky::OpalKellyBlinky;
+use rust_hdl::bsp::ok_xem7010::sys_clock::OpalKellySystemClock7;
+use std::time::Duration;
+use rust_hdl::bsp::ok_xem7010::XEM7010;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyFastBlinky {

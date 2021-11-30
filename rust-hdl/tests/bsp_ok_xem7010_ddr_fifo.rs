@@ -1,12 +1,16 @@
-use rust_hdl_bsp_ok_xem7010::download::OpalKellyDDRBackedDownloadFIFO7Series;
-use rust_hdl_bsp_ok_xem7010::mcb_if::MCBInterface4GDDR3;
-use rust_hdl_bsp_ok_xem7010::XEM7010;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-use rust_hdl_test_core::target_path;
-use rust_hdl_test_ok_common::ddr::test_opalkelly_ddr_stress_runtime;
-use rust_hdl_widgets::dff::DFF;
-use rust_hdl_widgets::prelude::Strobe;
+use std::thread::sleep;
+use std::time::{Duration, Instant};
+
+mod test_common;
+
+use test_common::ddr::*;
+
+use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+use rust_hdl::bsp::ok_xem7010::mcb_if::MCBInterface4GDDR3;
+use rust_hdl::bsp::ok_xem7010::download::OpalKellyDDRBackedDownloadFIFO7Series;
+use rust_hdl::bsp::ok_xem7010::XEM7010;
 
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFO7SeriesStressTest {

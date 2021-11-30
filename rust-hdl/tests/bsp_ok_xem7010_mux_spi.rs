@@ -1,9 +1,11 @@
-use rust_hdl_bsp_ok_xem7010::XEM7010;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-use rust_hdl_ok_frontpanel_sys::OkError;
-use rust_hdl_test_core::target_path;
-use rust_hdl_test_ok_common::prelude::*;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+use test_common::tools::*;
+use test_common::mux_spi::*;
+use rust_hdl::bsp::ok_xem7010::XEM7010;
+use rust_hdl::bsp::ok_core::prelude::*;
+
+mod test_common;
 
 #[test]
 fn test_opalkelly_xem_7010_mux_spi() {
