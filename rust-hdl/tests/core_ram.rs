@@ -1,6 +1,5 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::ram::RAM;
-use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]
 struct RAMTest {
@@ -77,7 +76,7 @@ fn test_ram_works() {
     sim.run_traced(
         Box::new(uut),
         512 * 10,
-        std::fs::File::create("ram.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("ram.vcd")).unwrap(),
     )
     .unwrap();
 }

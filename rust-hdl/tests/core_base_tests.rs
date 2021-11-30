@@ -1,4 +1,4 @@
-use rust_hdl_core::prelude::*;
+use rust_hdl::core::prelude::*;
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
@@ -13,11 +13,8 @@ enum FooState {
 #[cfg(test)]
 #[allow(dead_code)]
 mod tests {
-    use rust_hdl_core::prelude::*;
-    use rust_hdl_macros::hdl_gen;
-    use rust_hdl_macros::LogicBlock;
-    use rust_hdl_widgets::dff::DFF;
-    use rust_hdl_widgets::strobe::Strobe;
+    use rust_hdl::core::prelude::*;
+    use rust_hdl::widgets::prelude::*;
 
     #[derive(Copy, Clone, Debug, PartialEq)]
     enum MyState {
@@ -330,7 +327,7 @@ mod tests {
         fn update(&mut self) {}
     }
 
-    fn sample_func(mut ep: Sim<Circuit>) -> rust_hdl_core::simulate::Result<()> {
+    fn sample_func(mut ep: Sim<Circuit>) -> rust_hdl::core::simulate::Result<()> {
         // Need an initialization stage...
         // Get the initial circuit - this must be serviced first.
         println!("Initialize TB 1");
@@ -352,7 +349,7 @@ mod tests {
         Ok(())
     }
 
-    fn sample_func2(mut ep: Sim<Circuit>) -> rust_hdl_core::simulate::Result<()> {
+    fn sample_func2(mut ep: Sim<Circuit>) -> rust_hdl::core::simulate::Result<()> {
         let x = ep.init()?;
         println!("Hello from TB 2");
         let mut x = ep.wait(125, x)?;

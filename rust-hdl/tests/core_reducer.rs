@@ -1,6 +1,5 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::fifo_expander_n::WordOrder;
-use rust_hdl_widgets::prelude::*;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]
 struct ReducerTest {

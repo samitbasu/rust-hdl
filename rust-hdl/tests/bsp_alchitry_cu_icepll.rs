@@ -1,7 +1,5 @@
-use rust_hdl_bsp_alchitry_cu::ice_pll::ICE40PLLBlock;
-use rust_hdl_core::prelude::*;
-use rust_hdl_test_core::target_path;
-use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl::bsp::alchitry_cu::ice_pll::ICE40PLLBlock;
+use rust_hdl::core::prelude::*;
 
 #[test]
 fn test_pll_synthesizable() {
@@ -15,5 +13,5 @@ fn test_pll_synthesizable() {
     yosys_validate("vlog", &vlog).unwrap();
     println!("{}", vlog);
     println!("{}", target_path!("alchitry_cu/pll_cu"));
-    rust_hdl_bsp_alchitry_cu::synth::generate_bitstream(uut, target_path!("alchitry_cu/pll_cu"));
+    rust_hdl::bsp::alchitry_cu::synth::generate_bitstream(uut, target_path!("alchitry_cu/pll_cu"));
 }

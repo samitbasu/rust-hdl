@@ -1,14 +1,9 @@
 use std::collections::BTreeMap;
-
-use rust_hdl_bsp_alchitry_cu::ice_pll::ICE40PLLBlock;
-use rust_hdl_core::check_connected::check_connected;
-use rust_hdl_core::prelude::*;
-use rust_hdl_test_core::fader::FaderWithSyncROM;
-use rust_hdl_test_core::snore::snore;
-use rust_hdl_test_core::target_path;
-use rust_hdl_widgets::prelude::*;
-use rust_hdl_widgets::sync_rom::SyncROM;
-use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl::bsp::alchitry_cu::ice_pll::ICE40PLLBlock;
+use rust_hdl::core::prelude::*;
+mod test_common;
+use test_common::*;
+use rust_hdl::widgets::prelude::*;
 
 const MHZ25: u64 = 25_000_000;
 const MHZ100: u64 = 100_000_000;
@@ -51,8 +46,8 @@ impl<const P: usize> AlchitryCuPWMVecSyncROM<P> {
             FaderWithSyncROM::new(clock_frequency, 128),
         ];
         Self {
-            clock: rust_hdl_bsp_alchitry_cu::pins::clock(),
-            leds: rust_hdl_bsp_alchitry_cu::pins::leds(),
+            clock: rust_hdl::bsp::alchitry_cu::pins::clock(),
+            leds: rust_hdl::bsp::alchitry_cu::pins::leds(),
             local: Signal::default(),
             faders,
             pll: ICE40PLLBlock::default(),
@@ -67,7 +62,7 @@ fn test_pwm_vec_sync_rom_synthesizes() {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
     yosys_validate("pwm_cu_srom", &vlog).unwrap();
-    rust_hdl_bsp_alchitry_cu::synth::generate_bitstream(
+    rust_hdl::bsp::alchitry_cu::synth::generate_bitstream(
         uut,
         target_path!("alchitry_cu/pwm_cu_srom"),
     );

@@ -1,7 +1,5 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::spi_master::{SPIConfig, SPIMaster, SPIWires};
-use rust_hdl_widgets::spi_slave::SPISlave;
-use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]
 struct SPITestAsync {
@@ -64,7 +62,7 @@ fn test_spi_txn_completes() {
     sim.run_traced(
         Box::new(uut),
         100_000,
-        std::fs::File::create("spi_txn.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("spi_txn.vcd")).unwrap(),
     )
     .unwrap();
 }

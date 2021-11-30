@@ -1,6 +1,5 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::edge_detector::EdgeDetector;
-use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 
 #[test]
 fn test_rising_edge_detector_works() {
@@ -32,7 +31,7 @@ fn test_rising_edge_detector_works() {
     sim.run_traced(
         Box::new(uut),
         1000,
-        std::fs::File::create("edge_det2.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("edge_det2.vcd")).unwrap(),
     )
     .unwrap();
 }
@@ -67,7 +66,7 @@ fn test_falling_edge_detector_works() {
     sim.run_traced(
         Box::new(uut),
         1000,
-        std::fs::File::create("edge_det.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("edge_det.vcd")).unwrap(),
     )
     .unwrap();
 }

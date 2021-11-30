@@ -1,8 +1,6 @@
 use rand::Rng;
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::fifo_reducer::FIFOReducer;
-use rust_hdl_widgets::prelude::*;
-use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 struct SyncVecTest {
@@ -66,14 +64,14 @@ fn test_sync_vec() {
     sim.run_traced(
         Box::new(uut),
         100_000,
-        std::fs::File::create("vsync.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("vsync.vcd")).unwrap(),
     )
     .unwrap();
 }
 
 #[test]
 fn test_vector_synchronizer() {
-    rust_hdl_yosys_synth::top_wrap!(VectorSynchronizer<Bits<8>>, TestCircuit);
+    top_wrap!(VectorSynchronizer<Bits<8>>, TestCircuit);
     let mut dev: TestCircuit = Default::default();
     dev.uut.clock_in.connect();
     dev.uut.clock_out.connect();
@@ -117,7 +115,7 @@ fn test_vector_synchronizer() {
     sim.run_traced(
         Box::new(dev),
         100_000,
-        std::fs::File::create("vsync.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("vsync2.vcd")).unwrap(),
     )
     .unwrap();
 }
@@ -176,7 +174,7 @@ fn test_almost_empty_is_accurate_in_large_fifo() {
     sim.run_traced(
         Box::new(uut),
         50_000,
-        std::fs::File::create("fifo_big_almost_empty.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("fifo_big_almost_empty.vcd")).unwrap(),
     )
     .unwrap();
 }
@@ -219,7 +217,7 @@ fn test_almost_empty_is_accurate_synchronous_fifo() {
     sim.run_traced(
         Box::new(uut),
         10_000,
-        std::fs::File::create("fifo_almost_empty.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("fifo_almost_empty.vcd")).unwrap(),
     )
     .unwrap();
 }
@@ -264,7 +262,7 @@ fn test_fifo_can_be_filled_synchronous_fifo() {
     sim.run_traced(
         Box::new(uut),
         10_000,
-        std::fs::File::create("fifo_fill.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("fifo_fill.vcd")).unwrap(),
     )
     .unwrap();
 }
@@ -329,7 +327,7 @@ fn test_fifo_works_synchronous_fifo() {
     sim.run_traced(
         Box::new(uut),
         100_000,
-        std::fs::File::create("fifo.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("fifo.vcd")).unwrap(),
     )
     .unwrap();
 }
@@ -413,7 +411,7 @@ fn test_fifo_works_asynchronous_fifo() {
     sim.run_traced(
         Box::new(uut),
         100_000,
-        std::fs::File::create("afifo.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("afifo.vcd")).unwrap(),
     )
     .unwrap();
 }
@@ -466,7 +464,7 @@ fn test_almost_empty_is_accurate_in_large_async_fifo() {
     sim.run_traced(
         Box::new(uut),
         50_000,
-        std::fs::File::create("fifo_big_almost_empty_async.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("fifo_big_almost_empty_async.vcd")).unwrap(),
     )
     .unwrap();
 }
@@ -504,7 +502,7 @@ fn test_fifo_reducer_works() {
     uut.wide_fifo.data_in.connect();
     uut.narrow_fifo.read.connect();
     uut.connect_all();
-    yosys_validate("fifo_5", &generate_verilog(&uut)).unwrap();
+    yosys_validate("fifo_5b", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     let rdata = (0..256)
         .map(|_| Bits::<16>::from(rand::random::<u16>()))
@@ -560,7 +558,7 @@ fn test_fifo_reducer_works() {
     sim.run_traced(
         Box::new(uut),
         100_000,
-        std::fs::File::create("fifo_reducer.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("fifo_reducer.vcd")).unwrap(),
     )
     .unwrap();
 }

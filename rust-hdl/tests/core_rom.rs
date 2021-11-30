@@ -1,6 +1,5 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::rom::ROM;
-use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 use std::collections::BTreeMap;
 use std::fs::File;
 
@@ -49,6 +48,6 @@ fn test_rom_works() {
     let mut uut = ROMTest::new();
     uut.rom.address.connect();
     uut.connect_all();
-    sim.run_traced(Box::new(uut), 100, File::create("ROM.vcd").unwrap())
+    sim.run_traced(Box::new(uut), 100, File::create(vcd_path!("ROM.vcd")).unwrap())
         .unwrap();
 }

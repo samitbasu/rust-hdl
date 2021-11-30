@@ -1,6 +1,5 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::pwm::PulseWidthModulator;
-use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 use std::fs::File;
 
 #[derive(LogicBlock)]
@@ -48,6 +47,7 @@ fn test_pwm_circuit() {
         assert_eq!(accum, 32);
         Ok(())
     });
-    sim.run_traced(Box::new(uut), 512 * 10, File::create("pwm.vcd").unwrap())
+    sim.run_traced(Box::new(uut), 512 * 10,
+                   File::create(vcd_path!("pwm.vcd")).unwrap())
         .unwrap();
 }

@@ -1,6 +1,5 @@
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::fifo_expander_n::WordOrder;
-use rust_hdl_widgets::prelude::*;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]
 struct ExpanderTest {
@@ -75,7 +74,7 @@ fn test_expander_works() {
     sim.run_traced(
         Box::new(uut),
         100_000,
-        std::fs::File::create("expandern.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("expandern.vcd")).unwrap(),
     )
     .unwrap()
 }
@@ -119,7 +118,7 @@ fn test_expander_works_with_lsw_first() {
     sim.run_traced(
         Box::new(uut),
         100_000,
-        std::fs::File::create("expandern_lsw.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("expandern_lsw.vcd")).unwrap(),
     )
     .unwrap()
 }
@@ -188,7 +187,7 @@ fn test_fatten_works() {
     sim.run_traced(
         Box::new(uut),
         100_000,
-        std::fs::File::create("fattenn.vcd").unwrap(),
+        std::fs::File::create(vcd_path!("fattenn.vcd")).unwrap(),
     )
     .unwrap()
 }
