@@ -3,7 +3,7 @@
 members = [
     "rust-hdl",
     "rust-hdl-macros",
-    "rust-hdl-test-core",
+#    "rust-hdl-test-core",
 #    "rust-hdl-ok-frontpanel-sys",
     "rust-hdl-test-ok-common",
 ]

@@ -1,4 +1,4 @@
-use rust_hdl_core::prelude::*;
+use crate::core::prelude::*;
 
 #[derive(Clone, LogicInterface, Default)]
 pub struct MCBInterface1GDDR2 {

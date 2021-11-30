@@ -1,10 +1,9 @@
 use std::time::Duration;
 
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
-
-use crate::pins::*;
+use crate::core::prelude::*;
+use super::ok_core::prelude::*;
+use crate::widgets::prelude::*;
+use pins::*;
 
 pub mod ddr_fifo;
 pub mod mcb_if;
@@ -32,7 +31,7 @@ impl OpalKellyBSP for XEM6010 {
     }
 
     fn synth<U: Block>(uut: U, dir: &str) {
-        crate::synth::synth_obj(uut, dir)
+        synth::synth_obj(uut, dir)
     }
 }
 

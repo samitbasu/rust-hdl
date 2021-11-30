@@ -1,5 +1,4 @@
-use rust_hdl_core::constraint::InputTimingConstraint;
-use rust_hdl_core::prelude::*;
+use crate::core::prelude::*;
 
 #[derive(Clone, Debug, LogicInterface)]
 pub struct OpalKellyHostInterface {

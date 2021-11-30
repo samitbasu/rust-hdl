@@ -1,6 +1,5 @@
-use rust_hdl_core::prelude::*;
-
-use crate::ok_hi::OpalKellyHostInterface;
+use crate::core::prelude::*;
+use super::ok_hi::OpalKellyHostInterface;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct OpalKellyHost {

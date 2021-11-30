@@ -1,9 +1,8 @@
-use crate::mcb_if::MCBInterface1GDDR2;
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
-
-use crate::ddr_fifo::DDRFIFO;
-use rust_hdl_ok_core::prelude::*;
+use super::mcb_if::MCBInterface1GDDR2;
+use crate::core::prelude::*;
+use crate::widgets::prelude::*;
+use super::ddr_fifo::DDRFIFO;
+use crate::bsp::ok_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyDDRBackedDownloadFIFO {

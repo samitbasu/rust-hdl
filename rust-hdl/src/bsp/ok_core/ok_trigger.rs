@@ -1,4 +1,4 @@
-use rust_hdl_core::prelude::*;
+use crate::core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct TriggerOut {
@@ -66,12 +66,12 @@ endmodule  "#,
 
 #[test]
 fn test_trigger_out() {
-    let mut uut = rust_hdl_yosys_synth::TopWrap::new(TriggerOut::new(0x60));
+    let mut uut = TopWrap::new(TriggerOut::new(0x60));
     uut.uut.ok1.connect();
     uut.uut.clk.connect();
     uut.uut.trigger.connect();
     uut.connect_all();
-    rust_hdl_yosys_synth::yosys_validate("trigout", &generate_verilog(&uut)).unwrap();
+    yosys_validate("trigout", &generate_verilog(&uut)).unwrap();
 }
 
 #[derive(Clone, Debug, LogicBlock)]
@@ -135,9 +135,9 @@ endmodule  "#,
 
 #[test]
 fn test_trigger_in() {
-    let mut uut = rust_hdl_yosys_synth::TopWrap::new(TriggerIn::new(0x40));
+    let mut uut = TopWrap::new(TriggerIn::new(0x40));
     uut.uut.ok1.connect();
     uut.uut.clk.connect();
     uut.connect_all();
-    rust_hdl_yosys_synth::yosys_validate("trigin", &generate_verilog(&uut)).unwrap();
+    yosys_validate("trigin", &generate_verilog(&uut)).unwrap();
 }

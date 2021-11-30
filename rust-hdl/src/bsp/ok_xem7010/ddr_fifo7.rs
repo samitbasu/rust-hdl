@@ -1,8 +1,7 @@
-use crate::mcb_if::MCBInterface4GDDR3;
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
-
-use crate::mig7::MemoryInterfaceGenerator7Series;
+use super::mcb_if::MCBInterface4GDDR3;
+use crate::core::prelude::*;
+use crate::widgets::prelude::*;
+use super::mig7::MemoryInterfaceGenerator7Series;
 
 #[derive(LogicState, Debug, Copy, Clone, PartialEq)]
 pub enum DDR7FIFOState {

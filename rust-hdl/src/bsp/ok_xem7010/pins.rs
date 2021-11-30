@@ -1,4 +1,4 @@
-use rust_hdl_core::prelude::*;
+use crate::core::prelude::*;
 
 pub fn xem_7010_leds() -> Signal<Out, Bits<8>> {
     let mut x = Signal::default();

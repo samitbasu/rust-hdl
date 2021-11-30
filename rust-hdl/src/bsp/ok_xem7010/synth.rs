@@ -3,9 +3,9 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::find_ok_bus_collisions;
-use rust_hdl_toolchain_vivado::xdc_gen::generate_xdc;
+use crate::core::prelude::*;
+use crate::bsp::ok_core::prelude::*;
+use crate::toolchain::vivado::generate_xdc;
 
 #[derive(Clone, Debug)]
 pub struct VivadoOptions {
@@ -279,7 +279,7 @@ pub fn synth_obj<U: Block>(uut: U, dir: &str) {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
     find_ok_bus_collisions(&vlog);
-    let _xcd = rust_hdl_toolchain_vivado::xdc_gen::generate_xdc(&uut);
-    rust_hdl_yosys_synth::yosys_validate(dir, &vlog).unwrap();
+    let _xcd = crate::toolchain::vivado::generate_xdc(&uut);
+    yosys_validate(dir, &vlog).unwrap();
     generate_bitstream_xem_7010(uut, dir, Default::default());
 }

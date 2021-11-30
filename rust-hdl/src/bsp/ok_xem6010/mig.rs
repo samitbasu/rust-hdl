@@ -1,5 +1,5 @@
-use crate::mcb_if::MCBInterface1GDDR2;
-use rust_hdl_core::prelude::*;
+use super::mcb_if::MCBInterface1GDDR2;
+use crate::core::prelude::*;
 
 #[derive(LogicInterface, Default)]
 pub struct CommandPort {

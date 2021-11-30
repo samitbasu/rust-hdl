@@ -1,8 +1,7 @@
-use crate::mcb_if::MCBInterface1GDDR2;
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
-
-use crate::mig::MemoryInterfaceGenerator;
+use super::mcb_if::MCBInterface1GDDR2;
+use crate::core::prelude::*;
+use crate::widgets::prelude::*;
+use super::mig::MemoryInterfaceGenerator;
 
 #[derive(LogicState, Debug, Copy, Clone, PartialEq)]
 pub enum MIGInstruction {

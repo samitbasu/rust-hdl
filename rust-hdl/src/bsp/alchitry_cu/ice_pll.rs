@@ -16,8 +16,7 @@
 //  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
 
-use rust_hdl_core::ast::{BlackBox, VerilogLiteral};
-use rust_hdl_core::prelude::*;
+use crate::core::prelude::*;
 
 #[derive(Clone, Default, Debug)]
 struct ICE40PLLSettings {

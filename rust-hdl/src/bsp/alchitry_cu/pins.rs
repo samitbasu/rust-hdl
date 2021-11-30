@@ -1,4 +1,4 @@
-use rust_hdl_core::prelude::*;
+use crate::core::prelude::*;
 
 pub const CLOCK_SPEED_100MHZ: u64 = 100_000_000;
 

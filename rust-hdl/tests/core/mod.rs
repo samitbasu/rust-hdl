@@ -1,9 +1,8 @@
 use std::fs::File;
 use std::time::Duration;
 
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
-use rust_hdl_yosys_synth::yosys_validate;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 
 pub mod base_tests;
 pub mod edge_detector;

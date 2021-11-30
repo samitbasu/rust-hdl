@@ -1,7 +1,7 @@
-use rust_hdl_core::check_connected::check_connected;
-use rust_hdl_core::prelude::{generate_verilog, Block};
-use rust_hdl_toolchain_icestorm::pcf_gen::generate_pcf;
-use std::fs::{create_dir, create_dir_all, remove_dir_all, File};
+use crate::core::check_connected::check_connected;
+use crate::core::prelude::*;
+use crate::toolchain::icestorm::generate_pcf;
+use std::fs::{create_dir_all, remove_dir_all, File};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Output};

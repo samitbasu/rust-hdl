@@ -1,9 +1,8 @@
-use crate::mcb_if::MCBInterface4GDDR3;
-use rust_hdl_core::prelude::*;
-use rust_hdl_widgets::prelude::*;
-
-use crate::ddr_fifo7::DDR7FIFO;
-use rust_hdl_ok_core::prelude::*;
+use super::mcb_if::MCBInterface4GDDR3;
+use crate::core::prelude::*;
+use crate::widgets::prelude::*;
+use super::ddr_fifo7::DDR7FIFO;
+use crate::bsp::ok_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyDDRBackedDownloadFIFO7Series {

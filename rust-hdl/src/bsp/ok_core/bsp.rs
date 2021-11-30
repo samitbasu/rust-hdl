@@ -1,7 +1,7 @@
-use rust_hdl_core::prelude::*;
+use crate::core::prelude::*;
 
-use crate::OpalKellyHost;
-use crate::OpalKellyHostInterface;
+use super::OpalKellyHost;
+use super::OpalKellyHostInterface;
 
 pub trait OpalKellyBSP {
     fn hi() -> OpalKellyHostInterface;
