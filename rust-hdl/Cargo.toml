@@ -24,7 +24,7 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 #rust-hdl-bsp-alchitry-cu = {version="^0.1", optional=true}
 #rust-hdl-test-core = {version="^0.1", optional=true}
 #rust-hdl-test-ok-common = {version="^0.1", optional=true}
-rust-hdl-ok-frontpanel-sys = {version="^0.1", optional=true}
+rust-hdl-ok-frontpanel-sys = {version="^0.2", optional=true}
 
 rust-hdl-macros = "^0.1.0"
 crossbeam = "0.8.1"
