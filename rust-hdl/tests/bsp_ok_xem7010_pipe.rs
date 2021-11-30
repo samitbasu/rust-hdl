@@ -1,14 +1,17 @@
-use rust_hdl::core::prelude::*;
 use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 mod test_common;
 
-use test_common::pipe::*;
-use test_common::tools::*;
+use rust_hdl::bsp::ok_xem7010::pins::{xem_7010_leds, xem_7010_neg_clock, xem_7010_pos_clock};
 use rust_hdl::bsp::ok_xem7010::sys_clock::OpalKellySystemClock7;
-use rust_hdl::bsp::ok_xem7010::pins::{xem_7010_pos_clock, xem_7010_leds, xem_7010_neg_clock};
 use rust_hdl::bsp::ok_xem7010::XEM7010;
-use rust_hdl_ok_frontpanel_sys::{OkError, make_u16_buffer};
+#[cfg(feature = "frontpanel")]
+use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
+#[cfg(feature = "frontpanel")]
+use test_common::pipe::*;
+#[cfg(feature = "frontpanel")]
+use test_common::tools::*;
 
 declare_async_fifo!(OKTestAFIFO2, Bits<16>, 1024, 256);
 
@@ -105,6 +108,7 @@ impl OpalKellyBTPipeOut7Test {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_opalkelly_xem_7010_synth_btpipe() {
     let mut uut = OpalKellyBTPipeOut7Test::new();
@@ -114,6 +118,7 @@ fn test_opalkelly_xem_7010_synth_btpipe() {
     test_opalkelly_xem_7010_btpipe_runtime().unwrap();
 }
 
+#[cfg(feature = "frontpanel")]
 #[cfg(test)]
 fn test_opalkelly_xem_7010_btpipe_runtime() -> Result<(), OkError> {
     let hnd = ok_test_prelude(target_path!("xem_7010/btpipe/top.bit"))?;

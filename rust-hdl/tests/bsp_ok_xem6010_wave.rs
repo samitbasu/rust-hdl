@@ -1,10 +1,12 @@
-use rust_hdl::core::prelude::*;
 use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem6010::*;
+use rust_hdl::core::prelude::*;
 
 mod test_common;
+#[cfg(feature = "frontpanel")]
 use test_common::wave::*;
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_opalkelly_xem_6010_synth_wave() {
     let mut uut = OpalKellyWave::new::<XEM6010>();

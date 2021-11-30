@@ -1,9 +1,11 @@
 mod test_common;
-use test_common::download::*;
+use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
-use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
+use test_common::download::*;
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_opalkelly_xem_7010_synth_download32() {
     let mut uut = OpalKellyDownload32FIFOTest::new::<XEM7010>();

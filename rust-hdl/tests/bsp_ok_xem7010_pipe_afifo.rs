@@ -1,14 +1,17 @@
-use rust_hdl::core::prelude::*;
 use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 mod test_common;
 
-use test_common::pipe::*;
-use test_common::tools::*;
+use rust_hdl::bsp::ok_xem7010::pins::{xem_7010_leds, xem_7010_neg_clock, xem_7010_pos_clock};
 use rust_hdl::bsp::ok_xem7010::sys_clock::OpalKellySystemClock7;
-use rust_hdl::bsp::ok_xem7010::pins::{xem_7010_pos_clock, xem_7010_leds, xem_7010_neg_clock};
 use rust_hdl::bsp::ok_xem7010::XEM7010;
-use rust_hdl_ok_frontpanel_sys::{OkError, make_u16_buffer};
+#[cfg(feature = "frontpanel")]
+use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
+#[cfg(feature = "frontpanel")]
+use test_common::pipe::*;
+#[cfg(feature = "frontpanel")]
+use test_common::tools::*;
 
 declare_async_fifo!(OKTestAFIFO, Bits<16>, 256, 1);
 
@@ -83,6 +86,7 @@ impl Logic for OpalKellyPipeAFIFOTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_opalkelly_xem_7010_synth_pipe_afifo() {
     let mut uut = OpalKellyPipeAFIFOTest::new::<XEM7010>();

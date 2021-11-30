@@ -1,12 +1,12 @@
-use rust_hdl::core::prelude::*;
 use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 mod test_common;
 
-use test_common::blinky::OpalKellyBlinky;
 use rust_hdl::bsp::ok_xem7010::sys_clock::OpalKellySystemClock7;
-use std::time::Duration;
 use rust_hdl::bsp::ok_xem7010::XEM7010;
+use std::time::Duration;
+use test_common::blinky::OpalKellyBlinky;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyFastBlinky {
@@ -48,6 +48,7 @@ impl Logic for OpalKellyFastBlinky {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_opalkelly_xem_7010_synth_fast_blinky() {
     let mut uut = OpalKellyFastBlinky::new::<XEM7010>();

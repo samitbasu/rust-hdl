@@ -3,17 +3,18 @@ use std::time::Instant;
 use std::thread::sleep;
 
 mod test_common;
+#[cfg(feature = "frontpanel")]
 use test_common::tools::*;
 
 use rust_hdl::bsp::ok_core::prelude::*;
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
-use rust_hdl::bsp::ok_xem7010::mcb_if::MCBInterface4GDDR3;
 use rust_hdl::bsp::ok_xem7010::ddr_fifo7::DDR7FIFO;
+use rust_hdl::bsp::ok_xem7010::mcb_if::MCBInterface4GDDR3;
 use rust_hdl::bsp::ok_xem7010::pins::xem_7010_leds;
 use rust_hdl::bsp::ok_xem7010::XEM7010;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl_ok_frontpanel_sys::OkError;
-
 
 #[derive(LogicBlock)]
 struct OpalKellyDDR7Test {
@@ -77,6 +78,7 @@ impl Logic for OpalKellyDDR7Test {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_synthesis_of_xem7010_ddr() {
     let mut uut = OpalKellyDDR7Test::default();
@@ -89,6 +91,7 @@ fn test_synthesis_of_xem7010_ddr() {
     test_opalkelly_xem_7010_ddr_runtime().unwrap()
 }
 
+#[cfg(feature = "frontpanel")]
 #[cfg(test)]
 fn test_opalkelly_xem_7010_ddr_runtime() -> Result<(), OkError> {
     let hnd = ok_test_prelude(target_path!("xem_7010/ddr/top.bit"))?;

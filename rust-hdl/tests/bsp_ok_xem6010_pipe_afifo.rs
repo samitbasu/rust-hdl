@@ -1,10 +1,10 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
 use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl::bsp::ok_xem6010::XEM6010;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+#[cfg(feature = "frontpanel")]
 use test_common::pipe::*;
-
 
 mod test_common;
 
@@ -71,6 +71,7 @@ impl Logic for OpalKellyPipeAFIFOTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_opalkelly_xem_6010_synth_pipe_afifo() {
     let mut uut = OpalKellyPipeAFIFOTest::new::<XEM6010>();

@@ -1,12 +1,15 @@
+use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::bsp::ok_xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-use test_common::tools::*;
-use test_common::mux_spi::*;
-use rust_hdl::bsp::ok_xem7010::XEM7010;
-use rust_hdl::bsp::ok_core::prelude::*;
 
 mod test_common;
+#[cfg(feature = "frontpanel")]
+use test_common::mux_spi::*;
+#[cfg(feature = "frontpanel")]
+use test_common::tools::*;
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_opalkelly_xem_7010_mux_spi() {
     let mut uut = OpalKellySPIMuxTest::new::<XEM7010>();

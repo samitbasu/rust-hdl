@@ -1,16 +1,17 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
-use std::thread::sleep;
-use std::time::Duration;
 use rust_hdl::bsp::ok_core::prelude::*;
-use rust_hdl_ok_frontpanel_sys::OkError;
-use test_common::tools::*;
 use rust_hdl::bsp::ok_xem7010::mcb_if::MCBInterface4GDDR3;
 use rust_hdl::bsp::ok_xem7010::mig7::MemoryInterfaceGenerator7Series;
 use rust_hdl::bsp::ok_xem7010::XEM7010;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+#[cfg(feature = "frontpanel")]
+use rust_hdl_ok_frontpanel_sys::OkError;
+use std::thread::sleep;
+use std::time::Duration;
+#[cfg(feature = "frontpanel")]
+use test_common::tools::*;
 
 mod test_common;
-
 
 declare_expanding_fifo!(FrontPorch, 16, 4096, 128, 256);
 declare_narrowing_fifo!(BackPorch, 128, 256, 16, 4096);
@@ -167,6 +168,7 @@ impl Logic for OpalKellyXEM7010MIGTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_opalkelly_xem_7010_mig() {
     let mut uut = OpalKellyXEM7010MIGTest::default();
@@ -180,6 +182,7 @@ fn test_opalkelly_xem_7010_mig() {
     test_opalkelly_xem_7010_mig_runtime().unwrap();
 }
 
+#[cfg(feature = "frontpanel")]
 #[cfg(test)]
 fn test_opalkelly_xem_7010_mig_runtime() -> Result<(), OkError> {
     let hnd = ok_test_prelude(target_path!("xem_7010/mig/top.bit"))?;
