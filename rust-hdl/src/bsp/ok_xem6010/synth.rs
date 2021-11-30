@@ -3,8 +3,8 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-use crate::core::prelude::*;
 use crate::bsp::ok_core::prelude::find_ok_bus_collisions;
+use crate::core::prelude::*;
 use crate::toolchain::ise::generate_ucf;
 
 #[derive(Clone, Debug)]

@@ -1,8 +1,8 @@
+use crate::core::prelude::*;
 use crate::widgets::dff::DFF;
 use crate::widgets::edge_detector::EdgeDetector;
 use crate::widgets::prelude::BitSynchronizer;
 use crate::widgets::spi_master::SPIConfig;
-use crate::core::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum SPISlaveState {

@@ -1,5 +1,5 @@
-use crate::widgets::dff::DFF;
 use crate::core::prelude::*;
+use crate::widgets::dff::DFF;
 
 #[derive(LogicBlock)]
 pub struct PulseWidthModulator<const N: usize> {

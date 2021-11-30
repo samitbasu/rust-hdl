@@ -1,5 +1,5 @@
-use crate::widgets::dff::DFF;
 use crate::core::prelude::*;
+use crate::widgets::dff::DFF;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Strobe<const N: usize> {

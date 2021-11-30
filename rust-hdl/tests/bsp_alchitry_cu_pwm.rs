@@ -1,8 +1,8 @@
 use rust_hdl::core::prelude::*;
 mod test_common;
-use test_common::snore;
 use rust_hdl::widgets::prelude::*;
 use std::collections::BTreeMap;
+use test_common::snore;
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPWM<const P: usize> {

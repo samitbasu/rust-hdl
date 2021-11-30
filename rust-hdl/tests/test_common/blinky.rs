@@ -1,5 +1,5 @@
-use rust_hdl::core::prelude::*;
 use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 use std::time::Duration;
 

@@ -1,6 +1,6 @@
+use crate::core::prelude::*;
 use crate::widgets::shot::Shot;
 use crate::widgets::strobe::Strobe;
-use crate::core::prelude::*;
 use std::time::Duration;
 
 #[derive(LogicBlock)]

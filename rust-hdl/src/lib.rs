@@ -51,8 +51,8 @@
 //! - Test - some various test infrastructure firmware and tools for testing.
 //!
 
-pub mod core;
-pub mod widgets;
-pub mod toolchain;
-pub mod sim;
 pub mod bsp;
+pub mod core;
+pub mod sim;
+pub mod toolchain;
+pub mod widgets;

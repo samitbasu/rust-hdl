@@ -1,5 +1,5 @@
-use crate::widgets::rom::make_btree_from_iterable;
 use crate::core::prelude::*;
+use crate::widgets::rom::make_btree_from_iterable;
 use std::collections::BTreeMap;
 
 #[derive(LogicInterface, Default)]

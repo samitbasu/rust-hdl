@@ -47,7 +47,10 @@ fn test_pwm_circuit() {
         assert_eq!(accum, 32);
         Ok(())
     });
-    sim.run_traced(Box::new(uut), 512 * 10,
-                   File::create(vcd_path!("pwm.vcd")).unwrap())
-        .unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        512 * 10,
+        File::create(vcd_path!("pwm.vcd")).unwrap(),
+    )
+    .unwrap();
 }

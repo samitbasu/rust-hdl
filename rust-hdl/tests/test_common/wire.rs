@@ -1,9 +1,9 @@
 use crate::test_common::tools::ok_test_prelude;
-use rust_hdl::core::prelude::*;
 use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-use std::time::Duration;
 use rust_hdl_ok_frontpanel_sys::OkError;
+use std::time::Duration;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyWireTest {

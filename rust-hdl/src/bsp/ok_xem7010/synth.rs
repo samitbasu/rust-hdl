@@ -3,8 +3,8 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-use crate::core::prelude::*;
 use crate::bsp::ok_core::prelude::*;
+use crate::core::prelude::*;
 use crate::toolchain::vivado::generate_xdc;
 
 #[derive(Clone, Debug)]

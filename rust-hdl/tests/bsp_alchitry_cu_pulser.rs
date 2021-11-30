@@ -25,9 +25,11 @@ impl Logic for AlchitryCuPulser {
 
 impl Default for AlchitryCuPulser {
     fn default() -> Self {
-        let pulser = Pulser::new(rust_hdl::bsp::alchitry_cu::pins::CLOCK_SPEED_100MHZ,
-                                 1.0,
-                                 Duration::from_millis(250));
+        let pulser = Pulser::new(
+            rust_hdl::bsp::alchitry_cu::pins::CLOCK_SPEED_100MHZ,
+            1.0,
+            Duration::from_millis(250),
+        );
         Self {
             pulser,
             clock: rust_hdl::bsp::alchitry_cu::pins::clock(),

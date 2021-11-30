@@ -1,9 +1,9 @@
-use std::collections::BTreeMap;
 use rust_hdl::bsp::alchitry_cu::ice_pll::ICE40PLLBlock;
 use rust_hdl::core::prelude::*;
+use std::collections::BTreeMap;
 mod test_common;
-use test_common::*;
 use rust_hdl::widgets::prelude::*;
+use test_common::*;
 
 const MHZ25: u64 = 25_000_000;
 const MHZ100: u64 = 100_000_000;

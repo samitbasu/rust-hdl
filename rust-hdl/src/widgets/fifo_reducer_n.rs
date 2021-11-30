@@ -1,6 +1,6 @@
+use crate::core::prelude::*;
 use crate::widgets::dff::DFF;
 use crate::widgets::fifo_expander_n::WordOrder;
-use crate::core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct FIFOReducerN<const DW: usize, const DN: usize> {

@@ -1,7 +1,7 @@
 use super::mcb_if::MCBInterface1GDDR2;
+use super::mig::MemoryInterfaceGenerator;
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
-use super::mig::MemoryInterfaceGenerator;
 
 #[derive(LogicState, Debug, Copy, Clone, PartialEq)]
 pub enum MIGInstruction {

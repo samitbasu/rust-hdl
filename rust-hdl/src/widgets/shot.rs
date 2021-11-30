@@ -1,5 +1,5 @@
-use crate::widgets::dff::DFF;
 use crate::core::prelude::*;
+use crate::widgets::dff::DFF;
 use rust_hdl_macros::{hdl_gen, LogicBlock};
 use std::time::Duration;
 

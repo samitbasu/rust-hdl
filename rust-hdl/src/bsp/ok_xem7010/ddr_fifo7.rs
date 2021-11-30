@@ -1,7 +1,7 @@
 use super::mcb_if::MCBInterface4GDDR3;
+use super::mig7::MemoryInterfaceGenerator7Series;
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
-use super::mig7::MemoryInterfaceGenerator7Series;
 
 #[derive(LogicState, Debug, Copy, Clone, PartialEq)]
 pub enum DDR7FIFOState {

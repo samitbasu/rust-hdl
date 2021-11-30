@@ -10,7 +10,6 @@ use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
-
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFOStressTest {
     mcb: MCBInterface1GDDR2,
@@ -76,5 +75,6 @@ fn test_opalkelly_xem_6010_synth_ddr_stress() {
     uut.raw_sys_clock.connect();
     uut.connect_all();
     rust_hdl::bsp::ok_xem6010::synth::synth_obj(uut, target_path!("xem_6010/ddr_stress"));
-    test_common::ddr::test_opalkelly_ddr_stress_runtime(target_path!("xem_6010/ddr_stress/top.bit")).unwrap()
+    test_common::ddr::test_opalkelly_ddr_stress_runtime(target_path!("xem_6010/ddr_stress/top.bit"))
+        .unwrap()
 }

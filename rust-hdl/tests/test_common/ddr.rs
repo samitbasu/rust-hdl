@@ -1,7 +1,7 @@
+use crate::test_common::tools::ok_test_prelude;
+use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
-use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
-use crate::test_common::tools::ok_test_prelude;
 
 pub fn test_opalkelly_ddr_stress_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;

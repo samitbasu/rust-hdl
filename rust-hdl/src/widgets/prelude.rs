@@ -1,10 +1,10 @@
-pub use crate::widgets::async_fifo::AsynchronousFIFO;
-pub use crate::widgets::cross_fifo::CrossNarrowFIFO;
-pub use crate::widgets::cross_fifo::CrossWidenFIFO;
 pub use crate::declare_async_fifo;
 pub use crate::declare_expanding_fifo;
 pub use crate::declare_narrowing_fifo;
 pub use crate::declare_sync_fifo;
+pub use crate::widgets::async_fifo::AsynchronousFIFO;
+pub use crate::widgets::cross_fifo::CrossNarrowFIFO;
+pub use crate::widgets::cross_fifo::CrossWidenFIFO;
 pub use crate::widgets::dff::DFF;
 pub use crate::widgets::edge_detector::EdgeDetector;
 pub use crate::widgets::fifo_expander_n::FIFOExpanderN;
@@ -21,4 +21,6 @@ pub use crate::widgets::spi_slave::SPISlave;
 pub use crate::widgets::strobe::Strobe;
 pub use crate::widgets::sync_fifo::SynchronousFIFO;
 pub use crate::widgets::sync_rom::SyncROM;
-pub use crate::widgets::synchronizer::{BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer};
+pub use crate::widgets::synchronizer::{
+    BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer,
+};

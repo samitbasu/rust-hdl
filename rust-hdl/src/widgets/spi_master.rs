@@ -1,6 +1,6 @@
+use crate::core::prelude::*;
 use crate::widgets::dff::DFF;
 use crate::widgets::prelude::{BitSynchronizer, Strobe};
-use crate::core::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum SPIState {

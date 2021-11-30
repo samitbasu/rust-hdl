@@ -1,8 +1,8 @@
 use crate::test_common::tools::ok_test_prelude;
-use rust_hdl::core::prelude::*;
 use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-use rust_hdl_ok_frontpanel_sys::{OkError, make_u16_buffer, make_u32_buffer};
+use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, make_u32_buffer, OkError};
 
 #[derive(LogicBlock)]
 pub struct OpalKellyDownload32FIFOTest {

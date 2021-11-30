@@ -2,8 +2,8 @@ use std::collections::BTreeMap;
 
 use rust_hdl::core::prelude::*;
 mod test_common;
-use test_common::snore;
 use rust_hdl::widgets::prelude::*;
+use test_common::snore;
 
 #[derive(LogicBlock)]
 pub struct Fader {
