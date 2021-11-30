@@ -6,7 +6,7 @@ use std::{thread, time};
 
 //use rand::Rng;
 
-include!("bindings.rs");
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 pub struct OkHandle {
     hnd: okFrontPanel_HANDLE,
@@ -33,6 +33,12 @@ impl Drop for OkHandle {
         self.destruct();
     }
 }
+
+#[test]
+fn test_new_works() {
+    let _ = OkHandle::new();
+}
+
 
 impl OkHandle {
     pub fn new() -> OkHandle {

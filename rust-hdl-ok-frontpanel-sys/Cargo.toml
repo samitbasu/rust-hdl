@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-ok-frontpanel-sys"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
 license = "MIT"
 description = "OpalKelly FrontPanel library wrapper for the RustHDL crate."
@@ -16,5 +16,4 @@ build = "build.rs"
 [dependencies]
 
 [build-dependencies]
-bindgen = "0.59"
-cc = "^1"
+bindgen = "0.59.1"
