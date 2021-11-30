@@ -39,7 +39,6 @@ impl Logic for Pulser {
 
 #[test]
 fn test_pulser_synthesis() {
-    use rust_hdl_yosys_synth::yosys_validate;
     let mut uut = Pulser::new(1_000_000, 1.0, Duration::from_millis(100));
     uut.clock.connect();
     uut.enable.connect();

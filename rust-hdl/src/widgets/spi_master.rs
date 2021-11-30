@@ -227,5 +227,5 @@ fn test_spi_master_is_synthesizable() {
     dev.uut.wires.miso.connect();
     dev.connect_all();
     println!("{}", generate_verilog(&dev));
-    rust_hdl_yosys_synth::yosys_validate("spi_master", &generate_verilog(&dev)).unwrap();
+    yosys_validate("spi_master", &generate_verilog(&dev)).unwrap();
 }

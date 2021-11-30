@@ -87,10 +87,9 @@ impl OpalKellyHost {
 
 #[test]
 fn test_host_interface_synthesizes() {
-    use rust_hdl_yosys_synth::TopWrap;
     let mut uut = TopWrap::new(OpalKellyHost::xem_6010());
     uut.uut.ok2.connect();
     uut.uut.hi.sig_in.connect();
     uut.connect_all();
-    rust_hdl_yosys_synth::yosys_validate("okhi", &generate_verilog(&uut)).unwrap();
+    yosys_validate("okhi", &generate_verilog(&uut)).unwrap();
 }

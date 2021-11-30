@@ -126,7 +126,7 @@ fn test_dram_if_ucf() {
     let uut = DRAMIFTest5 {
         mcb_dram: MCBInterface1GDDR2::xem_6010(),
     };
-    let ucf = rust_hdl_toolchain_ise::ucf_gen::generate_ucf(&uut);
+    let ucf = crate::toolchain::ise::generate_ucf(&uut);
     println!("{}", ucf);
     assert!(ucf.contains("mcb_dram$zio LOC=Y2"));
     assert!(ucf.contains("mcb_dram$rzq LOC=K7"));

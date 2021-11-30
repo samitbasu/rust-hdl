@@ -154,9 +154,8 @@ impl MCBInterface4GDDR3 {
 
 #[test]
 fn test_dram7_if_xdc() {
-    use rust_hdl_yosys_synth::TopWrap;
     let uut = TopWrap::new(MCBInterface4GDDR3::xem_7010_constrained());
-    let xdc = rust_hdl_toolchain_vivado::xdc_gen::generate_xdc(&uut);
+    let xdc = crate::toolchain::vivado::generate_xdc(&uut);
     println!("{}", xdc);
     assert!(xdc.contains("set_property PACKAGE_PIN AB1 [get_ports { uut$data_bus[0] }]"));
     assert!(xdc.contains("set_property PACKAGE_PIN Y4 [get_ports { uut$data_bus[1] }]"));

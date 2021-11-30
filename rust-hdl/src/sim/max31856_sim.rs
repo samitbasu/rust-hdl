@@ -233,7 +233,6 @@ impl Logic for MAX31856Simulator {
 
 #[test]
 fn test_max31856_synthesizes() {
-    use rust_hdl_yosys_synth::yosys_validate;
     let mut uut = MAX31856Simulator::new(SPIConfig {
         clock_speed: 1_000_000,
         cs_off: true,
@@ -344,7 +343,6 @@ fn mk_test31856() -> Test31856 {
 
 #[test]
 fn test_yosys_validate_test_fixture() {
-    use rust_hdl_yosys_synth::yosys_validate;
     let uut = mk_test31856();
     yosys_validate("31856_1", &generate_verilog(&uut)).unwrap();
 }

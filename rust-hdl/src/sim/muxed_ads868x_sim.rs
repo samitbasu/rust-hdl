@@ -49,7 +49,6 @@ impl<const N: usize> Logic for MuxedADS868XSimulators<N> {
 
 #[test]
 fn test_mux_is_synthesizable() {
-    use rust_hdl_yosys_synth::yosys_validate;
     let mut uut: MuxedADS868XSimulators<8> =
         MuxedADS868XSimulators::new(ADS868XSimulator::spi_hw());
     uut.mclk.connect();

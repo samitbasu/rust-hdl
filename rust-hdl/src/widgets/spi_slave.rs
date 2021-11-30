@@ -263,6 +263,6 @@ fn test_spi_slave_synthesizes() {
     uut.bits.connect();
     uut.continued_transaction.connect();
     uut.connect_all();
-    rust_hdl_yosys_synth::yosys_validate("spi_slave", &generate_verilog(&uut)).unwrap();
+    yosys_validate("spi_slave", &generate_verilog(&uut)).unwrap();
     println!("{}", generate_verilog(&uut));
 }

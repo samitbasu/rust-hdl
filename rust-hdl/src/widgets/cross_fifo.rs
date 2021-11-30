@@ -107,7 +107,6 @@ impl<
 
 #[test]
 fn cross_widen_fifo_is_synthesizable() {
-    use rust_hdl_yosys_synth::TopWrap;
     let mut dev = TopWrap::new(CrossWidenFIFO::<16, 8, 9, 128, 5, 6>::new(
         WordOrder::MostSignificantFirst,
     ));
@@ -117,7 +116,7 @@ fn cross_widen_fifo_is_synthesizable() {
     dev.uut.read.connect();
     dev.uut.read_clock.connect();
     dev.connect_all();
-    rust_hdl_yosys_synth::yosys_validate("cross_wide", &generate_verilog(&dev)).unwrap();
+    yosys_validate("cross_wide", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev))
 }
 
@@ -224,7 +223,6 @@ impl<
 
 #[test]
 fn cross_narrow_fifo_is_synthesizable() {
-    use rust_hdl_yosys_synth::TopWrap;
     let mut dev = TopWrap::new(CrossNarrowFIFO::<128, 5, 6, 16, 8, 9>::new(
         WordOrder::MostSignificantFirst,
     ));
@@ -234,7 +232,7 @@ fn cross_narrow_fifo_is_synthesizable() {
     dev.uut.read.connect();
     dev.uut.read_clock.connect();
     dev.connect_all();
-    rust_hdl_yosys_synth::yosys_validate("cross_narrow", &generate_verilog(&dev)).unwrap();
+    yosys_validate("cross_narrow", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev))
 }
 

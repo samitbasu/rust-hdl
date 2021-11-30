@@ -260,7 +260,7 @@ define_uint_from_vec!(usize, 32);
 mod tests {
     use std::num::Wrapping;
 
-    use crate::bitvec::BitVec;
+    use super::BitVec;
 
     #[test]
     fn or_test() {

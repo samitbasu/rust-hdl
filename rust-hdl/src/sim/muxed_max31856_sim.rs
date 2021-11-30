@@ -56,8 +56,7 @@ impl Logic for MuxedMAX31856Simulators {
 
 #[test]
 fn test_mux_is_synthesizable() {
-    use rust_hdl_yosys_synth::yosys_validate;
-    use crate::prelude::AD7193Config;
+    use super::ad7193_sim::AD7193Config;
     let mut uut = MuxedMAX31856Simulators::new(AD7193Config::hw().spi);
     uut.mclk.connect();
     uut.mosi.connect();

@@ -79,7 +79,7 @@ fn test_ok_host_synthesizable() {
     check_connected(&uut);
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
-    let ucf = rust_hdl_toolchain_ise::ucf_gen::generate_ucf(&uut);
+    let ucf = crate::toolchain::ise::generate_ucf(&uut);
     println!("{}", ucf);
-    rust_hdl_yosys_synth::yosys_validate("vlog", &vlog).unwrap();
+    yosys_validate("vlog", &vlog).unwrap();
 }

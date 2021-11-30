@@ -62,7 +62,7 @@ use std::fmt::{Display, Formatter, LowerHex};
 /// IP core.
 ///
 /// ```rust
-/// # use crate::core::prelude::*;
+/// # use rust_hdl::core::prelude::*;
 /// pub struct ClockDriver {
 ///    pub I: Signal<In, Clock>,
 ///    pub B: Signal<In, Clock>,
@@ -75,7 +75,7 @@ use std::fmt::{Display, Formatter, LowerHex};
 /// The [Logic] trait for this circuit will need to be implemented
 /// by hand.
 /// ```rust
-/// # use crate::core:: prelude::*;
+/// # use rust_hdl::core:: prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub I: Signal<In, Clock>,
@@ -110,7 +110,7 @@ use std::fmt::{Display, Formatter, LowerHex};
 /// connected.  For our black box, the [Logic::connect] trait implementation
 /// is very simple:
 /// ```rust
-/// # use crate::core:: prelude::*;
+/// # use rust_hdl::core:: prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub I: Signal<In, Clock>,
@@ -137,7 +137,7 @@ use std::fmt::{Display, Formatter, LowerHex};
 /// That is where we need the [BlackBox] struct.
 ///
 /// ```rust
-/// # use crate::core:: prelude::*;
+/// # use rust_hdl::core::prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub I: Signal<In, Clock>,
@@ -178,7 +178,7 @@ use std::fmt::{Display, Formatter, LowerHex};
 /// example:
 ///
 /// ```rust
-/// # use crate::core::prelude::*;
+/// # use rust_hdl::core::prelude::*;
 ///
 /// #[derive(LogicBlock, Default)]
 /// pub struct ClockDriver {
@@ -239,7 +239,7 @@ use std::fmt::{Display, Formatter, LowerHex};
 /// To see how that works, let's create a minimum example.  For fun, we will
 /// use a single bit inverter.
 /// ```rust
-/// # use crate::core::prelude::*;
+/// # use rust_hdl::core::prelude::*;
 ///
 /// // First a basic inverter example
 /// #[derive(LogicBlock, Default)]
@@ -353,7 +353,7 @@ pub struct BlackBox {
 /// of it, and add a simulation model.
 ///
 /// ```rust
-/// # use crate::core::prelude::*;
+/// # use rust_hdl::core::prelude::*;
 /// pub struct ClockDriver {
 ///    pub clock_p: Signal<In, Clock>,
 ///    pub clock_n: Signal<In, Clock>,
@@ -377,7 +377,7 @@ pub struct BlackBox {
 /// by hand.
 ///
 /// ```rust
-/// # use crate::core::prelude::*;
+/// # use rust_hdl::core::prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub clock_p: Signal<In, Clock>,
@@ -429,7 +429,7 @@ pub struct BlackBox {
 /// (not a good idea in practice, but for simulations it's fine).
 ///
 /// ```rust
-/// # use crate::core:: prelude::*;
+/// # use rust_hdl::core:: prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub clock_p: Signal<In, Clock>,
@@ -456,7 +456,7 @@ pub struct BlackBox {
 /// That is where we need the [Wrapper] struct.
 ///
 /// ```rust
-/// # use crate::core::prelude::*;
+/// # use rust_hdl::core::prelude::*;
 /// # #[derive(LogicBlock, Default)]
 /// # pub struct ClockDriver {
 /// #   pub clock_p: Signal<In, Clock>,
@@ -497,7 +497,7 @@ pub struct BlackBox {
 /// example:
 ///
 /// ```rust
-/// # use crate::core::prelude::*;
+/// # use rust_hdl::core::prelude::*;
 ///
 /// #[derive(LogicBlock, Default)]
 /// pub struct ClockDriver {

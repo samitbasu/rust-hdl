@@ -495,7 +495,7 @@ impl<const N: usize> std::ops::Add<bool> for Bits<N> {
 mod tests {
     use std::num::Wrapping;
 
-    use crate::bits::{bit_cast, bits, clog2, Bits};
+    use super::{bit_cast, bits, clog2, Bits};
 
     #[test]
     fn test_short_from_u8() {

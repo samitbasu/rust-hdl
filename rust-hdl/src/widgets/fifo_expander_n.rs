@@ -106,13 +106,12 @@ impl<const DN: usize, const DW: usize> FIFOExpanderN<DN, DW> {
 
 #[test]
 fn fifo_expandern_is_synthesizable() {
-    use rust_hdl_yosys_synth::TopWrap;
     let mut dev = TopWrap::new(FIFOExpanderN::<4, 32>::new(WordOrder::MostSignificantFirst));
     dev.uut.empty.connect();
     dev.uut.full.connect();
     dev.uut.data_in.connect();
     dev.uut.clock.connect();
     dev.connect_all();
-    rust_hdl_yosys_synth::yosys_validate("fifo_expandern", &generate_verilog(&dev)).unwrap();
+    yosys_validate("fifo_expandern", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev));
 }
