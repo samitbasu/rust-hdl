@@ -1,16 +1,15 @@
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-use rust_hdl_bsp_ok_xem6010::mcb_if::MCBInterface1GDDR2;
-use rust_hdl_bsp_ok_xem6010::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
-use rust_hdl_bsp_ok_xem6010::pins::xem_6010_base_clock;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
-use rust_hdl_test_core::target_path;
-use rust_hdl_test_ok_common::ddr;
-use rust_hdl_test_ok_common::prelude::*;
-use rust_hdl_widgets::prelude::*;
+mod test_common;
+
+use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::bsp::ok_xem6010::mcb_if::MCBInterface1GDDR2;
+use rust_hdl::bsp::ok_xem6010::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
+use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+
 
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFOStressTest {
@@ -68,6 +67,7 @@ impl Logic for OpalKellyDownloadDDRFIFOStressTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_opalkelly_xem_6010_synth_ddr_stress() {
     let mut uut = OpalKellyDownloadDDRFIFOStressTest::default();
@@ -75,6 +75,6 @@ fn test_opalkelly_xem_6010_synth_ddr_stress() {
     uut.mcb.link_connect_dest();
     uut.raw_sys_clock.connect();
     uut.connect_all();
-    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, target_path!("xem_6010/ddr_stress"));
-    ddr::test_opalkelly_ddr_stress_runtime(target_path!("xem_6010/ddr_stress/top.bit")).unwrap()
+    rust_hdl::bsp::ok_xem6010::synth::synth_obj(uut, target_path!("xem_6010/ddr_stress"));
+    test_common::ddr::test_opalkelly_ddr_stress_runtime(target_path!("xem_6010/ddr_stress/top.bit")).unwrap()
 }

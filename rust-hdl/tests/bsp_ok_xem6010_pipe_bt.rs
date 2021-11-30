@@ -1,13 +1,13 @@
-use std::convert::Into;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::bsp::ok_xem6010::pins::{xem_6010_base_clock, xem_6010_leds};
+use rust_hdl::bsp::ok_xem6010::XEM6010;
+use rust_hdl_ok_frontpanel_sys::{OkError, make_u16_buffer};
 
-use rust_hdl_bsp_ok_xem6010::pins::{xem_6010_base_clock, xem_6010_leds};
-use rust_hdl_bsp_ok_xem6010::XEM6010;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
-use rust_hdl_test_core::target_path;
-use rust_hdl_test_ok_common::prelude::*;
-use rust_hdl_widgets::prelude::*;
+mod test_common;
+
+use test_common::tools::ok_test_prelude;
 
 declare_async_fifo!(OKTestAFIFO2, Bits<16>, 1024, 256);
 

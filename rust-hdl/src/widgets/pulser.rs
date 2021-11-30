@@ -67,7 +67,7 @@ fn test_pulser() {
     sim.run_traced(
         Box::new(uut),
         1_000_000,
-        std::fs::File::create(vcd_path!("pulser.vcd")).unwrap(),
+        std::fs::File::create(("/tmp/pulser.vcd")).unwrap(),
     )
     .unwrap();
 }

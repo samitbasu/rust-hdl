@@ -1,14 +1,16 @@
-use rust_hdl_bsp_ok_xem6010::mcb_if::MCBInterface1GDDR2;
-use rust_hdl_bsp_ok_xem6010::mig::MemoryInterfaceGenerator;
-use rust_hdl_bsp_ok_xem6010::pins::xem_6010_base_clock;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-use rust_hdl_ok_frontpanel_sys::OkError;
-use rust_hdl_test_core::target_path;
-use rust_hdl_test_ok_common::prelude::*;
-use rust_hdl_widgets::prelude::*;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 use std::thread::sleep;
 use std::time::Duration;
+use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::bsp::ok_xem6010::mcb_if::MCBInterface1GDDR2;
+use rust_hdl::bsp::ok_xem6010::mig::MemoryInterfaceGenerator;
+use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
+use rust_hdl_ok_frontpanel_sys::OkError;
+use test_common::tools::*;
+
+mod test_common;
+
 
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010MIGTest {
@@ -110,7 +112,7 @@ fn test_opalkelly_xem_6010_mig() {
     uut.mcb.link_connect_dest();
     uut.raw_clock.connect();
     uut.connect_all();
-    rust_hdl_bsp_ok_xem6010::synth::synth_obj(uut, target_path!("xem_6010/mig"));
+    rust_hdl::bsp::ok_xem6010::synth::synth_obj(uut, target_path!("xem_6010/mig"));
     test_opalkelly_xem_6010_mig_runtime().unwrap();
 }
 

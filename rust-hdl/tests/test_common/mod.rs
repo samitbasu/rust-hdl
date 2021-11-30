@@ -1,7 +1,26 @@
+use std::collections::BTreeMap;
 use std::f64::consts::PI;
+
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-use std::collections::BTreeMap;
+
+pub mod blinky;
+#[cfg(feature = "frontpanel")]
+pub mod ddr;
+#[cfg(feature = "frontpanel")]
+pub mod wire;
+#[cfg(feature = "frontpanel")]
+pub mod download;
+#[cfg(feature = "frontpanel")]
+pub mod mux_spi;
+#[cfg(feature = "frontpanel")]
+pub mod pipe;
+#[cfg(feature = "frontpanel")]
+pub mod spi;
+#[cfg(feature = "frontpanel")]
+pub mod tools;
+#[cfg(feature = "frontpanel")]
+pub mod wave;
 
 pub fn snore<const P: usize>(x: u32) -> Bits<P> {
     let amp = (f64::exp(f64::sin(((x as f64) - 128.0 / 2.) * PI / 128.0)) - 0.36787944) * 108.0;

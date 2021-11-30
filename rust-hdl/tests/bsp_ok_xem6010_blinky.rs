@@ -1,8 +1,10 @@
-use rust_hdl_bsp_ok_xem6010::XEM6010;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-use rust_hdl_test_core::target_path;
-use rust_hdl_test_ok_common::prelude::*;
+use rust_hdl::bsp::ok_xem6010::XEM6010;
+use rust_hdl::core::prelude::*;
+use rust_hdl::bsp::ok_core::prelude::*;
+
+mod test_ok_common;
+
+use bsp_alchitry_cu_pwm_vec_srom::test_common::blinky::OpalKellyBlinky;
 
 #[test]
 fn test_opalkelly_xem_6010_synth_blinky() {

@@ -1,11 +1,12 @@
-use rust_hdl_bsp_ok_xem6010::pins::xem_6010_base_clock;
-use rust_hdl_bsp_ok_xem6010::XEM6010;
-use rust_hdl_core::prelude::*;
-use rust_hdl_ok_core::prelude::*;
-use rust_hdl_ok_frontpanel_sys::OkError;
-use rust_hdl_test_core::target_path;
-use rust_hdl_test_ok_common::pipe::test_opalkelly_pipe_afifo_runtime;
-use rust_hdl_widgets::prelude::*;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
+use rust_hdl::bsp::ok_xem6010::XEM6010;
+use test_common::pipe::*;
+
+
+mod test_common;
 
 declare_async_fifo!(OKTestAFIFO, Bits<16>, 256, 1);
 
