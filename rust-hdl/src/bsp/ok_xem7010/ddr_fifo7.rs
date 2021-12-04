@@ -155,5 +155,5 @@ fn test_ddr7_fifo_gen() {
     ddr.uut.read_clock.connect();
     ddr.uut.reset.connect();
     ddr.connect_all();
-    yosys_validate("ddr7", &generate_verilog(&ddr));
+    yosys_validate("ddr7", &generate_verilog(&ddr)).unwrap();
 }

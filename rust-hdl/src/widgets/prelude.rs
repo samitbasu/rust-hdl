@@ -24,3 +24,4 @@ pub use crate::widgets::sync_rom::SyncROM;
 pub use crate::widgets::synchronizer::{
     BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer,
 };
+pub use crate::widgets::mac_fir::MultiplyAccumulateSymmetricFiniteImpulseResponseFilter;

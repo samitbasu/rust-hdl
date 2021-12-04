@@ -21,6 +21,8 @@ pub mod tools;
 pub mod wave;
 #[cfg(feature = "frontpanel")]
 pub mod wire;
+#[cfg(feature = "frontpanel")]
+pub mod fir;
 
 pub fn snore<const P: usize>(x: u32) -> Bits<P> {
     let amp = (f64::exp(f64::sin(((x as f64) - 128.0 / 2.) * PI / 128.0)) - 0.36787944) * 108.0;

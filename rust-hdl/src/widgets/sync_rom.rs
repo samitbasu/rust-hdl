@@ -1,5 +1,6 @@
 use crate::core::prelude::*;
 use std::collections::BTreeMap;
+use crate::widgets::rom::make_btree_from_iterable;
 
 #[derive(LogicBlock)]
 pub struct SyncROM<D: Synth, const N: usize> {
@@ -17,6 +18,12 @@ impl<D: Synth, const N: usize> SyncROM<D, N> {
             clock: Signal::default(),
             _sim: values,
         }
+    }
+}
+
+impl<I: Iterator<Item = D>, D: Synth, const N: usize> From<I> for SyncROM<D, N> {
+    fn from(v: I) -> Self {
+        Self::new(make_btree_from_iterable(v))
     }
 }
 

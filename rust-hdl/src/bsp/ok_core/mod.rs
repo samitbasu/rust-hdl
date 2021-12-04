@@ -13,5 +13,6 @@ pub mod ok_wire;
 pub mod prelude;
 pub mod spi;
 pub mod tools;
+pub mod clock;
 
 pub const MHZ48: u64 = 48_000_000;

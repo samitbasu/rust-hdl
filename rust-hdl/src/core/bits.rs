@@ -756,3 +756,30 @@ mod tests {
 
 /// A type alias for a simple bool.  You can use them interchangeably.
 pub type Bit = bool;
+
+/// Multipliers are special, so we only implement multipliers that we think are
+/// synthesizable.  In this case, we implement a 16 x 16 bit multiplier
+/// which yields a 32 bit result.
+impl std::ops::Mul<Bits<16>> for Bits<16> {
+    type Output = Bits<32>;
+
+    fn mul(self, rhs: Bits<16>) -> Self::Output {
+        let x = match self {
+            Bits::Short(x) => {
+                x.short()
+            }
+            Bits::Long(_) => {
+                panic!("unreachable!")
+            }
+        };
+        let y = match rhs {
+            Bits::Short(x) => {
+                x.short()
+            }
+            Bits::Long(_) => {
+                panic!("unreachable!")
+            }
+        };
+        Bits::Short(ShortBitVec::from(x*y))
+    }
+}
