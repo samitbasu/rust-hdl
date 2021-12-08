@@ -155,6 +155,10 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
     fn constraints(&self) -> Vec<PinConstraint> {
         self.constraints.clone()
     }
+
+    fn signed(&self) -> bool {
+        T::SIGNED
+    }
 }
 
 impl<D: Direction, T: Synth> Logic for Signal<D, T> {

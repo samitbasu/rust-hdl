@@ -1,3 +1,5 @@
+use num_bigint::BigUint;
+
 #[derive(Debug, Clone, Copy, Hash)]
 pub struct BitVec<const N: usize> {
     bits: [bool; N],

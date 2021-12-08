@@ -315,7 +315,7 @@ fn test_array_replacement() {
     let test = "a[((i+1))]";
     let captures = re.captures(test);
     let mut context = evalexpr::HashMapContext::new();
-    context.set_value("i".to_string(), 5.into());
+    context.set_value("i".to_string(), 5.into()).unwrap();
     for x in re.captures(test) {
         println!("Match {:?}", x);
         if x.len() == 2 {

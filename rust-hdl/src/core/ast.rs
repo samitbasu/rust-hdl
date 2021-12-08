@@ -1,5 +1,5 @@
 use crate::core::bits::Bits;
-use num_bigint::BigUint;
+use num_bigint::{BigUint, BigInt, Sign};
 use std::fmt::{Display, Formatter, LowerHex};
 
 /// The BlackBox struct provides a way to wrap a blackbox,
@@ -660,13 +660,15 @@ pub struct VerilogCase {
 #[doc(hidden)]
 #[derive(Debug, Clone)]
 pub struct VerilogLiteral {
-    val: BigUint,
+    val: BigInt,
     bits: usize,
 }
 
 impl VerilogLiteral {
     pub fn as_usize(&self) -> usize {
         let m = self.val.to_u32_digits();
+        assert!(m.0 != Sign::Minus);
+        let m = m.1;
         match m.len() {
             0 => 0,
             1 => m[0] as usize,
@@ -677,7 +679,7 @@ impl VerilogLiteral {
 
 impl From<bool> for VerilogLiteral {
     fn from(x: bool) -> Self {
-        let bi: BigUint = if x { 1_u32 } else { 0_u32 }.into();
+        let bi: BigInt = if x { 1_u32 } else { 0_u32 }.into();
         VerilogLiteral { val: bi, bits: 1 }
     }
 }
@@ -686,7 +688,7 @@ macro_rules! define_literal_from_uint {
     ($name: ident, $width: expr) => {
         impl From<$name> for VerilogLiteral {
             fn from(x: $name) -> Self {
-                let bi: BigUint = x.into();
+                let bi: BigInt = x.into();
                 VerilogLiteral {
                     val: bi,
                     bits: $width,
@@ -708,7 +710,7 @@ define_literal_from_uint!(usize, 32);
 
 impl<const N: usize> From<Bits<N>> for VerilogLiteral {
     fn from(x: Bits<N>) -> Self {
-        let mut z = BigUint::default();
+        let mut z = BigInt::default();
         for i in 0..N {
             z.set_bit(i as u64, x.get_bit(i));
         }

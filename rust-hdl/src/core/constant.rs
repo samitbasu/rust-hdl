@@ -75,6 +75,10 @@ impl<T: Synth> Atom for Constant<T> {
     fn constraints(&self) -> Vec<PinConstraint> {
         vec![]
     }
+
+    fn signed(&self) -> bool {
+        T::SIGNED
+    }
 }
 
 impl<T: Synth> Block for Constant<T> {

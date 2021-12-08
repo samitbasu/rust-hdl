@@ -24,3 +24,4 @@ pub mod vcd_probe;
 pub mod verilog_gen;
 pub mod verilog_visitor;
 pub mod yosys;
+pub mod signed;

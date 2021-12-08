@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use crate::core::ast::VerilogLiteral;
 use crate::core::bits::{Bit, Bits};
 use crate::core::clock::Clock;
+use crate::core::signed::Signed;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum VCDValue {
@@ -25,6 +26,7 @@ pub trait Synth: Default + Copy + PartialEq + Debug {
     const BITS: usize;
     const ENUM_TYPE: bool = false;
     const TYPE_NAME: &'static str = "Bits";
+    const SIGNED: bool = false;
     fn name(_ndx: usize) -> &'static str {
         ""
     }
@@ -69,5 +71,17 @@ impl Synth for Clock {
 
     fn verilog(self) -> VerilogLiteral {
         self.0.into()
+    }
+}
+
+impl<const N: usize> Synth for Signed<N> {
+    const BITS: usize = N;
+    const TYPE_NAME: &'static str = "Signed";
+    const SIGNED: bool = true;
+    fn vcd(self) -> VCDValue {
+        self.inner().vcd()
+    }
+    fn verilog(self) -> VerilogLiteral {
+        self.inner().into()
     }
 }

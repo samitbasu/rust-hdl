@@ -42,4 +42,5 @@ pub trait Atom {
     fn id(&self) -> usize;
     fn verilog(&self) -> VerilogLiteral;
     fn constraints(&self) -> Vec<PinConstraint>;
+    fn signed(&self) -> bool;
 }

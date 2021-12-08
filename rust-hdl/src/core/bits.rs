@@ -5,6 +5,8 @@ use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
 use std::hash::Hasher;
 use std::num::Wrapping;
+use num_bigint::BigUint;
+use num_traits::ToPrimitive;
 
 // This comes with a few invariants that must be maintained for short representation
 // The short value must be less than 2^N
@@ -54,6 +56,21 @@ fn test_clog2_is_correct() {
 pub enum Bits<const N: usize> {
     Short(ShortBitVec<N>),
     Long(BitVec<N>),
+}
+
+impl<const N: usize> From<BigUint> for Bits<N> {
+    fn from(x: BigUint) -> Self {
+        assert!(x.bits() <= N as u64);
+        if N <= SHORT_BITS {
+            x.to_u32().unwrap().into()
+        } else {
+            let mut ret = [false; N];
+            for i in 0..N {
+                ret[i] = x.bit(i as u64)
+            }
+            Bits::Long(ret.into())
+        }
+    }
 }
 
 impl<const N: usize> Binary for Bits<N> {
