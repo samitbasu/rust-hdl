@@ -108,6 +108,12 @@ impl<const N: usize> std::ops::Add<Signed<N>> for Signed<N> {
     }
 }
 
+impl<const N: usize> std::ops::Sub<Signed<N>> for Signed<N> {
+    type Output = Signed<N>;
+
+    fn sub(self, rhs: Signed<N>) -> Self::Output {Self(self.0 - rhs.0)}
+}
+
 impl std::ops::Mul<Signed<16>> for Signed<16> {
     type Output = Signed<32>;
 
