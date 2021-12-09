@@ -274,7 +274,10 @@ fn hdl_cast(cast: &syn::ExprCast) -> Result<TS> {
 
 fn hdl_call(call: &syn::ExprCall) -> Result<TS> {
     let funcname = quote!(#call).to_string();
-    if funcname.starts_with("bit_cast") || funcname.starts_with("tagged_bit_cast") {
+    if funcname.starts_with("bit_cast") || funcname.starts_with("signed_bit_cast")
+        || funcname.starts_with("signed_cast") || funcname.starts_with("unsigned_cast")
+        || funcname.starts_with("bits") || funcname.starts_with("Bits")
+    {
         hdl_compute(&call.args[0])
     } else if funcname.starts_with("all_true") {
         let arg = hdl_compute(&call.args[0])?;
@@ -282,9 +285,8 @@ fn hdl_call(call: &syn::ExprCall) -> Result<TS> {
         ast::VerilogExpression::Unary(ast::VerilogOpUnary::All, Box::new(#arg))
         }))
     } else {
-        Ok(quote!({
-        ast::VerilogExpression::Literal(#call.into())
-        }))
+        Err(syn::Error::new(call.span(),
+                            format!("Unsupported function {} called for HDL conversion", funcname)))
     }
 }
 

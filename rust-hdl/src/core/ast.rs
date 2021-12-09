@@ -1,6 +1,7 @@
 use crate::core::bits::Bits;
 use num_bigint::{BigUint, BigInt, Sign};
 use std::fmt::{Display, Formatter, LowerHex};
+use crate::core::signed::Signed;
 
 /// The BlackBox struct provides a way to wrap a blackbox,
 /// externally provided IP core.
@@ -700,6 +701,7 @@ macro_rules! define_literal_from_uint {
 
 define_literal_from_uint!(u128, 128);
 define_literal_from_uint!(u64, 64);
+define_literal_from_uint!(i32, 32);
 define_literal_from_uint!(u32, 32);
 define_literal_from_uint!(u16, 16);
 define_literal_from_uint!(u8, 8);
@@ -715,6 +717,12 @@ impl<const N: usize> From<Bits<N>> for VerilogLiteral {
             z.set_bit(i as u64, x.get_bit(i));
         }
         VerilogLiteral { val: z, bits: N }
+    }
+}
+
+impl<const N: usize> From<Signed<N>> for VerilogLiteral {
+    fn from(x: Signed<N>) -> Self {
+        VerilogLiteral {val: x.bigint(), bits: N}
     }
 }
 

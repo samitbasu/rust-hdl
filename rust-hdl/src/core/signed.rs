@@ -54,6 +54,9 @@ impl<const N: usize> Signed<N> {
     pub fn get_bit(&self, ndx: usize) -> bool {
         self.0.get_bit(ndx)
     }
+    pub fn get_bits<const M: usize>(&self, index: usize) -> Signed<M> {
+        Signed(self.0.get_bits::<M>(index))
+    }
     pub fn inner(&self) -> Bits<N> {
         self.0
     }
@@ -105,6 +108,14 @@ impl<const N: usize> std::ops::Add<Signed<N>> for Signed<N> {
     }
 }
 
+impl std::ops::Mul<Signed<16>> for Signed<16> {
+    type Output = Signed<32>;
+
+    fn mul(self, rhs: Signed<16>) -> Self::Output {
+        Self::Output::from(self.bigint() * rhs.bigint())
+    }
+}
+
 
 impl<const N: usize> From<i32> for Signed<N> {
     fn from(x: i32) -> Self {
@@ -116,12 +127,25 @@ impl<const N: usize> From<i32> for Signed<N> {
     }
 }
 
+pub fn signed<const N: usize>(x: i32) -> Signed<N> {
+    let t: Signed<N> = x.into();
+    t
+}
+
 pub fn signed_bit_cast<const M: usize, const N: usize>(x: Signed<N>) -> Signed<M> {
     if x.sign_bit() {
         -signed_bit_cast(-x)
     } else {
         Signed(bit_cast(x.0))
     }
+}
+
+pub fn signed_cast<const N: usize>(x: Bits<N>) -> Signed<N> {
+    Signed(x)
+}
+
+pub fn unsigned_cast<const N: usize>(x: Signed<N>) -> Bits<N> {
+    x.0
 }
 
 pub fn unsigned_bit_cast<const M: usize, const N: usize>(x: Signed<N>) -> Bits<M> {

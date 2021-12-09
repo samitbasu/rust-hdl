@@ -6,7 +6,7 @@ use crate::test_common::tools::ok_test_prelude;
 use std::thread::sleep;
 use std::time::Duration;
 
-declare_sync_fifo!(OKTestFIFO, Bits<16>, 256, 1);
+declare_sync_fifo!(OKTestFIFO, Signed<16>, 256, 1);
 
 #[derive(LogicBlock)]
 pub struct OpalKellyFIRTest {
@@ -35,7 +35,7 @@ impl Logic for OpalKellyFIRTest {
         self.fir.clock.next = self.ok_host.ti_clk.val();
         self.delay_read.clk.next = self.ok_host.ti_clk.val();
         // Connect the input pipe to the input fifo
-        self.i_fifo.data_in.next = self.i_pipe.dataout.val();
+        self.i_fifo.data_in.next = signed_cast(self.i_pipe.dataout.val());
         self.i_fifo.write.next = self.i_pipe.write.val();
         // For now, bridge the two fifos
         self.fir.data_in.next = self.i_fifo.data_out.val();
@@ -46,7 +46,7 @@ impl Logic for OpalKellyFIRTest {
         self.o_fifo.write.next = self.fir.strobe_out.val();
         self.o_fifo.read.next = self.delay_read.q.val();
         self.delay_read.d.next = self.o_pipe.read.val();
-        self.o_pipe.datain.next = self.o_fifo.data_out.val();
+        self.o_pipe.datain.next = unsigned_cast(self.o_fifo.data_out.val());
     }
 }
 
@@ -57,7 +57,7 @@ impl OpalKellyFIRTest {
             ok_host: B::ok_host(),
             i_fifo: Default::default(),
             o_fifo: Default::default(),
-            fir: MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::new(&[1, 2, 3, 5, 7, 5, 3, 2, 1]),
+            fir: MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::new(&[1, -2, 3, -5, 7, -5, 3, -2, 1]),
             i_pipe: PipeIn::new(0x80),
             o_pipe: PipeOut::new(0xA0),
             delay_read: Default::default(),
@@ -66,11 +66,16 @@ impl OpalKellyFIRTest {
     }
 }
 
+pub fn make_i16_buffer(data: &[u8]) -> Vec<i16> {
+    make_u16_buffer(data).iter().map(|x| *x as i16).collect()
+}
+
 pub fn test_opalkelly_fir_runtime(bit_name: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_name)?;
     let mut data = [0_u8; 256];
-    data[128] = 1;
-    let data16 = make_u16_buffer(&data);
+    data[128] = 0xFF;
+    data[129] = 0xFF;
+    let data16 = make_i16_buffer(&data);
     for (ndx, val) in data16.iter().enumerate() {
         if *val != 0 {
             println!("ival {} -> {}", ndx, val);
@@ -80,7 +85,7 @@ pub fn test_opalkelly_fir_runtime(bit_name: &str) -> Result<(), OkError> {
     sleep(Duration::from_secs(1));
     let mut data_out = [0_u8; 256];
     hnd.read_from_pipe_out(0xA0, &mut data_out);
-    let data_out = make_u16_buffer(&data_out);
+    let data_out = make_i16_buffer(&data_out);
     for (ndx, val) in data_out.iter().enumerate() {
         if *val != 0 {
             println!("val {} -> {}", ndx, val);

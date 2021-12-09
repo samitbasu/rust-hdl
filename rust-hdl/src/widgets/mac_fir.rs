@@ -14,15 +14,15 @@ enum MACFIRState {
 
 #[derive(LogicBlock)]
 pub struct MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<const ADDR_BITS: usize> {
-    pub data_in: Signal<In, Bits<16>>,
+    pub data_in: Signal<In, Signed<16>>,
     pub strobe_in: Signal<In, Bit>,
-    pub data_out: Signal<Out, Bits<48>>,
+    pub data_out: Signal<Out, Signed<48>>,
     pub strobe_out: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
     pub busy: Signal<Out, Bit>,
-    coeff_memory: SyncROM<Bits<16>, ADDR_BITS>,
-    left_bank: RAM<Bits<16>, ADDR_BITS>,
-    right_bank: RAM<Bits<16>, ADDR_BITS>,
+    coeff_memory: SyncROM<Signed<16>, ADDR_BITS>,
+    left_bank: RAM<Signed<16>, ADDR_BITS>,
+    right_bank: RAM<Signed<16>, ADDR_BITS>,
     // Points to where the next data sample goes (delay 0)
     head_ptr: DFF<Bits<ADDR_BITS>>,
     // Points to where the left data sample comes from
@@ -38,14 +38,14 @@ pub struct MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<const ADDR_BIT
     // Number of taps
     taps: Constant<Bits<32>>,
     // Sample from left and right banks
-    left_sample: Signal<Local, Bits<16>>,
-    right_sample: Signal<Local, Bits<16>>,
+    left_sample: Signal<Local, Signed<16>>,
+    right_sample: Signal<Local, Signed<16>>,
     // Accumulator
-    accum: DFF<Bits<48>>,
+    accum: DFF<Signed<48>>,
     // FIR state
     state: DFF<MACFIRState>,
     // The output of the MAC slice
-    mac_output: Signal<Local, Bits<48>>,
+    mac_output: Signal<Local, Signed<48>>,
     // The next write location for data
     data_write: Signal<Local, Bits<ADDR_BITS>>,
 }
@@ -93,15 +93,15 @@ MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<ADDR_BITS> {
         self.left_sample.next = self.left_bank.read_data.val();
         self.right_sample.next = self.right_bank.read_data.val();
         if self.state.q.val() == MACFIRState::CenterTap {
-            self.right_sample.next = 0_usize.into();
+            self.right_sample.next = 0_i32.into();
         }
         // Wire up the accumulator
         self.mac_output.next =
-            bit_cast::<48, 32>((self.left_sample.val() + self.right_sample.val()) *
+            signed_bit_cast::<48, 32>((self.left_sample.val() + self.right_sample.val()) *
                 (self.coeff_memory.data.val()))
                 + self.accum.q.val();
         if self.state.q.val() == MACFIRState::Idle {
-            self.mac_output.next = 0_usize.into();
+            self.mac_output.next = 0_i32.into();
         }
         // Latch prevention...
         self.head_ptr.d.next = self.head_ptr.q.val();
@@ -143,7 +143,7 @@ MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<ADDR_BITS> {
                 self.head_ptr.d.next = self.head_ptr.q.val() + 1_usize;
                 // Reset the counter
                 self.index.d.next = 0_usize.into();
-                self.accum.d.next = 0_usize.into();
+                self.accum.d.next = 0_i32.into();
             }
         }
         self.data_write.next = self.head_ptr.q.val();
@@ -151,7 +151,7 @@ MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<ADDR_BITS> {
 }
 
 impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<ADDR_BITS> {
-    pub fn new(coeffs: &[u16]) -> Self {
+    pub fn new(coeffs: &[i16]) -> Self {
         let taps = coeffs.len();
         assert!({ADDR_BITS} >= clog2(taps));
         // Check for symmetry
@@ -166,7 +166,7 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
             .iter()
             .map(|x| *x)
             .collect::<Vec<_>>();
-        let coeffs = coeff_short.iter().map(|x| bits::<16>(*x as u128)).collect::<Vec<_>>();
+        let coeffs = coeff_short.iter().map(|x| signed::<16>(*x as i32)).collect::<Vec<_>>();
         Self {
             data_in: Default::default(),
             strobe_in: Default::default(),
@@ -196,12 +196,13 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
 
 #[test]
 fn test_fir_is_synthesizable() {
-    let coeffs = [1, 2, 3, 2, 1];
+    let coeffs = [1, -2, 3, -2, 1];
     let mut uut = TopWrap::new(MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::<3>::new(&coeffs));
     uut.uut.data_in.connect();
     uut.uut.strobe_in.connect();
     uut.uut.clock.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
+    println!("{}", vlog);
     yosys_validate("fir", &vlog).unwrap();
 }
