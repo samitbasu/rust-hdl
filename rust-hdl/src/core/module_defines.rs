@@ -36,6 +36,7 @@ struct AtomDetails {
     kind: AtomKind,
     width: usize,
     const_val: VerilogLiteral,
+    signed: bool,
 }
 
 fn verilog_atom_name(x: &AtomKind) -> &str {
@@ -51,20 +52,27 @@ fn verilog_atom_name(x: &AtomKind) -> &str {
 }
 
 fn decl(x: &AtomDetails) -> String {
+    let signed = if x.signed {
+        "signed"
+    } else {
+        ""
+    };
     if x.kind == AtomKind::Constant {
         format!(
-            "{} {} = {};",
+            "{} {} {} = {};",
             verilog_atom_name(&x.kind),
+            signed,
             x.name,
             x.const_val
         )
     } else {
         if x.width == 1 {
-            format!("{} {};", verilog_atom_name(&x.kind), x.name)
+            format!("{} {} {};", verilog_atom_name(&x.kind), signed, x.name)
         } else {
             format!(
-                "{} [{}:0] {};",
+                "{} {} [{}:0] {};",
                 verilog_atom_name(&x.kind),
+                signed,
                 x.width - 1,
                 x.name
             )
@@ -160,6 +168,7 @@ impl Probe for ModuleDefines {
             kind: signal.kind(),
             width: signal.bits(),
             const_val: signal.verilog(),
+            signed: signal.signed(),
         };
         if param.kind.is_parameter() {
             let kind = if param.kind == AtomKind::InputParameter {
@@ -172,6 +181,7 @@ impl Probe for ModuleDefines {
                 kind,
                 width: signal.bits(),
                 const_val: signal.verilog(),
+                signed: signal.signed(),
             };
             let parent_name = self.path.parent();
             self.add_atom(&parent_name, parent_param);

@@ -5,6 +5,8 @@ use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
 use std::hash::Hasher;
 use std::num::Wrapping;
+use num_bigint::BigUint;
+use num_traits::ToPrimitive;
 
 // This comes with a few invariants that must be maintained for short representation
 // The short value must be less than 2^N
@@ -54,6 +56,21 @@ fn test_clog2_is_correct() {
 pub enum Bits<const N: usize> {
     Short(ShortBitVec<N>),
     Long(BitVec<N>),
+}
+
+impl<const N: usize> From<BigUint> for Bits<N> {
+    fn from(x: BigUint) -> Self {
+        assert!(x.bits() <= N as u64);
+        if N <= SHORT_BITS {
+            x.to_u32().unwrap().into()
+        } else {
+            let mut ret = [false; N];
+            for i in 0..N {
+                ret[i] = x.bit(i as u64)
+            }
+            Bits::Long(ret.into())
+        }
+    }
 }
 
 impl<const N: usize> Binary for Bits<N> {
@@ -756,3 +773,30 @@ mod tests {
 
 /// A type alias for a simple bool.  You can use them interchangeably.
 pub type Bit = bool;
+
+/// Multipliers are special, so we only implement multipliers that we think are
+/// synthesizable.  In this case, we implement a 16 x 16 bit multiplier
+/// which yields a 32 bit result.
+impl std::ops::Mul<Bits<16>> for Bits<16> {
+    type Output = Bits<32>;
+
+    fn mul(self, rhs: Bits<16>) -> Self::Output {
+        let x = match self {
+            Bits::Short(x) => {
+                x.short()
+            }
+            Bits::Long(_) => {
+                panic!("unreachable!")
+            }
+        };
+        let y = match rhs {
+            Bits::Short(x) => {
+                x.short()
+            }
+            Bits::Long(_) => {
+                panic!("unreachable!")
+            }
+        };
+        Bits::Short(ShortBitVec::from(x*y))
+    }
+}

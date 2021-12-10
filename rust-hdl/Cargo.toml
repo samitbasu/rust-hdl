@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl"
-version = "0.2.0"
+version = "0.3.1"
 edition = "2018"
 license = "MIT"
 description = "Write firmware for FPGAs in Rust"
@@ -10,9 +10,11 @@ keywords = ["fpga", "verilog", "hardware"]
 authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
-rust-hdl-macros = "^0.1.0"
+rust-hdl-macros = "^0.2"
+#rust-hdl-macros = {path="../rust-hdl-macros"}
 crossbeam = "0.8.1"
 num-bigint = "0.4.0"
+num-traits = "0.2.14"
 vcd = "0.6.1"
 evalexpr = "6.3.0"
 regex = "1.5.4"
