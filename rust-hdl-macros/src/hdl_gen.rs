@@ -334,7 +334,7 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
         let target = method.args.index(0);
         let target = common::fixup_ident(quote!(#target).to_string());
         return Ok(quote!(
-            ast::VerilogStatement::Link(#expr.link_hdl(#signal, #signal, #target))
+            ast::VerilogStatement::Link(#expr.link_hdl("", #signal, #target))
         ));
     }
     Err(syn::Error::new(
