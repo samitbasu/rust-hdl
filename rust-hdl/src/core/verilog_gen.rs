@@ -97,10 +97,17 @@ pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
                     )
                 }
                 VerilogLink::Bidirectional(x) => {
-                    format!(
-                        "assign {}${} = {}${};",
-                        x.owner_name, x.my_name, x.other_name, x.my_name
-                    )
+                    if x.my_name.is_empty() {
+                        format!(
+                            "assign {} = {};",
+                            x.owner_name, x.other_name
+                        )
+                    } else {
+                        format!(
+                            "assign {}${} = {}${};",
+                            x.owner_name, x.my_name, x.other_name, x.my_name
+                        )
+                    }
                 }
             }
             .to_string()

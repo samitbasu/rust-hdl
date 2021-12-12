@@ -21,3 +21,4 @@ pub mod synchronizer;
 pub mod accum;
 pub mod mac_fir;
 pub mod tristate;
+pub mod bidirectional_bus;

@@ -25,3 +25,6 @@ pub use crate::widgets::synchronizer::{
     BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer,
 };
 pub use crate::widgets::mac_fir::MultiplyAccumulateSymmetricFiniteImpulseResponseFilter;
+pub use crate::widgets::tristate::TristateBuffer;
+pub use crate::widgets::bidirectional_bus::BidirectionalBusSlave;
+pub use crate::widgets::bidirectional_bus::BidirectionalBusMaster;

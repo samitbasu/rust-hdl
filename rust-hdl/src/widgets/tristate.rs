@@ -14,6 +14,7 @@ impl<D: Synth> Logic for TristateBuffer<D> {
             self.bus.next = self.write_data.val();
         }
         self.read_data.next = self.bus.val();
+        self.bus.set_tristate_is_output(self.write_enable.val());
     }
 
     fn connect(&mut self) {
@@ -24,7 +25,7 @@ impl<D: Synth> Logic for TristateBuffer<D> {
     fn hdl(&self) -> Verilog {
         Verilog::Custom(format!("\
     assign bus = write_enable ? write_data : {WIDTH}'bz;
-assign read_data = bus;", WIDTH = D::BITS))
+always @(*) read_data = bus;", WIDTH = D::BITS))
     }
 }
 

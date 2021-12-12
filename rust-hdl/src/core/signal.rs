@@ -26,6 +26,8 @@ pub struct Signal<D: Direction, T: Synth> {
     pub changed: bool,
     claimed: bool,
     id: usize,
+    tristate_is_output: bool,
+    signal_is_undriven: bool,
     constraints: Vec<PinConstraint>,
     dir: std::marker::PhantomData<D>,
 }
@@ -69,8 +71,18 @@ impl<T: Synth> LogicLink for Signal<Out, T> {
 }
 
 impl<T: Synth> LogicLink for Signal<InOut, T> {
-    fn link(&mut self, _other: &mut Self) {
-        // Do nothing for bidirectional signals...
+    fn link(&mut self, other: &mut Self) {
+        // self is the outer scope, other is the inner scope
+        // So if the inner scope is driven, we take it's value
+        // and mark ourselves as driven.  If the inner scope is
+        // not driven, we are not driven and we push our value
+        self.tristate_is_output = other.tristate_is_output;
+        if other.tristate_is_output {
+            self.next = other.val();
+        } else {
+            other.next = self.val();
+        }
+        other.signal_is_undriven = self.signal_is_undriven;
     }
     fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
         let details = VerilogLinkDetails {
@@ -141,7 +153,11 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
     }
 
     fn vcd(&self) -> VCDValue {
-        self.val.vcd()
+        if !self.signal_is_undriven {
+            self.val.vcd()
+        } else {
+            VCDValue::Vector(vec![vcd::Value::Z; T::BITS])
+        }
     }
 
     fn id(&self) -> usize {
@@ -208,6 +224,8 @@ impl<T: Synth> Signal<Out, T> {
             changed: false,
             claimed: false,
             id: get_signal_id(),
+            tristate_is_output: false,
+            signal_is_undriven: false,
             constraints: vec![],
             dir: PhantomData,
         }
@@ -223,8 +241,39 @@ impl<D: Direction, T: Synth> Default for Signal<D, T> {
             changed: false,
             claimed: false,
             id: get_signal_id(),
+            tristate_is_output: false,
+            signal_is_undriven: false,
             constraints: vec![],
             dir: PhantomData,
         }
     }
 }
+
+impl<T: Synth> Signal<InOut, T> {
+    pub fn set_tristate_is_output(&mut self, flag: bool) {
+        if self.tristate_is_output != flag {
+            self.changed = true;
+        }
+        self.tristate_is_output = flag;
+        self.signal_is_undriven = !flag;
+    }
+    pub fn is_driving_tristate(&self) -> bool {
+        self.tristate_is_output
+    }
+    pub fn simulate_connected_tristate(&mut self, other: &mut Self) {
+        assert!(!(self.is_driving_tristate() & other.is_driving_tristate()));
+        if self.is_driving_tristate() {
+            other.next = self.val();
+            self.signal_is_undriven = false;
+            other.signal_is_undriven = false;
+        } else if other.is_driving_tristate() {
+            self.next = other.val();
+            self.signal_is_undriven = false;
+            other.signal_is_undriven = false;
+        } else {
+            self.signal_is_undriven = true;
+            other.signal_is_undriven = true;
+        }
+    }
+}
+
