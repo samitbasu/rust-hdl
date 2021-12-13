@@ -5,10 +5,10 @@ use crate::widgets::prelude::TristateBuffer;
 
 #[derive(Clone, Debug, Default, LogicInterface)]
 pub struct FifoBus<T: Synth> {
-    pub to_bus: Signal<Out, T>,
+    pub to_bus: Signal<In, T>,
     pub write: Signal<In, Bit>,
     pub full: Signal<Out, Bit>,
-    pub from_bus: Signal<In, T>,
+    pub from_bus: Signal<Out, T>,
     pub read: Signal<In, Bit>,
     pub empty: Signal<Out, Bit>,
 }
