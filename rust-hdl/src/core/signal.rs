@@ -11,6 +11,7 @@ use crate::core::logic::{Logic, LogicLink};
 use crate::core::prelude::InOut;
 use crate::core::probe::Probe;
 use crate::core::synth::{Synth, VCDValue};
+use crate::core::bits::Bit;
 
 static GLOBAL_THREAD_COUNT: AtomicUsize = AtomicUsize::new(1);
 
@@ -231,6 +232,16 @@ impl<T: Synth> Signal<Out, T> {
         }
     }
 }
+
+impl<D: Direction> Signal<D, Bit> {
+    pub fn pin_signal(location: &str, kind: SignalType) -> Signal<D, Bit> {
+        let mut ret = Signal::default();
+        ret.add_location(0, location);
+        ret.add_signal_type(0, kind);
+        ret
+    }
+}
+
 
 impl<D: Direction, T: Synth> Default for Signal<D, T> {
     fn default() -> Self {
