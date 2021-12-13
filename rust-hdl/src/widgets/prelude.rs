@@ -26,5 +26,4 @@ pub use crate::widgets::synchronizer::{
 };
 pub use crate::widgets::mac_fir::MultiplyAccumulateSymmetricFiniteImpulseResponseFilter;
 pub use crate::widgets::tristate::TristateBuffer;
-pub use crate::widgets::bidirectional_bus::BidirectionalBusSlave;
-pub use crate::widgets::bidirectional_bus::BidirectionalBusMaster;
+pub use crate::widgets::bidirectional_bus::{BidiDevice, BidiBusD, BidiBusM, BidiMaster};
