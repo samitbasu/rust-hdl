@@ -1,7 +1,7 @@
 use crate::core::prelude::*;
-use crate::widgets::sync_fifo::SynchronousFIFO;
+use crate::widgets::async_fifo::AsynchronousFIFO;
 use crate::widgets::dff::DFF;
-use crate::widgets::prelude::TristateBuffer;
+use crate::widgets::prelude::{TristateBuffer, SynchronousFIFO};
 
 #[derive(Clone, Debug, Default, LogicInterface)]
 pub struct FifoBus<T: Synth> {
@@ -37,11 +37,12 @@ pub struct BidiBusD<T: Synth> {
 #[derive(LogicBlock, Default)]
 pub struct BidiMaster<T: Synth, const N: usize, const NP1: usize> {
     pub bus: BidiBusM<T>,
-    pub clock: Signal<In, Clock>,
+    pub bus_clock: Signal<In, Clock>,
     bus_buffer: TristateBuffer<T>,
-    fifo_to_bus: SynchronousFIFO<T, N, NP1, 1>,
-    fifo_from_bus: SynchronousFIFO<T, N, NP1, 1>,
+    fifo_to_bus: AsynchronousFIFO<T, N, NP1, 1>,
+    fifo_from_bus: AsynchronousFIFO<T, N, NP1, 1>,
     pub data: FifoBus<T>,
+    pub data_clock: Signal<In, Clock>,
     state: DFF<BidiState>,
     can_send_to_bus: Signal<Local, Bit>,
     can_read_from_bus: Signal<Local, Bit>,
@@ -51,9 +52,11 @@ impl<T: Synth, const N: usize, const NP1: usize> Logic for BidiMaster<T, N, NP1>
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the logic
-        self.fifo_to_bus.clock.next = self.clock.val();
-        self.fifo_from_bus.clock.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
+        self.fifo_to_bus.read_clock.next = self.bus_clock.val();
+        self.fifo_from_bus.write_clock.next = self.bus_clock.val();
+        self.fifo_to_bus.write_clock.next = self.data_clock.val();
+        self.fifo_from_bus.read_clock.next = self.data_clock.val();
+        self.state.clk.next = self.bus_clock.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();
         self.bus_buffer.write_enable.next = false;
@@ -133,7 +136,7 @@ enum BidiState {
 fn test_bidi_master2_synthesizable() {
     let mut uut = BidiMaster::<Bits<8>, 8, 9>::default();
     uut.bus.link_connect_dest();
-    uut.clock.connect();
+    uut.bus_clock.connect();
     uut.data.write.connect();
     uut.data.read.connect();
     uut.data.to_bus.connect();

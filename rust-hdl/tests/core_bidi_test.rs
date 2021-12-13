@@ -11,7 +11,8 @@ struct BusTest {
 
 impl Logic for BusTest {
     fn update(&mut self) {
-        self.master.clock.next = self.clock.val();
+        self.master.bus_clock.next = self.clock.val();
+        self.master.data_clock.next = self.clock.val();
         self.device.clock.next = self.clock.val();
         self.master.bus.sig_empty.next = self.device.bus.sig_empty.val();
         self.master.bus.sig_full.next = self.device.bus.sig_full.val();
@@ -27,7 +28,8 @@ fn test_bidi2_bus_works() {
     let mut uut = BusTest::default();
     uut.clock.connect();
     uut.device.clock.connect();
-    uut.master.clock.connect();
+    uut.master.bus_clock.connect();
+    uut.master.data_clock.connect();
     uut.device.data.to_bus.connect();
     uut.device.data.read.connect();
     uut.device.data.write.connect();
