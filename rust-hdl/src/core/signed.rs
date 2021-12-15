@@ -1,12 +1,11 @@
-use std::fmt::{Debug, LowerHex, Formatter, UpperHex};
 use super::bits::Bits;
+use crate::core::bits::bit_cast;
+use crate::core::shortbitvec::ShortBitVec;
 use num_bigint::{BigInt, Sign};
 use num_traits::cast::ToPrimitive;
-use std::num::Wrapping;
 use num_traits::Zero;
-use crate::core::shortbitvec::ShortBitVec;
-use crate::core::bits::bit_cast;
-
+use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
+use std::num::Wrapping;
 
 #[derive(Clone, Debug, Copy, PartialEq, Default)]
 pub struct Signed<const N: usize>(Bits<N>);
@@ -32,10 +31,10 @@ impl<const N: usize> Signed<N> {
     pub fn max() -> BigInt {
         // Largest positive value is 0111...1 for N bits
         // Which is 2^N-1
-        BigInt::from(2).pow((N-1) as u32) - 1
+        BigInt::from(2).pow((N - 1) as u32) - 1
     }
     pub fn sign_bit(&self) -> bool {
-        self.0.get_bit(N-1)
+        self.0.get_bit(N - 1)
     }
     pub fn bigint(&self) -> BigInt {
         let mut ret = BigInt::default();
@@ -86,9 +85,7 @@ impl<const N: usize> std::ops::Neg for Signed<N> {
 
     fn neg(self) -> Self::Output {
         Signed(match self.0 {
-            Bits::Short(x) => {
-                Bits::Short((Wrapping(0_u32)-Wrapping(x.short())).0.into())
-            }
+            Bits::Short(x) => Bits::Short((Wrapping(0_u32) - Wrapping(x.short())).0.into()),
             Bits::Long(x) => {
                 let mut val = [false; N];
                 for ndx in 0..N {
@@ -111,7 +108,9 @@ impl<const N: usize> std::ops::Add<Signed<N>> for Signed<N> {
 impl<const N: usize> std::ops::Sub<Signed<N>> for Signed<N> {
     type Output = Signed<N>;
 
-    fn sub(self, rhs: Signed<N>) -> Self::Output {Self(self.0 - rhs.0)}
+    fn sub(self, rhs: Signed<N>) -> Self::Output {
+        Self(self.0 - rhs.0)
+    }
 }
 
 impl std::ops::Mul<Signed<16>> for Signed<16> {
@@ -121,7 +120,6 @@ impl std::ops::Mul<Signed<16>> for Signed<16> {
         Self::Output::from(self.bigint() * rhs.bigint())
     }
 }
-
 
 impl<const N: usize> From<i32> for Signed<N> {
     fn from(x: i32) -> Self {
@@ -160,8 +158,8 @@ pub fn unsigned_bit_cast<const M: usize, const N: usize>(x: Signed<N>) -> Bits<M
 
 #[cfg(test)]
 mod tests {
-    use crate::core::signed::{Signed, signed_bit_cast, unsigned_bit_cast};
     use crate::core::bits::Bits;
+    use crate::core::signed::{signed_bit_cast, unsigned_bit_cast, Signed};
     use num_bigint::BigInt;
     use num_traits::ToPrimitive;
 
@@ -205,7 +203,6 @@ mod tests {
     fn test_signed_import_large() {
         run_import_tests::<34>(1 << 16);
     }
-
 
     #[test]
     fn time_adds_bigint() {
@@ -254,14 +251,14 @@ mod tests {
     #[test]
     fn test_signed_cast() {
         let x = Signed::<16>::from(-23);
-        let y : Signed<40> = signed_bit_cast(x);
+        let y: Signed<40> = signed_bit_cast(x);
         assert_eq!(y, Signed::<40>::from(-23));
     }
 
     #[test]
     fn test_unsigned_cast() {
         let x = Signed::<16>::from(-23);
-        let y : Bits<16> = unsigned_bit_cast(x);
+        let y: Bits<16> = unsigned_bit_cast(x);
         assert_eq!(y, Bits::<16>::from(0xFFe9_usize))
     }
 
@@ -275,7 +272,6 @@ mod tests {
         assert_eq!(x.bigint(), BigInt::from(23));
     }
 
-
     #[test]
     fn test_neg_operator_larger() {
         let t: BigInt = BigInt::from(23) << 32;
@@ -286,5 +282,4 @@ mod tests {
         let x = -x;
         assert_eq!(x.bigint(), t.clone());
     }
-
 }

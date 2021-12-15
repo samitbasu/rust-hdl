@@ -1,7 +1,7 @@
-use rust_hdl::core::prelude::*;
 use rust_hdl::bsp::ok_core::ok_hi::OpalKellyHostInterface;
 use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem6010::XEM6010;
+use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]
@@ -27,7 +27,6 @@ impl Logic for OpalKellyTristateBuffer {
         self.readout.datain.next = bit_cast::<16, 1>(self.buffer.read_data.val().into());
     }
 }
-
 
 impl Default for OpalKellyTristateBuffer {
     fn default() -> Self {

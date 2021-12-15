@@ -378,5 +378,4 @@ mod tests {
         x.connect_all();
         sim.run(Box::new(x), 400).unwrap();
     }
-
 }

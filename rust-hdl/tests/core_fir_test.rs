@@ -4,7 +4,8 @@ use rust_hdl::widgets::prelude::*;
 #[test]
 fn test_fir_is_synthesizable() {
     let coeffs = [1_i16, 2, 3, 2, 1];
-    let mut uut = TopWrap::new(MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::<3>::new(&coeffs));
+    let mut uut =
+        TopWrap::new(MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::<3>::new(&coeffs));
     uut.uut.data_in.connect();
     uut.uut.strobe_in.connect();
     uut.uut.clock.connect();
@@ -25,9 +26,7 @@ fn test_fir_impulse_response_is_expected() {
     let vlog = generate_verilog(&uut);
     yosys_validate("fir", &vlog).unwrap();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Box<MACFIRTest>| {
-        x.clock.next = !x.clock.val()
-    });
+    sim.add_clock(5, |x: &mut Box<MACFIRTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<MACFIRTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
@@ -56,5 +55,10 @@ fn test_fir_impulse_response_is_expected() {
     x.strobe_in.connect();
     x.clock.connect();
     x.connect_all();
-    sim.run_traced(Box::new(x), 10000, std::fs::File::create(vcd_path!("fir.vcd")).unwrap()).unwrap()
+    sim.run_traced(
+        Box::new(x),
+        10000,
+        std::fs::File::create(vcd_path!("fir.vcd")).unwrap(),
+    )
+    .unwrap()
 }

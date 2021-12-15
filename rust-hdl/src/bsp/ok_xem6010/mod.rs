@@ -10,8 +10,8 @@ pub mod mcb_if;
 pub mod mig;
 pub mod ok_download_ddr;
 pub mod pins;
-pub mod synth;
 pub mod pll;
+pub mod synth;
 
 #[derive(Clone, Debug)]
 pub struct XEM6010 {}

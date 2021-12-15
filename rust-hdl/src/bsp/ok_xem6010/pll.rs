@@ -282,7 +282,7 @@ input [4:0] DADDR;
 
 endmodule
                 "#
-                .into(),
+            .into(),
         })
     }
 }

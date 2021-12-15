@@ -1,8 +1,8 @@
+use crate::test_common::tools::ok_test_prelude;
 use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-use rust_hdl_ok_frontpanel_sys::{OkError, make_u16_buffer};
-use crate::test_common::tools::ok_test_prelude;
+use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -57,11 +57,13 @@ impl OpalKellyFIRTest {
             ok_host: B::ok_host(),
             i_fifo: Default::default(),
             o_fifo: Default::default(),
-            fir: MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::new(&[1, -2, 3, -5, 7, -5, 3, -2, 1]),
+            fir: MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::new(&[
+                1, -2, 3, -5, 7, -5, 3, -2, 1,
+            ]),
             i_pipe: PipeIn::new(0x80),
             o_pipe: PipeOut::new(0xA0),
             delay_read: Default::default(),
-            will_feed: Default::default()
+            will_feed: Default::default(),
         }
     }
 }
@@ -93,4 +95,3 @@ pub fn test_opalkelly_fir_runtime(bit_name: &str) -> Result<(), OkError> {
     }
     Ok(())
 }
-

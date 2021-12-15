@@ -23,9 +23,12 @@ impl<D: Synth> Logic for TristateBuffer<D> {
     }
 
     fn hdl(&self) -> Verilog {
-        Verilog::Custom(format!("\
+        Verilog::Custom(format!(
+            "\
     assign bus = write_enable ? write_data : {WIDTH}'bz;
-always @(*) read_data = bus;", WIDTH = D::BITS))
+always @(*) read_data = bus;",
+            WIDTH = D::BITS
+        ))
     }
 }
 

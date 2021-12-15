@@ -1,6 +1,6 @@
 use crate::core::prelude::*;
-use std::collections::BTreeMap;
 use crate::widgets::rom::make_btree_from_iterable;
+use std::collections::BTreeMap;
 
 #[derive(LogicBlock)]
 pub struct SyncROM<D: Synth, const N: usize> {

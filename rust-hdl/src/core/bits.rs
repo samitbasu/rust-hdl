@@ -1,12 +1,12 @@
 use crate::core::bitvec::BitVec;
 use crate::core::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
 use crate::core::synth::VCDValue;
+use num_bigint::BigUint;
+use num_traits::ToPrimitive;
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
 use std::hash::Hasher;
 use std::num::Wrapping;
-use num_bigint::BigUint;
-use num_traits::ToPrimitive;
 
 // This comes with a few invariants that must be maintained for short representation
 // The short value must be less than 2^N
@@ -782,21 +782,17 @@ impl std::ops::Mul<Bits<16>> for Bits<16> {
 
     fn mul(self, rhs: Bits<16>) -> Self::Output {
         let x = match self {
-            Bits::Short(x) => {
-                x.short()
-            }
+            Bits::Short(x) => x.short(),
             Bits::Long(_) => {
                 panic!("unreachable!")
             }
         };
         let y = match rhs {
-            Bits::Short(x) => {
-                x.short()
-            }
+            Bits::Short(x) => x.short(),
             Bits::Long(_) => {
                 panic!("unreachable!")
             }
         };
-        Bits::Short(ShortBitVec::from(x*y))
+        Bits::Short(ShortBitVec::from(x * y))
     }
 }

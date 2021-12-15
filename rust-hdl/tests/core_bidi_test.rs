@@ -1,6 +1,6 @@
+use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-use rand::Rng;
 
 #[derive(LogicBlock, Default)]
 struct BusTest {
@@ -19,7 +19,10 @@ impl Logic for BusTest {
         self.device.bus.sig_not_read.next = self.master.bus.sig_not_read.val();
         self.device.bus.sig_not_write.next = self.master.bus.sig_not_write.val();
         self.device.bus.sig_master.next = self.master.bus.sig_master.val();
-        self.master.bus.sig_inout.simulate_connected_tristate(&mut self.device.bus.sig_inout);
+        self.master
+            .bus
+            .sig_inout
+            .simulate_connected_tristate(&mut self.device.bus.sig_inout);
     }
 }
 

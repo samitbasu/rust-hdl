@@ -50,8 +50,9 @@ pub struct MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<const ADDR_BIT
     data_write: Signal<Local, Bits<ADDR_BITS>>,
 }
 
-impl<const ADDR_BITS: usize> Logic for
-MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<ADDR_BITS> {
+impl<const ADDR_BITS: usize> Logic
+    for MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<ADDR_BITS>
+{
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the clocks
@@ -74,19 +75,19 @@ MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<ADDR_BITS> {
         self.left_bank.write_enable.next = self.strobe_in.val();
         self.right_bank.write_enable.next = self.strobe_in.val();
         // The read on the two banks is different...
-        self.left_ptr.next =
-            bit_cast::<{ADDR_BITS}, 32>(
-                bit_cast::<32, {ADDR_BITS}>(self.head_ptr.q.val()) +
-                    self.bufsize.val() - self.taps.val() + 1_u32 +
-                    bit_cast::<32, {ADDR_BITS}>(self.index.q.val()));
+        self.left_ptr.next = bit_cast::<{ ADDR_BITS }, 32>(
+            bit_cast::<32, { ADDR_BITS }>(self.head_ptr.q.val()) + self.bufsize.val()
+                - self.taps.val()
+                + 1_u32
+                + bit_cast::<32, { ADDR_BITS }>(self.index.q.val()),
+        );
         // This is a bit awkward.  We want to do wrapping arithmetic, so we need an extra bit,
         // but because of partial const generic support in Rust, we use 32 bits as an
         // upper bound.  This should synthesize just fine.
-        self.right_ptr.next =
-            bit_cast::<{ADDR_BITS}, 32>(
-                bit_cast::<32, {ADDR_BITS}>(self.head_ptr.q.val()) +
-                    self.bufsize.val() -
-                    bit_cast::<32, {ADDR_BITS}>(self.index.q.val()));
+        self.right_ptr.next = bit_cast::<{ ADDR_BITS }, 32>(
+            bit_cast::<32, { ADDR_BITS }>(self.head_ptr.q.val()) + self.bufsize.val()
+                - bit_cast::<32, { ADDR_BITS }>(self.index.q.val()),
+        );
         self.left_bank.read_address.next = self.left_ptr.val();
         self.right_bank.read_address.next = self.right_ptr.val();
         self.coeff_memory.address.next = self.index.q.val();
@@ -96,10 +97,9 @@ MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<ADDR_BITS> {
             self.right_sample.next = 0_i32.into();
         }
         // Wire up the accumulator
-        self.mac_output.next =
-            signed_bit_cast::<48, 32>((self.left_sample.val() + self.right_sample.val()) *
-                (self.coeff_memory.data.val()))
-                + self.accum.q.val();
+        self.mac_output.next = signed_bit_cast::<48, 32>(
+            (self.left_sample.val() + self.right_sample.val()) * (self.coeff_memory.data.val()),
+        ) + self.accum.q.val();
         if self.state.q.val() == MACFIRState::Idle {
             self.mac_output.next = 0_i32.into();
         }
@@ -153,20 +153,20 @@ MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<ADDR_BITS> {
 impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<ADDR_BITS> {
     pub fn new(coeffs: &[i16]) -> Self {
         let taps = coeffs.len();
-        assert!({ADDR_BITS} >= clog2(taps));
+        assert!({ ADDR_BITS } >= clog2(taps));
         // Check for symmetry
         for ndx in 0..coeffs.len() {
-            assert_eq!(coeffs[ndx], coeffs[taps - 1 -ndx]);
+            assert_eq!(coeffs[ndx], coeffs[taps - 1 - ndx]);
         }
         // Check for odd length
         assert_eq!(coeffs.len() % 2, 1);
         // Create the compact array
         let clen = (coeffs.len() + 1) / 2;
-        let mut coeff_short = coeffs[0..clen]
+        let mut coeff_short = coeffs[0..clen].iter().map(|x| *x).collect::<Vec<_>>();
+        let coeffs = coeff_short
             .iter()
-            .map(|x| *x)
+            .map(|x| signed::<16>(*x as i32))
             .collect::<Vec<_>>();
-        let coeffs = coeff_short.iter().map(|x| signed::<16>(*x as i32)).collect::<Vec<_>>();
         Self {
             data_in: Default::default(),
             strobe_in: Default::default(),
@@ -181,7 +181,7 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
             left_ptr: Default::default(),
             right_ptr: Default::default(),
             index: Default::default(),
-            iters: Constant::new(((taps - 1)/2).into()),
+            iters: Constant::new(((taps - 1) / 2).into()),
             bufsize: Constant::new(Bits::<ADDR_BITS>::count().into()),
             left_sample: Default::default(),
             right_sample: Default::default(),
@@ -197,7 +197,8 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
 #[test]
 fn test_fir_is_synthesizable() {
     let coeffs = [1, -2, 3, -2, 1];
-    let mut uut = TopWrap::new(MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::<3>::new(&coeffs));
+    let mut uut =
+        TopWrap::new(MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::<3>::new(&coeffs));
     uut.uut.data_in.connect();
     uut.uut.strobe_in.connect();
     uut.uut.clock.connect();

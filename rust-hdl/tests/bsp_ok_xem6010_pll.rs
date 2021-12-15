@@ -1,8 +1,8 @@
+use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem6010::pins::{xem_6010_base_clock, xem_6010_leds};
 use rust_hdl::bsp::ok_xem6010::pll::{PLLFreqSynthesis, Spartan6PLLSettings};
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
-use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]

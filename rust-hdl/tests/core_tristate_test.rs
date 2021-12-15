@@ -25,7 +25,9 @@ struct BusTest {
 
 impl Logic for BusTest {
     fn update(&mut self) {
-        self.left.bus_wire.simulate_connected_tristate(&mut self.right.bus_wire);
+        self.left
+            .bus_wire
+            .simulate_connected_tristate(&mut self.right.bus_wire);
     }
 }
 
@@ -80,6 +82,10 @@ fn test_tristate_buffer_works() {
         x = sim.wait(40, x)?;
         sim.done(x)
     });
-    sim.run_traced(Box::new(uut), 200,
-                   std::fs::File::create(vcd_path!("tristate.vcd")).unwrap()).unwrap()
+    sim.run_traced(
+        Box::new(uut),
+        200,
+        std::fs::File::create(vcd_path!("tristate.vcd")).unwrap(),
+    )
+    .unwrap()
 }

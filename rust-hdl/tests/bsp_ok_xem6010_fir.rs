@@ -1,10 +1,10 @@
 mod test_common;
 
+use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem6010::XEM6010;
+use rust_hdl::core::prelude::*;
 #[cfg(feature = "frontpanel")]
 use test_common::fir::*;
-use rust_hdl::bsp::ok_core::prelude::*;
-use rust_hdl::core::prelude::*;
 
 #[cfg(feature = "frontpanel")]
 #[test]

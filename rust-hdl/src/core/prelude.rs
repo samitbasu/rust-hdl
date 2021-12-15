@@ -27,6 +27,9 @@ pub use crate::core::named_path::NamedPath;
 pub use crate::core::probe;
 pub use crate::core::probe::Probe;
 pub use crate::core::signal::Signal;
+pub use crate::core::signed::{
+    signed, signed_bit_cast, signed_cast, unsigned_bit_cast, unsigned_cast, Signed,
+};
 pub use crate::core::simulate::simulate;
 pub use crate::core::simulate::{Sim, SimError, Simulation};
 pub use crate::core::synth::Synth;
@@ -45,4 +48,3 @@ pub use crate::wait_clock_cycles;
 pub use crate::wait_clock_false;
 pub use crate::wait_clock_true;
 pub use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface, LogicState};
-pub use crate::core::signed::{Signed, signed_bit_cast, unsigned_bit_cast, signed, signed_cast, unsigned_cast};

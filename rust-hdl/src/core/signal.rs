@@ -3,6 +3,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::core::ast::{VerilogLink, VerilogLinkDetails, VerilogLiteral};
 use crate::core::atom::{Atom, AtomKind};
+use crate::core::bits::Bit;
 use crate::core::block::Block;
 use crate::core::clock::Clock;
 use crate::core::constraint::{Constraint, PinConstraint, SignalType};
@@ -11,7 +12,6 @@ use crate::core::logic::{Logic, LogicLink};
 use crate::core::prelude::InOut;
 use crate::core::probe::Probe;
 use crate::core::synth::{Synth, VCDValue};
-use crate::core::bits::Bit;
 
 static GLOBAL_THREAD_COUNT: AtomicUsize = AtomicUsize::new(1);
 
@@ -242,7 +242,6 @@ impl<D: Direction> Signal<D, Bit> {
     }
 }
 
-
 impl<D: Direction, T: Synth> Default for Signal<D, T> {
     fn default() -> Self {
         Self {
@@ -287,4 +286,3 @@ impl<T: Synth> Signal<InOut, T> {
         }
     }
 }
-

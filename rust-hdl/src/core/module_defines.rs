@@ -52,11 +52,7 @@ fn verilog_atom_name(x: &AtomKind) -> &str {
 }
 
 fn decl(x: &AtomDetails) -> String {
-    let signed = if x.signed {
-        "signed"
-    } else {
-        ""
-    };
+    let signed = if x.signed { "signed" } else { "" };
     if x.kind == AtomKind::Constant {
         format!(
             "{} {} {} = {};",

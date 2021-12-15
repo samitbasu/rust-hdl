@@ -1,7 +1,7 @@
 use crate::core::prelude::*;
 use crate::widgets::async_fifo::AsynchronousFIFO;
 use crate::widgets::dff::DFF;
-use crate::widgets::prelude::{TristateBuffer, SynchronousFIFO};
+use crate::widgets::prelude::{SynchronousFIFO, TristateBuffer};
 
 #[derive(Clone, Debug, Default, LogicInterface)]
 pub struct FifoBus<T: Synth> {
@@ -32,7 +32,6 @@ pub struct BidiBusD<T: Synth> {
     pub sig_not_write: Signal<In, Bit>,
     pub sig_master: Signal<In, Bit>,
 }
-
 
 #[derive(LogicBlock, Default)]
 pub struct BidiMaster<T: Synth, const N: usize, const NP1: usize> {
@@ -120,7 +119,6 @@ impl<T: Synth, const N: usize, const NP1: usize> Logic for BidiMaster<T, N, NP1>
         }
     }
 }
-
 
 #[derive(LogicState, Debug, Copy, Clone, PartialEq)]
 enum BidiState {
