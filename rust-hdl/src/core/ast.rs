@@ -1,6 +1,6 @@
 use crate::core::bits::Bits;
 use crate::core::signed::Signed;
-use num_bigint::{BigInt, BigUint, Sign};
+use num_bigint::{BigInt, Sign};
 use std::fmt::{Display, Formatter, LowerHex};
 
 /// The BlackBox struct provides a way to wrap a blackbox,

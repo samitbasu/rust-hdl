@@ -1,9 +1,7 @@
 use super::bits::Bits;
 use crate::core::bits::bit_cast;
-use crate::core::shortbitvec::ShortBitVec;
 use num_bigint::{BigInt, Sign};
 use num_traits::cast::ToPrimitive;
-use num_traits::Zero;
 use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::num::Wrapping;
 
@@ -25,7 +23,7 @@ impl<const N: usize> UpperHex for Signed<N> {
 impl<const N: usize> Signed<N> {
     pub fn min() -> BigInt {
         // Largest negative value is 1000...0 for N bits
-        let mut ret = -Self::max() - 1;
+        let ret = -Self::max() - 1;
         ret
     }
     pub fn max() -> BigInt {
@@ -62,7 +60,7 @@ impl<const N: usize> Signed<N> {
 }
 
 impl<const N: usize> From<BigInt> for Signed<N> {
-    fn from(mut x: BigInt) -> Self {
+    fn from(x: BigInt) -> Self {
         assert!(x.bits() <= N as u64);
         if N <= 32 {
             if x.sign() == Sign::Minus {

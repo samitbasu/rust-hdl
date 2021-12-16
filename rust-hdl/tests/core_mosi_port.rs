@@ -47,6 +47,8 @@ fn test_port_test_synthesizes() {
     uut.bus_m.addr.connect();
     uut.bus_m.from_master.connect();
     uut.bus_m.strobe.connect();
+    uut.port_a.ready.connect();
+    uut.port_b.ready.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("test_port", &vlog).unwrap();
@@ -59,6 +61,8 @@ fn test_port_test_works() {
     uut.bus_m.addr.connect();
     uut.bus_m.from_master.connect();
     uut.bus_m.strobe.connect();
+    uut.port_a.ready.connect();
+    uut.port_b.ready.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<MOSIPortTest>| x.clock.next = !x.clock.val());
@@ -84,12 +88,14 @@ fn test_port_test_works() {
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
+        x.port_a.ready.next = true;
         x = sim.watch(|x| x.port_a.strobe_out.val(), x)?;
         sim_assert!(sim, x.port_a.port_out.val() == 0xBEEF_u16, x);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
+        x.port_b.ready.next = true;
         x = sim.watch(|x| x.port_b.strobe_out.val(), x)?;
         sim_assert!(sim, x.port_b.port_out.val() == 0xDEAD_u16, x);
         sim.done(x)
@@ -109,6 +115,8 @@ fn test_port_pipeline() {
     uut.bus_m.addr.connect();
     uut.bus_m.from_master.connect();
     uut.bus_m.strobe.connect();
+    uut.port_a.ready.connect();
+    uut.port_b.ready.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<MOSIPortTest>| x.clock.next = !x.clock.val());
@@ -128,6 +136,7 @@ fn test_port_pipeline() {
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
+        x.port_b.ready.next = true;
         for val in [0xDEAD_u16, 0xBEEF, 0xBABE, 0xCAFE] {
             x = sim.watch(|x| x.port_b.strobe_out.val(), x)?;
             sim_assert!(sim, x.port_b.port_out.val() == val, x);
@@ -140,11 +149,8 @@ fn test_port_pipeline() {
         1000,
         std::fs::File::create(vcd_path!("mosi_port_pipeline.vcd")).unwrap(),
     )
-        .unwrap();
+    .unwrap();
 }
-
-
-
 
 #[derive(LogicBlock)]
 struct MOSIWidePortTest {
@@ -259,4 +265,87 @@ fn test_wide_port_test_works() {
         std::fs::File::create(vcd_path!("mosi_wide_port.vcd")).unwrap(),
     )
     .unwrap();
+}
+
+#[derive(LogicBlock)]
+struct MOSIPortFIFOTest {
+    bus_m: LocalBusM<16, 8>,
+    port_a: MOSIPort<16, 8>,
+    fifo: SynchronousFIFO<Bits<16>, 4, 5, 1>,
+    clock: Signal<In, Clock>,
+}
+
+impl Logic for MOSIPortFIFOTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.port_a.bus.from_master.next = self.bus_m.from_master.val();
+        self.port_a.bus.strobe.next = self.bus_m.strobe.val();
+        self.port_a.bus.addr.next = self.bus_m.addr.val();
+        self.bus_m.to_master.next = self.port_a.bus.to_master.val();
+        self.bus_m.ready.next = self.port_a.bus.ready.val();
+        self.port_a.clock.next = self.clock.val();
+        self.fifo.clock.next = self.clock.val();
+        self.fifo.data_in.next = self.port_a.port_out.val();
+        self.fifo.write.next = self.port_a.strobe_out.val();
+        self.port_a.ready.next = !self.fifo.full.val();
+    }
+}
+
+impl Default for MOSIPortFIFOTest {
+    fn default() -> Self {
+        Self {
+            bus_m: Default::default(),
+            port_a: MOSIPort::new(53_u8.into()),
+            fifo: Default::default(),
+            clock: Default::default(),
+        }
+    }
+}
+
+#[test]
+fn test_mosi_port_fifo_synthesizes() {
+    let mut uut = MOSIPortFIFOTest::default();
+    uut.bus_m.addr.connect();
+    uut.bus_m.strobe.connect();
+    uut.bus_m.from_master.connect();
+    uut.fifo.read.connect();
+    uut.clock.connect();
+    uut.connect_all();
+    let vlog = generate_verilog(&uut);
+    yosys_validate("mosi_port_fifo", &vlog).unwrap();
+}
+
+#[test]
+fn test_mosi_port_fifo_works() {
+    let mut uut = MOSIPortFIFOTest::default();
+    uut.bus_m.addr.connect();
+    uut.bus_m.strobe.connect();
+    uut.bus_m.from_master.connect();
+    uut.fifo.read.connect();
+    uut.clock.connect();
+    uut.connect_all();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<MOSIPortFIFOTest>| {
+        x.clock.next = !x.clock.val()
+    });
+    sim.add_testbench(move |mut sim: Sim<MOSIPortFIFOTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        x.bus_m.addr.next = 53_u8.into();
+        wait_clock_cycle!(sim, clock, x);
+        for val in [0xDEAD_u16, 0xBEEF_u16, 0xBABE_u16, 0xCAFE_u16] {
+            x = sim.watch(|x| x.bus_m.ready.val(), x)?;
+            x.bus_m.from_master.next = val.into();
+            x.bus_m.strobe.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.bus_m.strobe.next = false;
+        }
+        wait_clock_cycles!(sim, clock, x, 100);
+        sim.done(x)
+    });
+    sim.run_traced(
+        Box::new(uut),
+        1000,
+        std::fs::File::create(vcd_path!("mosi_fifo.vcd")).unwrap(),
+    );
 }

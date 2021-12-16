@@ -13,7 +13,9 @@ pub use crate::widgets::fifo_expander_n::WordOrder;
 pub use crate::widgets::fifo_reducer::FIFOReducer;
 pub use crate::widgets::fifo_reducer_n::FIFOReducerN;
 pub use crate::widgets::fifo_register::RegisterFIFO;
-pub use crate::widgets::local_bus::{LocalBusD, LocalBusM, MISOPort, MOSIPort, MOSIWidePort};
+pub use crate::widgets::local_bus::{
+    LocalBusD, LocalBusM, MISOPort, MISOWidePort, MOSIPort, MOSIWidePort,
+};
 pub use crate::widgets::mac_fir::MultiplyAccumulateSymmetricFiniteImpulseResponseFilter;
 pub use crate::widgets::pulser::Pulser;
 pub use crate::widgets::pwm::PulseWidthModulator;

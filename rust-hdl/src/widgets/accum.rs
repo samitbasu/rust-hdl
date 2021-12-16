@@ -33,7 +33,7 @@ impl<const N: usize, const M: usize, const P: usize> Logic for Accum<N, M, P> {
 }
 
 impl<const N: usize, const M: usize, const P: usize> Accum<N, M, P> {
-    fn new(count: usize) -> Self {
+    pub fn new(count: usize) -> Self {
         assert!(P >= clog2(count));
         assert!(M >= N + P);
         Self {

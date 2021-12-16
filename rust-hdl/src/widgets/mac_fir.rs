@@ -162,7 +162,7 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
         assert_eq!(coeffs.len() % 2, 1);
         // Create the compact array
         let clen = (coeffs.len() + 1) / 2;
-        let mut coeff_short = coeffs[0..clen].iter().map(|x| *x).collect::<Vec<_>>();
+        let coeff_short = coeffs[0..clen].iter().map(|x| *x).collect::<Vec<_>>();
         let coeffs = coeff_short
             .iter()
             .map(|x| signed::<16>(*x as i32))
