@@ -235,7 +235,7 @@ fn test_ok_spi_master_works() {
     sim.run_traced(
         Box::new(uut),
         100_000,
-        std::fs::File::create(("/tmp/ok_spi.vcd")).unwrap(),
+        std::fs::File::create("/tmp/ok_spi.vcd").unwrap(),
     )
     .unwrap()
 }

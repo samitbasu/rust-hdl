@@ -1,0 +1,342 @@
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
+use rand::Rng;
+
+#[derive(LogicBlock)]
+struct ControllerTest {
+    to_cpu_fifo: SynchronousFIFO<Bits<16>, 6, 7, 1>,
+    from_cpu_fifo: SynchronousFIFO<Bits<16>, 6, 7, 1>,
+    controller: BaseController,
+    port: MOSIPort<16, 8>,
+    iport: MISOPort<16, 8>,
+    clock: Signal<In, Clock>,
+}
+
+impl Default for ControllerTest {
+    fn default() -> Self {
+        Self {
+            to_cpu_fifo: Default::default(),
+            from_cpu_fifo: Default::default(),
+            controller: Default::default(),
+            port: MOSIPort::new(0x53_u8.into()),
+            iport: MISOPort::new(0x54_u8.into()),
+            clock: Default::default(),
+        }
+    }
+}
+
+impl Logic for ControllerTest {
+    #[hdl_gen]
+    fn update(&mut self) {
+        // Connect the clocks
+        self.to_cpu_fifo.clock.next = self.clock.val();
+        self.from_cpu_fifo.clock.next = self.clock.val();
+        self.controller.clock.next = self.clock.val();
+        self.port.clock.next = self.clock.val();
+        self.iport.clock.next = self.clock.val();
+        // Connect the cpu fifo to the controller
+        self.controller.cpu.from_bus.next = self.from_cpu_fifo.data_out.val();
+        self.controller.cpu.empty.next = self.from_cpu_fifo.empty.val();
+        self.from_cpu_fifo.read.next = self.controller.cpu.read.val();
+        // Connect the other CPU fifo to the controller
+        self.to_cpu_fifo.data_in.next = self.controller.cpu.to_bus.val();
+        self.to_cpu_fifo.write.next = self.controller.cpu.write.val();
+        self.controller.cpu.full.next = self.to_cpu_fifo.full.val();
+        // Connect the controller to the port
+        self.port.bus.from_master.next = self.controller.bus.from_master.val();
+        self.port.bus.strobe.next = self.controller.bus.strobe.val();
+        self.port.bus.addr.next = self.controller.bus.addr.val();
+        // Connect the controller to the iport
+        self.iport.bus.from_master.next = self.controller.bus.from_master.val();
+        self.iport.bus.strobe.next = self.controller.bus.strobe.val();
+        self.iport.bus.addr.next = self.controller.bus.addr.val();
+        // OR the return lines
+        self.controller.bus.to_master.next = self.port.bus.to_master.val() | self.iport.bus.to_master.val();
+        self.controller.bus.ready.next = self.port.bus.ready.val() | self.iport.bus.ready.val();
+        // Make the output port it a flow through port (always ready)
+        self.port.ready.next = true;
+    }
+}
+
+#[cfg(test)]
+fn make_controller_test() -> ControllerTest {
+    let mut uut = ControllerTest::default();
+    uut.clock.connect();
+    uut.from_cpu_fifo.data_in.connect();
+    uut.from_cpu_fifo.write.connect();
+    uut.to_cpu_fifo.read.connect();
+    uut.iport.port_in.connect();
+    uut.iport.ready_in.connect();
+    uut.connect_all();
+    uut
+}
+
+#[test]
+fn test_controller_test_synthesizes() {
+    let uut = make_controller_test();
+    let vlog = generate_verilog(&uut);
+    yosys_validate("controller", &vlog).unwrap();
+}
+
+#[test]
+fn test_ping_works() {
+    let uut = make_controller_test();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<ControllerTest>| {
+        x.clock.next = !x.clock.val()
+    });
+    sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
+        let mut x = sim.init()?;
+        // Send a PING command
+        wait_clock_true!(sim, clock, x);
+        for iter in 0..10 {
+            wait_clock_cycles!(sim, clock, x, 5);
+            // A ping is 0x01XX, where XX is the code returned by the controller
+            x.from_cpu_fifo.data_in.next = (0x0167_u16 + iter).into();
+            x.from_cpu_fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.from_cpu_fifo.write.next = false;
+            wait_clock_cycles!(sim, clock, x, 5);
+            // Insert a NOOP
+            x.from_cpu_fifo.data_in.next = 0_u16.into();
+            x.from_cpu_fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.from_cpu_fifo.write.next = false;
+            wait_clock_cycles!(sim, clock, x, 5);
+        }
+        sim.done(x)
+    });
+    sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for iter in 0..10 {
+            x = sim.watch(|x| !x.to_cpu_fifo.empty.val(), x)?;
+            sim_assert!(sim, x.to_cpu_fifo.data_out.val() == (0x0167_u16 + iter), x);
+            x.to_cpu_fifo.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.to_cpu_fifo.read.next = false;
+        }
+        sim.done(x)
+    });
+    sim.run_traced(
+        Box::new(uut),
+        5000,
+        std::fs::File::create(vcd_path!("controller_ping.vcd")).unwrap(),
+    )
+    .unwrap();
+}
+
+#[test]
+fn test_write_command_works() {
+    let uut = make_controller_test();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<ControllerTest>| {
+        x.clock.next = !x.clock.val()
+    });
+    sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
+        let mut x = sim.init()?;
+        // Send a PING command
+        wait_clock_true!(sim, clock, x);
+        for iter in 0..10 {
+            wait_clock_cycles!(sim, clock, x, 5);
+            // A write command looks like 0x03XXYYYY, where XX is the address, YYYY is the count
+            // followed by count data elements.
+            // Write the command
+            x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
+            x.from_cpu_fifo.data_in.next = 0x0353_u16.into();
+            x.from_cpu_fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.from_cpu_fifo.write.next = false;
+            // Then the count
+            x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
+            x.from_cpu_fifo.data_in.next = (iter+1).into();
+            x.from_cpu_fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.from_cpu_fifo.write.next = false;
+            // Then the data elements
+            for ndx in 0..(iter+1) {
+                x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
+                x.from_cpu_fifo.data_in.next = (0x7870_u16 + ndx).into();
+                x.from_cpu_fifo.write.next = true;
+                wait_clock_cycle!(sim, clock, x);
+                x.from_cpu_fifo.write.next = false;
+            }
+            // Insert a NOOP
+            x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
+            x.from_cpu_fifo.data_in.next = 0_u16.into();
+            x.from_cpu_fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.from_cpu_fifo.write.next = false;
+            wait_clock_cycles!(sim, clock, x, 5);
+        }
+        sim.done(x)
+    });
+    sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for iter in 0..10 {
+            for ndx in 0..(iter+1) {
+                x = sim.watch(|x| x.port.strobe_out.val(), x)?;
+                sim_assert!(sim, x.port.port_out.val() == (0x7870_u32 + ndx), x);
+                wait_clock_cycle!(sim, clock, x);
+            }
+        }
+        sim.done(x)
+    });
+    sim.run_traced(
+        Box::new(uut),
+        5000,
+        std::fs::File::create(vcd_path!("controller_write.vcd")).unwrap(),
+    )
+        .unwrap();
+}
+
+#[test]
+fn test_read_command_works() {
+    let uut = make_controller_test();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<ControllerTest>| {
+        x.clock.next = !x.clock.val()
+    });
+    sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
+        let mut x = sim.init()?;
+        // Send a PING command
+        wait_clock_true!(sim, clock, x);
+        for iter in 0..10 {
+            wait_clock_cycles!(sim, clock, x, 5);
+            // A read command looks like 0x02XXYYYY, where XX is the address, YYYY is the count
+            // Write the command
+            x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
+            x.from_cpu_fifo.data_in.next = 0x0254_u16.into();
+            x.from_cpu_fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.from_cpu_fifo.write.next = false;
+            // Then the count
+            x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
+            x.from_cpu_fifo.data_in.next = (iter+1).into();
+            x.from_cpu_fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.from_cpu_fifo.write.next = false;
+            // Then wait for the data elements to come back to the CPU
+            for ndx in 0..(iter+1) {
+                x = sim.watch(|x| !x.to_cpu_fifo.empty.val(), x)?;
+                sim_assert!(sim, x.to_cpu_fifo.data_out.val() == 0xBEE0_u16 + ndx, x);
+                x.to_cpu_fifo.read.next = true;
+                wait_clock_cycle!(sim, clock, x);
+                x.to_cpu_fifo.read.next = false;
+            }
+            // Wait 1 clock cycle, and then issue a POLL command
+            wait_clock_cycle!(sim, clock, x);
+            x.from_cpu_fifo.data_in.next = 0x0454_u16.into();
+            x.from_cpu_fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.from_cpu_fifo.write.next = false;
+            // Read the result of the poll back
+            x = sim.watch(|x| !x.to_cpu_fifo.empty.val(), x)?;
+            // Port should always be ready
+            sim_assert!(sim, x.to_cpu_fifo.data_out.val() == 0x5401_u16, x);
+            x.to_cpu_fifo.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.to_cpu_fifo.read.next = false;
+            wait_clock_cycles!(sim, clock, x, 5);
+        }
+        sim.done(x)
+    });
+    sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for iter in 0..10 {
+            wait_clock_cycles!(sim, clock, x, 10);
+            for ndx in 0..(iter+1) {
+                x.iport.port_in.next = (0xBEE0_u16 + ndx).into();
+                x.iport.ready_in.next = true;
+                x = sim.watch(|x| x.iport.strobe_out.val(), x)?;
+                wait_clock_cycle!(sim, clock, x);
+            }
+        }
+        sim.done(x)
+    });
+    sim.run_traced(
+        Box::new(uut),
+        5000,
+        std::fs::File::create(vcd_path!("controller_read.vcd")).unwrap(),
+    )
+        .unwrap();
+}
+
+#[test]
+fn test_stream_command_works() {
+    let uut = make_controller_test();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<ControllerTest>| {
+        x.clock.next = !x.clock.val()
+    });
+    sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
+        let mut x = sim.init()?;
+        // Send a PING command
+        wait_clock_true!(sim, clock, x);
+        wait_clock_cycles!(sim, clock, x, 5);
+        // A stream command looks like 0x05XX, where XX is the address to stream from
+        // Write the command
+        x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
+        x.from_cpu_fifo.data_in.next = 0x0554_u16.into();
+        x.from_cpu_fifo.write.next = true;
+        wait_clock_cycle!(sim, clock, x);
+        x.from_cpu_fifo.write.next = false;
+        // Wait until we have collected 100 items
+        for iter in 0..100 {
+            x = sim.watch(|x| !x.to_cpu_fifo.empty.val(), x)?;
+            sim_assert!(sim, x.to_cpu_fifo.data_out.val() == 0xBAB0_u16 + iter, x);
+            x.to_cpu_fifo.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.to_cpu_fifo.read.next = false;
+        }
+        // Send a stop command (anything non-zero)
+        x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
+        x.from_cpu_fifo.data_in.next = 0x0554_u16.into();
+        x.from_cpu_fifo.write.next = true;
+        wait_clock_cycle!(sim, clock, x);
+        x.from_cpu_fifo.write.next = false;
+        // There may be extra data that comes, so discard data until the
+        // CPU fifo is empty...
+        while !x.to_cpu_fifo.empty.val() {
+            x.to_cpu_fifo.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.to_cpu_fifo.read.next = false;
+        }
+        // Send a ping
+        x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
+        x.from_cpu_fifo.data_in.next = 0x01FF_u16.into();
+        x.from_cpu_fifo.write.next = true;
+        wait_clock_cycle!(sim, clock, x);
+        x.from_cpu_fifo.write.next = false;
+        // Wait for it to return
+        x = sim.watch(|x| !x.to_cpu_fifo.empty.val(), x)?;
+        sim_assert!(sim, x.to_cpu_fifo.data_out.val() == 0x01FF_u16, x);
+        wait_clock_cycles!(sim, clock, x, 10);
+        sim.done(x)
+    });
+    sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for ndx in 0..100 {
+            x.iport.port_in.next = (0xBAB0_u16 + ndx).into();
+            x.iport.ready_in.next = true;
+            x = sim.watch(|x| x.iport.strobe_out.val(), x)?;
+            wait_clock_cycle!(sim, clock, x);
+            x.iport.ready_in.next = false;
+            if rand::thread_rng().gen::<f64>() < 0.3 {
+                for _ in 0..(rand::thread_rng().gen::<u8>() % 40) {
+                    wait_clock_cycle!(sim, clock, x);
+                }
+            }
+        }
+        sim.done(x)
+    });
+    sim.run_traced(
+        Box::new(uut),
+        50000,
+        std::fs::File::create(vcd_path!("controller_stream.vcd")).unwrap(),
+    )
+        .unwrap();
+}

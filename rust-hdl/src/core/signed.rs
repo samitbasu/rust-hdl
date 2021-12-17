@@ -159,7 +159,6 @@ mod tests {
     use crate::core::bits::Bits;
     use crate::core::signed::{signed_bit_cast, unsigned_bit_cast, Signed};
     use num_bigint::BigInt;
-    use num_traits::ToPrimitive;
 
     #[test]
     fn test_min_range_correct() {
@@ -205,9 +204,9 @@ mod tests {
     #[test]
     fn time_adds_bigint() {
         let now = std::time::Instant::now();
-        for iter in 0..10 {
+        for _iter in 0..10 {
             let mut q = BigInt::from(0_u32);
-            for i in 0..1_000_000 {
+            for _i in 0..1_000_000 {
                 q = q + 1;
             }
         }
@@ -218,9 +217,9 @@ mod tests {
     #[test]
     fn time_adds_bitvec() {
         let now = std::time::Instant::now();
-        for iter in 0..10 {
+        for _iter in 0..10 {
             let mut q = Bits::<40>::from(0_u32);
-            for i in 0..1_000_000 {
+            for _i in 0..1_000_000 {
                 q = q + 1_usize;
             }
         }
@@ -231,9 +230,9 @@ mod tests {
     #[test]
     fn time_adds_bitvec_small() {
         let now = std::time::Instant::now();
-        for iter in 0..10 {
+        for _iter in 0..10 {
             let mut q = Bits::<16>::from(0_u32);
-            for i in 0..1_000_000 {
+            for _i in 0..1_000_000 {
                 q = q + 1_usize;
             }
         }

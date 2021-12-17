@@ -51,5 +51,5 @@ impl<const N: usize, const M: usize, const P: usize> Accum<N, M, P> {
 
 #[test]
 fn test_accum_synthesizes() {
-    let p = TopWrap::new(Accum::<32, 40, 6>::new(50));
+    let _p = TopWrap::new(Accum::<32, 40, 6>::new(50));
 }

@@ -14,6 +14,16 @@ pub struct FifoBus<T: Synth> {
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]
+pub struct FifoBusIn<T: Synth> {
+    pub to_bus: Signal<Out, T>,
+    pub write: Signal<Out, Bit>,
+    pub full: Signal<In, Bit>,
+    pub from_bus: Signal<In, T>,
+    pub read: Signal<Out, Bit>,
+    pub empty: Signal<In, Bit>,
+}
+
+#[derive(Clone, Debug, Default, LogicInterface)]
 pub struct BidiBusM<T: Synth> {
     pub sig_inout: Signal<InOut, T>,
     pub sig_empty: Signal<In, Bit>,
