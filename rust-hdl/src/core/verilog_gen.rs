@@ -87,13 +87,19 @@ pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
                 VerilogLink::Forward(x) => {
                     format!(
                         "always @(*) {}${} = {}${};",
-                        x.other_name, x.my_name, x.owner_name, x.my_name
+                        x.other_name.replace("[", "$").replace("]", ""),
+                        x.my_name,
+                        x.owner_name.replace("[", "$").replace("]", ""),
+                        x.my_name
                     )
                 }
                 VerilogLink::Backward(x) => {
                     format!(
                         "always @(*) {}${} = {}${};",
-                        x.owner_name, x.my_name, x.other_name, x.my_name
+                        x.owner_name.replace("[", "$").replace("]", ""),
+                        x.my_name,
+                        x.other_name.replace("[", "$").replace("]", ""),
+                        x.my_name
                     )
                 }
                 VerilogLink::Bidirectional(x) => {

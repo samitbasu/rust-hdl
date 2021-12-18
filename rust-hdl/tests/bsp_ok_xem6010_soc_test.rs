@@ -4,9 +4,9 @@ use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 mod test_common;
-use test_common::soc::SoCTestChip;
-use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
+use rust_hdl::bsp::ok_xem6010::XEM6010;
+use test_common::soc::SoCTestChip;
 
 #[derive(LogicBlock)]
 struct OpalKellySoCTest {
@@ -28,7 +28,7 @@ impl Default for OpalKellySoCTest {
             pipe_in: PipeIn::new(0x80),
             pipe_out: PipeOut::new(0xA0),
             dut: Default::default(),
-            read_delay: Default::default()
+            read_delay: Default::default(),
         }
     }
 }

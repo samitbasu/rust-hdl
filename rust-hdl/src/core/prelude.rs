@@ -20,6 +20,7 @@ pub use crate::core::constraint::*;
 pub use crate::core::direction::{Direction, In, InOut, Local, Out};
 pub use crate::core::logic;
 pub use crate::core::logic::Logic;
+pub use crate::core::logic::LogicJoin;
 pub use crate::core::logic::LogicLink;
 pub use crate::core::module_defines::ModuleDefines;
 pub use crate::core::module_defines::{generate_verilog, generate_verilog_unchecked};

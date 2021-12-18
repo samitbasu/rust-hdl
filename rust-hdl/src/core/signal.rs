@@ -8,7 +8,7 @@ use crate::core::block::Block;
 use crate::core::clock::Clock;
 use crate::core::constraint::{Constraint, PinConstraint, SignalType};
 use crate::core::direction::{Direction, In, Out};
-use crate::core::logic::{Logic, LogicLink};
+use crate::core::logic::{Logic, LogicJoin, LogicLink};
 use crate::core::prelude::InOut;
 use crate::core::probe::Probe;
 use crate::core::synth::{Synth, VCDValue};
@@ -31,6 +31,49 @@ pub struct Signal<D: Direction, T: Synth> {
     signal_is_undriven: bool,
     constraints: Vec<PinConstraint>,
     dir: std::marker::PhantomData<D>,
+}
+
+impl<T: Synth> Signal<In, T> {
+    pub fn join(&mut self, other: &mut Signal<Out, T>) {
+        self.next = other.val();
+    }
+    pub fn join_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+        let details = VerilogLinkDetails {
+            my_name: my_name.into(),
+            owner_name: owner_name.into(),
+            other_name: other_name.into(),
+        };
+        vec![VerilogLink::Backward(details)]
+    }
+}
+
+impl<T: Synth> Signal<Out, T> {
+    pub fn join(&mut self, other: &mut Signal<In, T>) {
+        other.next = self.val();
+    }
+    pub fn join_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+        let details = VerilogLinkDetails {
+            my_name: my_name.into(),
+            owner_name: owner_name.into(),
+            other_name: other_name.into(),
+        };
+        vec![VerilogLink::Forward(details)]
+    }
+}
+
+// Only the input signal gets connected in a JOIN
+impl<T: Synth> LogicJoin for Signal<In, T> {
+    fn join_connect(&mut self) {
+        self.connect();
+    }
+}
+
+impl<T: Synth> LogicJoin for Signal<Out, T> {}
+
+impl<T: Synth> LogicJoin for Signal<InOut, T> {
+    fn join_connect(&mut self) {
+        self.connect();
+    }
 }
 
 impl<T: Synth> LogicLink for Signal<In, T> {

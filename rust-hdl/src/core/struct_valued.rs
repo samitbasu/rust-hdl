@@ -2,6 +2,8 @@ use crate::core::ast::VerilogLiteral;
 use crate::core::bits::{bit_cast, clog2, Bit, Bits};
 use crate::core::synth::{Synth, VCDValue};
 
+// We want to be able to combine a set of signals into a struct
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum CmdType {
     Noop,

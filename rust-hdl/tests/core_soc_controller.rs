@@ -1,6 +1,6 @@
+use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-use rand::Rng;
 
 #[derive(LogicBlock)]
 struct ControllerTest {
@@ -51,7 +51,8 @@ impl Logic for ControllerTest {
         self.iport.bus.strobe.next = self.controller.bus.strobe.val();
         self.iport.bus.addr.next = self.controller.bus.addr.val();
         // OR the return lines
-        self.controller.bus.to_master.next = self.port.bus.to_master.val() | self.iport.bus.to_master.val();
+        self.controller.bus.to_master.next =
+            self.port.bus.to_master.val() | self.iport.bus.to_master.val();
         self.controller.bus.ready.next = self.port.bus.ready.val() | self.iport.bus.ready.val();
         // Make the output port it a flow through port (always ready)
         self.port.ready.next = true;
@@ -149,12 +150,12 @@ fn test_write_command_works() {
             x.from_cpu_fifo.write.next = false;
             // Then the count
             x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
-            x.from_cpu_fifo.data_in.next = (iter+1).into();
+            x.from_cpu_fifo.data_in.next = (iter + 1).into();
             x.from_cpu_fifo.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu_fifo.write.next = false;
             // Then the data elements
-            for ndx in 0..(iter+1) {
+            for ndx in 0..(iter + 1) {
                 x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
                 x.from_cpu_fifo.data_in.next = (0x7870_u16 + ndx).into();
                 x.from_cpu_fifo.write.next = true;
@@ -175,7 +176,7 @@ fn test_write_command_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for iter in 0..10 {
-            for ndx in 0..(iter+1) {
+            for ndx in 0..(iter + 1) {
                 x = sim.watch(|x| x.port.strobe_out.val(), x)?;
                 sim_assert!(sim, x.port.port_out.val() == (0x7870_u32 + ndx), x);
                 wait_clock_cycle!(sim, clock, x);
@@ -188,7 +189,7 @@ fn test_write_command_works() {
         5000,
         std::fs::File::create(vcd_path!("controller_write.vcd")).unwrap(),
     )
-        .unwrap();
+    .unwrap();
 }
 
 #[test]
@@ -213,12 +214,12 @@ fn test_read_command_works() {
             x.from_cpu_fifo.write.next = false;
             // Then the count
             x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
-            x.from_cpu_fifo.data_in.next = (iter+1).into();
+            x.from_cpu_fifo.data_in.next = (iter + 1).into();
             x.from_cpu_fifo.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu_fifo.write.next = false;
             // Then wait for the data elements to come back to the CPU
-            for ndx in 0..(iter+1) {
+            for ndx in 0..(iter + 1) {
                 x = sim.watch(|x| !x.to_cpu_fifo.empty.val(), x)?;
                 sim_assert!(sim, x.to_cpu_fifo.data_out.val() == 0xBEE0_u16 + ndx, x);
                 x.to_cpu_fifo.read.next = true;
@@ -247,7 +248,7 @@ fn test_read_command_works() {
         wait_clock_true!(sim, clock, x);
         for iter in 0..10 {
             wait_clock_cycles!(sim, clock, x, 10);
-            for ndx in 0..(iter+1) {
+            for ndx in 0..(iter + 1) {
                 x.iport.port_in.next = (0xBEE0_u16 + ndx).into();
                 x.iport.ready_in.next = true;
                 x = sim.watch(|x| x.iport.strobe_out.val(), x)?;
@@ -261,7 +262,7 @@ fn test_read_command_works() {
         5000,
         std::fs::File::create(vcd_path!("controller_read.vcd")).unwrap(),
     )
-        .unwrap();
+    .unwrap();
 }
 
 #[test]
@@ -338,5 +339,5 @@ fn test_stream_command_works() {
         50000,
         std::fs::File::create(vcd_path!("controller_stream.vcd")).unwrap(),
     )
-        .unwrap();
+    .unwrap();
 }

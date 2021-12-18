@@ -35,7 +35,7 @@ impl Default for SoCTestChip {
             soc_host: Default::default(),
             mosi_port: MOSIPort::new(0x53_u8.into()),
             miso_port: MISOPort::new(0x54_u8.into()),
-            data_fifo: Default::default()
+            data_fifo: Default::default(),
         }
     }
 }
@@ -51,17 +51,16 @@ impl Logic for SoCTestChip {
         self.mosi_port.clock.next = self.sys_clock.val();
         self.miso_port.clock.next = self.sys_clock.val();
         self.data_fifo.clock.next = self.sys_clock.val();
-        // Wire the ports to the host
         self.mosi_port.bus.from_master.next = self.soc_host.bus.from_master.val();
         self.mosi_port.bus.strobe.next = self.soc_host.bus.strobe.val();
         self.mosi_port.bus.addr.next = self.soc_host.bus.addr.val();
         self.miso_port.bus.from_master.next = self.soc_host.bus.from_master.val();
         self.miso_port.bus.strobe.next = self.soc_host.bus.strobe.val();
         self.miso_port.bus.addr.next = self.soc_host.bus.addr.val();
-        self.soc_host.bus.to_master.next = self.miso_port.bus.to_master.val() |
-            self.mosi_port.bus.to_master.val();
-        self.soc_host.bus.ready.next = self.miso_port.bus.ready.val() |
-            self.mosi_port.bus.ready.val();
+        self.soc_host.bus.to_master.next =
+            self.miso_port.bus.to_master.val() | self.mosi_port.bus.to_master.val();
+        self.soc_host.bus.ready.next =
+            self.miso_port.bus.ready.val() | self.mosi_port.bus.ready.val();
         // Wire the MOSI port to the input of the data_fifo
         self.data_fifo.data_in.next = self.mosi_port.port_out.val() << 1_usize;
         self.data_fifo.write.next = self.mosi_port.strobe_out.val();

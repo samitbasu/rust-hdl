@@ -136,8 +136,8 @@ impl Logic for BaseController {
             }
             BaseControllerState::Poll => {
                 if !self.cpu.full.val() {
-                    self.cpu.to_bus.next = (bit_cast::<16, 8>(self.address.q.val()) << 8_usize) |
-                        bit_cast::<16, 1>(self.bus.ready.val().into());
+                    self.cpu.to_bus.next = (bit_cast::<16, 8>(self.address.q.val()) << 8_usize)
+                        | bit_cast::<16, 1>(self.bus.ready.val().into());
                     self.cpu.write.next = true;
                     self.state.d.next = BaseControllerState::Idle;
                 }

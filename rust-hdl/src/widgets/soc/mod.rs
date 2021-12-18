@@ -1,3 +1,4 @@
+pub mod bridge;
 pub mod bus;
 pub mod controller;
 pub mod miso_port;

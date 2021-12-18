@@ -14,9 +14,7 @@ fn test_soc_chip_works() {
     uut.cpu_bus.read.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Box<SoCTestChip>| {
-        x.clock.next = !x.clock.val()
-    });
+    sim.add_clock(5, |x: &mut Box<SoCTestChip>| x.clock.next = !x.clock.val());
     sim.add_clock(4, |x: &mut Box<SoCTestChip>| {
         x.sys_clock.next = !x.sys_clock.val()
     });
@@ -47,7 +45,11 @@ fn test_soc_chip_works() {
         wait_clock_true!(sim, clock, x);
         for iter in 0..10 {
             x = sim.watch(|x| !x.cpu_bus.empty.val(), x)?;
-            sim_assert!(sim, x.cpu_bus.from_controller.val() == (0x0167_u16 + iter), x);
+            sim_assert!(
+                sim,
+                x.cpu_bus.from_controller.val() == (0x0167_u16 + iter),
+                x
+            );
             x.cpu_bus.read.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.cpu_bus.read.next = false;
@@ -55,10 +57,13 @@ fn test_soc_chip_works() {
         wait_clock_cycles!(sim, clock, x, 10);
         sim.done(x)
     });
-    sim.run_traced(Box::new(uut), 5_000,
-                   std::fs::File::create(vcd_path!("soc_chip_ping.vcd")).unwrap()).unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        5_000,
+        std::fs::File::create(vcd_path!("soc_chip_ping.vcd")).unwrap(),
+    )
+    .unwrap();
 }
-
 
 #[test]
 fn test_soc_chip_read_write_works() {
@@ -70,9 +75,7 @@ fn test_soc_chip_read_write_works() {
     uut.cpu_bus.read.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Box<SoCTestChip>| {
-        x.clock.next = !x.clock.val()
-    });
+    sim.add_clock(5, |x: &mut Box<SoCTestChip>| x.clock.next = !x.clock.val());
     sim.add_clock(4, |x: &mut Box<SoCTestChip>| {
         x.sys_clock.next = !x.sys_clock.val()
     });
@@ -121,6 +124,10 @@ fn test_soc_chip_read_write_works() {
         }
         sim.done(x)
     });
-    sim.run_traced(Box::new(uut), 50_000,
-                   std::fs::File::create(vcd_path!("soc_chip_pipe.vcd")).unwrap()).unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        50_000,
+        std::fs::File::create(vcd_path!("soc_chip_pipe.vcd")).unwrap(),
+    )
+    .unwrap();
 }
