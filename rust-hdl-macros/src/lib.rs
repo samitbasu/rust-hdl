@@ -27,7 +27,7 @@ pub fn logic_block(input: TokenStream) -> TokenStream {
     }
 }
 
-#[proc_macro_derive(LogicInterface)]
+#[proc_macro_derive(LogicInterface, attributes(join))]
 pub fn logic_interface(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 

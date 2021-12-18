@@ -64,6 +64,15 @@ fn connect_method_call(node: &syn::ExprMethodCall) -> Result<TS> {
             ));
         }
     }
+    if method_name == "join" {
+        let target = node.args.index(0);
+        if let Expr::Reference(t) = target {
+            let target = &t.expr;
+            return Ok(quote!(
+                logic::logic_connect_join_fn(&mut #source, &mut #target);
+            ));
+        }
+    }
     Ok(TS::new())
 }
 

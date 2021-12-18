@@ -336,6 +336,14 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
         return Ok(quote!(
             ast::VerilogStatement::Link(#expr.link_hdl("", #signal, #target))
         ));
+    } else if method_name == "join" {
+        let expr = method.receiver.as_ref();
+        let signal = common::fixup_ident(quote!(#expr).to_string());
+        let target = method.args.index(0);
+        let target = common::fixup_ident(quote!(#target).to_string());
+        return Ok(quote!(
+            ast::VerilogStatement::Link(#expr.join_hdl("", #signal, #target))
+        ));
     }
     Err(syn::Error::new(
         method.span(),
