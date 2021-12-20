@@ -33,8 +33,8 @@ use crate::core::prelude::*;
 #[join = "SoCBusResponder"]
 pub struct SoCBusController<const D: usize, const A: usize> {
     pub address: Signal<Out, Bits<A>>,
-    pub from_master: Signal<Out, Bits<D>>,
-    pub to_master: Signal<In, Bits<D>>,
+    pub from_controller: Signal<Out, Bits<D>>,
+    pub to_controller: Signal<In, Bits<D>>,
     pub ready: Signal<In, Bit>,
     pub strobe: Signal<Out, Bit>,
     pub clock: Signal<Out, Clock>,
@@ -44,8 +44,8 @@ pub struct SoCBusController<const D: usize, const A: usize> {
 #[join = "SoCBusController"]
 pub struct SoCBusResponder<const D: usize, const A: usize> {
     pub address: Signal<In, Bits<A>>,
-    pub from_master: Signal<In, Bits<D>>,
-    pub to_master: Signal<Out, Bits<D>>,
+    pub from_controller: Signal<In, Bits<D>>,
+    pub to_controller: Signal<Out, Bits<D>>,
     pub ready: Signal<Out, Bit>,
     pub strobe: Signal<In, Bit>,
     pub clock: Signal<In, Clock>,
@@ -55,8 +55,8 @@ pub struct SoCBusResponder<const D: usize, const A: usize> {
 #[join = "SoCPortResponder"]
 pub struct SoCPortController<const D: usize> {
     pub select: Signal<Out, Bit>,
-    pub from_master: Signal<Out, Bits<D>>,
-    pub to_master: Signal<In, Bits<D>>,
+    pub from_controller: Signal<Out, Bits<D>>,
+    pub to_controller: Signal<In, Bits<D>>,
     pub ready: Signal<In, Bit>,
     pub strobe: Signal<Out, Bit>,
     pub clock: Signal<Out, Clock>,
@@ -66,8 +66,8 @@ pub struct SoCPortController<const D: usize> {
 #[join = "SoCPortController"]
 pub struct SoCPortResponder<const D: usize> {
     pub select: Signal<In, Bit>,
-    pub from_master: Signal<In, Bits<D>>,
-    pub to_master: Signal<Out, Bits<D>>,
+    pub from_controller: Signal<In, Bits<D>>,
+    pub to_controller: Signal<Out, Bits<D>>,
     pub ready: Signal<Out, Bit>,
     pub strobe: Signal<In, Bit>,
     pub clock: Signal<In, Clock>,

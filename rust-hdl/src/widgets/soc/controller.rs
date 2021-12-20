@@ -58,7 +58,7 @@ impl<const A: usize> Logic for BaseController<A> {
         self.cpu.write.next = false;
         self.bus.clock.next = self.clock.val();
         self.bus.address.next = self.address.q.val();
-        self.bus.from_master.next = 0_usize.into();
+        self.bus.from_controller.next = 0_usize.into();
         self.bus.strobe.next = false;
         match self.state.q.val() {
             BaseControllerState::Idle => {
@@ -105,7 +105,7 @@ impl<const A: usize> Logic for BaseController<A> {
             }
             BaseControllerState::Read => {
                 if self.bus.ready.val() & !self.cpu.full.val() {
-                    self.cpu.to_bus.next = self.bus.to_master.val();
+                    self.cpu.to_bus.next = self.bus.to_controller.val();
                     self.bus.strobe.next = true;
                     self.cpu.write.next = true;
                     self.counter.d.next = self.counter.q.val() - 1_u32;
@@ -123,7 +123,7 @@ impl<const A: usize> Logic for BaseController<A> {
             }
             BaseControllerState::Write => {
                 if self.bus.ready.val() & !self.cpu.empty.val() {
-                    self.bus.from_master.next = self.cpu.from_bus.val();
+                    self.bus.from_controller.next = self.cpu.from_bus.val();
                     self.bus.strobe.next = true;
                     self.cpu.read.next = true;
                     self.counter.d.next = self.counter.q.val() - 1_u32;
@@ -148,7 +148,7 @@ impl<const A: usize> Logic for BaseController<A> {
             }
             BaseControllerState::Stream => {
                 if self.bus.ready.val() & !self.cpu.full.val() {
-                    self.cpu.to_bus.next = self.bus.to_master.val();
+                    self.cpu.to_bus.next = self.bus.to_controller.val();
                     self.bus.strobe.next = true;
                     self.cpu.write.next = true;
                 }
@@ -170,7 +170,7 @@ fn test_base_controller_is_synthesizable() {
     uut.cpu.from_bus.connect();
     uut.cpu.empty.connect();
     uut.cpu.full.connect();
-    uut.bus.to_master.connect();
+    uut.bus.to_controller.connect();
     uut.bus.ready.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);

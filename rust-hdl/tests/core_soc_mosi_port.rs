@@ -24,7 +24,7 @@ impl Logic for MOSIPortTest {
 fn test_port_test_synthesizes() {
     let mut uut = MOSIPortTest::default();
     uut.bus.clock.connect();
-    uut.bus.from_master.connect();
+    uut.bus.from_controller.connect();
     uut.bus.address.connect();
     uut.bus.strobe.connect();
     uut.port_a.ready.connect();
@@ -38,7 +38,7 @@ fn test_port_test_synthesizes() {
 fn test_port_test_works() {
     let mut uut = MOSIPortTest::default();
     uut.bus.clock.connect();
-    uut.bus.from_master.connect();
+    uut.bus.from_controller.connect();
     uut.bus.address.connect();
     uut.bus.strobe.connect();
     uut.port_a.ready.connect();
@@ -51,14 +51,14 @@ fn test_port_test_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 1_usize.into();
-        x.bus.from_master.next = 0xDEAD_u16.into();
+        x.bus.from_controller.next = 0xDEAD_u16.into();
         wait_clock_cycle!(sim, clock, x);
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         x.bus.strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.bus.strobe.next = false;
         x.bus.address.next = 0_usize.into();
-        x.bus.from_master.next = 0xBEEF_u16.into();
+        x.bus.from_controller.next = 0xBEEF_u16.into();
         wait_clock_cycle!(sim, clock, x);
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         x.bus.strobe.next = true;
@@ -93,7 +93,7 @@ fn test_port_test_works() {
 fn test_port_pipeline() {
     let mut uut = MOSIPortTest::default();
     uut.bus.clock.connect();
-    uut.bus.from_master.connect();
+    uut.bus.from_controller.connect();
     uut.bus.address.connect();
     uut.bus.strobe.connect();
     uut.port_a.ready.connect();
@@ -108,7 +108,7 @@ fn test_port_pipeline() {
         x.bus.address.next = 1_usize.into();
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         for val in [0xDEAD_u16, 0xBEEF, 0xBABE, 0xCAFE] {
-            x.bus.from_master.next = val.into();
+            x.bus.from_controller.next = val.into();
             x.bus.strobe.next = true;
             wait_clock_cycle!(sim, clock, x);
         }
@@ -158,7 +158,7 @@ fn test_wport_test_synthesizes() {
     let mut uut = MOSIWidePortTest::default();
     uut.clock.connect();
     uut.bus.address.connect();
-    uut.bus.from_master.connect();
+    uut.bus.from_controller.connect();
     uut.bus.strobe.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
@@ -170,7 +170,7 @@ fn test_wide_port_test_works() {
     let mut uut = MOSIWidePortTest::default();
     uut.clock.connect();
     uut.bus.address.connect();
-    uut.bus.from_master.connect();
+    uut.bus.from_controller.connect();
     uut.bus.strobe.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
@@ -185,7 +185,7 @@ fn test_wide_port_test_works() {
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         for val in [0xDEAD_u16, 0xBEEF_u16, 0xCAFE_u16, 0x1234_u16] {
             x.bus.strobe.next = true;
-            x.bus.from_master.next = val.into();
+            x.bus.from_controller.next = val.into();
             wait_clock_cycle!(sim, clock, x);
         }
         x.bus.strobe.next = false;
@@ -198,7 +198,7 @@ fn test_wide_port_test_works() {
             0x89AB_u16,
         ] {
             x.bus.strobe.next = true;
-            x.bus.from_master.next = val.into();
+            x.bus.from_controller.next = val.into();
             wait_clock_cycle!(sim, clock, x);
         }
         x.bus.strobe.next = false;
@@ -231,7 +231,8 @@ fn test_wide_port_test_works() {
 
 #[derive(LogicBlock, Default)]
 struct MOSIPortFIFOTest {
-    bus: SoCPortController<16>,
+    bus: SoCBusController<16, 2>,
+    bridge: Bridge<16, 2, 1>,
     port_a: MOSIPort<16>,
     fifo: SynchronousFIFO<Bits<16>, 4, 5, 1>,
     clock: Signal<In, Clock>,
@@ -241,8 +242,9 @@ impl Logic for MOSIPortFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
-        self.bus.join(&mut self.port_a.bus);
-        self.fifo.clock.next = self.clock.val();
+        self.bus.join(&mut self.bridge.upstream);
+        self.bridge.nodes[0].join(&mut self.port_a.bus);
+        self.fifo.clock.next = self.port_a.clock_out.val();
         self.fifo.data_in.next = self.port_a.port_out.val();
         self.fifo.write.next = self.port_a.strobe_out.val();
         self.port_a.ready.next = !self.fifo.full.val();
@@ -253,8 +255,8 @@ impl Logic for MOSIPortFIFOTest {
 fn test_mosi_port_fifo_synthesizes() {
     let mut uut = MOSIPortFIFOTest::default();
     uut.bus.strobe.connect();
-    uut.bus.from_master.connect();
-    uut.bus.select.connect();
+    uut.bus.from_controller.connect();
+    uut.bus.address.connect();
     uut.fifo.read.connect();
     uut.clock.connect();
     uut.connect_all();
@@ -265,24 +267,25 @@ fn test_mosi_port_fifo_synthesizes() {
 #[test]
 fn test_mosi_port_fifo_works() {
     let mut uut = MOSIPortFIFOTest::default();
-    uut.bus.select.connect();
+    uut.bus.address.connect();
     uut.bus.strobe.connect();
-    uut.bus.from_master.connect();
+    uut.bus.from_controller.connect();
     uut.fifo.read.connect();
     uut.clock.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
+    let vals = [0xDEAD_u16, 0xBEEF_u16, 0xBABE_u16, 0xCAFE_u16];
     sim.add_clock(5, |x: &mut Box<MOSIPortFIFOTest>| {
         x.clock.next = !x.clock.val()
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        x.bus.select.next = true;
+        x.bus.address.next = 0_usize.into();
         wait_clock_cycle!(sim, clock, x);
-        for val in [0xDEAD_u16, 0xBEEF_u16, 0xBABE_u16, 0xCAFE_u16] {
+        for val in vals.clone() {
             x = sim.watch(|x| x.bus.ready.val(), x)?;
-            x.bus.from_master.next = val.into();
+            x.bus.from_controller.next = val.into();
             x.bus.strobe.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.bus.strobe.next = false;
@@ -290,9 +293,20 @@ fn test_mosi_port_fifo_works() {
         wait_clock_cycles!(sim, clock, x, 100);
         sim.done(x)
     });
+    sim.add_testbench(move |mut sim: Sim<MOSIPortFIFOTest>| {
+        let mut x = sim.init()?;
+        for val in vals.clone() {
+            x = sim.watch(|x| !x.fifo.empty.val(), x)?;
+            sim_assert!(sim, x.fifo.data_out.val() == val, x);
+            x.fifo.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo.read.next = false;
+        }
+        sim.done(x)
+    });
     sim.run_traced(
         Box::new(uut),
-        1000,
+        5000,
         std::fs::File::create(vcd_path!("mosi_fifo.vcd")).unwrap(),
     )
     .unwrap();

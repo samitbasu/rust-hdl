@@ -22,12 +22,12 @@ impl<const D: usize> Logic for MISOPort<D> {
         self.clock_out.next = self.bus.clock.val();
         self.address_active.clk.next = self.bus.clock.val();
         self.address_active.d.next = self.bus.select.val();
-        self.bus.to_master.next = 0_usize.into();
+        self.bus.to_controller.next = 0_usize.into();
         self.bus.ready.next = false;
         self.strobe_out.next = false;
         if self.address_active.q.val() {
             self.bus.ready.next = self.ready_in.val();
-            self.bus.to_master.next = self.port_in.val();
+            self.bus.to_controller.next = self.port_in.val();
             self.strobe_out.next = self.bus.strobe.val();
         }
     }
@@ -36,7 +36,7 @@ impl<const D: usize> Logic for MISOPort<D> {
 #[test]
 fn test_local_in_port_is_synthesizable() {
     let mut dev = MISOPort::<16>::default();
-    dev.bus.from_master.connect();
+    dev.bus.from_controller.connect();
     dev.bus.select.connect();
     dev.bus.clock.connect();
     dev.bus.strobe.connect();

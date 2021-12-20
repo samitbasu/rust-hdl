@@ -35,18 +35,18 @@ impl<const D: usize> Logic for MOSIPort<D> {
         if self.address_active.q.val() {
             self.bus.ready.next = self.ready.val() & self.bus.select.val();
             if self.bus.strobe.val() {
-                self.state.d.next = self.bus.from_master.val();
+                self.state.d.next = self.bus.from_controller.val();
             }
             self.strobe.d.next = self.bus.strobe.val();
         }
-        self.bus.to_master.next = 0_usize.into();
+        self.bus.to_controller.next = 0_usize.into();
     }
 }
 
 #[test]
 fn test_local_out_port_is_synthesizable() {
     let mut dev = MOSIPort::<16>::default();
-    dev.bus.from_master.connect();
+    dev.bus.from_controller.connect();
     dev.bus.clock.connect();
     dev.bus.select.connect();
     dev.bus.strobe.connect();

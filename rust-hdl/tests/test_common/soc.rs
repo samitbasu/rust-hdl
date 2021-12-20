@@ -51,14 +51,14 @@ impl Logic for SoCTestChip {
         self.mosi_port.clock.next = self.sys_clock.val();
         self.miso_port.clock.next = self.sys_clock.val();
         self.data_fifo.clock.next = self.sys_clock.val();
-        self.mosi_port.bus.from_master.next = self.soc_host.bus.from_master.val();
+        self.mosi_port.bus.from_controller.next = self.soc_host.bus.from_controller.val();
         self.mosi_port.bus.strobe.next = self.soc_host.bus.strobe.val();
         self.mosi_port.bus.addr.next = self.soc_host.bus.addr.val();
-        self.miso_port.bus.from_master.next = self.soc_host.bus.from_master.val();
+        self.miso_port.bus.from_controller.next = self.soc_host.bus.from_controller.val();
         self.miso_port.bus.strobe.next = self.soc_host.bus.strobe.val();
         self.miso_port.bus.addr.next = self.soc_host.bus.addr.val();
-        self.soc_host.bus.to_master.next =
-            self.miso_port.bus.to_master.val() | self.mosi_port.bus.to_master.val();
+        self.soc_host.bus.to_controller.next =
+            self.miso_port.bus.to_controller.val() | self.mosi_port.bus.to_controller.val();
         self.soc_host.bus.ready.next =
             self.miso_port.bus.ready.val() | self.mosi_port.bus.ready.val();
         // Wire the MOSI port to the input of the data_fifo

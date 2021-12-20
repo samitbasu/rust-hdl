@@ -25,17 +25,17 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Bridge<D, A, N> {
     #[hdl_gen]
     fn update(&mut self) {
         self.upstream.ready.next = false;
-        self.upstream.to_master.next = 0_usize.into();
+        self.upstream.to_controller.next = 0_usize.into();
         for i in 0_usize..N {
-            self.nodes[i].from_master.next = 0_usize.into();
+            self.nodes[i].from_controller.next = 0_usize.into();
             self.nodes[i].select.next = false;
             self.nodes[i].strobe.next = false;
             self.nodes[i].clock.next = self.upstream.clock.val();
             if self.upstream.address.val().index() == i {
-                self.nodes[i].from_master.next = self.upstream.from_master.val();
+                self.nodes[i].from_controller.next = self.upstream.from_controller.val();
                 self.nodes[i].select.next = true;
                 self.nodes[i].strobe.next = self.upstream.strobe.val();
-                self.upstream.to_master.next = self.nodes[i].to_master.val();
+                self.upstream.to_controller.next = self.nodes[i].to_controller.val();
                 self.upstream.ready.next = self.nodes[i].ready.val();
             }
         }
@@ -47,12 +47,12 @@ fn test_bridge_is_synthesizable() {
     let mut uut = Bridge::<16, 8, 6>::default();
     uut.upstream.address.connect();
     uut.upstream.ready.connect();
-    uut.upstream.from_master.connect();
+    uut.upstream.from_controller.connect();
     uut.upstream.strobe.connect();
     uut.upstream.clock.connect();
     uut.upstream.address.connect();
     for ndx in 0..6 {
-        uut.nodes[ndx].to_master.connect();
+        uut.nodes[ndx].to_controller.connect();
         uut.nodes[ndx].ready.connect();
     }
     uut.connect_all();
