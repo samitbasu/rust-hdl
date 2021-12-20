@@ -1,41 +1,27 @@
 // A simple, local bus for attaching stuff together on the FPGA
 use crate::core::prelude::*;
 use crate::widgets::dff::DFF;
-use crate::widgets::soc::bus::LocalBusD;
+use crate::widgets::soc::bus::SoCPortResponder;
 
 // An input port simply stores the value written to it's input back to
 // the master.  The address comparison logic is registered to improve the
 // timing analysis of the bus.
-#[derive(LogicBlock)]
-pub struct MISOPort<const D: usize, const A: usize> {
-    pub bus: LocalBusD<D, A>,
+#[derive(LogicBlock, Default)]
+pub struct MISOPort<const D: usize> {
+    pub bus: SoCPortResponder<D>,
     pub port_in: Signal<In, Bits<D>>,
-    pub clock: Signal<In, Clock>,
+    pub clock_out: Signal<Out, Clock>,
     pub ready_in: Signal<In, Bit>,
     pub strobe_out: Signal<Out, Bit>,
     address_active: DFF<Bit>,
-    my_address: Constant<Bits<A>>,
 }
 
-impl<const D: usize, const A: usize> MISOPort<D, A> {
-    pub fn new(address: Bits<A>) -> Self {
-        Self {
-            bus: Default::default(),
-            port_in: Default::default(),
-            clock: Default::default(),
-            ready_in: Default::default(),
-            strobe_out: Default::default(),
-            address_active: Default::default(),
-            my_address: Constant::new(address),
-        }
-    }
-}
-
-impl<const D: usize, const A: usize> Logic for MISOPort<D, A> {
+impl<const D: usize> Logic for MISOPort<D> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.address_active.clk.next = self.clock.val();
-        self.address_active.d.next = self.bus.addr.val() == self.my_address.val();
+        self.clock_out.next = self.bus.clock.val();
+        self.address_active.clk.next = self.bus.clock.val();
+        self.address_active.d.next = self.bus.select.val();
         self.bus.to_master.next = 0_usize.into();
         self.bus.ready.next = false;
         self.strobe_out.next = false;
@@ -49,12 +35,13 @@ impl<const D: usize, const A: usize> Logic for MISOPort<D, A> {
 
 #[test]
 fn test_local_in_port_is_synthesizable() {
-    let mut dev = MISOPort::<16, 8>::new(53_u8.into());
+    let mut dev = MISOPort::<16>::default();
     dev.bus.from_master.connect();
-    dev.bus.addr.connect();
-    dev.clock.connect();
+    dev.bus.select.connect();
+    dev.bus.clock.connect();
     dev.bus.strobe.connect();
     dev.port_in.connect();
+    dev.ready_in.connect();
     dev.connect_all();
     let vlog = generate_verilog(&dev);
     println!("{}", vlog);

@@ -1,7 +1,7 @@
 use crate::core::prelude::*;
 use crate::widgets::bidirectional_bus::FifoBusIn;
 use crate::widgets::dff::DFF;
-use crate::widgets::soc::bus::LocalBusM;
+use crate::widgets::soc::bus::SoCBusController;
 
 // For now, we will hard code the op codes
 // 00 - NOOP
@@ -30,17 +30,17 @@ enum BaseControllerState {
 // but the internal logic needs to handle the differences in address
 // space bits, data widths, etc.
 #[derive(LogicBlock, Default)]
-pub struct BaseController {
+pub struct BaseController<const A: usize> {
     pub cpu: FifoBusIn<Bits<16>>, // Word-stream from/to the CPU
     pub clock: Signal<In, Clock>, // All in a single clock domain
     state: DFF<BaseControllerState>,
-    pub bus: LocalBusM<16, 8>,
+    pub bus: SoCBusController<16, { A }>,
     counter: DFF<Bits<16>>,
     opcode: Signal<Local, Bits<8>>,
-    address: DFF<Bits<8>>,
+    address: DFF<Bits<A>>,
 }
 
-impl Logic for BaseController {
+impl<const A: usize> Logic for BaseController<A> {
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the logic
@@ -56,7 +56,8 @@ impl Logic for BaseController {
         self.cpu.read.next = false;
         self.cpu.to_bus.next = 0_usize.into();
         self.cpu.write.next = false;
-        self.bus.addr.next = self.address.q.val();
+        self.bus.clock.next = self.clock.val();
+        self.bus.address.next = self.address.q.val();
         self.bus.from_master.next = 0_usize.into();
         self.bus.strobe.next = false;
         match self.state.q.val() {
@@ -70,20 +71,20 @@ impl Logic for BaseController {
                         self.state.d.next = BaseControllerState::Ping;
                     } else if self.opcode.val() == 2_u8 {
                         // Latch the address
-                        self.address.d.next = self.cpu.from_bus.val().get_bits::<8>(0);
+                        self.address.d.next = self.cpu.from_bus.val().get_bits::<A>(0);
                         self.cpu.read.next = true;
                         self.state.d.next = BaseControllerState::ReadLoadCount;
                     } else if self.opcode.val() == 3_u8 {
                         // Latch the address
-                        self.address.d.next = self.cpu.from_bus.val().get_bits::<8>(0);
+                        self.address.d.next = self.cpu.from_bus.val().get_bits::<A>(0);
                         self.cpu.read.next = true;
                         self.state.d.next = BaseControllerState::WriteLoadCount;
                     } else if self.opcode.val() == 4_u8 {
-                        self.address.d.next = self.cpu.from_bus.val().get_bits::<8>(0);
+                        self.address.d.next = self.cpu.from_bus.val().get_bits::<A>(0);
                         self.cpu.read.next = true;
                         self.state.d.next = BaseControllerState::PollWait;
                     } else if self.opcode.val() == 5_u8 {
-                        self.address.d.next = self.cpu.from_bus.val().get_bits::<8>(0);
+                        self.address.d.next = self.cpu.from_bus.val().get_bits::<A>(0);
                         self.cpu.read.next = true;
                         self.state.d.next = BaseControllerState::StreamWait;
                     }
@@ -136,7 +137,7 @@ impl Logic for BaseController {
             }
             BaseControllerState::Poll => {
                 if !self.cpu.full.val() {
-                    self.cpu.to_bus.next = (bit_cast::<16, 8>(self.address.q.val()) << 8_usize)
+                    self.cpu.to_bus.next = (bit_cast::<16, { A }>(self.address.q.val()) << 8_usize)
                         | bit_cast::<16, 1>(self.bus.ready.val().into());
                     self.cpu.write.next = true;
                     self.state.d.next = BaseControllerState::Idle;
@@ -164,7 +165,7 @@ impl Logic for BaseController {
 
 #[test]
 fn test_base_controller_is_synthesizable() {
-    let mut uut = BaseController::default();
+    let mut uut = BaseController::<4>::default();
     uut.clock.connect();
     uut.cpu.from_bus.connect();
     uut.cpu.empty.connect();

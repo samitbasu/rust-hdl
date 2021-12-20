@@ -2,27 +2,15 @@ use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
-#[derive(LogicBlock)]
+#[derive(LogicBlock, Default)]
 struct ControllerTest {
     to_cpu_fifo: SynchronousFIFO<Bits<16>, 6, 7, 1>,
     from_cpu_fifo: SynchronousFIFO<Bits<16>, 6, 7, 1>,
-    controller: BaseController,
-    port: MOSIPort<16, 8>,
-    iport: MISOPort<16, 8>,
+    controller: BaseController<2>,
+    bridge: Bridge<16, 2, 2>,
+    port: MOSIPort<16>,
+    iport: MISOPort<16>,
     clock: Signal<In, Clock>,
-}
-
-impl Default for ControllerTest {
-    fn default() -> Self {
-        Self {
-            to_cpu_fifo: Default::default(),
-            from_cpu_fifo: Default::default(),
-            controller: Default::default(),
-            port: MOSIPort::new(0x53_u8.into()),
-            iport: MISOPort::new(0x54_u8.into()),
-            clock: Default::default(),
-        }
-    }
 }
 
 impl Logic for ControllerTest {
@@ -32,8 +20,6 @@ impl Logic for ControllerTest {
         self.to_cpu_fifo.clock.next = self.clock.val();
         self.from_cpu_fifo.clock.next = self.clock.val();
         self.controller.clock.next = self.clock.val();
-        self.port.clock.next = self.clock.val();
-        self.iport.clock.next = self.clock.val();
         // Connect the cpu fifo to the controller
         self.controller.cpu.from_bus.next = self.from_cpu_fifo.data_out.val();
         self.controller.cpu.empty.next = self.from_cpu_fifo.empty.val();
@@ -42,19 +28,11 @@ impl Logic for ControllerTest {
         self.to_cpu_fifo.data_in.next = self.controller.cpu.to_bus.val();
         self.to_cpu_fifo.write.next = self.controller.cpu.write.val();
         self.controller.cpu.full.next = self.to_cpu_fifo.full.val();
-        // Connect the controller to the port
-        self.port.bus.from_master.next = self.controller.bus.from_master.val();
-        self.port.bus.strobe.next = self.controller.bus.strobe.val();
-        self.port.bus.addr.next = self.controller.bus.addr.val();
-        // Connect the controller to the iport
-        self.iport.bus.from_master.next = self.controller.bus.from_master.val();
-        self.iport.bus.strobe.next = self.controller.bus.strobe.val();
-        self.iport.bus.addr.next = self.controller.bus.addr.val();
-        // OR the return lines
-        self.controller.bus.to_master.next =
-            self.port.bus.to_master.val() | self.iport.bus.to_master.val();
-        self.controller.bus.ready.next = self.port.bus.ready.val() | self.iport.bus.ready.val();
-        // Make the output port it a flow through port (always ready)
+        // Connect the controller to the bridge
+        self.controller.bus.join(&mut self.bridge.upstream);
+        // Connect the MOSI port to node 0 of the bridge
+        self.bridge.nodes[0].join(&mut self.port.bus);
+        self.bridge.nodes[1].join(&mut self.iport.bus);
         self.port.ready.next = true;
     }
 }
@@ -144,7 +122,7 @@ fn test_write_command_works() {
             // followed by count data elements.
             // Write the command
             x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
-            x.from_cpu_fifo.data_in.next = 0x0353_u16.into();
+            x.from_cpu_fifo.data_in.next = 0x0300_u16.into();
             x.from_cpu_fifo.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu_fifo.write.next = false;
@@ -208,7 +186,7 @@ fn test_read_command_works() {
             // A read command looks like 0x02XXYYYY, where XX is the address, YYYY is the count
             // Write the command
             x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
-            x.from_cpu_fifo.data_in.next = 0x0254_u16.into();
+            x.from_cpu_fifo.data_in.next = 0x0201_u16.into();
             x.from_cpu_fifo.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu_fifo.write.next = false;
@@ -228,14 +206,14 @@ fn test_read_command_works() {
             }
             // Wait 1 clock cycle, and then issue a POLL command
             wait_clock_cycle!(sim, clock, x);
-            x.from_cpu_fifo.data_in.next = 0x0454_u16.into();
+            x.from_cpu_fifo.data_in.next = 0x0401_u16.into();
             x.from_cpu_fifo.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu_fifo.write.next = false;
             // Read the result of the poll back
             x = sim.watch(|x| !x.to_cpu_fifo.empty.val(), x)?;
             // Port should always be ready
-            sim_assert!(sim, x.to_cpu_fifo.data_out.val() == 0x5401_u16, x);
+            sim_assert!(sim, x.to_cpu_fifo.data_out.val() == 0x0101_u16, x);
             x.to_cpu_fifo.read.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.to_cpu_fifo.read.next = false;
@@ -280,7 +258,7 @@ fn test_stream_command_works() {
         // A stream command looks like 0x05XX, where XX is the address to stream from
         // Write the command
         x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
-        x.from_cpu_fifo.data_in.next = 0x0554_u16.into();
+        x.from_cpu_fifo.data_in.next = 0x0501_u16.into();
         x.from_cpu_fifo.write.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.from_cpu_fifo.write.next = false;
@@ -294,7 +272,7 @@ fn test_stream_command_works() {
         }
         // Send a stop command (anything non-zero)
         x = sim.watch(|x| !x.from_cpu_fifo.full.val(), x)?;
-        x.from_cpu_fifo.data_in.next = 0x0554_u16.into();
+        x.from_cpu_fifo.data_in.next = 0x0501_u16.into();
         x.from_cpu_fifo.write.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.from_cpu_fifo.write.next = false;
