@@ -26,6 +26,7 @@ fn test_port_test_synthesizes() {
     uut.bus.clock.connect();
     uut.bus.from_controller.connect();
     uut.bus.address.connect();
+    uut.bus.address_strobe.connect();
     uut.bus.strobe.connect();
     uut.port_a.ready.connect();
     uut.port_b.ready.connect();
@@ -40,6 +41,7 @@ fn test_port_test_works() {
     uut.bus.clock.connect();
     uut.bus.from_controller.connect();
     uut.bus.address.connect();
+    uut.bus.address_strobe.connect();
     uut.bus.strobe.connect();
     uut.port_a.ready.connect();
     uut.port_b.ready.connect();
@@ -52,14 +54,18 @@ fn test_port_test_works() {
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 1_usize.into();
         x.bus.from_controller.next = 0xDEAD_u16.into();
+        x.bus.address_strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
+        x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         x.bus.strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.bus.strobe.next = false;
         x.bus.address.next = 0_usize.into();
         x.bus.from_controller.next = 0xBEEF_u16.into();
+        x.bus.address_strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
+        x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         x.bus.strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
@@ -95,6 +101,7 @@ fn test_port_pipeline() {
     uut.bus.clock.connect();
     uut.bus.from_controller.connect();
     uut.bus.address.connect();
+    uut.bus.address_strobe.connect();
     uut.bus.strobe.connect();
     uut.port_a.ready.connect();
     uut.port_b.ready.connect();
@@ -106,6 +113,9 @@ fn test_port_pipeline() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 1_usize.into();
+        x.bus.address_strobe.next = true;
+        wait_clock_cycle!(sim, clock, x);
+        x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         for val in [0xDEAD_u16, 0xBEEF, 0xBABE, 0xCAFE] {
             x.bus.from_controller.next = val.into();
@@ -158,6 +168,7 @@ fn test_wport_test_synthesizes() {
     let mut uut = MOSIWidePortTest::default();
     uut.clock.connect();
     uut.bus.address.connect();
+    uut.bus.address_strobe.connect();
     uut.bus.from_controller.connect();
     uut.bus.strobe.connect();
     uut.connect_all();
@@ -170,6 +181,7 @@ fn test_wide_port_test_works() {
     let mut uut = MOSIWidePortTest::default();
     uut.clock.connect();
     uut.bus.address.connect();
+    uut.bus.address_strobe.connect();
     uut.bus.from_controller.connect();
     uut.bus.strobe.connect();
     uut.connect_all();
@@ -181,7 +193,9 @@ fn test_wide_port_test_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 0_usize.into();
+        x.bus.address_strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
+        x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         for val in [0xDEAD_u16, 0xBEEF_u16, 0xCAFE_u16, 0x1234_u16] {
             x.bus.strobe.next = true;
@@ -191,7 +205,9 @@ fn test_wide_port_test_works() {
         x.bus.strobe.next = false;
         wait_clock_cycle!(sim, clock, x);
         x.bus.address.next = 1_usize.into();
+        x.bus.address_strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
+        x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         for val in [
             0xBABE_u16, 0x5EA1_u16, 0xFACE_u16, 0xABCD_u16, 0xBABA_u16, 0xCECE_u16, 0x4321_u16,
@@ -257,6 +273,7 @@ fn test_mosi_port_fifo_synthesizes() {
     uut.bus.strobe.connect();
     uut.bus.from_controller.connect();
     uut.bus.address.connect();
+    uut.bus.address_strobe.connect();
     uut.fifo.read.connect();
     uut.clock.connect();
     uut.connect_all();
@@ -268,6 +285,7 @@ fn test_mosi_port_fifo_synthesizes() {
 fn test_mosi_port_fifo_works() {
     let mut uut = MOSIPortFIFOTest::default();
     uut.bus.address.connect();
+    uut.bus.address_strobe.connect();
     uut.bus.strobe.connect();
     uut.bus.from_controller.connect();
     uut.fifo.read.connect();
@@ -282,7 +300,9 @@ fn test_mosi_port_fifo_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 0_usize.into();
+        x.bus.address_strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
+        x.bus.address_strobe.next = false;
         for val in vals.clone() {
             x = sim.watch(|x| x.bus.ready.val(), x)?;
             x.bus.from_controller.next = val.into();

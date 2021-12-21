@@ -37,7 +37,6 @@ pub struct BaseController<const A: usize> {
     pub bus: SoCBusController<16, { A }>,
     counter: DFF<Bits<16>>,
     opcode: Signal<Local, Bits<8>>,
-    address: DFF<Bits<A>>,
 }
 
 impl<const A: usize> Logic for BaseController<A> {
@@ -46,10 +45,8 @@ impl<const A: usize> Logic for BaseController<A> {
         // Clock the logic
         self.state.clk.next = self.clock.val();
         self.counter.clk.next = self.clock.val();
-        self.address.clk.next = self.clock.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();
-        self.address.d.next = self.address.q.val();
         self.opcode.next = self.cpu.from_bus.val().get_bits::<8>(8);
         self.counter.d.next = self.counter.q.val();
         // Default values for output signals.
@@ -57,12 +54,12 @@ impl<const A: usize> Logic for BaseController<A> {
         self.cpu.to_bus.next = 0_usize.into();
         self.cpu.write.next = false;
         self.bus.clock.next = self.clock.val();
-        self.bus.address.next = self.address.q.val();
         self.bus.from_controller.next = 0_usize.into();
         self.bus.strobe.next = false;
+        self.bus.address.next = 0_usize.into();
+        self.bus.address_strobe.next = false;
         match self.state.q.val() {
             BaseControllerState::Idle => {
-                self.address.d.next = 0_usize.into();
                 if !self.cpu.empty.val() {
                     if self.opcode.val() == 0_u16 {
                         // Skip opcodes that are NOOP
@@ -71,20 +68,24 @@ impl<const A: usize> Logic for BaseController<A> {
                         self.state.d.next = BaseControllerState::Ping;
                     } else if self.opcode.val() == 2_u8 {
                         // Latch the address
-                        self.address.d.next = self.cpu.from_bus.val().get_bits::<A>(0);
+                        self.bus.address.next = self.cpu.from_bus.val().get_bits::<A>(0);
+                        self.bus.address_strobe.next = true;
                         self.cpu.read.next = true;
                         self.state.d.next = BaseControllerState::ReadLoadCount;
                     } else if self.opcode.val() == 3_u8 {
                         // Latch the address
-                        self.address.d.next = self.cpu.from_bus.val().get_bits::<A>(0);
+                        self.bus.address.next = self.cpu.from_bus.val().get_bits::<A>(0);
+                        self.bus.address_strobe.next = true;
                         self.cpu.read.next = true;
                         self.state.d.next = BaseControllerState::WriteLoadCount;
                     } else if self.opcode.val() == 4_u8 {
-                        self.address.d.next = self.cpu.from_bus.val().get_bits::<A>(0);
+                        self.bus.address.next = self.cpu.from_bus.val().get_bits::<A>(0);
+                        self.bus.address_strobe.next = true;
                         self.cpu.read.next = true;
                         self.state.d.next = BaseControllerState::PollWait;
                     } else if self.opcode.val() == 5_u8 {
-                        self.address.d.next = self.cpu.from_bus.val().get_bits::<A>(0);
+                        self.bus.address.next = self.cpu.from_bus.val().get_bits::<A>(0);
+                        self.bus.address_strobe.next = true;
                         self.cpu.read.next = true;
                         self.state.d.next = BaseControllerState::StreamWait;
                     }
@@ -137,7 +138,7 @@ impl<const A: usize> Logic for BaseController<A> {
             }
             BaseControllerState::Poll => {
                 if !self.cpu.full.val() {
-                    self.cpu.to_bus.next = (bit_cast::<16, { A }>(self.address.q.val()) << 8_usize)
+                    self.cpu.to_bus.next = bits::<16>(0xFF00)
                         | bit_cast::<16, 1>(self.bus.ready.val().into());
                     self.cpu.write.next = true;
                     self.state.d.next = BaseControllerState::Idle;

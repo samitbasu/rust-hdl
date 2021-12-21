@@ -30,6 +30,7 @@ pub use crate::widgets::soc::miso_port::MISOPort;
 pub use crate::widgets::soc::miso_wide_port::MISOWidePort;
 pub use crate::widgets::soc::mosi_port::MOSIPort;
 pub use crate::widgets::soc::mosi_wide_port::MOSIWidePort;
+pub use crate::widgets::soc::router::Router;
 pub use crate::widgets::spi_master::{SPIConfig, SPIMaster, SPIWires};
 pub use crate::widgets::spi_slave::SPISlave;
 pub use crate::widgets::strobe::Strobe;

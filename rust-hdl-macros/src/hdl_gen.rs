@@ -202,6 +202,10 @@ fn hdl_compute(m: &syn::Expr) -> Result<TS> {
         Expr::MethodCall(method) => hdl_method(method),
         Expr::Lit(lit) => hdl_literal(lit),
         Expr::Cast(cast) => hdl_cast(&cast),
+        Expr::Index(_ndx) => {
+            let ndx_expanded = common::fixup_ident(quote!(#m).to_string());
+            Ok(quote!(ast::VerilogExpression::Signal(#ndx_expanded.to_string())))
+        }
         _ => Err(syn::Error::new(
             m.span(),
             format!("Unsupported expression type: {:?}", m),

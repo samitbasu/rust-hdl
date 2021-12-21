@@ -33,6 +33,7 @@ use crate::core::prelude::*;
 #[join = "SoCBusResponder"]
 pub struct SoCBusController<const D: usize, const A: usize> {
     pub address: Signal<Out, Bits<A>>,
+    pub address_strobe: Signal<Out, Bit>,
     pub from_controller: Signal<Out, Bits<D>>,
     pub to_controller: Signal<In, Bits<D>>,
     pub ready: Signal<In, Bit>,
@@ -44,6 +45,7 @@ pub struct SoCBusController<const D: usize, const A: usize> {
 #[join = "SoCBusController"]
 pub struct SoCBusResponder<const D: usize, const A: usize> {
     pub address: Signal<In, Bits<A>>,
+    pub address_strobe: Signal<In, Bit>,
     pub from_controller: Signal<In, Bits<D>>,
     pub to_controller: Signal<Out, Bits<D>>,
     pub ready: Signal<Out, Bit>,

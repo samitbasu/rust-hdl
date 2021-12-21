@@ -213,7 +213,7 @@ fn test_read_command_works() {
             // Read the result of the poll back
             x = sim.watch(|x| !x.to_cpu_fifo.empty.val(), x)?;
             // Port should always be ready
-            sim_assert!(sim, x.to_cpu_fifo.data_out.val() == 0x0101_u16, x);
+            sim_assert!(sim, x.to_cpu_fifo.data_out.val() == 0xFF01_u16, x);
             x.to_cpu_fifo.read.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.to_cpu_fifo.read.next = false;
