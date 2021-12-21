@@ -21,16 +21,6 @@ pub use crate::widgets::pwm::PulseWidthModulator;
 pub use crate::widgets::ram::RAM;
 pub use crate::widgets::rom::ROM;
 pub use crate::widgets::shot::Shot;
-pub use crate::widgets::soc::bridge::Bridge;
-pub use crate::widgets::soc::bus::{
-    SoCBusController, SoCBusResponder, SoCPortController, SoCPortResponder,
-};
-pub use crate::widgets::soc::controller::BaseController;
-pub use crate::widgets::soc::miso_port::MISOPort;
-pub use crate::widgets::soc::miso_wide_port::MISOWidePort;
-pub use crate::widgets::soc::mosi_port::MOSIPort;
-pub use crate::widgets::soc::mosi_wide_port::MOSIWidePort;
-pub use crate::widgets::soc::router::Router;
 pub use crate::widgets::spi_master::{SPIConfig, SPIMaster, SPIWires};
 pub use crate::widgets::spi_slave::SPISlave;
 pub use crate::widgets::strobe::Strobe;

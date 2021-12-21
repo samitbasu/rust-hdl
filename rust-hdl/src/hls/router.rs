@@ -1,5 +1,6 @@
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
+use crate::hls::bus::{SoCBusResponder, SoCBusController};
 
 // A router allows you to connect multiple bridges to a single master
 // Each bridge is assigned a base address (they must be non-overlapping).

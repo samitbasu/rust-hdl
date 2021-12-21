@@ -1,5 +1,5 @@
 use crate::core::prelude::*;
-use crate::widgets::soc::bus::*;
+use crate::hls::bus::*;
 use crate::widgets::prelude::DFF;
 
 // A simple bus bridge.  It connects to the master on the one side, and

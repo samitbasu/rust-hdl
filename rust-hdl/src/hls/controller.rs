@@ -1,7 +1,7 @@
 use crate::core::prelude::*;
 use crate::widgets::bidirectional_bus::FifoBusIn;
 use crate::widgets::dff::DFF;
-use crate::widgets::soc::bus::SoCBusController;
+use crate::hls::bus::SoCBusController;
 
 // For now, we will hard code the op codes
 // 00 - NOOP

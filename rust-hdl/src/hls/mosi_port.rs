@@ -1,6 +1,6 @@
 use crate::core::prelude::*;
 use crate::widgets::dff::DFF;
-use crate::widgets::soc::bus::SoCPortResponder;
+use crate::hls::bus::SoCPortResponder;
 
 // An output port simply stores the value written to that memory location
 // by the master.  The value is latched.
