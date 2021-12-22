@@ -329,3 +329,17 @@ impl<T: Synth> Signal<InOut, T> {
         }
     }
 }
+
+impl<T: Synth> Signal<InOut, T> {
+    pub fn join(&mut self, other: &mut Signal<InOut, T>) {
+        self.simulate_connected_tristate(other);
+    }
+    pub fn join_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+        let details = VerilogLinkDetails {
+            my_name: my_name.into(),
+            owner_name: owner_name.into(),
+            other_name: other_name.into(),
+        };
+        vec![VerilogLink::Bidirectional(details)]
+    }
+}

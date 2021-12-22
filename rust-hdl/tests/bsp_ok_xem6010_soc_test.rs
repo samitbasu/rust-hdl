@@ -40,11 +40,11 @@ impl Logic for OpalKellySoCTest {
         self.read_delay.clk.next = self.ok_host.ti_clk.val();
         self.dut.clock.next = self.ok_host.ti_clk.val();
         self.dut.sys_clock.next = self.sys_clock.val();
-        self.dut.cpu_bus.to_controller.next = self.pipe_in.dataout.val();
-        self.dut.cpu_bus.write.next = self.pipe_in.write.val();
-        self.pipe_out.datain.next = self.dut.cpu_bus.from_controller.val();
+        self.dut.from_cpu.data.next = self.pipe_in.dataout.val();
+        self.dut.from_cpu.write.next = self.pipe_in.write.val();
+        self.pipe_out.datain.next = self.dut.to_cpu.data.val();
         self.read_delay.d.next = self.pipe_out.read.val();
-        self.dut.cpu_bus.read.next = self.read_delay.q.val();
+        self.dut.to_cpu.read.next = self.read_delay.q.val();
         self.pipe_in.ok1.next = self.ok_host.ok1.val();
         self.pipe_out.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.pipe_in.ok2.val() | self.pipe_out.ok2.val();

@@ -7,8 +7,8 @@ use rust_hdl::widgets::prelude::*;
 struct ControllerTest {
     to_cpu: FIFOReadController<16>,
     from_cpu: FIFOWriteController<16>,
-    to_cpu_fifo: HLSFIFO<16, 6, 7, 1>,
-    from_cpu_fifo: HLSFIFO<16, 6, 7, 1>,
+    to_cpu_fifo: SyncFIFO<16, 6, 7, 1>,
+    from_cpu_fifo: SyncFIFO<16, 6, 7, 1>,
     controller: BaseController<2>,
     bridge: Bridge<16, 2, 2>,
     port: MOSIPort<16>,
@@ -20,8 +20,8 @@ impl Logic for ControllerTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the clocks
-        self.to_cpu.clock.next = self.clock.val();
-        self.from_cpu.clock.next = self.clock.val();
+        self.to_cpu_fifo.clock.next = self.clock.val();
+        self.from_cpu_fifo.clock.next = self.clock.val();
         // Connect the test interfaces
         self.from_cpu.join(&mut self.from_cpu_fifo.bus_write);
         self.from_cpu_fifo
@@ -43,10 +43,8 @@ impl Logic for ControllerTest {
 fn make_controller_test() -> ControllerTest {
     let mut uut = ControllerTest::default();
     uut.clock.connect();
-    uut.from_cpu.clock.connect();
     uut.from_cpu.data.connect();
     uut.from_cpu.write.connect();
-    uut.to_cpu.clock.connect();
     uut.to_cpu.read.connect();
     uut.iport.port_in.connect();
     uut.iport.ready_in.connect();

@@ -11,7 +11,7 @@ fn test_fir_is_synthesizable() {
     uut.uut.clock.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    yosys_validate("fir", &vlog).unwrap();
+    yosys_validate("fir_synth", &vlog).unwrap();
 }
 
 #[test]
@@ -24,7 +24,7 @@ fn test_fir_impulse_response_is_expected() {
     uut.uut.clock.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    yosys_validate("fir", &vlog).unwrap();
+    yosys_validate("fir_sim", &vlog).unwrap();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<MACFIRTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<MACFIRTest>| {

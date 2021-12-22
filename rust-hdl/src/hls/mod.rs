@@ -1,3 +1,4 @@
+pub mod bidi;
 pub mod bridge;
 pub mod bus;
 pub mod controller;

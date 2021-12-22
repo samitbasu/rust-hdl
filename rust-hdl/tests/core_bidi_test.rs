@@ -4,7 +4,7 @@ use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 struct BusTest {
-    pub device: BidiDevice<Bits<8>, 4, 5>,
+    pub device: BidiSimulatedDevice<Bits<8>, 4, 5>,
     pub master: BidiMaster<Bits<8>, 4, 5>,
     pub clock: Signal<In, Clock>,
 }

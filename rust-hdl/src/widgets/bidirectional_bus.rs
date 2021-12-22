@@ -4,6 +4,7 @@ use crate::widgets::dff::DFF;
 use crate::widgets::prelude::{SynchronousFIFO, TristateBuffer};
 
 #[derive(Clone, Debug, Default, LogicInterface)]
+#[join = "FifoBusIn"]
 pub struct FifoBus<T: Synth> {
     pub to_bus: Signal<In, T>,
     pub write: Signal<In, Bit>,
@@ -14,6 +15,7 @@ pub struct FifoBus<T: Synth> {
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]
+#[join = "FifoBus"]
 pub struct FifoBusIn<T: Synth> {
     pub to_bus: Signal<Out, T>,
     pub write: Signal<Out, Bit>,
@@ -24,6 +26,7 @@ pub struct FifoBusIn<T: Synth> {
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]
+#[join = "BidiBusD"]
 pub struct BidiBusM<T: Synth> {
     pub sig_inout: Signal<InOut, T>,
     pub sig_empty: Signal<In, Bit>,
@@ -34,6 +37,7 @@ pub struct BidiBusM<T: Synth> {
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]
+#[join = "BidiBusM"]
 pub struct BidiBusD<T: Synth> {
     pub sig_inout: Signal<InOut, T>,
     pub sig_empty: Signal<Out, Bit>,
@@ -155,7 +159,7 @@ fn test_bidi_master2_synthesizable() {
 }
 
 #[derive(LogicBlock, Default)]
-pub struct BidiDevice<T: Synth, const N: usize, const NP1: usize> {
+pub struct BidiSimulatedDevice<T: Synth, const N: usize, const NP1: usize> {
     pub bus: BidiBusD<T>,
     pub clock: Signal<In, Clock>,
     bus_buffer: TristateBuffer<T>,
@@ -164,7 +168,7 @@ pub struct BidiDevice<T: Synth, const N: usize, const NP1: usize> {
     pub data: FifoBus<T>,
 }
 
-impl<T: Synth, const N: usize, const NP1: usize> Logic for BidiDevice<T, N, NP1> {
+impl<T: Synth, const N: usize, const NP1: usize> Logic for BidiSimulatedDevice<T, N, NP1> {
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the logic
@@ -197,7 +201,7 @@ impl<T: Synth, const N: usize, const NP1: usize> Logic for BidiDevice<T, N, NP1>
 
 #[test]
 fn test_bidi_device_synthesizable() {
-    let mut uut = BidiDevice::<Bits<8>, 8, 9>::default();
+    let mut uut = BidiSimulatedDevice::<Bits<8>, 8, 9>::default();
     uut.bus.connect();
     uut.data.read.connect();
     uut.data.write.connect();

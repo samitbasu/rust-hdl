@@ -82,7 +82,6 @@ pub struct FIFOWriteController<const D: usize> {
     pub write: Signal<Out, Bit>,
     pub full: Signal<In, Bit>,
     pub almost_full: Signal<In, Bit>,
-    pub clock: Signal<Out, Clock>,
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]
@@ -92,7 +91,6 @@ pub struct FIFOWriteResponder<const D: usize> {
     pub write: Signal<In, Bit>,
     pub full: Signal<Out, Bit>,
     pub almost_full: Signal<Out, Bit>,
-    pub clock: Signal<In, Clock>,
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]
@@ -102,7 +100,6 @@ pub struct FIFOReadController<const D: usize> {
     pub read: Signal<Out, Bit>,
     pub empty: Signal<In, Bit>,
     pub almost_empty: Signal<In, Bit>,
-    pub clock: Signal<Out, Clock>,
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]
@@ -112,5 +109,4 @@ pub struct FIFOReadResponder<const D: usize> {
     pub read: Signal<In, Bit>,
     pub empty: Signal<Out, Bit>,
     pub almost_empty: Signal<Out, Bit>,
-    pub clock: Signal<In, Clock>,
 }

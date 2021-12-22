@@ -45,8 +45,6 @@ impl<const A: usize> Logic for BaseController<A> {
         // Clock the logic
         self.state.clk.next = self.clock.val();
         self.counter.clk.next = self.clock.val();
-        self.from_cpu.clock.next = self.clock.val();
-        self.to_cpu.clock.next = self.clock.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();
         self.opcode.next = self.from_cpu.data.val().get_bits::<8>(8);

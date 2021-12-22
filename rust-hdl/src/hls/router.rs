@@ -88,6 +88,7 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Router<D, A, N> {
 fn test_router_is_synthesizable() {
     let mut router = Router::<16, 8, 6>::new([4, 8, 12, 4, 4, 4]);
     router.upstream.address.connect();
+    router.upstream.address_strobe.connect();
     router.upstream.from_controller.connect();
     router.upstream.strobe.connect();
     router.upstream.clock.connect();

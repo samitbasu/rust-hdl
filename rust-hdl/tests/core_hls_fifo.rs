@@ -4,15 +4,15 @@ use rust_hdl::hls::prelude::*;
 
 #[derive(LogicBlock, Default)]
 struct HLSFIFOTest {
-    fifo: HLSFIFO<8, 3, 4, 1>,
+    fifo: AsyncFIFO<8, 3, 4, 1>,
     clock: Signal<In, Clock>,
 }
 
 impl Logic for HLSFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.fifo.bus_write.clock.next = self.clock.val();
-        self.fifo.bus_read.clock.next = self.clock.val();
+        self.fifo.write_clock.next = self.clock.val();
+        self.fifo.read_clock.next = self.clock.val();
     }
 }
 

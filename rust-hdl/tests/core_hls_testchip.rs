@@ -4,15 +4,21 @@ use rust_hdl::widgets::prelude::*;
 mod test_common;
 use test_common::soc::SoCTestChip;
 
-#[test]
-fn test_soc_chip_works() {
+#[cfg(test)]
+fn make_test_chip() -> SoCTestChip {
     let mut uut = SoCTestChip::default();
     uut.sys_clock.connect();
     uut.clock.connect();
-    uut.cpu_bus.write.connect();
-    uut.cpu_bus.to_controller.connect();
-    uut.cpu_bus.read.connect();
+    uut.from_cpu.write.connect();
+    uut.from_cpu.data.connect();
+    uut.to_cpu.read.connect();
     uut.connect_all();
+    uut
+}
+
+#[test]
+fn test_soc_chip_works() {
+    let uut = make_test_chip();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<SoCTestChip>| x.clock.next = !x.clock.val());
     sim.add_clock(4, |x: &mut Box<SoCTestChip>| {
@@ -26,16 +32,16 @@ fn test_soc_chip_works() {
         for iter in 0..10 {
             wait_clock_cycles!(sim, clock, x, 5);
             // A ping is 0x01XX, where XX is the code returned by the controller
-            x.cpu_bus.to_controller.next = (0x0167_u16 + iter).into();
-            x.cpu_bus.write.next = true;
+            x.from_cpu.data.next = (0x0167_u16 + iter).into();
+            x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
-            x.cpu_bus.write.next = false;
+            x.from_cpu.write.next = false;
             wait_clock_cycles!(sim, clock, x, 5);
             // Insert a NOOP
-            x.cpu_bus.to_controller.next = 0_u16.into();
-            x.cpu_bus.write.next = true;
+            x.from_cpu.data.next = 0_u16.into();
+            x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
-            x.cpu_bus.write.next = false;
+            x.from_cpu.write.next = false;
             wait_clock_cycles!(sim, clock, x, 5);
         }
         sim.done(x)
@@ -44,15 +50,11 @@ fn test_soc_chip_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for iter in 0..10 {
-            x = sim.watch(|x| !x.cpu_bus.empty.val(), x)?;
-            sim_assert!(
-                sim,
-                x.cpu_bus.from_controller.val() == (0x0167_u16 + iter),
-                x
-            );
-            x.cpu_bus.read.next = true;
+            x = sim.watch(|x| !x.to_cpu.empty.val(), x)?;
+            sim_assert!(sim, x.to_cpu.data.val() == (0x0167_u16 + iter), x);
+            x.to_cpu.read.next = true;
             wait_clock_cycle!(sim, clock, x);
-            x.cpu_bus.read.next = false;
+            x.to_cpu.read.next = false;
         }
         wait_clock_cycles!(sim, clock, x, 10);
         sim.done(x)
@@ -67,13 +69,7 @@ fn test_soc_chip_works() {
 
 #[test]
 fn test_soc_chip_read_write_works() {
-    let mut uut = SoCTestChip::default();
-    uut.sys_clock.connect();
-    uut.clock.connect();
-    uut.cpu_bus.write.connect();
-    uut.cpu_bus.to_controller.connect();
-    uut.cpu_bus.read.connect();
-    uut.connect_all();
+    let mut uut = make_test_chip();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<SoCTestChip>| x.clock.next = !x.clock.val());
     sim.add_clock(4, |x: &mut Box<SoCTestChip>| {
@@ -86,41 +82,41 @@ fn test_soc_chip_read_write_works() {
         // Send a PING command
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 5);
-        x = sim.watch(|x| !x.cpu_bus.full.val(), x)?;
-        // Write the 4 data elements to port 0x53
-        x.cpu_bus.to_controller.next = 0x0353_u16.into();
-        x.cpu_bus.write.next = true;
+        x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
+        // Write the 4 data elements to port 0x00
+        x.from_cpu.data.next = 0x0300_u16.into();
+        x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
-        x.cpu_bus.write.next = false;
-        x = sim.watch(|x| !x.cpu_bus.full.val(), x)?;
-        x.cpu_bus.to_controller.next = 0x0004_u16.into();
-        x.cpu_bus.write.next = true;
+        x.from_cpu.write.next = false;
+        x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
+        x.from_cpu.data.next = 0x0004_u16.into();
+        x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
-        x.cpu_bus.write.next = false;
+        x.from_cpu.write.next = false;
         for datum in data_in.clone() {
-            x = sim.watch(|x| !x.cpu_bus.full.val(), x)?;
-            x.cpu_bus.to_controller.next = datum.into();
-            x.cpu_bus.write.next = true;
+            x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
+            x.from_cpu.data.next = datum.into();
+            x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
-            x.cpu_bus.write.next = false;
+            x.from_cpu.write.next = false;
         }
-        x = sim.watch(|x| !x.cpu_bus.full.val(), x)?;
-        // Read the 4 data elements from port 0x54
-        x.cpu_bus.to_controller.next = 0x0254_u16.into();
-        x.cpu_bus.write.next = true;
+        x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
+        // Read the 4 data elements from port 0x01
+        x.from_cpu.data.next = 0x0201_u16.into();
+        x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
-        x.cpu_bus.write.next = false;
-        x = sim.watch(|x| !x.cpu_bus.full.val(), x)?;
-        x.cpu_bus.to_controller.next = 0x0004_u16.into();
-        x.cpu_bus.write.next = true;
+        x.from_cpu.write.next = false;
+        x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
+        x.from_cpu.data.next = 0x0004_u16.into();
+        x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
-        x.cpu_bus.write.next = false;
+        x.from_cpu.write.next = false;
         for datum in data_in.clone() {
-            x = sim.watch(|x| !x.cpu_bus.empty.val(), x)?;
-            sim_assert!(sim, x.cpu_bus.from_controller.val() == (datum << 1), x);
-            x.cpu_bus.read.next = true;
+            x = sim.watch(|x| !x.to_cpu.empty.val(), x)?;
+            sim_assert!(sim, x.to_cpu.data.val() == (datum << 1), x);
+            x.to_cpu.read.next = true;
             wait_clock_cycle!(sim, clock, x);
-            x.cpu_bus.read.next = false;
+            x.to_cpu.read.next = false;
         }
         sim.done(x)
     });
