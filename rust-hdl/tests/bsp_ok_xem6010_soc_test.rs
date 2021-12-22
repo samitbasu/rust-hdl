@@ -60,3 +60,10 @@ fn test_opalkelly_xem_6010_soc() {
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/soc_hello"));
 }
+
+#[cfg(feature = "frontpanel")]
+#[test]
+fn test_opalkelly_xem_6010_soc_ping() {
+    use crate::test_common::soc::test_opalkelly_soc_hello;
+    test_opalkelly_soc_hello(target_path!("xem_6010/soc_hello/top.bit")).unwrap();
+}
