@@ -1,9 +1,9 @@
 use crate::common::get_field_names;
 use crate::common::{get_connect_all, get_has_changed, get_update_all, TS};
 use quote::quote;
-use syn::{Result, TypeGenerics};
 use std::collections::HashMap;
 use syn::spanned::Spanned;
+use syn::{Result, TypeGenerics};
 
 pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<TS> {
     let fields = get_field_names(input)?;
