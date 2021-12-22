@@ -1,6 +1,6 @@
 use crate::core::prelude::*;
+use crate::hls::bus::{SoCBusController, SoCBusResponder};
 use crate::widgets::prelude::*;
-use crate::hls::bus::{SoCBusResponder, SoCBusController};
 
 // A router allows you to connect multiple bridges to a single master
 // Each bridge is assigned a base address (they must be non-overlapping).
@@ -21,13 +21,13 @@ pub struct Router<const D: usize, const A: usize, const N: usize> {
 impl<const D: usize, const A: usize, const N: usize> Router<D, A, N> {
     pub fn new(address_count: [usize; N]) -> Self {
         let zero = Constant::<Bits<A>>::new(0usize.into());
-        let mut node_start_address : [Constant<Bits<A>>; N] = array_init::array_init(|_| zero);
-        let mut node_end_address : [Constant<Bits<A>>; N] = array_init::array_init(|_| zero);
+        let mut node_start_address: [Constant<Bits<A>>; N] = array_init::array_init(|_| zero);
+        let mut node_end_address: [Constant<Bits<A>>; N] = array_init::array_init(|_| zero);
         let mut offset = 0;
         for (ndx, count) in address_count.iter().enumerate() {
             assert_ne!(*count, 0);
-            node_start_address[ndx]  = Constant::<Bits<A>>::new(offset.into());
-            node_end_address[ndx] = Constant::<Bits<A>>:: new((offset + count).into());
+            node_start_address[ndx] = Constant::<Bits<A>>::new(offset.into());
+            node_end_address[ndx] = Constant::<Bits<A>>::new((offset + count).into());
             offset = offset + count;
         }
         Self {
@@ -37,7 +37,7 @@ impl<const D: usize, const A: usize, const N: usize> Router<D, A, N> {
             node_end_address,
             active: Default::default(),
             virtual_address: Default::default(),
-            address_strobe_delay: Default::default()
+            address_strobe_delay: Default::default(),
         }
     }
 }
@@ -61,11 +61,13 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Router<D, A, N> {
             self.nodes[i].address_strobe.next = false;
             self.nodes[i].strobe.next = false;
             self.nodes[i].clock.next = self.upstream.clock.val();
-            if (self.upstream.address.val() >= self.node_start_address[i].val()) &
-                (self.upstream.address.val() < self.node_end_address[i].val()) &
-                self.upstream.address_strobe.val() {
+            if (self.upstream.address.val() >= self.node_start_address[i].val())
+                & (self.upstream.address.val() < self.node_end_address[i].val())
+                & self.upstream.address_strobe.val()
+            {
                 self.active.d.next = i.into();
-                self.virtual_address.d.next = self.upstream.address.val() - self.node_start_address[i].val();
+                self.virtual_address.d.next =
+                    self.upstream.address.val() - self.node_start_address[i].val();
             }
             if self.active.q.val().index() == i {
                 self.nodes[i].from_controller.next = self.upstream.from_controller.val();

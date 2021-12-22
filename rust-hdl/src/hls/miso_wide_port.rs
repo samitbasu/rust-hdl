@@ -1,6 +1,6 @@
 use crate::core::prelude::*;
-use crate::widgets::dff::DFF;
 use crate::hls::bus::SoCPortResponder;
+use crate::widgets::dff::DFF;
 
 #[derive(LogicBlock)]
 pub struct MISOWidePort<const W: usize, const D: usize> {

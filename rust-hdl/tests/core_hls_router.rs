@@ -24,7 +24,6 @@ impl Logic for RouterTest {
     }
 }
 
-
 #[cfg(test)]
 fn make_test_router() -> RouterTest {
     let mut uut = RouterTest::default();
@@ -54,7 +53,7 @@ fn test_router_is_synthesizable() {
 fn test_router_function() {
     let router = make_test_router();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x : &mut Box<RouterTest>| { x.clock.next = !x.clock.val() });
+    sim.add_clock(5, |x: &mut Box<RouterTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<RouterTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
@@ -70,16 +69,25 @@ fn test_router_function() {
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<RouterTest>| {
-       let mut x = sim.init()?;
+        let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         x = sim.watch(|x| x.router.nodes[1].address.val() == 0x03_u8, x)?;
         x.router.nodes[1].ready.next = true;
         x = sim.watch(|x| x.router.nodes[1].strobe.val(), x)?;
-        sim_assert!(sim, x.router.nodes[1].from_controller.val() == 0xDEAD_u16, x);
+        sim_assert!(
+            sim,
+            x.router.nodes[1].from_controller.val() == 0xDEAD_u16,
+            x
+        );
         wait_clock_cycles!(sim, clock, x, 10);
         sim.done(x)
     });
-    sim.run_traced(Box::new(router), 1000, std::fs::File::create(vcd_path!("router.vcd")).unwrap()).unwrap();
+    sim.run_traced(
+        Box::new(router),
+        1000,
+        std::fs::File::create(vcd_path!("router.vcd")).unwrap(),
+    )
+    .unwrap();
 }
 
 #[derive(LogicBlock)]
@@ -92,7 +100,7 @@ struct RouterTestDevice {
 impl Default for RouterTestDevice {
     fn default() -> Self {
         Self {
-          upstream: Default::default(),
+            upstream: Default::default(),
             bridge: Default::default(),
             mosi_ports: array_init::array_init(|_| Default::default()),
         }
@@ -131,7 +139,6 @@ fn test_device_synthesizes() {
     yosys_validate("router_test_device", &vlog).unwrap();
 }
 
-
 #[derive(LogicBlock)]
 struct RouterTestSetup {
     pub upstream: SoCBusResponder<16, 8>,
@@ -146,7 +153,7 @@ impl Default for RouterTestSetup {
             upstream: Default::default(),
             router: Router::new([5, 5, 5]),
             dev_a: array_init::array_init(|_| Default::default()),
-            clock: Default::default()
+            clock: Default::default(),
         }
     }
 }
@@ -187,16 +194,16 @@ fn test_router_test_setup_synthesizes() {
     yosys_validate("router_test_setup", &vlog).unwrap();
 }
 
-
 #[test]
 fn test_router_test_setup_works() {
     let uut = make_router_test_setup();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Box<RouterTestSetup>| x.clock.next = !x.clock.val());
-    let dataset = [0xBEAF_u16, 0xDEED, 0xCAFE, 0xBABE,
-        0x1234, 0x5678, 0x900B, 0xB001,
-        0xDEAD, 0xBEEF, 0x5EA1, 0x5AFE,
-        0xAAAA, 0x5A13, 0x8675,
+    sim.add_clock(5, |x: &mut Box<RouterTestSetup>| {
+        x.clock.next = !x.clock.val()
+    });
+    let dataset = [
+        0xBEAF_u16, 0xDEED, 0xCAFE, 0xBABE, 0x1234, 0x5678, 0x900B, 0xB001, 0xDEAD, 0xBEEF, 0x5EA1,
+        0x5AFE, 0xAAAA, 0x5A13, 0x8675,
     ];
     sim.add_testbench(move |mut sim: Sim<RouterTestSetup>| {
         let mut x = sim.init()?;
@@ -221,17 +228,45 @@ fn test_router_test_setup_works() {
         wait_clock_true!(sim, clock, x);
         for dev in 0..3 {
             for node in 0..5 {
-                x = sim.watch(move |x| x.dev_a[dev.clone()].mosi_ports[node.clone()].bus.select.val(), x)?;
-                x = sim.watch(move |x| x.dev_a[dev.clone()].mosi_ports[node.clone()].strobe_out.val(), x)?;
-                println!("Dataset {} {} {:x} {:x}",
-                    dev, node, dataset[dev*5+node], x.dev_a[dev.clone()].mosi_ports[node.clone()].port_out.val()
+                x = sim.watch(
+                    move |x| {
+                        x.dev_a[dev.clone()].mosi_ports[node.clone()]
+                            .bus
+                            .select
+                            .val()
+                    },
+                    x,
+                )?;
+                x = sim.watch(
+                    move |x| {
+                        x.dev_a[dev.clone()].mosi_ports[node.clone()]
+                            .strobe_out
+                            .val()
+                    },
+                    x,
+                )?;
+                println!(
+                    "Dataset {} {} {:x} {:x}",
+                    dev,
+                    node,
+                    dataset[dev * 5 + node],
+                    x.dev_a[dev.clone()].mosi_ports[node.clone()].port_out.val()
                 );
-                sim_assert!(sim, x.dev_a[dev.clone()].mosi_ports[node.clone()].port_out.val() == dataset[dev*5+node], x);
+                sim_assert!(
+                    sim,
+                    x.dev_a[dev.clone()].mosi_ports[node.clone()].port_out.val()
+                        == dataset[dev * 5 + node],
+                    x
+                );
                 wait_clock_cycle!(sim, clock, x);
             }
         }
         sim.done(x)
     });
-    sim.run_traced(Box::new(uut), 10000,
-    std::fs::File::create(vcd_path!("router_test_setup_function.vcd")).unwrap()).unwrap();
+    sim.run_traced(
+        Box::new(uut),
+        10000,
+        std::fs::File::create(vcd_path!("router_test_setup_function.vcd")).unwrap(),
+    )
+    .unwrap();
 }

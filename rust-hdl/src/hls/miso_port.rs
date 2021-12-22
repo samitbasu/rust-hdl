@@ -1,7 +1,7 @@
 // A simple, local bus for attaching stuff together on the FPGA
 use crate::core::prelude::*;
-use crate::widgets::dff::DFF;
 use crate::hls::bus::SoCPortResponder;
+use crate::widgets::dff::DFF;
 
 // An input port simply stores the value written to it's input back to
 // the master.  The address comparison logic is registered to improve the
