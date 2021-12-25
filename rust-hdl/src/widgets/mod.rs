@@ -1,6 +1,6 @@
 pub mod accum;
 pub mod async_fifo;
-pub mod bidirectional_bus;
+//pub mod bidirectional_bus;
 pub mod cross_fifo;
 pub mod dff;
 pub mod edge_detector;

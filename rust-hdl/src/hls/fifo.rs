@@ -3,15 +3,15 @@ use crate::hls::bus::{FIFOReadResponder, FIFOWriteResponder};
 use crate::widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
-pub struct SyncFIFO<const D: usize, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
-    pub bus_write: FIFOWriteResponder<D>,
-    pub bus_read: FIFOReadResponder<D>,
+pub struct SyncFIFO<T: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
+    pub bus_write: FIFOWriteResponder<T>,
+    pub bus_read: FIFOReadResponder<T>,
     pub clock: Signal<In, Clock>,
-    fifo: SynchronousFIFO<Bits<D>, N, NP1, BLOCK_SIZE>,
+    fifo: SynchronousFIFO<T, N, NP1, BLOCK_SIZE>,
 }
 
-impl<const D: usize, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
-    for SyncFIFO<D, N, NP1, BLOCK_SIZE>
+impl<T: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
+    for SyncFIFO<T, N, NP1, BLOCK_SIZE>
 {
     #[hdl_gen]
     fn update(&mut self) {
@@ -30,16 +30,16 @@ impl<const D: usize, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Lo
 }
 
 #[derive(LogicBlock, Default)]
-pub struct AsyncFIFO<const D: usize, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
-    pub bus_write: FIFOWriteResponder<D>,
+pub struct AsyncFIFO<T: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
+    pub bus_write: FIFOWriteResponder<T>,
     pub write_clock: Signal<In, Clock>,
-    pub bus_read: FIFOReadResponder<D>,
+    pub bus_read: FIFOReadResponder<T>,
     pub read_clock: Signal<In, Clock>,
-    fifo: AsynchronousFIFO<Bits<D>, N, NP1, BLOCK_SIZE>,
+    fifo: AsynchronousFIFO<T, N, NP1, BLOCK_SIZE>,
 }
 
-impl<const D: usize, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
-    for AsyncFIFO<D, N, NP1, BLOCK_SIZE>
+impl<T: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
+    for AsyncFIFO<T, N, NP1, BLOCK_SIZE>
 {
     #[hdl_gen]
     fn update(&mut self) {
@@ -60,7 +60,7 @@ impl<const D: usize, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Lo
 
 #[test]
 fn test_hsl_fifo_synthesizes() {
-    let mut uut = AsyncFIFO::<8, 6, 7, 1>::default();
+    let mut uut = AsyncFIFO::<Bits<8>, 6, 7, 1>::default();
     uut.write_clock.connect();
     uut.bus_write.write.connect();
     uut.bus_write.data.connect();
@@ -73,7 +73,7 @@ fn test_hsl_fifo_synthesizes() {
 
 #[test]
 fn test_hsl_sync_fifo_synthesizes() {
-    let mut uut = SyncFIFO::<8, 6, 7, 1>::default();
+    let mut uut = SyncFIFO::<Bits<8>, 6, 7, 1>::default();
     uut.clock.connect();
     uut.bus_write.write.connect();
     uut.bus_write.data.connect();

@@ -77,8 +77,8 @@ pub struct SoCPortResponder<const D: usize> {
 
 #[derive(Clone, Debug, Default, LogicInterface)]
 #[join = "FIFOWriteResponder"]
-pub struct FIFOWriteController<const D: usize> {
-    pub data: Signal<Out, Bits<D>>,
+pub struct FIFOWriteController<T: Synth> {
+    pub data: Signal<Out, T>,
     pub write: Signal<Out, Bit>,
     pub full: Signal<In, Bit>,
     pub almost_full: Signal<In, Bit>,
@@ -86,8 +86,8 @@ pub struct FIFOWriteController<const D: usize> {
 
 #[derive(Clone, Debug, Default, LogicInterface)]
 #[join = "FIFOWriteController"]
-pub struct FIFOWriteResponder<const D: usize> {
-    pub data: Signal<In, Bits<D>>,
+pub struct FIFOWriteResponder<T: Synth> {
+    pub data: Signal<In, T>,
     pub write: Signal<In, Bit>,
     pub full: Signal<Out, Bit>,
     pub almost_full: Signal<Out, Bit>,
@@ -95,8 +95,8 @@ pub struct FIFOWriteResponder<const D: usize> {
 
 #[derive(Clone, Debug, Default, LogicInterface)]
 #[join = "FIFOReadResponder"]
-pub struct FIFOReadController<const D: usize> {
-    pub data: Signal<In, Bits<D>>,
+pub struct FIFOReadController<T: Synth> {
+    pub data: Signal<In, T>,
     pub read: Signal<Out, Bit>,
     pub empty: Signal<In, Bit>,
     pub almost_empty: Signal<In, Bit>,
@@ -104,8 +104,8 @@ pub struct FIFOReadController<const D: usize> {
 
 #[derive(Clone, Debug, Default, LogicInterface)]
 #[join = "FIFOReadController"]
-pub struct FIFOReadResponder<const D: usize> {
-    pub data: Signal<Out, Bits<D>>,
+pub struct FIFOReadResponder<T: Synth> {
+    pub data: Signal<Out, T>,
     pub read: Signal<In, Bit>,
     pub empty: Signal<Out, Bit>,
     pub almost_empty: Signal<Out, Bit>,

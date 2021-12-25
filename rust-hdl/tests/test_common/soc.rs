@@ -1,7 +1,9 @@
+#[cfg(feature = "frontpanel")]
 use crate::test_common::tools::ok_test_prelude;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::widgets::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError, OkHandle};
 use std::thread::sleep;
 
@@ -9,10 +11,10 @@ use std::thread::sleep;
 pub struct SoCTestChip {
     pub clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
-    pub from_cpu: FIFOWriteResponder<16>,
-    pub to_cpu: FIFOReadResponder<16>,
-    from_cpu_fifo: AsyncFIFO<16, 8, 9, 1>,
-    to_cpu_fifo: AsyncFIFO<16, 8, 9, 1>,
+    pub from_cpu: FIFOWriteResponder<Bits<16>>,
+    pub to_cpu: FIFOReadResponder<Bits<16>>,
+    from_cpu_fifo: AsyncFIFO<Bits<16>, 8, 9, 1>,
+    to_cpu_fifo: AsyncFIFO<Bits<16>, 8, 9, 1>,
     soc_host: BaseController<8>,
     bridge: Bridge<16, 8, 2>,
     mosi_port: MOSIPort<16>, // At address
@@ -91,16 +93,19 @@ fn mk_u8(dat: &[u16]) -> Vec<u8> {
     ret
 }
 
+#[cfg(feature = "frontpanel")]
 fn send_ping(hnd: &OkHandle, id: u8) -> Result<(), OkError> {
     hnd.write_to_pipe_in(0x80, &mk_u8(&[0x0100 | (id as u16)]))
 }
 
+#[cfg(feature = "frontpanel")]
 fn read_ping(hnd: &OkHandle) -> Result<u16, OkError> {
     let mut data = [0x0_u8; 2];
     hnd.read_from_pipe_out(0xA0, &mut data)?;
     Ok(make_u16_buffer(&data)[0])
 }
 
+#[cfg(feature = "frontpanel")]
 fn write_array(hnd: &OkHandle, address: u8, data: &[u16]) -> Result<(), OkError> {
     let mut msg = vec![0_u16; data.len() + 2];
     msg[0] = 0x0300 | (address as u16);
@@ -112,6 +117,7 @@ fn write_array(hnd: &OkHandle, address: u8, data: &[u16]) -> Result<(), OkError>
     hnd.write_to_pipe_in(0x80, &mk_u8(&msg))
 }
 
+#[cfg(feature = "frontpanel")]
 fn read_array(hnd: &OkHandle, address: u8, len: usize) -> Result<Vec<u16>, OkError> {
     let mut msg = vec![0_u16; 2];
     msg[0] = 0x0200 | (address as u16);
@@ -122,6 +128,7 @@ fn read_array(hnd: &OkHandle, address: u8, len: usize) -> Result<Vec<u16>, OkErr
     Ok(make_u16_buffer(&data))
 }
 
+#[cfg(feature = "frontpanel")]
 pub fn test_opalkelly_soc_hello(bit_name: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_name)?;
     for iter in 0..100 {

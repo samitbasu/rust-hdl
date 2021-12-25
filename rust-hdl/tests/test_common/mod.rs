@@ -9,6 +9,7 @@ pub mod blinky;
 pub mod ddr;
 #[cfg(feature = "frontpanel")]
 pub mod download;
+pub mod fifo_tester;
 #[cfg(feature = "frontpanel")]
 pub mod fir;
 #[cfg(feature = "frontpanel")]

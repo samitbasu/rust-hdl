@@ -3,9 +3,9 @@ pub use crate::declare_expanding_fifo;
 pub use crate::declare_narrowing_fifo;
 pub use crate::declare_sync_fifo;
 pub use crate::widgets::async_fifo::AsynchronousFIFO;
-pub use crate::widgets::bidirectional_bus::{
-    BidiBusD, BidiBusM, BidiMaster, BidiSimulatedDevice, FifoBus, FifoBusIn,
-};
+//pub use crate::widgets::bidirectional_bus::{
+//    BidiBusD, BidiBusM, BidiMaster, BidiSimulatedDevice, FifoBus, FifoBusIn,
+//};
 pub use crate::widgets::cross_fifo::CrossNarrowFIFO;
 pub use crate::widgets::cross_fifo::CrossWidenFIFO;
 pub use crate::widgets::dff::DFF;

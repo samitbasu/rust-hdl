@@ -1,3 +1,4 @@
+pub use crate::hls::bidi::{BidiBusD, BidiBusM, BidiMaster, BidiSimulatedDevice};
 pub use crate::hls::bridge::Bridge;
 pub use crate::hls::bus::{
     FIFOReadController, FIFOReadResponder, FIFOWriteController, FIFOWriteResponder,

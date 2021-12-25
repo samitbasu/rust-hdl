@@ -6,8 +6,10 @@ use rust_hdl::widgets::prelude::*;
 mod test_common;
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl::bsp::ok_xem6010::XEM6010;
+#[cfg(feature = "frontpanel")]
 use test_common::soc::SoCTestChip;
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 struct OpalKellySoCTest {
     hi: OpalKellyHostInterface,
@@ -19,6 +21,7 @@ struct OpalKellySoCTest {
     read_delay: DFF<Bit>,
 }
 
+#[cfg(feature = "frontpanel")]
 impl Default for OpalKellySoCTest {
     fn default() -> Self {
         Self {
@@ -33,6 +36,7 @@ impl Default for OpalKellySoCTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellySoCTest {
     #[hdl_gen]
     fn update(&mut self) {
