@@ -190,7 +190,7 @@ impl<T: Synth, const N: usize> Logic for LazyFIFOReader<T, N> {
 }
 
 pub fn bursty_rand() -> Bits<32> {
-    if rand::thread_rng().gen::<f64>() < 0.6 {
+    if rand::thread_rng().gen::<f64>() < 0.9 {
         Bits::from(0_u32)
     } else {
         Bits::from((rand::thread_rng().gen::<f64>() * 40.0) as u32)
