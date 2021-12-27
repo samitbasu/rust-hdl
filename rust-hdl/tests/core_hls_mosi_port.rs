@@ -250,8 +250,7 @@ fn test_wide_port_test_works() {
 struct MOSIPortFIFOTest {
     bus: SoCBusController<16, 2>,
     bridge: Bridge<16, 2, 1>,
-    port_a: MOSIPort<16>,
-    fifo: SynchronousFIFO<Bits<16>, 4, 5, 1>,
+    port_a: MOSIFIFOPort<16, 4, 5, 1>,
     clock: Signal<In, Clock>,
 }
 
@@ -261,10 +260,6 @@ impl Logic for MOSIPortFIFOTest {
         self.bus.clock.next = self.clock.val();
         self.bus.join(&mut self.bridge.upstream);
         self.bridge.nodes[0].join(&mut self.port_a.bus);
-        self.fifo.clock.next = self.port_a.clock_out.val();
-        self.fifo.data_in.next = self.port_a.port_out.val();
-        self.fifo.write.next = self.port_a.strobe_out.val();
-        self.port_a.ready.next = !self.fifo.full.val();
     }
 }
 
@@ -275,7 +270,7 @@ fn test_mosi_port_fifo_synthesizes() {
     uut.bus.from_controller.connect();
     uut.bus.address.connect();
     uut.bus.address_strobe.connect();
-    uut.fifo.read.connect();
+    uut.port_a.fifo_bus.link_connect_dest();
     uut.clock.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
@@ -289,7 +284,7 @@ fn test_mosi_port_fifo_works() {
     uut.bus.address_strobe.connect();
     uut.bus.strobe.connect();
     uut.bus.from_controller.connect();
-    uut.fifo.read.connect();
+    uut.port_a.fifo_bus.link_connect_dest();
     uut.clock.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
@@ -316,13 +311,7 @@ fn test_mosi_port_fifo_works() {
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortFIFOTest>| {
         let mut x = sim.init()?;
-        for val in vals.clone() {
-            x = sim.watch(|x| !x.fifo.empty.val(), x)?;
-            sim_assert!(sim, x.fifo.data_out.val() == val, x);
-            x.fifo.read.next = true;
-            wait_clock_cycle!(sim, clock, x);
-            x.fifo.read.next = false;
-        }
+        hls_fifo_read!(sim, clock, x, port_a.fifo_bus, vals.clone());
         sim.done(x)
     });
     sim.run_traced(

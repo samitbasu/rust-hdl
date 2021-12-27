@@ -1,3 +1,4 @@
+use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::widgets::prelude::*;
@@ -246,8 +247,7 @@ fn test_wide_port_test_works() {
 struct MISOPortFIFOTest {
     bus: SoCBusController<16, 2>,
     bridge: Bridge<16, 2, 1>,
-    port_a: MISOPort<16>,
-    fifo: SynchronousFIFO<Bits<16>, 2, 3, 1>,
+    port_a: MISOFIFOPort<16, 2, 3, 1>,
     clock: Signal<In, Clock>,
 }
 
@@ -257,10 +257,6 @@ impl Logic for MISOPortFIFOTest {
         self.bus.clock.next = self.clock.val();
         self.bus.join(&mut self.bridge.upstream);
         self.bridge.nodes[0].join(&mut self.port_a.bus);
-        self.fifo.clock.next = self.clock.val();
-        self.port_a.port_in.next = self.fifo.data_out.val();
-        self.port_a.ready_in.next = !self.fifo.empty.val();
-        self.fifo.read.next = self.port_a.strobe_out.val();
     }
 }
 
@@ -272,8 +268,7 @@ fn test_miso_fifo_synthesizes() {
     uut.bus.address_strobe.connect();
     uut.bus.from_controller.connect();
     uut.bus.strobe.connect();
-    uut.fifo.data_in.connect();
-    uut.fifo.write.connect();
+    uut.port_a.fifo_bus.link_connect_dest();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("miso_fifo", &vlog).unwrap();
@@ -282,13 +277,12 @@ fn test_miso_fifo_synthesizes() {
 #[test]
 fn test_miso_fifo_works() {
     let mut uut = MISOPortFIFOTest::default();
+    uut.clock.connect();
     uut.bus.address.connect();
     uut.bus.address_strobe.connect();
     uut.bus.from_controller.connect();
     uut.bus.strobe.connect();
-    uut.fifo.data_in.connect();
-    uut.fifo.write.connect();
-    uut.clock.connect();
+    uut.port_a.fifo_bus.link_connect_dest();
     uut.connect_all();
     let mut sim = Simulation::new();
     let test_data = [0xDEAD_u16, 0xBEEF, 0xCAFE, 0xBABE, 0x1234, 0x5678, 0x5423];
@@ -298,13 +292,7 @@ fn test_miso_fifo_works() {
     sim.add_testbench(move |mut sim: Sim<MISOPortFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for val in test_data.clone() {
-            x = sim.watch(|x| !x.fifo.full.val(), x)?;
-            x.fifo.data_in.next = val.into();
-            x.fifo.write.next = true;
-            wait_clock_cycle!(sim, clock, x);
-            x.fifo.write.next = false;
-        }
+        hls_fifo_write_lazy!(sim, clock, x, port_a.fifo_bus, test_data.clone());
         wait_clock_cycles!(sim, clock, x, 10);
         sim.done(x)
     });
@@ -328,7 +316,7 @@ fn test_miso_fifo_works() {
     });
     sim.run_traced(
         Box::new(uut),
-        1000,
+        5000,
         std::fs::File::create(vcd_path!("miso_fifo.vcd")).unwrap(),
     )
     .unwrap();

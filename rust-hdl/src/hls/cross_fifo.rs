@@ -2,7 +2,7 @@ use crate::core::prelude::*;
 use crate::hls::bus::{FIFOReadResponder, FIFOWriteResponder};
 use crate::widgets::prelude::*;
 
-#[derive(LogicBlock)]
+#[derive(LogicBlock, Default)]
 pub struct CrossWiden<
     const DN: usize,
     const NN: usize,
@@ -77,7 +77,7 @@ fn test_hsl_cross_fifo_synthesizes() {
     yosys_validate("hsl_cross_fifo", &vlog).unwrap();
 }
 
-#[derive(LogicBlock)]
+#[derive(LogicBlock, Default)]
 pub struct CrossNarrow<
     const DW: usize,
     const WN: usize,
