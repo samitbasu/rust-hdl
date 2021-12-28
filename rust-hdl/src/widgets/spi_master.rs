@@ -39,6 +39,7 @@ pub struct SPIMaster<const N: usize> {
     pub start_send: Signal<In, Bit>,
     pub transfer_done: Signal<Out, Bit>,
     pub continued_transaction: Signal<In, Bit>,
+    pub busy: Signal<Out, Bit>,
     pub wires: SPIWires,
     register_out: DFF<Bits<N>>,
     register_in: DFF<Bits<N>>,
@@ -69,6 +70,7 @@ impl<const N: usize> SPIMaster<N> {
             start_send: Default::default(),
             transfer_done: Default::default(),
             continued_transaction: Default::default(),
+            busy: Default::default(),
             wires: Default::default(),
             register_out: Default::default(),
             register_in: Default::default(),
@@ -127,9 +129,11 @@ impl<const N: usize> Logic for SPIMaster<N> {
         self.mosi_flop.d.next = self.mosi_flop.q.val();
         self.clock_state.d.next = self.clock_state.q.val();
         self.pointerm1.next = self.pointer.q.val() - 1_u32;
+        self.busy.next = true;
         // The main state machine
         match self.state.q.val() {
             SPIState::Idle => {
+                self.busy.next = false;
                 self.clock_state.d.next = self.cpol.val();
                 if self.start_send.val() {
                     // Capture the outgoing data in our register

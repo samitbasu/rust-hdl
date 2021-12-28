@@ -1,8 +1,7 @@
 use crate::core::prelude::*;
-use crate::hls::bus::{FIFOReadResponder, SoCBusResponder, SoCPortResponder};
+use crate::hls::bus::{FIFOReadResponder, SoCPortResponder};
 use crate::hls::fifo::SyncFIFO;
 use crate::hls::mosi_port::MOSIPort;
-use crate::widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 pub struct MOSIFIFOPort<const W: usize, const N: usize, const NP1: usize, const BLOCK: u32> {

@@ -16,3 +16,4 @@ pub mod prelude;
 pub mod reducer;
 pub mod router;
 pub mod sim;
+pub mod spi;

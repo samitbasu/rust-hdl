@@ -10,6 +10,7 @@ use crate::widgets::prelude::DFF;
 pub struct Bridge<const D: usize, const A: usize, const N: usize> {
     pub upstream: SoCBusResponder<D, A>,
     pub nodes: [SoCPortController<D>; N],
+    pub clock_out: Signal<Out, Clock>,
     address_latch: DFF<Bits<A>>,
 }
 
@@ -19,6 +20,7 @@ impl<const D: usize, const A: usize, const N: usize> Default for Bridge<D, A, N>
         Self {
             upstream: Default::default(),
             nodes: array_init::array_init(|_| Default::default()),
+            clock_out: Default::default(),
             address_latch: Default::default(),
         }
     }
@@ -27,6 +29,7 @@ impl<const D: usize, const A: usize, const N: usize> Default for Bridge<D, A, N>
 impl<const D: usize, const A: usize, const N: usize> Logic for Bridge<D, A, N> {
     #[hdl_gen]
     fn update(&mut self) {
+        self.clock_out.next = self.upstream.clock.val();
         self.upstream.ready.next = false;
         self.upstream.to_controller.next = 0_usize.into();
         self.address_latch.clk.next = self.upstream.clock.val();

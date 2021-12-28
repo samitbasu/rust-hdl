@@ -3,7 +3,6 @@ use crate::hls::bus::FIFOWriteResponder;
 use crate::hls::fifo::SyncFIFO;
 use crate::hls::miso_port::MISOPort;
 use crate::hls::prelude::SoCPortResponder;
-use crate::widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 pub struct MISOFIFOPort<const W: usize, const N: usize, const NP1: usize, const BLOCK: u32> {
