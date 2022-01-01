@@ -1,4 +1,6 @@
 use crate::core::prelude::*;
+use crate::sim::sdr_sdram::sdr_sdram_cmd_sim::SDRAMCommand;
+use crate::sim::sdr_sdram::sdr_sdram_timings::{nanos_to_clocks, MemoryTimings};
 use crate::widgets::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -13,23 +15,11 @@ enum MasterState {
     Error,
 }
 
-#[derive(Copy, Clone, PartialEq, Debug, LogicState)]
-pub enum MicronCommand {
-    LoadModeRegister,
-    AutoRefresh,
-    Precharge,
-    BurstTerminate,
-    Write,
-    Read,
-    Active,
-    NOP,
-}
-
 // Clock enable, and DQM are ignored.
 #[derive(LogicBlock)]
-pub struct MicronSDRSimulator<const D: usize> {
+pub struct SDRAMSimulator<const D: usize> {
     pub clock: Signal<In, Clock>,
-    pub cmd: Signal<In, MicronCommand>,
+    pub cmd: Signal<In, SDRAMCommand>,
     pub bank: Signal<In, Bits<2>>,
     pub address: Signal<In, Bits<12>>,
     pub data: Signal<InOut, Bits<D>>,
@@ -51,7 +41,7 @@ pub struct MicronSDRSimulator<const D: usize> {
     load_mode_timing: Constant<Bits<32>>,
 }
 
-impl<const D: usize> Logic for MicronSDRSimulator<D> {
+impl<const D: usize> Logic for SDRAMSimulator<D> {
     #[hdl_gen]
     fn update(&mut self) {
         // Clock logic
@@ -77,7 +67,7 @@ impl<const D: usize> Logic for MicronSDRSimulator<D> {
         self.test_ready.next = false;
         match self.state.q.val() {
             MasterState::Boot => {
-                if self.cmd.val() != MicronCommand::NOP {
+                if self.cmd.val() != SDRAMCommand::NOP {
                     self.state.d.next = MasterState::Error;
                 }
                 self.counter.d.next = self.counter.q.val() + 1_usize;
@@ -87,8 +77,8 @@ impl<const D: usize> Logic for MicronSDRSimulator<D> {
             }
             MasterState::WaitPrecharge => {
                 match self.cmd.val() {
-                    MicronCommand::NOP => {}
-                    MicronCommand::Precharge => {
+                    SDRAMCommand::NOP => {}
+                    SDRAMCommand::Precharge => {
                         // make sure the ALL bit is set
                         if self.address.val().get_bit(10_usize) != true {
                             self.state.d.next = MasterState::Error;
@@ -107,17 +97,17 @@ impl<const D: usize> Logic for MicronSDRSimulator<D> {
                 if self.counter.q.val() == self.precharge_delay.val() {
                     self.state.d.next = MasterState::WaitAutorefresh;
                 }
-                if self.cmd.val() != MicronCommand::NOP {
+                if self.cmd.val() != SDRAMCommand::NOP {
                     self.state.d.next = MasterState::Error;
                 }
             }
             MasterState::WaitAutorefresh => match self.cmd.val() {
-                MicronCommand::NOP => {}
-                MicronCommand::AutoRefresh => {
+                SDRAMCommand::NOP => {}
+                SDRAMCommand::AutoRefresh => {
                     self.counter.d.next = 0_usize.into();
                     self.state.d.next = MasterState::Autorefresh;
                 }
-                MicronCommand::LoadModeRegister => {
+                SDRAMCommand::LoadModeRegister => {
                     if self.auto_refresh_init_counter.q.val() < 2_u32.into() {
                         self.state.d.next = MasterState::Error;
                     } else {
@@ -142,7 +132,7 @@ impl<const D: usize> Logic for MicronSDRSimulator<D> {
                 if self.counter.q.val() == self.load_mode_timing.val() {
                     self.state.d.next = MasterState::Ready;
                 }
-                if self.cmd.val() != MicronCommand::NOP {
+                if self.cmd.val() != SDRAMCommand::NOP {
                     self.state.d.next = MasterState::Error;
                 }
                 if self.burst_len.q.val() > 3_u32.into() {
@@ -163,7 +153,7 @@ impl<const D: usize> Logic for MicronSDRSimulator<D> {
                     self.auto_refresh_init_counter.d.next =
                         self.auto_refresh_init_counter.q.val() + 1_usize;
                 }
-                if self.cmd.val() != MicronCommand::NOP {
+                if self.cmd.val() != SDRAMCommand::NOP {
                     self.state.d.next = MasterState::Error;
                 }
             }
@@ -177,34 +167,16 @@ impl<const D: usize> Logic for MicronSDRSimulator<D> {
     }
 }
 
-pub struct MemoryTimings {
-    initial_delay_in_nanoseconds: f64,
-    precharge_command_timing_nanoseconds: f64,
-    autorefresh_command_timing_nanoseconds: f64,
-    load_mode_command_timing_clocks: u32,
-}
-
-impl MemoryTimings {
-    pub fn MT48LC8M16A2() -> Self {
-        Self {
-            initial_delay_in_nanoseconds: 100.0e3,
-            precharge_command_timing_nanoseconds: 20.0,
-            autorefresh_command_timing_nanoseconds: 66.0,
-            load_mode_command_timing_clocks: 2,
-        }
-    }
-}
-
-impl<const D: usize> MicronSDRSimulator<D> {
+impl<const D: usize> SDRAMSimulator<D> {
     pub fn new(timings: MemoryTimings, clock_speed_hz: f64) -> Self {
         // Calculate the number of picoseconds per clock cycle
-        let clock_period_in_nanos = 1.0e9 / clock_speed_hz;
-        let boot_delay =
-            (timings.initial_delay_in_nanoseconds / clock_period_in_nanos).ceil() as u32;
+        let boot_delay = nanos_to_clocks(timings.initial_delay_in_nanoseconds, clock_speed_hz) - 1;
         let precharge_delay =
-            (timings.precharge_command_timing_nanoseconds / clock_period_in_nanos).ceil() as u32;
-        let autorefresh_delay =
-            (timings.autorefresh_command_timing_nanoseconds / clock_period_in_nanos).ceil() as u32;
+            nanos_to_clocks(timings.t_rp_recharge_period_nanoseconds, clock_speed_hz) - 1;
+        let autorefresh_delay = nanos_to_clocks(
+            timings.autorefresh_command_timing_nanoseconds,
+            clock_speed_hz,
+        ) - 1;
         Self {
             clock: Default::default(),
             cmd: Signal::default(),
@@ -230,8 +202,8 @@ impl<const D: usize> MicronSDRSimulator<D> {
 }
 
 #[cfg(test)]
-fn mk_sdr_sim() -> MicronSDRSimulator<16> {
-    let mut uut = MicronSDRSimulator::new(MemoryTimings::MT48LC8M16A2(), 125_000_000.0);
+fn mk_sdr_sim() -> SDRAMSimulator<16> {
+    let mut uut = SDRAMSimulator::new(MemoryTimings::mt48lc8m16a2(), 125_000_000.0);
     uut.clock.connect();
     uut.cmd.connect();
     uut.bank.connect();
@@ -254,35 +226,35 @@ fn test_sdram_init_works() {
     let uut = mk_sdr_sim();
     let mut sim = Simulation::new();
     // Clock period at 125 MHz is 8000ps
-    sim.add_clock(4000, |x: &mut Box<MicronSDRSimulator<16>>| {
+    sim.add_clock(4000, |x: &mut Box<SDRAMSimulator<16>>| {
         x.clock.next = !x.clock.val();
     });
-    sim.add_testbench(move |mut sim: Sim<MicronSDRSimulator<16>>| {
+    sim.add_testbench(move |mut sim: Sim<SDRAMSimulator<16>>| {
         let mut x = sim.init()?;
-        x.cmd.next = MicronCommand::NOP;
+        x.cmd.next = SDRAMCommand::NOP;
         wait_clock_true!(sim, clock, x);
         // Wait for 100 microseconds
         // 100 microseconds = 100 * 1_000_000
         x = sim.wait(100_000_000, x)?;
         wait_clock_true!(sim, clock, x);
         wait_clock_cycle!(sim, clock, x);
-        x.cmd.next = MicronCommand::Precharge;
+        x.cmd.next = SDRAMCommand::Precharge;
         x.address.next = 0xFFF_usize.into();
         wait_clock_cycle!(sim, clock, x);
-        x.cmd.next = MicronCommand::NOP;
-        wait_clock_cycles!(sim, clock, x, 4);
-        x.cmd.next = MicronCommand::AutoRefresh;
+        x.cmd.next = SDRAMCommand::NOP;
+        wait_clock_cycles!(sim, clock, x, 3);
+        x.cmd.next = SDRAMCommand::AutoRefresh;
         wait_clock_cycle!(sim, clock, x);
-        x.cmd.next = MicronCommand::NOP;
-        wait_clock_cycles!(sim, clock, x, 10);
-        x.cmd.next = MicronCommand::AutoRefresh;
+        x.cmd.next = SDRAMCommand::NOP;
+        wait_clock_cycles!(sim, clock, x, 9);
+        x.cmd.next = SDRAMCommand::AutoRefresh;
         wait_clock_cycle!(sim, clock, x);
-        x.cmd.next = MicronCommand::NOP;
-        wait_clock_cycles!(sim, clock, x, 10);
-        x.cmd.next = MicronCommand::LoadModeRegister;
+        x.cmd.next = SDRAMCommand::NOP;
+        wait_clock_cycles!(sim, clock, x, 9);
+        x.cmd.next = SDRAMCommand::LoadModeRegister;
         x.address.next = 0b000_0_00_011_0_011_u32.into();
         wait_clock_cycle!(sim, clock, x);
-        x.cmd.next = MicronCommand::NOP;
+        x.cmd.next = SDRAMCommand::NOP;
         wait_clock_cycles!(sim, clock, x, 20);
         sim_assert!(sim, x.state.q.val() == MasterState::Ready, x);
         sim.done(x)
