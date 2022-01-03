@@ -2,11 +2,13 @@
 pub struct MemoryTimings {
     pub initial_delay_in_nanoseconds: f64,
     pub t_rp_recharge_period_nanoseconds: f64,
-    pub autorefresh_command_timing_nanoseconds: f64,
+    pub t_rfc_autorefresh_period_nanoseconds: f64,
     pub load_mode_command_timing_clocks: u32,
     pub t_ras_row_active_min_time_nanoseconds: f64,
     pub t_rc_row_to_row_min_time_nanoseconds: f64,
     pub t_rcd_row_to_column_min_time_nanoseconds: f64,
+    pub t_rrd_bank_to_bank_activate_min_time_nanoseconds: f64,
+    pub t_refresh_max_interval_nanoseconds: f64,
 }
 
 impl MemoryTimings {
@@ -14,11 +16,13 @@ impl MemoryTimings {
         Self {
             initial_delay_in_nanoseconds: 100.0e3,
             t_rp_recharge_period_nanoseconds: 20.0,
-            autorefresh_command_timing_nanoseconds: 66.0,
+            t_rfc_autorefresh_period_nanoseconds: 66.0,
             load_mode_command_timing_clocks: 2,
             t_ras_row_active_min_time_nanoseconds: 44.0,
             t_rc_row_to_row_min_time_nanoseconds: 66.0,
             t_rcd_row_to_column_min_time_nanoseconds: 20.0,
+            t_rrd_bank_to_bank_activate_min_time_nanoseconds: 15.0,
+            t_refresh_max_interval_nanoseconds: 16e6 / 4096.0,
         }
     }
 }

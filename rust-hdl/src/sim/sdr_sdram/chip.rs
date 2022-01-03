@@ -1,6 +1,8 @@
+use crate::bsp::alchitry_cu::pins::clock;
 use crate::core::prelude::*;
-use crate::sim::sdr_sdram::sdr_sdram_cmd_sim::SDRAMCommand;
-use crate::sim::sdr_sdram::sdr_sdram_timings::{nanos_to_clocks, MemoryTimings};
+use crate::sim::sdr_sdram::bank::MemoryBank;
+use crate::sim::sdr_sdram::cmd::SDRAMCommand;
+use crate::sim::sdr_sdram::timings::{nanos_to_clocks, MemoryTimings};
 use crate::widgets::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -33,12 +35,16 @@ pub struct SDRAMSimulator<const D: usize> {
     burst_type: DFF<Bit>,
     burst_len: DFF<Bits<3>>,
     op_mode: DFF<Bits<2>>,
+    bufz: TristateBuffer<Bits<D>>,
+    banks: [MemoryBank<5, 5, 10, D>; 4],
     // Timings
     // Number of clocks to delay for boot initialization
     boot_delay: Constant<Bits<32>>,
-    precharge_delay: Constant<Bits<32>>,
-    autorefresh_delay: Constant<Bits<32>>,
+    t_rp: Constant<Bits<32>>,
+    t_rfc: Constant<Bits<32>>,
     load_mode_timing: Constant<Bits<32>>,
+    t_rrd: Constant<Bits<32>>,
+    t_refresh_max: Constant<Bits<32>>,
 }
 
 impl<const D: usize> Logic for SDRAMSimulator<D> {
@@ -65,6 +71,37 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
         //
         self.test_error.next = false;
         self.test_ready.next = false;
+        self.data.link(&mut self.bufz.bus);
+        // Connect up the banks to the I/O buffer
+        self.bufz.write_enable.next = false;
+        self.bufz.write_data.next = 0_usize.into();
+        for i in 0..4 {
+            self.banks[i].clock.next = self.clock.val();
+            self.banks[i].write_data.next = self.bufz.read_data.val();
+            if self.banks[i].read_valid.val() {
+                self.bufz.write_data.next = self.banks[i].read_data.val();
+                self.bufz.write_enable.next = true;
+            }
+            self.banks[i].address.next = self.address.val();
+            self.banks[i].cmd.next = self.cmd.val();
+            self.banks[i].write_burst.next = self.write_burst_mode.q.val();
+            self.banks[i].burst_len.next = 1_usize.into();
+            self.banks[i].select.next = true;
+            match self.burst_len.q.val().index() {
+                0 => self.banks[i].burst_len.next = 1_usize.into(),
+                1 => self.banks[i].burst_len.next = 2_usize.into(),
+                2 => self.banks[i].burst_len.next = 4_usize.into(),
+                3 => self.banks[i].burst_len.next = 8_usize.into(),
+                _ => self.state.d.next = MasterState::Error,
+            }
+            self.banks[i].cas_delay.next = 2_usize.into();
+            match self.cas_latency.q.val().index() {
+                0 => self.banks[i].cas_delay.next = 0_usize.into(),
+                2 => self.banks[i].cas_delay.next = 2_usize.into(),
+                3 => self.banks[i].cas_delay.next = 3_usize.into(),
+                _ => self.state.d.next = MasterState::Error,
+            }
+        }
         match self.state.q.val() {
             MasterState::Boot => {
                 if self.cmd.val() != SDRAMCommand::NOP {
@@ -94,7 +131,7 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
             }
             MasterState::Precharge => {
                 self.counter.d.next = self.counter.q.val() + 1_usize;
-                if self.counter.q.val() == self.precharge_delay.val() {
+                if self.counter.q.val() == self.t_rp.val() {
                     self.state.d.next = MasterState::WaitAutorefresh;
                 }
                 if self.cmd.val() != SDRAMCommand::NOP {
@@ -148,7 +185,7 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
             }
             MasterState::Autorefresh => {
                 self.counter.d.next = self.counter.q.val() + 1_usize;
-                if self.counter.q.val() == self.autorefresh_delay.val() {
+                if self.counter.q.val() == self.t_rfc.val() {
                     self.state.d.next = MasterState::WaitAutorefresh;
                     self.auto_refresh_init_counter.d.next =
                         self.auto_refresh_init_counter.q.val() + 1_usize;
@@ -164,19 +201,29 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
                 self.test_ready.next = true;
             }
         }
+        // Any banks that are in error mean the chip is in error.
+        for i in 0_usize..4 {
+            if self.banks[i].error.val() {
+                self.state.d.next = MasterState::Error;
+            }
+        }
     }
 }
 
 impl<const D: usize> SDRAMSimulator<D> {
-    pub fn new(timings: MemoryTimings, clock_speed_hz: f64) -> Self {
+    pub fn new(clock_speed_hz: f64, timings: MemoryTimings) -> Self {
         // Calculate the number of picoseconds per clock cycle
         let boot_delay = nanos_to_clocks(timings.initial_delay_in_nanoseconds, clock_speed_hz) - 1;
         let precharge_delay =
             nanos_to_clocks(timings.t_rp_recharge_period_nanoseconds, clock_speed_hz) - 1;
-        let autorefresh_delay = nanos_to_clocks(
-            timings.autorefresh_command_timing_nanoseconds,
+        let autorefresh_delay =
+            nanos_to_clocks(timings.t_rfc_autorefresh_period_nanoseconds, clock_speed_hz) - 1;
+        let bank_bank_delay = nanos_to_clocks(
+            timings.t_rrd_bank_to_bank_activate_min_time_nanoseconds,
             clock_speed_hz,
         ) - 1;
+        let refresh_max =
+            nanos_to_clocks(timings.t_refresh_max_interval_nanoseconds, clock_speed_hz);
         Self {
             clock: Default::default(),
             cmd: Signal::default(),
@@ -193,17 +240,21 @@ impl<const D: usize> SDRAMSimulator<D> {
             burst_type: Default::default(),
             burst_len: Default::default(),
             op_mode: Default::default(),
+            bufz: Default::default(),
+            banks: array_init::array_init(|_| MemoryBank::new(clock_speed_hz, timings)),
             boot_delay: Constant::new(boot_delay.into()),
-            precharge_delay: Constant::new(precharge_delay.into()),
-            autorefresh_delay: Constant::new(autorefresh_delay.into()),
+            t_rp: Constant::new(precharge_delay.into()),
+            t_rfc: Constant::new(autorefresh_delay.into()),
+            t_rrd: Constant::new(bank_bank_delay.into()),
             load_mode_timing: Constant::new(timings.load_mode_command_timing_clocks.into()),
+            t_refresh_max: Constant::new(refresh_max.into()),
         }
     }
 }
 
 #[cfg(test)]
 fn mk_sdr_sim() -> SDRAMSimulator<16> {
-    let mut uut = SDRAMSimulator::new(MemoryTimings::mt48lc8m16a2(), 125_000_000.0);
+    let mut uut = SDRAMSimulator::new(125_000_000.0, MemoryTimings::mt48lc8m16a2());
     uut.clock.connect();
     uut.cmd.connect();
     uut.bank.connect();
@@ -259,8 +310,6 @@ fn test_sdram_init_works() {
         sim_assert!(sim, x.state.q.val() == MasterState::Ready, x);
         sim.done(x)
     });
-    let mut vcd = vec![];
-    let ret = sim.run_traced(Box::new(uut), 200_000_000, &mut vcd);
-    std::fs::write("sdr_init.vcd", vcd).unwrap();
-    ret.unwrap();
+    sim.run_to_file(Box::new(uut), 200_000_000, "sdr_init.vcd")
+        .unwrap()
 }

@@ -1,4 +1,4 @@
-pub mod sdr_sdram_bank_sim;
-pub mod sdr_sdram_cmd_sim;
-pub mod sdr_sdram_sim;
-pub mod sdr_sdram_timings;
+pub mod bank;
+pub mod chip;
+pub mod cmd;
+pub mod timings;

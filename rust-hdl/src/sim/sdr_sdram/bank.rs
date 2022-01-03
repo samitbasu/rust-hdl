@@ -1,6 +1,6 @@
 use crate::core::prelude::*;
-use crate::sim::sdr_sdram::sdr_sdram_cmd_sim::SDRAMCommand;
-use crate::sim::sdr_sdram::sdr_sdram_timings::{nanos_to_clocks, MemoryTimings};
+use crate::sim::sdr_sdram::cmd::SDRAMCommand;
+use crate::sim::sdr_sdram::timings::{nanos_to_clocks, MemoryTimings};
 use crate::widgets::delay_line::DelayLine;
 use crate::widgets::prelude::*;
 
@@ -33,6 +33,7 @@ pub struct MemoryBank<const R: usize, const C: usize, const A: usize, const D: u
     pub write_data: Signal<In, Bits<D>>,
     pub read_data: Signal<Out, Bits<D>>,
     pub read_valid: Signal<Out, Bit>,
+    pub select: Signal<In, Bit>,
     delay_line: DelayLine<Bits<D>, 7, 3>,
     read_delay_line: DelayLine<Bit, 7, 3>,
     mem: RAM<Bits<D>, A>,
@@ -52,22 +53,19 @@ pub struct MemoryBank<const R: usize, const C: usize, const A: usize, const D: u
 }
 
 impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<R, C, A, D> {
-    pub fn new(clock_frequency_hz: f64, timings: MemoryTimings) -> Self {
+    pub fn new(clock_speed_hz: f64, timings: MemoryTimings) -> Self {
         assert_eq!(R + C, A);
         let t_ras = nanos_to_clocks(
             timings.t_ras_row_active_min_time_nanoseconds,
-            clock_frequency_hz,
+            clock_speed_hz,
         ) - 1;
-        let t_rc = nanos_to_clocks(
-            timings.t_rc_row_to_row_min_time_nanoseconds,
-            clock_frequency_hz,
-        ) - 1;
+        let t_rc =
+            nanos_to_clocks(timings.t_rc_row_to_row_min_time_nanoseconds, clock_speed_hz) - 1;
         let t_rcd = nanos_to_clocks(
             timings.t_rcd_row_to_column_min_time_nanoseconds,
-            clock_frequency_hz,
+            clock_speed_hz,
         ) - 1;
-        let t_rp =
-            nanos_to_clocks(timings.t_rp_recharge_period_nanoseconds, clock_frequency_hz) - 1;
+        let t_rp = nanos_to_clocks(timings.t_rp_recharge_period_nanoseconds, clock_speed_hz) - 1;
         Self {
             clock: Default::default(),
             cas_delay: Default::default(),
@@ -80,6 +78,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<
             write_data: Default::default(),
             read_data: Default::default(),
             read_valid: Default::default(),
+            select: Default::default(),
             delay_line: Default::default(),
             read_delay_line: Default::default(),
             mem: Default::default(),
@@ -149,25 +148,30 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         match self.state.q.val() {
             BankState::Idle => {
                 self.busy.next = false;
-                match self.cmd.val() {
-                    SDRAMCommand::Active => {
-                        // Reset the activate timer
-                        if self.t_activate.q.val() < self.t_rcd.val() {
-                            self.state.d.next = BankState::Error;
-                        } else {
-                            self.t_activate.d.next = 0_usize.into();
-                            // Activate the given row.
-                            // Load the row into the row register
-                            self.active_row.d.next = self.address.val().get_bits::<R>(0_usize);
-                            // Reset the delay timer
-                            self.delay_counter.d.next = 0_usize.into();
-                            // Transition to the activating state.
-                            self.state.d.next = BankState::Active;
+                if self.select.val() {
+                    match self.cmd.val() {
+                        SDRAMCommand::Active => {
+                            // Reset the activate timer
+                            if self.t_activate.q.val() < self.t_rcd.val() {
+                                self.state.d.next = BankState::Error;
+                            } else {
+                                self.t_activate.d.next = 0_usize.into();
+                                // Activate the given row.
+                                // Load the row into the row register
+                                self.active_row.d.next = self.address.val().get_bits::<R>(0_usize);
+                                // Reset the delay timer
+                                self.delay_counter.d.next = 0_usize.into();
+                                // Transition to the activating state.
+                                self.state.d.next = BankState::Active;
+                            }
                         }
-                    }
-                    SDRAMCommand::NOP => {}
-                    _ => {
-                        self.state.d.next = BankState::Error;
+                        SDRAMCommand::NOP => {}
+                        SDRAMCommand::Precharge => {} // See ISSI docs.  Precharging an idle bank is a NOP
+                        SDRAMCommand::AutoRefresh => {} // Handled at the chip level
+                        SDRAMCommand::LoadModeRegister => {} // Ignored by banks
+                        _ => {
+                            self.state.d.next = BankState::Error;
+                        }
                     }
                 }
             }
@@ -313,11 +317,13 @@ fn mk_bank_sim() -> MemoryBank<5, 5, 10, 16> {
     uut.write_burst.connect();
     uut.burst_len.connect();
     uut.write_data.connect();
+    uut.select.connect();
     uut.connect_all();
     uut.burst_len.next = 8_usize.into();
     uut.write_burst.next = true;
     uut.cas_delay.next = 3_usize.into();
     uut.cmd.next = SDRAMCommand::NOP;
+    uut.select.next = true;
     uut
 }
 
