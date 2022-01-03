@@ -225,6 +225,12 @@ impl<T: Send + 'static + Block> Simulation<T> {
         }
         Ok(())
     }
+    pub fn run_to_file(&mut self, x: Box<T>, max_time: u64, name: &str) -> Result<()> {
+        let mut vcd = vec![];
+        let result = self.run_traced(x, max_time, &mut vcd);
+        std::fs::write(name, vcd).unwrap();
+        result
+    }
     pub fn run_traced<W: Write>(&mut self, mut x: Box<T>, max_time: u64, trace: W) -> Result<()> {
         check_connected(x.as_mut());
         let mut vcd = write_vcd_header(trace, x.as_ref());

@@ -2,6 +2,7 @@ pub mod accum;
 pub mod async_fifo;
 //pub mod bidirectional_bus;
 pub mod cross_fifo;
+pub mod delay_line;
 pub mod dff;
 pub mod edge_detector;
 pub mod fifo_expander_n;
