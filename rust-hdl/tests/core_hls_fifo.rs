@@ -1,6 +1,5 @@
 use crate::test_common::fifo_tester;
 use crate::test_common::fifo_tester::{LazyFIFOFeeder, LazyFIFOReader};
-use bsp_ok_xem6010_fir::test_common::fifo_tester;
 use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;

@@ -143,8 +143,6 @@ fn test_bidi2_bus_works() {
         sim_assert!(sim, !x.mtd_reader.error.val(), x);
         sim.done(x)
     });
-    let mut vcd = vec![];
-    let ret = sim.run_traced(Box::new(uut), 100_000, &mut vcd);
-    std::fs::write(vcd_path!("bidi_stress.vcd"), vcd).unwrap();
-    ret.unwrap()
+    sim.run_to_file(Box::new(uut), 500_000, &vcd_path!("bidi_stress.vcd"))
+        .unwrap();
 }

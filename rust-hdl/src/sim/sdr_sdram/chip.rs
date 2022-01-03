@@ -1,4 +1,3 @@
-use crate::bsp::alchitry_cu::pins::clock;
 use crate::core::prelude::*;
 use crate::sim::sdr_sdram::bank::MemoryBank;
 use crate::sim::sdr_sdram::cmd::SDRAMCommand;
@@ -11,7 +10,6 @@ enum MasterState {
     WaitPrecharge,
     Precharge,
     WaitAutorefresh,
-    Autorefresh,
     LoadModeRegister,
     Ready,
     Error,
@@ -41,10 +39,9 @@ pub struct SDRAMSimulator<const D: usize> {
     // Number of clocks to delay for boot initialization
     boot_delay: Constant<Bits<32>>,
     t_rp: Constant<Bits<32>>,
-    t_rfc: Constant<Bits<32>>,
     load_mode_timing: Constant<Bits<32>>,
     t_rrd: Constant<Bits<32>>,
-    t_refresh_max: Constant<Bits<32>>,
+    banks_busy: Signal<Local, Bit>,
 }
 
 impl<const D: usize> Logic for SDRAMSimulator<D> {
@@ -102,6 +99,10 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
                 _ => self.state.d.next = MasterState::Error,
             }
         }
+        self.banks_busy.next = self.banks[0].busy.val()
+            | self.banks[1].busy.val()
+            | self.banks[2].busy.val()
+            | self.banks[3].busy.val();
         match self.state.q.val() {
             MasterState::Boot => {
                 if self.cmd.val() != SDRAMCommand::NOP {
@@ -141,8 +142,12 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
             MasterState::WaitAutorefresh => match self.cmd.val() {
                 SDRAMCommand::NOP => {}
                 SDRAMCommand::AutoRefresh => {
-                    self.counter.d.next = 0_usize.into();
-                    self.state.d.next = MasterState::Autorefresh;
+                    if self.banks_busy.val() {
+                        self.state.d.next = MasterState::Error;
+                    } else {
+                        self.auto_refresh_init_counter.d.next =
+                            self.auto_refresh_init_counter.q.val() + 1_usize;
+                    }
                 }
                 SDRAMCommand::LoadModeRegister => {
                     if self.auto_refresh_init_counter.q.val() < 2_u32.into() {
@@ -183,17 +188,6 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
                     self.state.d.next = MasterState::Error;
                 }
             }
-            MasterState::Autorefresh => {
-                self.counter.d.next = self.counter.q.val() + 1_usize;
-                if self.counter.q.val() == self.t_rfc.val() {
-                    self.state.d.next = MasterState::WaitAutorefresh;
-                    self.auto_refresh_init_counter.d.next =
-                        self.auto_refresh_init_counter.q.val() + 1_usize;
-                }
-                if self.cmd.val() != SDRAMCommand::NOP {
-                    self.state.d.next = MasterState::Error;
-                }
-            }
             MasterState::Error => {
                 self.test_error.next = true;
             }
@@ -216,14 +210,10 @@ impl<const D: usize> SDRAMSimulator<D> {
         let boot_delay = nanos_to_clocks(timings.initial_delay_in_nanoseconds, clock_speed_hz) - 1;
         let precharge_delay =
             nanos_to_clocks(timings.t_rp_recharge_period_nanoseconds, clock_speed_hz) - 1;
-        let autorefresh_delay =
-            nanos_to_clocks(timings.t_rfc_autorefresh_period_nanoseconds, clock_speed_hz) - 1;
         let bank_bank_delay = nanos_to_clocks(
             timings.t_rrd_bank_to_bank_activate_min_time_nanoseconds,
             clock_speed_hz,
         ) - 1;
-        let refresh_max =
-            nanos_to_clocks(timings.t_refresh_max_interval_nanoseconds, clock_speed_hz);
         Self {
             clock: Default::default(),
             cmd: Signal::default(),
@@ -244,10 +234,9 @@ impl<const D: usize> SDRAMSimulator<D> {
             banks: array_init::array_init(|_| MemoryBank::new(clock_speed_hz, timings)),
             boot_delay: Constant::new(boot_delay.into()),
             t_rp: Constant::new(precharge_delay.into()),
-            t_rfc: Constant::new(autorefresh_delay.into()),
             t_rrd: Constant::new(bank_bank_delay.into()),
             load_mode_timing: Constant::new(timings.load_mode_command_timing_clocks.into()),
-            t_refresh_max: Constant::new(refresh_max.into()),
+            banks_busy: Default::default(),
         }
     }
 }

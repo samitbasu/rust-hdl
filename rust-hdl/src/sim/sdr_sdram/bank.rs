@@ -12,6 +12,7 @@ pub enum BankState {
     Precharging,
     Writing,
     Error,
+    Autorefreshing,
 }
 
 // Bank state machine - a bank is simulated using BRAM.
@@ -36,6 +37,8 @@ pub struct MemoryBank<const R: usize, const C: usize, const A: usize, const D: u
     pub select: Signal<In, Bit>,
     delay_line: DelayLine<Bits<D>, 7, 3>,
     read_delay_line: DelayLine<Bit, 7, 3>,
+    refresh_counter: DFF<Bits<32>>,
+    refresh_active: DFF<Bit>,
     mem: RAM<Bits<D>, A>,
     write_reg: DFF<Bits<D>>,
     state: DFF<BankState>,
@@ -49,6 +52,8 @@ pub struct MemoryBank<const R: usize, const C: usize, const A: usize, const D: u
     t_rc: Constant<Bits<32>>,  // Min time from active to activate
     t_rcd: Constant<Bits<32>>, // Min time from active to read/write
     t_rp: Constant<Bits<32>>,  // Precharge command time
+    t_refresh_max: Constant<Bits<32>>,
+    t_rfc: Constant<Bits<32>>,
     row_shift: Constant<Bits<A>>,
 }
 
@@ -66,6 +71,10 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<
             clock_speed_hz,
         ) - 1;
         let t_rp = nanos_to_clocks(timings.t_rp_recharge_period_nanoseconds, clock_speed_hz) - 1;
+        let t_refresh_max =
+            nanos_to_clocks(timings.t_refresh_max_interval_nanoseconds, clock_speed_hz) - 1;
+        let t_rfc =
+            nanos_to_clocks(timings.t_rfc_autorefresh_period_nanoseconds, clock_speed_hz) - 1;
         Self {
             clock: Default::default(),
             cas_delay: Default::default(),
@@ -89,11 +98,15 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<
             burst_counter: Default::default(),
             active_col: Default::default(),
             delay_counter: Default::default(),
+            refresh_counter: Default::default(),
+            refresh_active: Default::default(),
             t_activate: Default::default(),
             t_ras: Constant::new(t_ras.into()),
             t_rc: Constant::new(t_rc.into()),
             t_rcd: Constant::new(t_rcd.into()),
             t_rp: Constant::new(t_rp.into()),
+            t_refresh_max: Constant::new(t_refresh_max.into()),
+            t_rfc: Constant::new(t_rfc.into()),
             row_shift: Constant::new(C.into()),
         }
     }
@@ -117,6 +130,8 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         self.write_reg.clk.next = self.clock.val();
         self.delay_line.clock.next = self.clock.val();
         self.read_delay_line.clock.next = self.clock.val();
+        self.refresh_counter.clk.next = self.clock.val();
+        self.refresh_active.clk.next = self.clock.val();
         // Add latch prevention
         self.state.d.next = self.state.q.val();
         self.active_row.d.next = self.active_row.q.val();
@@ -145,6 +160,8 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         self.read_delay_line.data_in.next = false;
         self.read_delay_line.delay.next = self.cas_delay.val() - 1_usize;
         self.read_valid.next = self.read_delay_line.data_out.val();
+        self.refresh_active.d.next = self.refresh_active.q.val();
+        self.refresh_counter.d.next = self.refresh_counter.q.val() + self.refresh_active.q.val();
         match self.state.q.val() {
             BankState::Idle => {
                 self.busy.next = false;
@@ -167,7 +184,11 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                         }
                         SDRAMCommand::NOP => {}
                         SDRAMCommand::Precharge => {} // See ISSI docs.  Precharging an idle bank is a NOP
-                        SDRAMCommand::AutoRefresh => {} // Handled at the chip level
+                        SDRAMCommand::AutoRefresh => {
+                            self.state.d.next = BankState::Autorefreshing;
+                            self.refresh_active.d.next = true;
+                            self.refresh_counter.d.next = 0_usize.into();
+                        } // Handled at the chip level
                         SDRAMCommand::LoadModeRegister => {} // Ignored by banks
                         _ => {
                             self.state.d.next = BankState::Error;
@@ -224,7 +245,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                         // Did the read finish?
                         if self.burst_counter.q.val() == self.burst_len.val() {
                             self.read_delay_line.data_in.next = false;
-                            if self.auto_precharge.d.next {
+                            if self.auto_precharge.q.val() {
                                 self.delay_counter.d.next = 0_usize.into();
                                 self.state.d.next = BankState::Precharging;
                             } else {
@@ -263,6 +284,16 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                     self.state.d.next = BankState::Error;
                 }
             },
+            BankState::Autorefreshing => match self.cmd.val() {
+                SDRAMCommand::NOP => {
+                    if self.refresh_counter.q.val() == self.t_rfc.val() {
+                        self.state.d.next = BankState::Idle;
+                    }
+                }
+                _ => {
+                    self.state.d.next = BankState::Error;
+                }
+            },
             BankState::Writing => {
                 self.mem.write_enable.next = true;
                 match self.cmd.val() {
@@ -272,7 +303,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                         self.active_col.d.next = self.active_col.q.val() + 1_u32;
                         // Did the write finish?
                         if self.burst_counter.q.val() == self.burst_len.val() - 1_u32 {
-                            if self.auto_precharge.d.next {
+                            if self.auto_precharge.q.val() {
                                 self.delay_counter.d.next = 0_usize.into();
                                 self.state.d.next = BankState::Precharging;
                             } else {
@@ -303,6 +334,9 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                 self.error.next = true;
             }
         }
+        if self.refresh_counter.q.val() >= self.t_refresh_max.val() {
+            self.state.d.next = BankState::Error;
+        }
     }
 }
 
@@ -331,6 +365,7 @@ fn mk_bank_sim() -> MemoryBank<5, 5, 10, 16> {
 fn test_bank_sim_synthesizes() {
     let uut = mk_bank_sim();
     let vlog = generate_verilog(&uut);
+    println!("{}", vlog);
     yosys_validate("sdram_bank", &vlog).unwrap();
 }
 

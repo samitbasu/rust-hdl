@@ -114,6 +114,7 @@ fn test_bidi_master2_synthesizable() {
     uut.clock.connect();
     uut.data_to_bus.empty.connect();
     uut.data_to_bus.almost_empty.connect();
+    uut.data_to_bus.data.connect();
     uut.data_from_bus.full.connect();
     uut.data_from_bus.almost_full.connect();
     uut.connect_all();

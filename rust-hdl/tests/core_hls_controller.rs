@@ -5,10 +5,10 @@ use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 struct ControllerTest {
-    to_cpu: FIFOReadController<16>,
-    from_cpu: FIFOWriteController<16>,
-    to_cpu_fifo: SyncFIFO<16, 6, 7, 1>,
-    from_cpu_fifo: SyncFIFO<16, 6, 7, 1>,
+    to_cpu: FIFOReadController<Bits<16>>,
+    from_cpu: FIFOWriteController<Bits<16>>,
+    to_cpu_fifo: SyncFIFO<Bits<16>, 6, 7, 1>,
+    from_cpu_fifo: SyncFIFO<Bits<16>, 6, 7, 1>,
     controller: BaseController<2>,
     bridge: Bridge<16, 2, 2>,
     port: MOSIPort<16>,

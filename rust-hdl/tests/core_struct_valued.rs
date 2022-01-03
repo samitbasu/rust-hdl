@@ -64,6 +64,7 @@ impl<const D: usize, const A: usize> Logic for DemoCircuit<D, A> {
 fn test_demo_synthesizes() {
     let mut uut = DemoCircuit::<16, 8>::default();
     uut.sig_in.connect();
+    uut.sig_out.connect();
     uut.clock.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
