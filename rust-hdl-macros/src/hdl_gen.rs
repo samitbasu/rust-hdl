@@ -119,7 +119,7 @@ fn hdl_non_indexed_assignment(expr: &syn::ExprAssign) -> Result<TS> {
 
 fn hdl_map_field_assign(expr: &syn::ExprField) -> Result<TS> {
     let expr_expanded = common::fixup_ident(quote!(#expr).to_string());
-    if expr_expanded.ends_with("_val") {
+    if expr_expanded.ends_with("$val") {
         return Err(syn::Error::new(
             expr.span(),
             "Do not assign to .val in HDL.  Use .next instead.",
@@ -130,10 +130,10 @@ fn hdl_map_field_assign(expr: &syn::ExprField) -> Result<TS> {
 
 fn hdl_map_field(expr: &syn::ExprField) -> Result<TS> {
     let expr_expanded = common::fixup_ident(quote!(#expr).to_string());
-    if expr_expanded.ends_with("_next") {
+    if expr_expanded.ends_with("$next") {
         return Err(syn::Error::new(
             expr.span(),
-            "Do not read from .next in HDL.  Use .val instead.",
+            "Do not read from .next in HDL.  Use .val() instead.",
         ));
     }
     Ok(quote!(ast::VerilogExpression::Signal(#expr_expanded.to_string())))
@@ -141,6 +141,12 @@ fn hdl_map_field(expr: &syn::ExprField) -> Result<TS> {
 
 fn hdl_map_path(expr: &syn::ExprPath) -> Result<TS> {
     let expr_expanded = common::fixup_ident(quote!(#expr).to_string());
+    if expr_expanded.ends_with("$next") {
+        return Err(syn::Error::new(
+            expr.span(),
+            format!("{} {}", "Do not read from .next in HDL.  Use .val() instead.", expr_expanded),
+        ));
+    }
     Ok(quote!(ast::VerilogExpression::Signal(#expr_expanded.to_string())))
 }
 
