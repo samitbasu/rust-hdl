@@ -126,7 +126,7 @@ impl<T: Synth> LogicLink for Signal<InOut, T> {
         } else {
             other.next = self.val();
         }
-        other.signal_is_undriven = self.signal_is_undriven;
+        self.signal_is_undriven = other.signal_is_undriven;
     }
     fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
         let details = VerilogLinkDetails {
