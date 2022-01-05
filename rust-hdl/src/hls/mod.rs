@@ -15,5 +15,6 @@ pub mod mosi_wide_port;
 pub mod prelude;
 pub mod reducer;
 pub mod router;
+pub mod sdram_fifo;
 pub mod sim;
 pub mod spi;

@@ -223,18 +223,6 @@ fn test_stream_command_works() {
         wait_clock_true!(sim, sys_clock, x);
         let o_data = (0..100).map(|x| 0xBAB0_u16 + x).collect::<Vec<_>>();
         hls_fifo_write_lazy!(sim, sys_clock, x, fport.fifo_bus, o_data);
-        /*for ndx in 0..100 {
-            x.iport.port_in.next = (0xBAB0_u16 + ndx).into();
-            x.iport.ready_in.next = true;
-            x = sim.watch(|x| x.iport.strobe_out.val(), x)?;
-            wait_clock_cycle!(sim, sys_clock, x);
-            x.iport.ready_in.next = false;
-            if rand::thread_rng().gen::<f64>() < 0.3 {
-                for _ in 0..(rand::thread_rng().gen::<u8>() % 40) {
-                    wait_clock_cycle!(sim, sys_clock, x);
-                }
-            }
-        }*/
         sim.done(x)
     });
     sim.run_traced(

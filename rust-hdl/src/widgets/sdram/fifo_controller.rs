@@ -3,7 +3,6 @@ use crate::sim::sdr_sdram::chip::SDRAMSimulator;
 use crate::widgets::dff::DFF;
 use crate::widgets::prelude::{DelayLine, MemoryTimings, SynchronousFIFO, TristateBuffer};
 use crate::widgets::sdram::cmd::SDRAMCommand;
-use rand::Rng;
 
 // Controller states...
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -209,11 +208,13 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> Logic
         self.can_write.next = (self.transfer_counter.q.val() < self.max_transfer_size.val())
             & (self.write_bank.val() == self.active_bank.q.val())
             & (self.write_row.val() == self.active_row.q.val())
+            & (self.refresh_counter.q.val() < self.t_refresh_max.val())
             & (!self.is_full.val())
             & !self.fp.empty.val();
         self.can_read.next = (self.transfer_counter.q.val() < self.max_transfer_size.val())
             & (self.read_bank.val() == self.active_bank.q.val())
             & (self.read_row.val() == self.active_row.q.val())
+            & (self.refresh_counter.q.val() < self.t_refresh_max.val())
             & (!self.is_empty.val())
             & !self.bp.almost_full.val();
         // State machine
@@ -260,6 +261,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> Logic
                     // Refresh takes the highest priority
                     self.cmd.next = SDRAMCommand::AutoRefresh;
                     self.state.d.next = State::Refresh;
+                    self.refresh_counter.d.next = 0_usize.into();
                 } else {
                     if !self.is_empty.val() & !self.bp.almost_full.val() {
                         self.cmd.next = SDRAMCommand::Active;
@@ -280,7 +282,6 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> Logic
             }
             State::Refresh => {
                 if self.delay_counter.q.val() == self.t_rfc.val() {
-                    self.refresh_counter.d.next = 0_usize.into();
                     self.state.d.next = State::Idle;
                 }
             }

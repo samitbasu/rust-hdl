@@ -6,7 +6,7 @@ macro_rules! hls_fifo_write_lazy {
             // Wait for the FIFO to not be full
             $uut = $sim.watch(|x| !x.$($fifo).+.full.val(), $uut)?;
             // Set the data lines and pulse the write signal
-            $uut.$($fifo).+.data.next = val.into();
+            $uut.$($fifo).+.data.next = (*val).into();
             $uut.$($fifo).+.write.next = true;
             wait_clock_cycle!($sim, $clock, $uut);
             $uut.$($fifo).+.write.next = false;
@@ -41,10 +41,29 @@ macro_rules! hls_fifo_read {
         wait_clock_true!($sim, $clock, $uut);
         for val in $data {
             $uut = $sim.watch(|x| !x.$($fifo).+.empty.val(), $uut)?;
-            sim_assert!($sim, $uut.$($fifo).+.data.val() == val, $uut);
+            sim_assert!($sim, $uut.$($fifo).+.data.val() == *val, $uut);
             $uut.$($fifo).+.read.next = true;
             wait_clock_cycle!($sim, $clock, $uut);
             $uut.$($fifo).+.read.next = false;
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! hls_fifo_read_lazy {
+    ($sim: ident, $clock: ident, $uut: ident, $($fifo:ident).*, $data: expr) => {
+        wait_clock_true!($sim, $clock, $uut);
+        for val in $data {
+            $uut = $sim.watch(|x| !x.$($fifo).+.empty.val(), $uut)?;
+            sim_assert!($sim, $uut.$($fifo).+.data.val() == *val, $uut);
+            $uut.$($fifo).+.read.next = true;
+            wait_clock_cycle!($sim, $clock, $uut);
+            $uut.$($fifo).+.read.next = false;
+            if rand::thread_rng().gen::<f64>() < 0.2 {
+                for _ in 0..(rand::thread_rng().gen::<u8>() % 40) {
+                    wait_clock_cycle!($sim, $clock, $uut);
+                }
+            }
         }
     }
 }
