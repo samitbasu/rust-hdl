@@ -1,7 +1,4 @@
 use crate::core::prelude::*;
-use crate::sim::sdr_sdram::cmd::SDRAMCommand;
-use crate::sim::sdr_sdram::timings::{nanos_to_clocks, MemoryTimings};
-use crate::widgets::delay_line::DelayLine;
 use crate::widgets::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -13,6 +10,7 @@ pub enum BankState {
     Writing,
     Error,
     Autorefreshing,
+    WriteRecovery,
 }
 
 // Bank state machine - a bank is simulated using BRAM.
@@ -52,6 +50,7 @@ pub struct MemoryBank<const R: usize, const C: usize, const A: usize, const D: u
     t_rc: Constant<Bits<32>>,  // Min time from active to activate
     t_rcd: Constant<Bits<32>>, // Min time from active to read/write
     t_rp: Constant<Bits<32>>,  // Precharge command time
+    t_wr: Constant<Bits<32>>,  // Write recovery time
     t_refresh_max: Constant<Bits<32>>,
     t_rfc: Constant<Bits<32>>,
     row_shift: Constant<Bits<A>>,
@@ -66,6 +65,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<
         let t_rp = timings.t_rp() - 1;
         let t_refresh_max = timings.t_refresh_max() - 1;
         let t_rfc = timings.t_rfc() - 1;
+        let t_wr = timings.t_wr() - 1;
         Self {
             clock: Default::default(),
             cas_delay: Default::default(),
@@ -91,11 +91,12 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<
             delay_counter: Default::default(),
             refresh_counter: Default::default(),
             refresh_active: Default::default(),
-            t_activate: Default::default(),
+            t_activate: DFF::new(0xFFFF_u32.into()),
             t_ras: Constant::new(t_ras.into()),
             t_rc: Constant::new(t_rc.into()),
             t_rcd: Constant::new(t_rcd.into()),
             t_rp: Constant::new(t_rp.into()),
+            t_wr: Constant::new(t_wr.into()),
             t_refresh_max: Constant::new(t_refresh_max.into()),
             t_rfc: Constant::new(t_rfc.into()),
             row_shift: Constant::new(C.into()),
@@ -128,7 +129,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         self.active_row.d.next = self.active_row.q.val();
         self.burst_counter.d.next = self.burst_counter.q.val();
         self.active_col.d.next = self.active_col.q.val();
-        self.delay_counter.d.next = self.delay_counter.q.val();
+        self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
         self.t_activate.d.next = self.t_activate.q.val();
         self.auto_precharge.d.next = self.auto_precharge.q.val();
         self.error.next = false;
@@ -217,6 +218,8 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                                 self.active_col.d.next = self.address.val().get_bits::<C>(0_usize);
                                 self.burst_counter.d.next = 0_usize.into();
                                 self.state.d.next = BankState::Writing;
+                                // Capture the auto precharge bit (bit 10) - this is the per the JEDEC spec
+                                self.auto_precharge.d.next = self.address.val().get_bit(10_usize);
                             }
                         }
                         SDRAMCommand::Precharge => {
@@ -258,6 +261,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                             self.burst_counter.d.next = 0_usize.into();
                             // Capture the auto precharge bit (bit 10) - this is the per the JEDEC spec
                             self.auto_precharge.d.next = self.address.val().get_bit(10_usize);
+                            self.state.d.next = BankState::Reading;
                         }
                         SDRAMCommand::Precharge => {
                             if self.auto_precharge.q.val() {
@@ -274,7 +278,6 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                 }
             }
             BankState::Precharging => {
-                self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
                 if self.delay_counter.q.val() == self.t_rp.val() {
                     self.state.d.next = BankState::Idle;
                 }
@@ -307,11 +310,11 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                 self.active_col.d.next = self.active_col.q.val() + 1_u32;
                 // Did the write finish?
                 if self.burst_counter.q.val() == self.burst_len.val() - 1_u32 {
+                    self.delay_counter.d.next = 0_usize.into();
                     if self.auto_precharge.q.val() {
-                        self.delay_counter.d.next = 0_usize.into();
                         self.state.d.next = BankState::Precharging;
                     } else {
-                        self.state.d.next = BankState::Active
+                        self.state.d.next = BankState::WriteRecovery
                     }
                 }
                 if self.select.val() {
@@ -322,6 +325,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                             self.burst_counter.d.next = 0_usize.into();
                             // Capture the auto precharge bit (bit 10) - this is the per the JEDEC spec
                             self.auto_precharge.d.next = self.address.val().get_bit(10_usize);
+                            self.state.d.next = BankState::Writing;
                         }
                         SDRAMCommand::Precharge => {
                             if self.auto_precharge.q.val() {
@@ -339,6 +343,31 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
             }
             BankState::Error => {
                 self.error.next = true;
+            }
+            BankState::WriteRecovery => {
+                if self.delay_counter.q.val() == self.t_wr.val() {
+                    self.state.d.next = BankState::Active;
+                }
+                match self.cmd.val() {
+                    SDRAMCommand::NOP => {}
+                    SDRAMCommand::Read => {
+                        self.active_col.d.next = self.address.val().get_bits::<C>(0_usize);
+                        self.burst_counter.d.next = 0_usize.into();
+                        self.state.d.next = BankState::Reading;
+                        // Capture the auto precharge bit (bit 10) - this is the per the JEDEC spec
+                        self.auto_precharge.d.next = self.address.val().get_bit(10_usize);
+                    }
+                    SDRAMCommand::Write => {
+                        self.active_col.d.next = self.address.val().get_bits::<C>(0_usize);
+                        self.burst_counter.d.next = 0_usize.into();
+                        self.state.d.next = BankState::Writing;
+                        // Capture the auto precharge bit (bit 10) - this is the per the JEDEC spec
+                        self.auto_precharge.d.next = self.address.val().get_bit(10_usize);
+                    }
+                    _ => {
+                        self.state.d.next = BankState::Error;
+                    }
+                }
             }
         }
         if self.refresh_counter.q.val() >= self.t_refresh_max.val() {
@@ -463,7 +492,6 @@ fn test_bank_write() {
     let mut sim = Simulation::new();
     // Clock period is 500 MHz or 2000ps
     let clock_period = 2000;
-    let clock_speed = 500_000_000;
     sim.add_clock(clock_period / 2, |x: &mut Box<MemoryBank<5, 5, 10, 16>>| {
         x.clock.next = !x.clock.val();
     });
@@ -534,8 +562,7 @@ fn test_bank_write() {
         wait_clock_cycle!(sim, clock, x);
         x.cmd.next = SDRAMCommand::NOP;
         wait_clock_cycles!(sim, clock, x, 10);
-        let precharge_clocks =
-            nanos_to_clocks(timing.t_rp_recharge_period_nanoseconds, clock_speed as f64);
+        let precharge_clocks = timing.t_rp();
         wait_clock_cycles!(sim, clock, x, precharge_clocks);
         sim_assert!(sim, !x.busy.val(), x);
         sim_assert!(sim, !x.error.val(), x);

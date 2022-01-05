@@ -1,7 +1,5 @@
 use crate::core::prelude::*;
 use crate::sim::sdr_sdram::bank::MemoryBank;
-use crate::sim::sdr_sdram::cmd::SDRAMCommand;
-use crate::sim::sdr_sdram::timings::{nanos_to_clocks, MemoryTimings};
 use crate::widgets::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -101,6 +99,12 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
                 self.banks[i].select.next = true;
             } else {
                 self.banks[i].select.next = false;
+            }
+            if self.cmd.val() == SDRAMCommand::AutoRefresh {
+                self.banks[i].select.next = true;
+            }
+            if (self.cmd.val() == SDRAMCommand::Precharge) & self.address.val().get_bit(10_usize) {
+                self.banks[i].select.next = true;
             }
         }
         self.banks_busy.next = self.banks[0].busy.val()
@@ -211,14 +215,9 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
 impl<const D: usize> SDRAMSimulator<D> {
     pub fn new(timings: MemoryTimings) -> Self {
         // Calculate the number of picoseconds per clock cycle
-        let clock_speed_hz = timings.clock_speed_hz;
-        let boot_delay = nanos_to_clocks(timings.initial_delay_in_nanoseconds, clock_speed_hz) - 1;
-        let precharge_delay =
-            nanos_to_clocks(timings.t_rp_recharge_period_nanoseconds, clock_speed_hz) - 1;
-        let bank_bank_delay = nanos_to_clocks(
-            timings.t_rrd_bank_to_bank_activate_min_time_nanoseconds,
-            clock_speed_hz,
-        ) - 1;
+        let boot_delay = timings.t_boot();
+        let precharge_delay = timings.t_rp() - 1;
+        let bank_bank_delay = timings.t_rrd() - 1;
         Self {
             clock: Default::default(),
             cmd: Signal::default(),
@@ -302,7 +301,7 @@ macro_rules! sdram_read {
         $uut.address.next = ($addr as u32).into();
         wait_clock_cycle!($sim, $clock, $uut);
         $uut.cmd.next = SDRAMCommand::NOP;
-        wait_clock_cycles!($sim, $clock, $uut, 2); // Programmed CAS delay
+        wait_clock_cycles!($sim, $clock, $uut, 2); // Programmed CAS delay - 1
         for datum in $data {
             $uut.cmd.next = SDRAMCommand::NOP;
             sim_assert!($sim, $uut.data.val() == (datum as u32), $uut);
@@ -319,9 +318,10 @@ macro_rules! sdram_reada {
         $uut.address.next = ($addr as u32 | 1024_u32).into(); // Signal autoprecharge
         wait_clock_cycle!($sim, $clock, $uut);
         $uut.cmd.next = SDRAMCommand::NOP;
-        wait_clock_cycles!($sim, $clock, $uut, 3); // Programmed CAS delay
+        wait_clock_cycles!($sim, $clock, $uut, 2); // Programmed CAS delay
         for datum in $data {
             $uut.cmd.next = SDRAMCommand::NOP;
+            sim_assert!($sim, $uut.data.val() == (datum as u32), $uut);
             wait_clock_cycle!($sim, $clock, $uut);
         }
     };
@@ -335,6 +335,18 @@ macro_rules! sdram_precharge_one {
         $uut.address.next = (0 as u32).into();
         wait_clock_cycle!($sim, $clock, $uut);
         $uut.cmd.next = SDRAMCommand::NOP;
+    };
+}
+
+#[macro_export]
+macro_rules! sdram_refresh {
+    ($sim: ident, $clock: ident, $uut: ident, $timings: expr) => {
+        $uut.cmd.next = SDRAMCommand::AutoRefresh;
+        $uut.bank.next = (0 as u32).into();
+        $uut.address.next = (0 as u32).into();
+        wait_clock_cycle!($sim, $clock, $uut);
+        $uut.cmd.next = SDRAMCommand::NOP;
+        wait_clock_cycles!($sim, $clock, $uut, $timings.t_rfc());
     };
 }
 
@@ -413,7 +425,7 @@ fn test_sdram_init_works() {
         sim_assert!(sim, !x.banks_busy.val(), x);
         sim_assert!(sim, x.state.q.val() == MasterState::Ready, x);
         sdram_activate!(sim, clock, x, 1, 7);
-        wait_clock_cycles!(sim, clock, x, timings.t_ras());
+        wait_clock_cycles!(sim, clock, x, timings.t_rcd());
         sdram_read!(
             sim,
             clock,
@@ -424,7 +436,7 @@ fn test_sdram_init_works() {
         );
         sdram_precharge_one!(sim, clock, x, 1);
         sdram_activate!(sim, clock, x, 2, 14);
-        wait_clock_cycles!(sim, clock, x, timings.t_ras());
+        wait_clock_cycles!(sim, clock, x, timings.t_rcd());
         sdram_reada!(
             sim,
             clock,
@@ -436,6 +448,10 @@ fn test_sdram_init_works() {
         wait_clock_cycles!(sim, clock, x, timings.t_rp() + 1);
         sim_assert!(sim, !x.banks_busy.val(), x);
         sim_assert!(sim, x.state.q.val() == MasterState::Ready, x);
+        sdram_refresh!(sim, clock, x, timings);
+        sim_assert!(sim, !x.banks_busy.val(), x);
+        sim_assert!(sim, x.state.q.val() == MasterState::Ready, x);
+        wait_clock_cycles!(sim, clock, x, 10);
         sim.done(x)
     });
     sim.run_to_file(Box::new(uut), 200_000_000, "sdr_init.vcd")

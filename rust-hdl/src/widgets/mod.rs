@@ -16,6 +16,7 @@ pub mod pulser;
 pub mod pwm;
 pub mod ram;
 pub mod rom;
+pub mod sdram;
 pub mod shot;
 pub mod spi_master;
 pub mod spi_slave;
