@@ -99,7 +99,7 @@ impl OpalKellyDownloadFIFOTest {
 pub fn test_opalkelly_download_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     // Read the data in 256*2 = 512 byte blocks
-    let mut data = vec![0_u8; 1024 * 128];
+    let mut data = vec![0_u8; 1024 * 512];
     hnd.read_from_block_pipe_out(0xA0, 256, &mut data).unwrap();
     let data_shorts = make_u16_buffer(&data);
     for (ndx, val) in data_shorts.iter().enumerate() {

@@ -168,7 +168,7 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
                         self.cas_latency.d.next = self.address.val().get_bits::<3>(4_usize);
                         self.op_mode.d.next = self.address.val().get_bits::<2>(7_usize);
                         self.write_burst_mode.d.next = self.address.val().get_bit(9_usize);
-                        if self.address.val().get_bits::<3>(10_usize) != 0_usize {
+                        if self.address.val().get_bits::<2>(10_usize) != 0_usize {
                             self.state.d.next = MasterState::Error;
                         }
                     }
