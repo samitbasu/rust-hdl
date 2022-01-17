@@ -378,4 +378,55 @@ mod tests {
         x.connect_all();
         sim.run(Box::new(x), 400).unwrap();
     }
+
+    #[test]
+    fn test_array_assignments() {
+        #[derive(LogicBlock, Default)]
+        struct TestObj {
+            channel: [Signal<Local, Bit>; 8],
+            sum: Signal<Local, Bit>,
+        }
+
+        impl Logic for TestObj {
+            #[hdl_gen]
+            fn update(&mut self) {
+                self.sum.next = self.channel[0].val() |
+                    self.channel[1].val();
+            }
+        }
+
+        let mut x = TestObj::default();
+        for i in 0..8 {
+            x.channel[i].connect();
+        }
+        x.connect_all();
+        let vlog = generate_verilog(&x);
+        yosys_validate("test_obj", &vlog).unwrap();
+    }
+
+    #[test]
+    fn test_array_assignments_with_bitcast() {
+        #[derive(LogicBlock, Default)]
+        struct TestObj {
+            channel: [Signal<Local, Bit>; 8],
+            sum: Signal<Local, Bits<4>>,
+        }
+
+        impl Logic for TestObj {
+            #[hdl_gen]
+            fn update(&mut self) {
+                self.sum.next = bit_cast::<4, 1>(self.channel[0].val().into()) |
+                    (bit_cast::<4, 1>(self.channel[1].val().into()) << 1_u8);
+            }
+        }
+
+        let mut x = TestObj::default();
+        for i in 0..8 {
+            x.channel[i].connect();
+        }
+        x.connect_all();
+        let vlog = generate_verilog(&x);
+        yosys_validate("test_obj", &vlog).unwrap();
+    }
+
 }
