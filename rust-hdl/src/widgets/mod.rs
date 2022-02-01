@@ -25,3 +25,4 @@ pub mod sync_fifo;
 pub mod sync_rom;
 pub mod synchronizer;
 pub mod tristate;
+pub mod open_drain;

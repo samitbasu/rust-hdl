@@ -423,6 +423,7 @@ fn test_unit_boots() {
 
 #[test]
 fn test_unit_writes() {
+    use rand::Rng;
     let uut = make_test_device();
     let mut sim = Simulation::new();
     let test_data = (0..2048)
