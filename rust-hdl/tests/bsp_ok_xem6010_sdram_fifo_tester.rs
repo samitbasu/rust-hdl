@@ -3,12 +3,12 @@ use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
 mod test_common;
+use rust_hdl::bsp::ok_core::prelude::*;
+use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
+use rust_hdl::hls::sdram_fifo::SDRAMFIFO;
+use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
 #[cfg(feature = "frontpanel")]
 use test_common::download::*;
-use rust_hdl::bsp::ok_core::prelude::*;
-use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
-use rust_hdl::hls::sdram_fifo::SDRAMFIFO;
-use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 
 #[derive(LogicBlock)]
 struct SDRAMSimulatedFIFOTester {
@@ -39,7 +39,7 @@ impl SDRAMSimulatedFIFOTester {
             dl: OpalKellyDownloadFIFO::new(0xA0),
             will_write: Default::default(),
             will_read: Default::default(),
-            will_cross: Default::default()
+            will_cross: Default::default(),
         }
     }
 }
@@ -92,4 +92,3 @@ fn test_opalkelly_xem_6010_sdram_simulated_fifo_download() {
     rust_hdl::bsp::ok_xem6010::synth::synth_obj(uut, target_path!("xem_6010/sdram_fifo_sim"));
     test_opalkelly_download_runtime(target_path!("xem_6010/sdram_fifo_sim/top.bit")).unwrap()
 }
-

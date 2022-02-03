@@ -57,12 +57,15 @@ struct Worker<T> {
     kind: TriggerType<T>,
 }
 
+pub type CustomLogicFn<T> = Box<dyn Fn(&mut T) -> ()>;
+
 pub struct Simulation<T> {
     workers: Vec<Worker<T>>,
     recv: Receiver<Message<T>>,
     channel_to_sim: Sender<Message<T>>,
     time: u64,
     testbenches: Vec<JoinHandle<Result<()>>>,
+    custom_logic: Vec<CustomLogicFn<T>>,
 }
 
 pub struct Sim<T> {
@@ -87,6 +90,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
             channel_to_sim: send,
             time: 0,
             testbenches: vec![],
+            custom_logic: vec![],
         }
     }
     pub fn add_clock<F>(&mut self, interval: u64, clock_fn: F)
@@ -108,6 +112,12 @@ impl<T: Send + 'static + Block> Simulation<T> {
         let ep = self.endpoint();
         self.testbenches
             .push(std::thread::spawn(move || testbench(ep)));
+    }
+    pub fn add_custom_logic<F>(&mut self, logic: F)
+    where
+        F: Fn(&mut T) -> () + 'static,
+    {
+        self.custom_logic.push(Box::new(logic));
     }
     pub fn endpoint(&mut self) -> Sim<T> {
         let (send_to_worker, recv_from_sim_to_worker) = bounded(0);
@@ -134,6 +144,9 @@ impl<T: Send + 'static + Block> Simulation<T> {
         worker.kind = x.kind;
         // Update the circuit
         for _ in 0..10 {
+            for l in &self.custom_logic {
+                l(&mut x.circuit);
+            }
             x.circuit.update_all();
             if !x.circuit.has_changed() {
                 break;

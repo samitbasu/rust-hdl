@@ -390,8 +390,7 @@ mod tests {
         impl Logic for TestObj {
             #[hdl_gen]
             fn update(&mut self) {
-                self.sum.next = self.channel[0].val() |
-                    self.channel[1].val();
+                self.sum.next = self.channel[0].val() | self.channel[1].val();
             }
         }
 
@@ -415,8 +414,8 @@ mod tests {
         impl Logic for TestObj {
             #[hdl_gen]
             fn update(&mut self) {
-                self.sum.next = bit_cast::<4, 1>(self.channel[0].val().into()) |
-                    (bit_cast::<4, 1>(self.channel[1].val().into()) << 1_u8);
+                self.sum.next = bit_cast::<4, 1>(self.channel[0].val().into())
+                    | (bit_cast::<4, 1>(self.channel[1].val().into()) << 1_u8);
             }
         }
 
@@ -428,5 +427,4 @@ mod tests {
         let vlog = generate_verilog(&x);
         yosys_validate("test_obj", &vlog).unwrap();
     }
-
 }

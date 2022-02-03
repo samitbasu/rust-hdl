@@ -80,7 +80,11 @@ impl<W: Write> Probe for VCDChange<W> {
                     self.0.vcd.change_scalar(*idc, s).unwrap();
                 }
                 VCDValue::Vector(v) => {
-                    self.0.vcd.change_vector(*idc, &v).unwrap();
+                    if v.len() == 1 {
+                        self.0.vcd.change_scalar(*idc, v[0]).unwrap();
+                    } else {
+                        self.0.vcd.change_vector(*idc, &v).unwrap();
+                    }
                 }
                 VCDValue::String(t) => {
                     self.0.vcd.change_string(*idc, &t).unwrap();
@@ -108,7 +112,11 @@ impl<W: Write> Probe for VCDDump<W> {
                     self.0.vcd.change_scalar(idc, s).unwrap();
                 }
                 VCDValue::Vector(v) => {
-                    self.0.vcd.change_vector(idc, &v).unwrap();
+                    if v.len() == 1 {
+                        self.0.vcd.change_scalar(idc, v[0]).unwrap();
+                    } else {
+                        self.0.vcd.change_vector(idc, &v).unwrap();
+                    }
                 }
                 VCDValue::String(t) => {
                     self.0.vcd.change_string(idc, &t).unwrap();

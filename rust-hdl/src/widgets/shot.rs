@@ -41,15 +41,15 @@ impl<const N: usize> Logic for Shot<N> {
             self.counter.d.next = self.counter.q.val() + 1_u32;
         }
         self.state.d.next = self.state.q.val();
-        if !self.state.q.val() && self.trigger.val() {
-            self.state.d.next = true;
-            self.counter.d.next = 0_u32.into();
-        }
         self.fired.next = false;
         if self.state.q.val() && (self.counter.q.val() == self.duration.val()) {
             self.state.d.next = false;
             self.fired.next = true;
         }
         self.active.next = self.state.q.val();
+        if self.trigger.val() {
+            self.state.d.next = true;
+            self.counter.d.next = 0_u32.into();
+        }
     }
 }
