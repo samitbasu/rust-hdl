@@ -4,23 +4,23 @@ use std::time::Duration;
 
 #[derive(Copy, Clone)]
 pub struct I2CConfig {
-    delay_time: Duration,
-    clock_speed_hz: u64,
+    pub delay_time: Duration,
+    pub clock_speed_hz: u64,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
-enum I2CDriverCmd {
+pub enum I2CDriverCmd {
+    Noop,
     SendStart,
     SendTrue,
     SendFalse,
     SendStop,
     GetBit,
     Restart,
-    Reset,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
-enum I2CDriverState {
+enum State {
     Idle,
     Start,
     Send,
@@ -31,11 +31,18 @@ enum I2CDriverState {
     StopStretch,
     StopSetup,
     CheckArbitration,
+    Restart,
+    RestartStretch,
+    RestartDelay,
+    Receive,
+    ReceiveClock,
+    ReceiveStretch,
+    ReceiveRead,
 }
 
 // Implement the bit-bang I2C interface as reported on Wikipedia
 #[derive(LogicBlock)]
-struct I2CDriver {
+pub struct I2CDriver {
     pub sda: Signal<InOut, Bit>,
     pub scl: Signal<InOut, Bit>,
     pub clock: Signal<In, Clock>,
@@ -43,7 +50,10 @@ struct I2CDriver {
     pub run: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
     pub error: Signal<Out, Bit>,
-    state: DFF<I2CDriverState>,
+    pub reset: Signal<In, Bit>,
+    pub read_bit: Signal<Out, Bit>,
+    pub read_valid: Signal<Out, Bit>,
+    state: DFF<State>,
     delay: Shot<32>,
     sda_driver: OpenDrainBuffer,
     scl_driver: OpenDrainBuffer,
@@ -82,10 +92,11 @@ impl Logic for I2CDriver {
         self.clear_scl.next = false;
         self.set_sda.next = false;
         self.clear_sda.next = false;
-        self.busy.next = (self.state.q.val() != I2CDriverState::Idle)
-            & (self.state.q.val() != I2CDriverState::Error);
+        self.read_bit.next = self.sda_is_high.val();
+        self.read_valid.next = false;
+        self.busy.next = (self.state.q.val() != State::Idle) & (self.state.q.val() != State::Error);
         match self.state.q.val() {
-            I2CDriverState::Idle => {
+            State::Idle => {
                 if self.run.val() {
                     match self.cmd.val() {
                         I2CDriverCmd::SendStart => {
@@ -93,13 +104,13 @@ impl Logic for I2CDriver {
                             //     arbitration_lost();
                             // }
                             if !self.sda_is_high.val() {
-                                self.state.d.next = I2CDriverState::Error
+                                self.state.d.next = State::Error
                             } else {
                                 //  clear_SDA();
                                 //  I2C_delay();
                                 self.clear_sda.next = true;
                                 self.delay.trigger.next = true;
-                                self.state.d.next = I2CDriverState::Start
+                                self.state.d.next = State::Start
                             }
                         }
                         I2CDriverCmd::SendTrue => {
@@ -107,61 +118,100 @@ impl Logic for I2CDriver {
                             self.set_sda.next = true;
                             // I2C_delay()
                             self.delay.trigger.next = true;
-                            self.state.d.next = I2CDriverState::Send
+                            self.state.d.next = State::Send
+                        }
+                        I2CDriverCmd::GetBit => {
+                            // set_SDA() - let target drive the SDA line
+                            self.set_sda.next = true;
+                            // I2C_delay()
+                            self.delay.trigger.next = true;
+                            self.state.d.next = State::Receive;
                         }
                         I2CDriverCmd::SendFalse => {
                             // clear_SDA()
                             self.clear_sda.next = true;
                             // I2C_delay()
                             self.delay.trigger.next = true;
-                            self.state.d.next = I2CDriverState::Send
+                            self.state.d.next = State::Send
                         }
                         I2CDriverCmd::SendStop => {
                             // clear_SDA();
                             // I2C_delay();
                             self.clear_sda.next = true;
                             self.delay.trigger.next = true;
-                            self.state.d.next = I2CDriverState::Stop
+                            self.state.d.next = State::Stop
+                        }
+                        I2CDriverCmd::Restart => {
+                            //   set_SDA();
+                            //   I2C_delay();
+                            self.set_sda.next = true;
+                            self.delay.trigger.next = true;
+                            self.state.d.next = State::Restart
                         }
                         _ => {}
                     }
                 }
             }
-            I2CDriverState::Start => {
+            State::Start => {
                 if self.delay.fired.val() {
                     //  clear_SCL();
                     self.clear_scl.next = true;
-                    self.state.d.next = I2CDriverState::Idle;
+                    self.state.d.next = State::Idle;
                 }
             }
-            I2CDriverState::Stop => {
+            State::Stop => {
                 if self.delay.fired.val() {
                     // set_SCL()
                     self.set_scl.next = true;
-                    self.state.d.next = I2CDriverState::StopStretch;
+                    self.state.d.next = State::StopStretch;
                 }
             }
-            I2CDriverState::Error => {
+            State::Error => {
                 self.error.next = true;
-                if self.cmd.val() == I2CDriverCmd::Reset && self.run.val() {
-                    self.state.d.next = I2CDriverState::Idle;
-                }
             }
-            I2CDriverState::Send => {
+            State::Send => {
                 if self.delay.fired.val() {
                     // set_SCL()
                     self.set_scl.next = true;
-                    self.state.d.next = I2CDriverState::Clock;
+                    self.state.d.next = State::Clock;
                     // I2C_delay()
                     self.delay.trigger.next = true;
                 }
             }
-            I2CDriverState::Clock => {
+            State::Receive => {
                 if self.delay.fired.val() {
-                    self.state.d.next = I2CDriverState::Stretch;
+                    // set SCL()
+                    self.set_scl.next = true;
+                    self.state.d.next = State::ReceiveClock;
+                    // I2C_delay()
+                    self.delay.trigger.next = true;
                 }
             }
-            I2CDriverState::Stretch => {
+            State::Clock => {
+                if self.delay.fired.val() {
+                    self.state.d.next = State::Stretch;
+                }
+            }
+            State::ReceiveClock => {
+                if self.delay.fired.val() {
+                    self.state.d.next = State::ReceiveStretch;
+                }
+            }
+            State::ReceiveStretch => {
+                // while (read_SCL() == 0) {} - clock stretching
+                if self.scl_driver.read_data.val() {
+                    self.delay.trigger.next = true;
+                    self.state.d.next = State::ReceiveRead;
+                }
+            }
+            State::ReceiveRead => {
+                if self.delay.fired.val() {
+                    self.read_valid.next = true;
+                    self.clear_scl.next = true;
+                    self.state.d.next = State::Idle;
+                }
+            }
+            State::Stretch => {
                 // while (read_SCL() == 0) {} - clock stretching
                 if self.scl_driver.read_data.val() {
                     // clear_SCL()
@@ -173,35 +223,60 @@ impl Logic for I2CDriver {
                         self.state.d.next = I2CDriverState::Error;
                     }
                     */
-                    self.state.d.next = I2CDriverState::Idle;
+                    self.state.d.next = State::Idle;
                 }
             }
-            I2CDriverState::StopStretch => {
+            State::StopStretch => {
                 // while (read_SCL() == 0) {}
                 if self.scl_driver.read_data.val() {
                     // I2C_delay()
                     self.delay.trigger.next = true;
-                    self.state.d.next = I2CDriverState::StopSetup;
+                    self.state.d.next = State::StopSetup;
                 }
             }
-            I2CDriverState::StopSetup => {
+            State::StopSetup => {
                 if self.delay.fired.val() {
                     // set_SDA()
                     self.set_sda.next = true;
                     // I2C_delay()
                     self.delay.trigger.next = true;
-                    self.state.d.next = I2CDriverState::CheckArbitration;
+                    self.state.d.next = State::CheckArbitration;
                 }
             }
-            I2CDriverState::CheckArbitration => {
+            State::Restart => {
+                //   set_SCL();
+                if self.delay.fired.val() {
+                    self.set_scl.next = true;
+                    self.state.d.next = State::RestartStretch
+                }
+            }
+            State::RestartStretch => {
+                //   while (read_SCL() == 0) { // Clock stretching
+                //     // You should add timeout to this loop
+                //   }
+                if self.scl_is_high.val() {
+                    //   // Repeated start setup time, minimum 4.7us
+                    //   I2C_delay();
+                    self.delay.trigger.next = true;
+                    self.state.d.next = State::RestartDelay
+                }
+            }
+            State::RestartDelay => {
+                if self.delay.fired.val() {
+                    self.clear_sda.next = true;
+                    self.delay.trigger.next = true;
+                    self.state.d.next = State::Start
+                }
+            }
+            State::CheckArbitration => {
                 if self.delay.fired.val() {
                     // if (read_SDA() == 0) {
                     //    arbitration_lost();
                     // }
                     if !self.sda_driver.read_data.val() {
-                        self.state.d.next = I2CDriverState::Error;
+                        self.state.d.next = State::Error;
                     } else {
-                        self.state.d.next = I2CDriverState::Idle;
+                        self.state.d.next = State::Idle;
                     }
                 }
             }
@@ -217,6 +292,9 @@ impl Logic for I2CDriver {
         }
         if self.clear_sda.val() {
             self.sda_flop.d.next = true;
+        }
+        if self.reset.val() {
+            self.state.d.next = State::Idle;
         }
     }
 }
@@ -243,6 +321,9 @@ impl I2CDriver {
             clear_scl: Default::default(),
             set_sda: Default::default(),
             set_scl: Default::default(),
+            reset: Default::default(),
+            read_bit: Default::default(),
+            read_valid: Default::default(),
         }
     }
 }
@@ -259,6 +340,7 @@ fn test_i2c_driver_synthesizes() {
     uut.uut.clock.connect();
     uut.uut.cmd.connect();
     uut.uut.run.connect();
+    uut.uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("i2cdriver", &vlog).unwrap()
@@ -286,6 +368,8 @@ impl Logic for I2CDriverTest {
         self.driver.scl.join(&mut self.target.scl);
         self.pullup_scl.write_data.next = true;
         self.pullup_sda.write_data.next = true;
+        self.driver.reset.next = false;
+        self.target.active.next = false;
     }
 }
 
@@ -322,19 +406,18 @@ fn test_i2c_driver_operation() {
     sim.add_custom_logic(|x| {
         x.pullup_sda.write_enable.next =
             !x.driver.sda.is_driving_tristate() & !x.target.sda.is_driving_tristate();
-        x.pullup_scl.write_enable.next = !x.driver.scl.is_driving_tristate();
+        x.pullup_scl.write_enable.next =
+            !x.driver.scl.is_driving_tristate() & !x.target.scl.is_driving_tristate();
     });
-    let bits = [true, false, false, true, true, false, true];
+    let bits = [true, false, false, true, true, false, true, true];
     sim.add_testbench(move |mut sim: Sim<I2CDriverTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for bin in &bits {
-            x = sim.watch(|x| x.target.bus_write.val(), x)?;
-            sim_assert!(sim, x.target.from_bus.val() == *bin, x);
-            wait_clock_cycle!(sim, clock, x);
-        }
+        x = sim.watch(|x| x.target.bus_write.val(), x)?;
+        sim_assert!(sim, x.target.from_bus.val() == 0b10011011_u8, x);
         wait_clock_cycle!(sim, clock, x);
-        x = sim.watch(|x| x.target.stop.val(), x)?;
+        x = sim.watch(|x| x.target.bus_write.val(), x)?;
+        sim_assert!(sim, x.target.from_bus.val() == 0b10011011_u8, x);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<I2CDriverTest>| {
@@ -357,6 +440,32 @@ fn test_i2c_driver_operation() {
             x.driver.run.next = false;
             x = sim.watch(|x| !x.driver.busy.val(), x)?;
         }
+        x.driver.cmd.next = I2CDriverCmd::GetBit;
+        x.driver.run.next = true;
+        wait_clock_cycle!(sim, clock, x);
+        x = sim.watch(|x| !x.driver.busy.val(), x)?;
+        x.driver.cmd.next = I2CDriverCmd::Restart;
+        x.driver.run.next = true;
+        wait_clock_cycle!(sim, clock, x);
+        x.driver.run.next = false;
+        x = sim.watch(|x| !x.driver.busy.val(), x)?;
+        for bit in &bits {
+            wait_clock_true!(sim, clock, x);
+            x.driver.cmd.next = if *bit {
+                I2CDriverCmd::SendTrue
+            } else {
+                I2CDriverCmd::SendFalse
+            };
+            x.driver.run.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.driver.run.next = false;
+            x = sim.watch(|x| !x.driver.busy.val(), x)?;
+        }
+        x.driver.cmd.next = I2CDriverCmd::GetBit;
+        x.driver.run.next = true;
+        wait_clock_cycle!(sim, clock, x);
+        x.driver.run.next = false;
+        x = sim.watch(|x| !x.driver.busy.val(), x)?;
         x.driver.cmd.next = I2CDriverCmd::SendStop;
         x.driver.run.next = true;
         wait_clock_cycle!(sim, clock, x);
