@@ -278,10 +278,12 @@ impl Logic for I2CDriverTest {
     fn update(&mut self) {
         self.driver.clock.next = self.clock.val();
         self.target.clock.next = self.clock.val();
-        self.driver.sda.join(&mut self.target.sda);
-        self.driver.scl.join(&mut self.target.scl);
         self.pullup_scl.bus.join(&mut self.driver.scl);
         self.pullup_sda.bus.join(&mut self.driver.sda);
+        self.pullup_scl.bus.join(&mut self.target.scl);
+        self.pullup_sda.bus.join(&mut self.target.sda);
+        self.driver.sda.join(&mut self.target.sda);
+        self.driver.scl.join(&mut self.target.scl);
         self.pullup_scl.write_data.next = true;
         self.pullup_sda.write_data.next = true;
     }
@@ -318,18 +320,22 @@ fn test_i2c_driver_operation() {
         x.clock.next = !x.clock.val()
     });
     sim.add_custom_logic(|x| {
-        /*
-               println!("Custom logic SDA driver: {d_sda} target: {t_sda} value: {sda} {d_scl} {t_scl}",
-                   d_sda = x.driver.sda.is_driving_tristate(),
-                   t_sda = x.target.sda.is_driving_tristate(),
-                   d_scl = x.driver.scl.is_driving_tristate(),
-                   t_scl = x.target.scl.is_driving_tristate(),
-                   sda = x.target.sda.val()
-               );
-        */
         x.pullup_sda.write_enable.next =
             !x.driver.sda.is_driving_tristate() & !x.target.sda.is_driving_tristate();
         x.pullup_scl.write_enable.next = !x.driver.scl.is_driving_tristate();
+    });
+    let bits = [true, false, false, true, true, false, true];
+    sim.add_testbench(move |mut sim: Sim<I2CDriverTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for bin in &bits {
+            x = sim.watch(|x| x.target.bus_write.val(), x)?;
+            sim_assert!(sim, x.target.from_bus.val() == *bin, x);
+            wait_clock_cycle!(sim, clock, x);
+        }
+        wait_clock_cycle!(sim, clock, x);
+        x = sim.watch(|x| x.target.stop.val(), x)?;
+        sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<I2CDriverTest>| {
         let mut x = sim.init()?;
@@ -339,18 +345,18 @@ fn test_i2c_driver_operation() {
         wait_clock_cycle!(sim, clock, x);
         x.driver.run.next = false;
         x = sim.watch(|x| !x.driver.busy.val(), x)?;
-        wait_clock_true!(sim, clock, x);
-        x.driver.cmd.next = I2CDriverCmd::SendTrue;
-        x.driver.run.next = true;
-        wait_clock_cycle!(sim, clock, x);
-        x.driver.run.next = false;
-        x = sim.watch(|x| !x.driver.busy.val(), x)?;
-        wait_clock_true!(sim, clock, x);
-        x.driver.cmd.next = I2CDriverCmd::SendFalse;
-        x.driver.run.next = true;
-        wait_clock_cycle!(sim, clock, x);
-        x.driver.run.next = false;
-        x = sim.watch(|x| !x.driver.busy.val(), x)?;
+        for bit in &bits {
+            wait_clock_true!(sim, clock, x);
+            x.driver.cmd.next = if *bit {
+                I2CDriverCmd::SendTrue
+            } else {
+                I2CDriverCmd::SendFalse
+            };
+            x.driver.run.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.driver.run.next = false;
+            x = sim.watch(|x| !x.driver.busy.val(), x)?;
+        }
         x.driver.cmd.next = I2CDriverCmd::SendStop;
         x.driver.run.next = true;
         wait_clock_cycle!(sim, clock, x);
@@ -358,6 +364,6 @@ fn test_i2c_driver_operation() {
         x = sim.watch(|x| !x.driver.busy.val(), x)?;
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 100_000_000, "i2c_driver.vcd")
+    sim.run_to_file(Box::new(uut), 1_000_000_000, "i2c_driver.vcd")
         .unwrap()
 }

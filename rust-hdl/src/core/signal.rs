@@ -314,7 +314,7 @@ impl<T: Synth> Signal<InOut, T> {
         self.tristate_is_output
     }
     pub fn simulate_connected_tristate(&mut self, other: &mut Self) {
-//        assert!(!(self.is_driving_tristate() & other.is_driving_tristate()));
+        //        assert!(!(self.is_driving_tristate() & other.is_driving_tristate()));
         if self.is_driving_tristate() {
             other.next = self.val();
             self.signal_is_undriven = false;
