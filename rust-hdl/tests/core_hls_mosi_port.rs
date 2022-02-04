@@ -311,7 +311,7 @@ fn test_mosi_port_fifo_works() {
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortFIFOTest>| {
         let mut x = sim.init()?;
-        hls_fifo_read!(sim, clock, x, port_a.fifo_bus, vals.clone());
+        hls_fifo_read!(sim, clock, x, port_a.fifo_bus, &vals.clone());
         sim.done(x)
     });
     sim.run_traced(

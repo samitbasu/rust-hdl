@@ -292,7 +292,7 @@ fn test_miso_fifo_works() {
     sim.add_testbench(move |mut sim: Sim<MISOPortFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        hls_fifo_write_lazy!(sim, clock, x, port_a.fifo_bus, test_data.clone());
+        hls_fifo_write_lazy!(sim, clock, x, port_a.fifo_bus, &test_data.clone());
         wait_clock_cycles!(sim, clock, x, 10);
         sim.done(x)
     });

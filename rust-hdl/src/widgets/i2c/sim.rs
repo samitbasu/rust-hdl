@@ -53,12 +53,27 @@ macro_rules! i2c_write {
         $uut = $sim.watch(|x| x.controller.nack.val() | x.controller.ack.val(), $uut)?;
     };
 }
+
 #[macro_export]
 macro_rules! i2c_read {
     ($sim: ident, $clock: ident, $uut: ident) => {{
         $uut = $sim.watch(|x| !x.controller.busy.val(), $uut)?;
         wait_clock_true!($sim, $clock, $uut);
         $uut.controller.cmd.next = I2CControllerCmd::Read;
+        $uut.controller.run.next = true;
+        wait_clock_cycle!($sim, $clock, $uut);
+        $uut.controller.run.next = false;
+        $uut = $sim.watch(|x| x.controller.read_valid.val(), $uut)?;
+        $uut.controller.read_data_out.val()
+    }};
+}
+
+#[macro_export]
+macro_rules! i2c_read_last {
+    ($sim: ident, $clock: ident, $uut: ident) => {{
+        $uut = $sim.watch(|x| !x.controller.busy.val(), $uut)?;
+        wait_clock_true!($sim, $clock, $uut);
+        $uut.controller.cmd.next = I2CControllerCmd::ReadLast;
         $uut.controller.run.next = true;
         wait_clock_cycle!($sim, $clock, $uut);
         $uut.controller.run.next = false;

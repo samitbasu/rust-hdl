@@ -222,7 +222,7 @@ fn test_stream_command_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, sys_clock, x);
         let o_data = (0..100).map(|x| 0xBAB0_u16 + x).collect::<Vec<_>>();
-        hls_fifo_write_lazy!(sim, sys_clock, x, fport.fifo_bus, o_data);
+        hls_fifo_write_lazy!(sim, sys_clock, x, fport.fifo_bus, &o_data);
         sim.done(x)
     });
     sim.run_traced(

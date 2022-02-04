@@ -415,7 +415,7 @@ mod tests {
             #[hdl_gen]
             fn update(&mut self) {
                 self.sum.next = bit_cast::<4, 1>(self.channel[0].val().into())
-                    | (bit_cast::<4, 1>(self.channel[1].val().into()) << 1_u8);
+                    | (bit_cast::<4, 1>(self.channel[1].val().into()) << 1_usize);
             }
         }
 

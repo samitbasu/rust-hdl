@@ -26,18 +26,13 @@ enum State {
     Send,
     Error,
     Clock,
-    Stretch,
     Stop,
-    StopStretch,
     StopSetup,
     CheckArbitration,
     Restart,
-    RestartStretch,
     RestartDelay,
     Receive,
     ReceiveClock,
-    ReceiveStretch,
-    ReceiveRead,
 }
 
 // Implement the bit-bang I2C interface as reported on Wikipedia
@@ -148,7 +143,7 @@ impl Logic for I2CDriver {
                             self.delay.trigger.next = true;
                             self.state.d.next = State::Restart
                         }
-                        _ => {}
+                        I2CDriverCmd::Noop => {}
                     }
                 }
             }
@@ -163,7 +158,8 @@ impl Logic for I2CDriver {
                 if self.delay.fired.val() {
                     // set_SCL()
                     self.set_scl.next = true;
-                    self.state.d.next = State::StopStretch;
+                    self.delay.trigger.next = true;
+                    self.state.d.next = State::StopSetup;
                 }
             }
             State::Error => {
@@ -189,49 +185,15 @@ impl Logic for I2CDriver {
             }
             State::Clock => {
                 if self.delay.fired.val() {
-                    self.state.d.next = State::Stretch;
+                    self.clear_scl.next = true;
+                    self.state.d.next = State::Idle;
                 }
             }
             State::ReceiveClock => {
                 if self.delay.fired.val() {
-                    self.state.d.next = State::ReceiveStretch;
-                }
-            }
-            State::ReceiveStretch => {
-                // while (read_SCL() == 0) {} - clock stretching
-                if self.scl_driver.read_data.val() {
-                    self.delay.trigger.next = true;
-                    self.state.d.next = State::ReceiveRead;
-                }
-            }
-            State::ReceiveRead => {
-                if self.delay.fired.val() {
                     self.read_valid.next = true;
                     self.clear_scl.next = true;
                     self.state.d.next = State::Idle;
-                }
-            }
-            State::Stretch => {
-                // while (read_SCL() == 0) {} - clock stretching
-                if self.scl_driver.read_data.val() {
-                    // clear_SCL()
-                    self.clear_scl.next = true;
-                    /*
-                    if self.sda_is_high.val() {
-                        self.state.d.next = I2CDriverState::Idle;
-                    } else {
-                        self.state.d.next = I2CDriverState::Error;
-                    }
-                    */
-                    self.state.d.next = State::Idle;
-                }
-            }
-            State::StopStretch => {
-                // while (read_SCL() == 0) {}
-                if self.scl_driver.read_data.val() {
-                    // I2C_delay()
-                    self.delay.trigger.next = true;
-                    self.state.d.next = State::StopSetup;
                 }
             }
             State::StopSetup => {
@@ -247,18 +209,8 @@ impl Logic for I2CDriver {
                 //   set_SCL();
                 if self.delay.fired.val() {
                     self.set_scl.next = true;
-                    self.state.d.next = State::RestartStretch
-                }
-            }
-            State::RestartStretch => {
-                //   while (read_SCL() == 0) { // Clock stretching
-                //     // You should add timeout to this loop
-                //   }
-                if self.scl_is_high.val() {
-                    //   // Repeated start setup time, minimum 4.7us
-                    //   I2C_delay();
+                    self.state.d.next = State::RestartDelay;
                     self.delay.trigger.next = true;
-                    self.state.d.next = State::RestartDelay
                 }
             }
             State::RestartDelay => {
@@ -295,6 +247,9 @@ impl Logic for I2CDriver {
         }
         if self.reset.val() {
             self.state.d.next = State::Idle;
+        }
+        if self.run.val() & self.busy.val() {
+            self.state.d.next = State::Error;
         }
     }
 }
