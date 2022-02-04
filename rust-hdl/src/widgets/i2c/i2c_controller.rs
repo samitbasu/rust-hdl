@@ -2,22 +2,27 @@ use crate::core::prelude::*;
 use crate::widgets::i2c::i2c_driver::{I2CDriver, I2CDriverCmd};
 use crate::widgets::i2c::i2c_test_target::I2CTestTarget;
 use crate::widgets::prelude::*;
+use crate::{i2c_begin_read, i2c_begin_write, i2c_end_transmission, i2c_read, i2c_write};
 use std::time::Duration;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 pub enum I2CControllerCmd {
     BeginWrite,
+    Write,
     BeginRead,
+    Read,
     EndTransmission,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum State {
     Idle,
-    SendStart,
     SendBuffer,
+    GetBuffer,
     WaitAck,
+    WaitBit,
     Error,
+    WaitDriverIdle,
 }
 
 #[derive(LogicBlock)]
@@ -88,11 +93,12 @@ impl Logic for I2CController {
         self.write_data.d.next = self.write_data.q.val();
         self.state.d.next = self.state.q.val();
         // Default values
-        self.busy.next = false;
+        self.busy.next = (self.state.q.val() != State::Idle) | self.driver.busy.val();
         self.error.next = false;
         self.read_data_out.next = self.read_data.q.val();
         self.read_valid.next = false;
         self.ack.next = false;
+        self.nack.next = false;
         match self.state.q.val() {
             State::Idle => {
                 if self.run.val() {
@@ -107,7 +113,28 @@ impl Logic for I2CController {
                             self.counter.d.next = 8_usize.into();
                             self.state.d.next = State::SendBuffer;
                         }
-                        _ => {}
+                        I2CControllerCmd::BeginRead => {
+                            // Set the lowest bit to indicate a read
+                            self.write_data.d.next = (self.write_data_in.val() << 1_usize) | 1_u32;
+                            self.driver.cmd.next = I2CDriverCmd::SendStart;
+                            self.driver.run.next = true;
+                            self.counter.d.next = 8_usize.into();
+                            self.state.d.next = State::SendBuffer;
+                        }
+                        I2CControllerCmd::EndTransmission => {
+                            self.driver.cmd.next = I2CDriverCmd::SendStop;
+                            self.driver.run.next = true;
+                            self.state.d.next = State::WaitDriverIdle;
+                        }
+                        I2CControllerCmd::Write => {
+                            self.write_data.d.next = self.write_data_in.val();
+                            self.counter.d.next = 8_usize.into();
+                            self.state.d.next = State::SendBuffer;
+                        }
+                        I2CControllerCmd::Read => {
+                            self.counter.d.next = 8_usize.into();
+                            self.state.d.next = State::GetBuffer;
+                        }
                     }
                 }
             }
@@ -129,6 +156,28 @@ impl Logic for I2CController {
                     }
                 }
             }
+            State::GetBuffer => {
+                if !self.driver.busy.val() {
+                    if self.counter.q.val() == 0_usize {
+                        self.driver.cmd.next = I2CDriverCmd::SendFalse;
+                        self.driver.run.next = true;
+                        self.state.d.next = State::Idle;
+                        self.read_valid.next = true;
+                    } else {
+                        self.driver.cmd.next = I2CDriverCmd::GetBit;
+                        self.driver.run.next = true;
+                        self.state.d.next = State::WaitBit;
+                    }
+                }
+            }
+            State::WaitBit => {
+                if self.driver.read_valid.val() {
+                    self.read_data.d.next = (self.read_data.q.val() << 1_usize)
+                        | bit_cast::<8, 1>(self.driver.read_bit.val().into());
+                    self.counter.d.next = self.counter.q.val() - 1_usize;
+                    self.state.d.next = State::GetBuffer;
+                }
+            }
             State::WaitAck => {
                 if self.driver.read_valid.val() {
                     if self.driver.read_bit.val() {
@@ -139,13 +188,20 @@ impl Logic for I2CController {
                     self.state.d.next = State::Idle;
                 }
             }
+            State::WaitDriverIdle => {
+                if !self.driver.busy.val() {
+                    self.state.d.next = State::Idle;
+                }
+            }
             State::Error => {
                 self.error.next = true;
             }
-            _ => {}
         }
         if self.reset.val() {
             self.state.d.next = State::Idle;
+        }
+        if self.driver.error.val() {
+            self.state.d.next = State::Error;
         }
         self.driver.reset.next = self.reset.val();
     }
@@ -205,7 +261,7 @@ impl Logic for I2CControllerTest {
 impl Default for I2CControllerTest {
     fn default() -> Self {
         let config = I2CConfig {
-            delay_time: Duration::from_micros(10),
+            delay_time: Duration::from_micros(5),
             clock_speed_hz: 1_000_000,
         };
         Self {
@@ -221,6 +277,27 @@ impl Default for I2CControllerTest {
 
 #[test]
 fn test_i2c_controller_operation() {
+    use rand::Rng;
+
+    struct TestCase {
+        address: u8,
+        reg_index: u8,
+        val_msb: u8,
+        val_lsb: u8,
+    }
+
+    let test_cases = (0..12)
+        .map(|ndx| TestCase {
+            address: if rand::thread_rng().gen::<bool>() {
+                0x53_u8
+            } else {
+                0x57_u8
+            },
+            reg_index: ndx,
+            val_msb: rand::thread_rng().gen::<u8>(),
+            val_lsb: rand::thread_rng().gen::<u8>(),
+        })
+        .collect::<Vec<_>>();
     let mut uut = I2CControllerTest::default();
     uut.clock.connect();
     uut.controller.cmd.connect();
@@ -229,6 +306,8 @@ fn test_i2c_controller_operation() {
     uut.pullup_scl.write_enable.connect();
     uut.pullup_sda.write_enable.connect();
     uut.connect_all();
+    let vlog = generate_verilog(&uut);
+    yosys_validate("i2c_controller", &vlog).unwrap();
     let mut sim = Simulation::new();
     sim.add_clock(500_000, |x: &mut Box<I2CControllerTest>| {
         x.clock.next = !x.clock.val()
@@ -244,15 +323,36 @@ fn test_i2c_controller_operation() {
     sim.add_testbench(move |mut sim: Sim<I2CControllerTest>| {
         let mut x = sim.init()?;
         // Check that a write to an invalid address is NACKed.
-        wait_clock_true!(sim, clock, x);
-        x.controller.cmd.next = I2CControllerCmd::BeginWrite;
-        x.controller.write_data_in.next = 0x54_u32.into();
-        x.controller.run.next = true;
-        wait_clock_cycle!(sim, clock, x);
-        x.controller.run.next = false;
-        x = sim.watch(|x| x.controller.nack.val(), x)?;
+        i2c_begin_write!(sim, clock, x, 0x54_u32);
+        sim_assert!(sim, x.controller.nack.val() & !x.controller.ack.val(), x);
+        i2c_end_transmission!(sim, clock, x);
+        wait_clock_cycles!(sim, clock, x, 10);
+        for test in &test_cases {
+            i2c_begin_write!(sim, clock, x, test.address);
+            sim_assert!(sim, x.controller.ack.val() & !x.controller.nack.val(), x);
+            i2c_write!(sim, clock, x, test.reg_index);
+            i2c_write!(sim, clock, x, test.val_msb);
+            i2c_write!(sim, clock, x, test.val_lsb);
+            i2c_end_transmission!(sim, clock, x);
+        }
+        wait_clock_cycles!(sim, clock, x, 10);
+        for test in &test_cases {
+            i2c_begin_write!(sim, clock, x, test.address);
+            sim_assert!(sim, x.controller.ack.val() & !x.controller.nack.val(), x);
+            i2c_write!(sim, clock, x, test.reg_index);
+            sim_assert!(sim, x.controller.ack.val() & !x.controller.nack.val(), x);
+            i2c_end_transmission!(sim, clock, x);
+            i2c_begin_read!(sim, clock, x, test.address);
+            sim_assert!(sim, x.controller.ack.val() & !x.controller.nack.val(), x);
+            let byte = i2c_read!(sim, clock, x);
+            sim_assert!(sim, byte == test.val_msb, x);
+            let byte = i2c_read!(sim, clock, x);
+            sim_assert!(sim, byte == test.val_lsb, x);
+            i2c_end_transmission!(sim, clock, x);
+        }
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 1_000_000_000, "i2c_controller.vcd")
+    sim.run_to_file(Box::new(uut), 40_000_000_000, "i2c_controller.vcd")
         .unwrap()
+    //    sim.run(Box::new(uut), 40_000_000_000).unwrap()
 }

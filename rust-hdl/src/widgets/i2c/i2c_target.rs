@@ -1,6 +1,5 @@
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
-use std::time::Duration;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum State {
@@ -11,6 +10,13 @@ enum State {
     Flag,
     Ack,
     AckHold,
+    WaitEndTransaction,
+    CheckStop,
+    Writing,
+    WaitSCLHigh,
+    WaitSCLLow,
+    WaitSCLHighAck,
+    CollectAck,
 }
 
 #[derive(LogicBlock, Default)]
@@ -21,6 +27,12 @@ pub struct I2CTarget {
     pub from_bus: Signal<Out, Bits<8>>,
     pub bus_write: Signal<Out, Bit>,
     pub active: Signal<In, Bit>,
+    pub stop: Signal<Out, Bit>,
+    pub to_bus: Signal<In, Bits<8>>,
+    pub write_enable: Signal<In, Bit>,
+    pub ack: Signal<Out, Bit>,
+    pub nack: Signal<Out, Bit>,
+    pub write_ok: Signal<Out, Bit>,
     state: DFF<State>,
     sda_driver: OpenDrainBuffer,
     scl_driver: OpenDrainBuffer,
@@ -59,9 +71,15 @@ impl Logic for I2CTarget {
         self.clear_sda.next = false;
         self.from_bus.next = self.accum.q.val();
         self.bus_write.next = false;
+        self.stop.next = false;
+        self.ack.next = false;
+        self.nack.next = false;
+        self.write_ok.next = false;
         // For now, can only read bits
         match self.state.q.val() {
             State::Idle => {
+                self.set_sda.next = true;
+                self.count.d.next = 0_usize.into();
                 if !self.sda_is_high.val() & self.scl_is_high.val() {
                     self.state.d.next = State::Start;
                 }
@@ -73,7 +91,52 @@ impl Logic for I2CTarget {
                     self.state.d.next = State::Reading;
                 }
             }
+            State::Writing => {
+                if self.accum.q.val().get_bit(7_usize) {
+                    self.set_sda.next = true;
+                } else {
+                    self.clear_sda.next = true;
+                }
+                self.count.d.next = self.count.q.val() + 1_usize;
+                self.accum.d.next = self.accum.q.val() << 1_usize;
+                self.state.d.next = State::WaitSCLHigh;
+                if self.count.q.val() == 8_usize {
+                    self.state.d.next = State::WaitSCLHighAck;
+                }
+            }
+            State::WaitSCLHighAck => {
+                if self.scl_is_high.val() {
+                    self.set_sda.next = true;
+                    self.state.d.next = State::CollectAck;
+                }
+            }
+            State::CollectAck => {
+                if !self.scl_is_high.val() {
+                    if self.sda_is_high.val() {
+                        self.nack.next = true;
+                    } else {
+                        self.ack.next = true;
+                    }
+                    self.state.d.next = State::Reading;
+                }
+            }
+            State::WaitSCLHigh => {
+                if self.scl_is_high.val() {
+                    self.state.d.next = State::WaitSCLLow;
+                }
+            }
+            State::WaitSCLLow => {
+                if !self.scl_is_high.val() {
+                    self.state.d.next = State::Writing;
+                }
+            }
             State::Reading => {
+                self.write_ok.next = true;
+                if self.write_enable.val() {
+                    self.accum.d.next = self.to_bus.val();
+                    self.count.d.next = 0_usize.into();
+                    self.state.d.next = State::Writing;
+                }
                 if self.scl_is_high.val() {
                     self.read_bit.d.next = self.sda_is_high.val();
                     self.state.d.next = State::Waiting;
@@ -91,9 +154,11 @@ impl Logic for I2CTarget {
                     }
                 }
                 if !self.read_bit.q.val() & self.sda_is_high.val() & self.scl_is_high.val() {
+                    self.stop.next = true;
                     self.state.d.next = State::Idle;
                 }
                 if self.read_bit.q.val() & !self.sda_is_high.val() & self.scl_is_high.val() {
+                    self.stop.next = true;
                     self.state.d.next = State::Idle;
                 }
             }
@@ -105,6 +170,9 @@ impl Logic for I2CTarget {
             }
             State::Ack => {
                 self.clear_sda.next = self.active.val();
+                if !self.active.val() {
+                    self.state.d.next = State::WaitEndTransaction;
+                }
                 if self.scl_is_high.val() {
                     self.state.d.next = State::AckHold;
                 }
@@ -112,7 +180,21 @@ impl Logic for I2CTarget {
             State::AckHold => {
                 if !self.scl_is_high.val() {
                     self.set_sda.next = true;
+                    self.state.d.next = State::Reading;
+                }
+            }
+            State::WaitEndTransaction => {
+                // A STOP condition is signalled by
+                // CLK -> H, SDA -> L
+                // CLK -> H, SDA -> H
+                if self.scl_is_high.val() & !self.sda_is_high.val() {
+                    self.state.d.next = State::CheckStop;
+                }
+            }
+            State::CheckStop => {
+                if self.scl_is_high.val() & self.sda_is_high.val() {
                     self.state.d.next = State::Idle;
+                    self.stop.next = true;
                 }
             }
         }
