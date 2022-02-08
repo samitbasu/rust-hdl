@@ -19,8 +19,8 @@ impl Logic for CrossWidenTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
         self.feeder.clock.next = self.clock.val();
-        self.feeder.bus.join(&mut self.cross.narrow_bus);
-        self.cross.wide_bus.join(&mut self.reader.bus);
+        FIFOWriteController::<Bits<4>>::join(&mut self.feeder.bus, &mut self.cross.narrow_bus);
+        FIFOReadResponder::<Bits<16>>::join(&mut self.cross.wide_bus, &mut self.reader.bus);
         self.cross.wide_clock.next = self.clock.val();
         self.cross.narrow_clock.next = self.clock.val();
         self.reader.clock.next = self.clock.val();
@@ -89,8 +89,8 @@ impl Logic for CrossNarrowTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
         self.feeder.clock.next = self.clock.val();
-        self.feeder.bus.join(&mut self.cross.wide_bus);
-        self.cross.narrow_bus.join(&mut self.reader.bus);
+        FIFOWriteController::<Bits<16>>::join(&mut self.feeder.bus, &mut self.cross.wide_bus);
+        FIFOReadResponder::<Bits<4>>::join(&mut self.cross.narrow_bus, &mut self.reader.bus);
         self.cross.wide_clock.next = self.clock.val();
         self.cross.narrow_clock.next = self.clock.val();
         self.reader.clock.next = self.clock.val();

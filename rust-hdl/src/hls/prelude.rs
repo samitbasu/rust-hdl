@@ -17,6 +17,8 @@ pub use crate::hls::mosi_port::MOSIPort;
 pub use crate::hls::mosi_wide_port::MOSIWidePort;
 pub use crate::hls::reducer::Reducer;
 pub use crate::hls::router::Router;
+pub use crate::hls::spi::HLSSPIMaster;
+pub use crate::hls::spi::HLSSPIMasterDynamicMode;
 pub use crate::hls_fifo_read;
 pub use crate::hls_fifo_read_lazy;
 pub use crate::hls_fifo_write;

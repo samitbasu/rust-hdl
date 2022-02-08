@@ -1,5 +1,6 @@
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
+use crate::widgets::spi::master::SPIWiresSlave;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum ADS868XState {
@@ -17,10 +18,7 @@ enum ADS868XState {
 
 #[derive(LogicBlock)]
 pub struct ADS868XSimulator {
-    pub mosi: Signal<In, Bit>,
-    pub mclk: Signal<In, Bit>,
-    pub msel: Signal<In, Bit>,
-    pub miso: Signal<Out, Bit>,
+    pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
     // RAM to store register values
     reg_ram: RAM<Bits<16>, 5>,
@@ -65,10 +63,7 @@ impl ADS868XSimulator {
     pub fn new(spi_config: SPIConfig) -> Self {
         assert!(spi_config.clock_speed > 10 * spi_config.speed_hz);
         Self {
-            mosi: Default::default(),
-            mclk: Default::default(),
-            msel: Default::default(),
-            miso: Default::default(),
+            wires: Default::default(),
             clock: Default::default(),
             reg_ram: Default::default(),
             spi_slave: SPISlave::new(spi_config),
@@ -95,10 +90,7 @@ impl Logic for ADS868XSimulator {
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the spi bus
-        self.spi_slave.mosi.next = self.mosi.val();
-        self.spi_slave.mclk.next = self.mclk.val();
-        self.spi_slave.msel.next = self.msel.val();
-        self.miso.next = self.spi_slave.miso.val();
+        self.wires.link(&mut self.spi_slave.wires);
         // Clock internal components
         self.reg_ram.read_clock.next = self.clock.val();
         self.reg_ram.write_clock.next = self.clock.val();
@@ -223,9 +215,7 @@ impl Logic for ADS868XSimulator {
 #[test]
 fn test_ads8689_synthesizes() {
     let mut uut = ADS868XSimulator::new(ADS868XSimulator::spi_sw());
-    uut.mosi.connect();
-    uut.mclk.connect();
-    uut.msel.connect();
+    uut.wires.link_connect_dest();
     uut.clock.connect();
     uut.connect_all();
     yosys_validate("ads8689", &generate_verilog(&uut)).unwrap();
@@ -243,10 +233,7 @@ impl Logic for Test8689 {
     fn update(&mut self) {
         self.master.clock.next = self.clock.val();
         self.adc.clock.next = self.clock.val();
-        self.adc.mosi.next = self.master.wires.mosi.val();
-        self.adc.msel.next = self.master.wires.msel.val();
-        self.adc.mclk.next = self.master.wires.mclk.val();
-        self.master.wires.miso.next = self.adc.miso.val();
+        SPIWiresMaster::join(&mut self.master.wires, &mut self.adc.wires);
     }
 }
 

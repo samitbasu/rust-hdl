@@ -23,11 +23,21 @@ pub struct SPIConfig {
 }
 
 #[derive(LogicInterface, Default)]
-pub struct SPIWires {
+#[join = "SPIWiresSlave"]
+pub struct SPIWiresMaster {
     pub mosi: Signal<Out, Bit>,
     pub miso: Signal<In, Bit>,
     pub msel: Signal<Out, Bit>,
     pub mclk: Signal<Out, Bit>,
+}
+
+#[derive(LogicInterface, Default)]
+#[join = "SPIWiresMaster"]
+pub struct SPIWiresSlave {
+    pub mosi: Signal<In, Bit>,
+    pub miso: Signal<Out, Bit>,
+    pub msel: Signal<In, Bit>,
+    pub mclk: Signal<In, Bit>,
 }
 
 #[derive(LogicBlock)]
@@ -40,7 +50,7 @@ pub struct SPIMaster<const N: usize> {
     pub transfer_done: Signal<Out, Bit>,
     pub continued_transaction: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
-    pub wires: SPIWires,
+    pub wires: SPIWiresMaster,
     register_out: DFF<Bits<N>>,
     register_in: DFF<Bits<N>>,
     state: DFF<SPIState>,

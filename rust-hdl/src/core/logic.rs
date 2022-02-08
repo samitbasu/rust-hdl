@@ -49,7 +49,7 @@ pub fn logic_connect_link_fn<L: LogicLink>(source: &mut L, dest: &mut L) {
 
 pub trait LogicJoin {
     fn join_connect(&mut self) {}
-    fn join_hdl(&self, _my_name: &str, _this: &str, _that: &str) -> Vec<VerilogLink> {
+    fn join_hdl(_my_name: &str, _this: &str, _that: &str) -> Vec<VerilogLink> {
         vec![]
     }
 }

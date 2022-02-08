@@ -1,13 +1,15 @@
-use std::thread::sleep;
-use std::time::Duration;
-use rust_hdl_ok_frontpanel_sys::{OkError, OkHandle};
+#[cfg(feature = "frontpanel")]
+use crate::test_common::tools::ok_test_prelude;
 use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
-use rust_hdl::widgets::i2c::i2c_controller::{I2CController, I2CControllerCmd};
 use rust_hdl::widgets::i2c::i2c_controller::I2CControllerCmd::BeginWrite;
-use crate::test_common::tools::ok_test_prelude;
+use rust_hdl::widgets::i2c::i2c_controller::{I2CController, I2CControllerCmd};
+use rust_hdl::widgets::prelude::*;
+#[cfg(feature = "frontpanel")]
+use rust_hdl_ok_frontpanel_sys::{OkError, OkHandle};
+use std::thread::sleep;
+use std::time::Duration;
 
 mod test_common;
 
@@ -73,17 +75,15 @@ impl Logic for OKI2CTest {
         self.trig_out.ok1.next = self.ok_host.ok1.val();
         self.wire_in.ok1.next = self.ok_host.ok1.val();
         self.wire_out.ok1.next = self.ok_host.ok1.val();
-        self.ok_host.ok2.next = self.trig_out.ok2.val() |
-            self.wire_out.ok2.val();
+        self.ok_host.ok2.next = self.trig_out.ok2.val() | self.wire_out.ok2.val();
         // Output wire is [0..0 err busy data_byte]
-        self.wire_out.datain.next = bit_cast::<16,8>(self.wire_out_latch.q.val()) |
-            (bit_cast::<16, 1>(self.i2c.busy.val().into()) << 8_usize) |
-            (bit_cast::<16, 1>(self.i2c.error.val().into()) << 9_usize);
+        self.wire_out.datain.next = bit_cast::<16, 8>(self.wire_out_latch.q.val())
+            | (bit_cast::<16, 1>(self.i2c.busy.val().into()) << 8_usize)
+            | (bit_cast::<16, 1>(self.i2c.error.val().into()) << 9_usize);
         // Nack and ACK
-        self.trig_out.trigger.next =
-            bit_cast::<16, 1>(self.i2c.nack.val().into()) |
-                (bit_cast::<16,1>(self.i2c.ack.val().into()) << 1_usize) |
-                (bit_cast::<16,1>(self.i2c.read_valid.val().into()) << 2_usize);
+        self.trig_out.trigger.next = bit_cast::<16, 1>(self.i2c.nack.val().into())
+            | (bit_cast::<16, 1>(self.i2c.ack.val().into()) << 1_usize)
+            | (bit_cast::<16, 1>(self.i2c.read_valid.val().into()) << 2_usize);
         // Wire in contains the address or data byte to write
         self.i2c.write_data_in.next = self.wire_in.dataout.val().get_bits::<8>(0_usize);
         // Use the remaining triggers to determine the command
@@ -133,7 +133,7 @@ impl Default for OKI2CTest {
             trig_out: TriggerOut::new(0x66),
             wire_in: WireIn::new(0x06),
             wire_out: WireOut::new(0x26),
-            wire_out_latch: Default::default()
+            wire_out_latch: Default::default(),
         }
     }
 }
@@ -150,6 +150,7 @@ fn test_opalkelly_xem_6010_synth_i2c() {
     XEM6010::synth(uut, target_path!("xem_6010/i2c_test"));
 }
 
+#[cfg(feature = "frontpanel")]
 fn ok_wait_valid(hnd: &OkHandle) -> Result<(), OkError> {
     while !hnd.is_triggered(0x66, 4) {
         hnd.update_trigger_outs();
@@ -157,6 +158,7 @@ fn ok_wait_valid(hnd: &OkHandle) -> Result<(), OkError> {
     Ok(())
 }
 
+#[cfg(feature = "frontpanel")]
 fn ok_wait_ack(hnd: &OkHandle) -> Result<(), OkError> {
     let mut acked = false;
     let mut nacked = false;
@@ -170,15 +172,20 @@ fn ok_wait_ack(hnd: &OkHandle) -> Result<(), OkError> {
         error = (status & 0x0200) != 0;
     }
     if error {
-        return Err(OkError{code: rust_hdl_ok_frontpanel_sys::ok_ErrorCode_ok_CommunicationError})
+        return Err(OkError {
+            code: rust_hdl_ok_frontpanel_sys::ok_ErrorCode_ok_CommunicationError,
+        });
     }
     if acked {
         Ok(())
     } else {
-        Err(OkError{code: rust_hdl_ok_frontpanel_sys::ok_ErrorCode_ok_I2CNack})
+        Err(OkError {
+            code: rust_hdl_ok_frontpanel_sys::ok_ErrorCode_ok_I2CNack,
+        })
     }
 }
 
+#[cfg(feature = "frontpanel")]
 fn ok_i2c_cmd(hnd: &OkHandle, cmd: u16) -> Result<(), OkError> {
     // Issue a basic transaction - do a beginwrite to address 0x53
     hnd.set_wire_in(0x06, cmd);
@@ -186,6 +193,7 @@ fn ok_i2c_cmd(hnd: &OkHandle, cmd: u16) -> Result<(), OkError> {
     hnd.activate_trigger_in(0x46, 0)
 }
 
+#[cfg(feature = "frontpanel")]
 fn ok_i2c_reset(hnd: &OkHandle) -> Result<(), OkError> {
     hnd.set_wire_in(0x06, 0xFFFF);
     hnd.update_wire_ins();
@@ -194,21 +202,25 @@ fn ok_i2c_reset(hnd: &OkHandle) -> Result<(), OkError> {
     Ok(())
 }
 
+#[cfg(feature = "frontpanel")]
 fn ok_i2c_begin_write(hnd: &OkHandle, addr: u8) -> Result<(), OkError> {
     ok_i2c_cmd(&hnd, (0 << 8) | addr as u16)?;
     ok_wait_ack(&hnd)
 }
 
+#[cfg(feature = "frontpanel")]
 fn ok_i2c_write(hnd: &OkHandle, data: u8) -> Result<(), OkError> {
     ok_i2c_cmd(&hnd, (1 << 8) | data as u16)?;
     ok_wait_ack(&hnd)
 }
 
+#[cfg(feature = "frontpanel")]
 fn ok_i2c_begin_read(hnd: &OkHandle, addr: u8) -> Result<(), OkError> {
     ok_i2c_cmd(&hnd, (2 << 8) | addr as u16)?;
     ok_wait_ack(&hnd)
 }
 
+#[cfg(feature = "frontpanel")]
 fn ok_i2c_read(hnd: &OkHandle) -> Result<u8, OkError> {
     ok_i2c_cmd(&hnd, (3 << 8) | 0x00)?;
     ok_wait_valid(&hnd);
@@ -217,6 +229,7 @@ fn ok_i2c_read(hnd: &OkHandle) -> Result<u8, OkError> {
     Ok((status & 0xFF) as u8)
 }
 
+#[cfg(feature = "frontpanel")]
 fn ok_i2c_read_last(hnd: &OkHandle) -> Result<u8, OkError> {
     ok_i2c_cmd(&hnd, (5 << 8) | 0x00)?;
     ok_wait_valid(&hnd);
@@ -225,6 +238,7 @@ fn ok_i2c_read_last(hnd: &OkHandle) -> Result<u8, OkError> {
     Ok((status & 0xFF) as u8)
 }
 
+#[cfg(feature = "frontpanel")]
 fn ok_i2c_end_transmission(hnd: &OkHandle) -> Result<(), OkError> {
     ok_i2c_cmd(&hnd, (4 << 8) | 0x00)?;
     // Get the status word
@@ -232,7 +246,6 @@ fn ok_i2c_end_transmission(hnd: &OkHandle) -> Result<(), OkError> {
     let status = hnd.get_wire_out(0x26);
     Ok(())
 }
-
 
 #[cfg(feature = "frontpanel")]
 #[test]
@@ -246,7 +259,7 @@ fn test_opalkelly_xem_6010_run_i2c() -> Result<(), OkError> {
     let b2 = ok_i2c_read_last(&hnd)?;
     ok_i2c_end_transmission(&hnd)?;
     println!("ID {:x}{:x}", b1, b2);
-    for _ in (0..10) {
+    for _ in (0..100) {
         ok_i2c_begin_write(&hnd, 0x48)?;
         ok_i2c_write(&hnd, 0x00)?;
         ok_i2c_begin_read(&hnd, 0x048)?;
@@ -254,9 +267,9 @@ fn test_opalkelly_xem_6010_run_i2c() -> Result<(), OkError> {
         let b2 = ok_i2c_read_last(&hnd)?;
         ok_i2c_end_transmission(&hnd)?;
         let temp = (b1 as u16) << 8 | (b2 as u16);
-        let temp_c = (temp as f32 + 256.0) * 7.8125/1000.0;
+        let temp_c = (temp as f32 + 256.0) * 7.8125 / 1000.0;
         println!("Temp {:x}{:x} {} deg C", b1, b2, temp_c);
-        sleep(Duration::from_millis(200))
+        sleep(Duration::from_millis(100))
     }
     Ok(())
 }

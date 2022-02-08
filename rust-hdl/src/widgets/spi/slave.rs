@@ -2,7 +2,7 @@ use crate::core::prelude::*;
 use crate::widgets::dff::DFF;
 use crate::widgets::edge_detector::EdgeDetector;
 use crate::widgets::prelude::BitSynchronizer;
-use crate::widgets::spi_master::SPIConfig;
+use crate::widgets::spi::master::{SPIConfig, SPIWiresSlave};
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum SPISlaveState {
@@ -20,10 +20,7 @@ enum SPISlaveState {
 #[derive(LogicBlock)]
 pub struct SPISlave<const N: usize> {
     pub clock: Signal<In, Clock>,
-    pub mosi: Signal<In, Bit>,
-    pub miso: Signal<Out, Bit>,
-    pub msel: Signal<In, Bit>,
-    pub mclk: Signal<In, Bit>,
+    pub wires: SPIWiresSlave,
     pub disabled: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
     pub data_inbound: Signal<Out, Bits<N>>,
@@ -69,10 +66,7 @@ impl<const N: usize> SPISlave<N> {
     pub fn new(config: SPIConfig) -> Self {
         Self {
             clock: Default::default(),
-            mosi: Default::default(),
-            miso: Default::default(),
-            msel: Default::default(),
-            mclk: Default::default(),
+            wires: Default::default(),
             disabled: Default::default(),
             busy: Default::default(),
             data_inbound: Default::default(),
@@ -125,15 +119,15 @@ impl<const N: usize> Logic for SPISlave<N> {
         self.advance_detector.input_signal.next = self.mclk_synchronizer.sig_out.val();
         self.edge_detector.input_signal.next = self.csel_synchronizer.sig_out.val();
         // Connect the synchronizers
-        self.mclk_synchronizer.sig_in.next = self.mclk.val();
-        self.csel_synchronizer.sig_in.next = self.msel.val();
+        self.mclk_synchronizer.sig_in.next = self.wires.mclk.val();
+        self.csel_synchronizer.sig_in.next = self.wires.msel.val();
         // Logic
         self.busy.next = (self.state.q.val() != SPISlaveState::Idle)
             | (self.csel_synchronizer.sig_out.val() != self.cs_off.val());
         if self.state.q.val() != SPISlaveState::Disabled {
-            self.miso.next = self.miso_flop.q.val();
+            self.wires.miso.next = self.miso_flop.q.val();
         } else {
-            self.miso.next = true;
+            self.wires.miso.next = true;
         }
         self.data_inbound.next = self.register_in.q.val();
         self.transfer_done.next = self.done_flop.q.val();
@@ -189,7 +183,7 @@ impl<const N: usize> Logic for SPISlave<N> {
             }
             SPISlaveState::Capture => {
                 self.register_in.d.next = (self.register_in.q.val() << 1_usize)
-                    | bit_cast::<N, 1>(self.mosi.val().into());
+                    | bit_cast::<N, 1>(self.wires.mosi.val().into());
                 self.state.d.next = SPISlaveState::Hold;
             }
             SPISlaveState::Hold => {
@@ -254,9 +248,7 @@ fn test_spi_slave_synthesizes() {
     let mut uut: SPISlave<64> = SPISlave::new(config);
     uut.clock.connect();
     uut.bits.connect();
-    uut.mosi.connect();
-    uut.msel.connect();
-    uut.mclk.connect();
+    uut.wires.link_connect_dest();
     uut.disabled.connect();
     uut.start_send.connect();
     uut.data_outbound.connect();

@@ -1,15 +1,14 @@
 use super::ads868x_sim::ADS868XSimulator;
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
+use crate::widgets::spi::mux::MuxSlaves;
 
 #[derive(LogicBlock)]
 pub struct MuxedADS868XSimulators<const N: usize> {
     // Input SPI bus
-    pub mosi: Signal<In, Bit>,
-    pub mclk: Signal<In, Bit>,
-    pub msel: Signal<In, Bit>,
-    pub miso: Signal<Out, Bit>,
+    pub wires: SPIWiresSlave,
     pub addr: Signal<In, Bits<3>>,
+    pub mux: MuxSlaves<N, 3>,
     pub clock: Signal<In, Clock>,
     adcs: [ADS868XSimulator; N],
 }
@@ -18,10 +17,8 @@ impl<const N: usize> MuxedADS868XSimulators<N> {
     pub fn new(config: SPIConfig) -> Self {
         assert!(N <= 8);
         Self {
-            mosi: Default::default(),
-            mclk: Default::default(),
-            msel: Default::default(),
-            miso: Default::default(),
+            wires: Default::default(),
+            mux: Default::default(),
             addr: Default::default(),
             clock: Default::default(),
             adcs: array_init::array_init(|_| ADS868XSimulator::new(config)),
@@ -32,18 +29,12 @@ impl<const N: usize> MuxedADS868XSimulators<N> {
 impl<const N: usize> Logic for MuxedADS868XSimulators<N> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Latch prevention
-        self.miso.next = true;
+        self.wires.link(&mut self.mux.from_master);
         for i in 0_usize..N {
             self.adcs[i].clock.next = self.clock.val();
-            self.adcs[i].mosi.next = self.mosi.val();
-            self.adcs[i].mclk.next = self.mclk.val();
-            self.adcs[i].msel.next = true;
-            if self.addr.val().index() == i {
-                self.adcs[i].msel.next = self.msel.val();
-                self.miso.next = self.adcs[i].miso.val();
-            }
+            SPIWiresMaster::join(&mut self.mux.to_slaves[i], &mut self.adcs[i].wires);
         }
+        self.mux.sel.next = self.addr.val();
     }
 }
 
@@ -51,9 +42,7 @@ impl<const N: usize> Logic for MuxedADS868XSimulators<N> {
 fn test_mux_is_synthesizable() {
     let mut uut: MuxedADS868XSimulators<8> =
         MuxedADS868XSimulators::new(ADS868XSimulator::spi_hw());
-    uut.mclk.connect();
-    uut.mosi.connect();
-    uut.msel.connect();
+    uut.wires.link_connect_dest();
     uut.addr.connect();
     uut.clock.connect();
     uut.connect_all();

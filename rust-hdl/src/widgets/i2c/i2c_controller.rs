@@ -2,7 +2,6 @@ use crate::core::prelude::*;
 use crate::widgets::i2c::i2c_driver::{I2CDriver, I2CDriverCmd};
 use crate::widgets::i2c::i2c_test_target::I2CTestTarget;
 use crate::widgets::prelude::*;
-use crate::{i2c_begin_read, i2c_begin_write, i2c_end_transmission, i2c_read, i2c_read_last, i2c_write};
 use std::time::Duration;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -75,7 +74,7 @@ impl I2CController {
             write_data: Default::default(),
             state: Default::default(),
             started: Default::default(),
-            last_read: Default::default()
+            last_read: Default::default(),
         }
     }
 }
@@ -277,16 +276,16 @@ impl Logic for I2CControllerTest {
         self.controller.clock.next = self.clock.val();
         self.target_1.clock.next = self.clock.val();
         self.target_2.clock.next = self.clock.val();
-        self.pullup_scl.bus.join(&mut self.controller.scl);
-        self.pullup_sda.bus.join(&mut self.controller.sda);
-        self.pullup_scl.bus.join(&mut self.target_1.scl);
-        self.pullup_sda.bus.join(&mut self.target_1.sda);
-        self.controller.sda.join(&mut self.target_1.sda);
-        self.controller.scl.join(&mut self.target_1.scl);
-        self.pullup_scl.bus.join(&mut self.target_2.scl);
-        self.pullup_sda.bus.join(&mut self.target_2.sda);
-        self.controller.sda.join(&mut self.target_2.sda);
-        self.controller.scl.join(&mut self.target_2.scl);
+        Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.controller.scl);
+        Signal::<InOut, Bit>::join(&mut self.pullup_sda.bus, &mut self.controller.sda);
+        Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.target_1.scl);
+        Signal::<InOut, Bit>::join(&mut self.pullup_sda.bus, &mut self.target_1.sda);
+        Signal::<InOut, Bit>::join(&mut self.controller.sda, &mut self.target_1.sda);
+        Signal::<InOut, Bit>::join(&mut self.controller.scl, &mut self.target_1.scl);
+        Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.target_2.scl);
+        Signal::<InOut, Bit>::join(&mut self.pullup_sda.bus, &mut self.target_2.sda);
+        Signal::<InOut, Bit>::join(&mut self.controller.sda, &mut self.target_2.sda);
+        Signal::<InOut, Bit>::join(&mut self.controller.scl, &mut self.target_2.scl);
         self.pullup_scl.write_data.next = true;
         self.pullup_sda.write_data.next = true;
         self.controller.reset.next = false;

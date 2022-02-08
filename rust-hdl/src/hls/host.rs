@@ -1,6 +1,7 @@
 use crate::core::prelude::*;
 use crate::hls::bidi::{BidiBusM, BidiMaster};
-use crate::hls::bus::SoCBusController;
+use crate::hls::bus::FIFOWriteController;
+use crate::hls::bus::{FIFOReadController, SoCBusController};
 use crate::hls::controller::BaseController;
 use crate::hls::cross_fifo::{CrossNarrow, CrossWiden};
 
@@ -23,22 +24,26 @@ impl<const A: usize> Logic for Host<A> {
     fn update(&mut self) {
         self.bidi_bus.link(&mut self.bidi_master.bus);
         self.bidi_master.clock.next = self.bidi_clock.val();
-        self.bidi_master
-            .data_from_bus
-            .join(&mut self.bus_to_controller.narrow_bus);
+        FIFOWriteController::<Bits<8>>::join(
+            &mut self.bidi_master.data_from_bus,
+            &mut self.bus_to_controller.narrow_bus,
+        );
         self.bus_to_controller.narrow_clock.next = self.bidi_clock.val();
         self.bus_to_controller.wide_clock.next = self.sys_clock.val();
-        self.bidi_master
-            .data_to_bus
-            .join(&mut self.controller_to_bus.narrow_bus);
+        FIFOReadController::<Bits<8>>::join(
+            &mut self.bidi_master.data_to_bus,
+            &mut self.controller_to_bus.narrow_bus,
+        );
         self.controller_to_bus.narrow_clock.next = self.bidi_clock.val();
         self.controller_to_bus.wide_clock.next = self.sys_clock.val();
-        self.controller
-            .from_cpu
-            .join(&mut self.bus_to_controller.wide_bus);
-        self.controller
-            .to_cpu
-            .join(&mut self.controller_to_bus.wide_bus);
+        FIFOReadController::<Bits<16>>::join(
+            &mut self.controller.from_cpu,
+            &mut self.bus_to_controller.wide_bus,
+        );
+        FIFOWriteController::<Bits<16>>::join(
+            &mut self.controller.to_cpu,
+            &mut self.controller_to_bus.wide_bus,
+        );
         self.controller.clock.next = self.sys_clock.val();
         self.bus.link(&mut self.controller.bus);
     }

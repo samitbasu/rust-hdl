@@ -1,7 +1,6 @@
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
-use rust_hdl::hls::spi::HLSSPIMaster;
-use rust_hdl::widgets::prelude::{SPIConfig, SPIWiresMaster};
+use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]
 struct SPITest {
@@ -9,7 +8,7 @@ struct SPITest {
     host_to_pc: SyncFIFO<Bits<8>, 3, 4, 1>,
     bidi_dev: BidiSimulatedDevice<Bits<8>>,
     host: Host<8>,
-    core: HLSSPIMaster<16, 8, 64>,
+    core: HLSSPIMasterDynamicMode<16, 8, 64>,
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
     pub spi: SPIWiresMaster,
@@ -33,20 +32,18 @@ impl Logic for SPITest {
 
 impl Default for SPITest {
     fn default() -> Self {
-        let spi_config = SPIConfig {
+        let spi_config = SPIConfigDynamicMode {
             clock_speed: 100_000_000,
             cs_off: true,
             mosi_off: false,
             speed_hz: 10_000_000,
-            cpha: true,
-            cpol: false,
         };
         Self {
             pc_to_host: Default::default(),
             host_to_pc: Default::default(),
             bidi_dev: Default::default(),
             host: Default::default(),
-            core: HLSSPIMaster::new(spi_config),
+            core: HLSSPIMasterDynamicMode::new(spi_config),
             bidi_clock: Default::default(),
             sys_clock: Default::default(),
             spi: Default::default(),
@@ -68,14 +65,14 @@ fn make_spi_test() -> SPITest {
 }
 
 #[test]
-fn test_spi_test_synthesizes() {
+fn test_spi_test_dynamic_mode_synthesizes() {
     let uut = make_spi_test();
     let vlog = generate_verilog(&uut);
-    yosys_validate("spi_test", &vlog).unwrap();
+    yosys_validate("spi_dm_test", &vlog).unwrap();
 }
 
 #[test]
-fn test_spi_works() {
+fn test_spi_dynamic_mode_works() {
     let uut = make_spi_test();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<SPITest>| {
@@ -96,8 +93,11 @@ fn test_spi_works() {
             0,
             [0_u16, 0, 0xDEAD_u16, 0xBEEF]
         );
-        // Write the transaction length
-        hls_host_write!(sim, bidi_clock, x, pc_to_host, 2, [32_u16]);
+        // Write the transaction length - set the SPI mode to 2, which
+        // sets the cpol and cpha bits to bits 8 and 9 of the length register
+        // shifted by 8 bits relative to the length
+        let mode_and_length: u16 = 32 | (3 << 8);
+        hls_host_write!(sim, bidi_clock, x, pc_to_host, 2, [mode_and_length]);
         // Write a start to start the transaction
         hls_host_write!(sim, bidi_clock, x, pc_to_host, 3, [0_u16]);
         // Read back the results
@@ -107,10 +107,6 @@ fn test_spi_works() {
         println!("{:x?}", ret);
         sim.done(x)
     });
-    let ret = sim.run_traced(
-        Box::new(uut),
-        100_000,
-        std::fs::File::create(vcd_path!("host_spi.vcd")).unwrap(),
-    );
-    ret.unwrap();
+    sim.run_to_file(Box::new(uut), 100_000, &vcd_path!("host_spi_dm.vcd"))
+        .unwrap();
 }

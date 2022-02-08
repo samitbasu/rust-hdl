@@ -37,7 +37,7 @@ impl<T: Synth> Signal<In, T> {
     pub fn join(&mut self, other: &mut Signal<Out, T>) {
         self.next = other.val();
     }
-    pub fn join_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+    pub fn join_hdl(my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
         let details = VerilogLinkDetails {
             my_name: my_name.into(),
             owner_name: owner_name.into(),
@@ -51,7 +51,7 @@ impl<T: Synth> Signal<Out, T> {
     pub fn join(&mut self, other: &mut Signal<In, T>) {
         other.next = self.val();
     }
-    pub fn join_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+    pub fn join_hdl(my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
         let details = VerilogLinkDetails {
             my_name: my_name.into(),
             owner_name: owner_name.into(),
@@ -334,7 +334,7 @@ impl<T: Synth> Signal<InOut, T> {
     pub fn join(&mut self, other: &mut Signal<InOut, T>) {
         self.simulate_connected_tristate(other);
     }
-    pub fn join_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+    pub fn join_hdl(my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
         let details = VerilogLinkDetails {
             my_name: my_name.into(),
             owner_name: owner_name.into(),

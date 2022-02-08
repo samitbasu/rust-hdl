@@ -1,7 +1,7 @@
 use crate::core::prelude::*;
 use crate::widgets::dff::DFF;
-use crate::widgets::ram::RAM;
-use crate::widgets::sync_rom::SyncROM;
+use crate::widgets::ramrom::ram::RAM;
+use crate::widgets::ramrom::sync_rom::SyncROM;
 
 #[derive(Clone, Debug, LogicState, Copy, PartialEq)]
 enum MACFIRState {

@@ -1,6 +1,5 @@
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
-use std::time::Duration;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum State {

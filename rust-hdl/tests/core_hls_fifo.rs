@@ -91,8 +91,8 @@ impl Logic for FIFOTestFixture {
         self.feeder.clock.next = self.clock.val();
         self.reader.clock.next = self.clock.val();
         self.fifo.clock.next = self.clock.val();
-        self.feeder.bus.join(&mut self.fifo.bus_write);
-        self.reader.bus.join(&mut self.fifo.bus_read);
+        FIFOWriteController::<Bits<8>>::join(&mut self.feeder.bus, &mut self.fifo.bus_write);
+        FIFOReadController::<Bits<8>>::join(&mut self.reader.bus, &mut self.fifo.bus_read);
     }
 }
 
@@ -166,8 +166,8 @@ impl Logic for FIFOTestFixtureAsync {
         self.reader.clock.next = self.clock_read.val();
         self.fifo.write_clock.next = self.clock_write.val();
         self.fifo.read_clock.next = self.clock_read.val();
-        self.feeder.bus.join(&mut self.fifo.bus_write);
-        self.reader.bus.join(&mut self.fifo.bus_read);
+        FIFOWriteController::<Bits<8>>::join(&mut self.feeder.bus, &mut self.fifo.bus_write);
+        FIFOReadController::<Bits<8>>::join(&mut self.reader.bus, &mut self.fifo.bus_read);
     }
 }
 

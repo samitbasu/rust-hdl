@@ -39,6 +39,7 @@ fn connect_inner_statement(expr: &syn::Expr) -> Result<TS> {
         Expr::Match(x) => connect_match(x),
         Expr::ForLoop(x) => connect_for_loop(x),
         Expr::MethodCall(x) => connect_method_call(x),
+        Expr::Call(x) => connect_call(x),
         _ => Ok(TS::new()),
     }
 }
@@ -52,6 +53,14 @@ fn connect_for_loop(node: &syn::ExprForLoop) -> Result<TS> {
     }))
 }
 
+fn connect_call(node: &syn::ExprCall) -> Result<TS> {
+    let source = node.args.index(0);
+    let target = node.args.index(1);
+    Ok(quote!(
+        logic::logic_connect_join_fn(#source, #target);
+    ))
+}
+
 fn connect_method_call(node: &syn::ExprMethodCall) -> Result<TS> {
     let source = &node.receiver;
     let method_name = node.method.to_string();
@@ -61,15 +70,6 @@ fn connect_method_call(node: &syn::ExprMethodCall) -> Result<TS> {
             let target = &t.expr;
             return Ok(quote!(
                 logic::logic_connect_link_fn(&mut #source, &mut #target);
-            ));
-        }
-    }
-    if method_name == "join" {
-        let target = node.args.index(0);
-        if let Expr::Reference(t) = target {
-            let target = &t.expr;
-            return Ok(quote!(
-                logic::logic_connect_join_fn(&mut #source, &mut #target);
             ));
         }
     }

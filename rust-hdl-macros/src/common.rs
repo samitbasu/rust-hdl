@@ -4,6 +4,44 @@ use syn::Data;
 
 pub(crate) type TS = proc_macro2::TokenStream;
 
+pub(crate) fn get_field_types(input: &syn::DeriveInput) -> syn::Result<Vec<TS>> {
+    let mut fields = vec![];
+    match &input.data {
+        Data::Struct(ds) => {
+            for field in &ds.fields {
+                if field.ident.is_none() {
+                    return Err(syn::Error::new(
+                        field.span(),
+                        "Unnamed fields are not supported",
+                    ));
+                }
+                let name = &field.ident.as_ref();
+                let qname = quote!(#name);
+                let qname_string = qname.to_string();
+                if ["config", "wire", "reg", "module", "edge", "disable"]
+                    .contains(&qname_string.as_str())
+                {
+                    return Err(syn::Error::new(
+                        field.span(),
+                        "Cannot use an HDL keyword here",
+                    ));
+                }
+                if !qname_string.starts_with("_") {
+                    let ty = &field.ty;
+                    fields.push(quote!(#ty));
+                }
+            }
+        }
+        _ => {
+            return Err(syn::Error::new(
+                input.span(),
+                "Logic Derive can only be applied to structs",
+            ));
+        }
+    }
+    Ok(fields)
+}
+
 pub(crate) fn get_field_names(input: &syn::DeriveInput) -> syn::Result<Vec<TS>> {
     let mut fields = vec![];
     match &input.data {
@@ -73,6 +111,11 @@ pub fn get_has_changed(fields: Vec<TS>) -> syn::Result<TS> {
             }
         })
     }
+}
+
+pub fn squash(x: &str) -> String {
+    let y = x.to_string().replace(" ", "").replace("\n", "");
+    y
 }
 
 pub fn fixup_ident(x: String) -> String {

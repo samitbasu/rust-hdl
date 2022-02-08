@@ -354,7 +354,7 @@ impl Logic for TestSDRAMDevice {
         self.dram.clock.next = self.clock.val();
         self.dram.address.next = self.cntrl.address.val();
         self.dram.cmd.next = self.cntrl.cmd.val();
-        self.dram.data.join(&mut self.cntrl.data);
+        Signal::<InOut, Bits<16>>::join(&mut self.dram.data, &mut self.cntrl.data);
         self.dram.bank.next = self.cntrl.bank.val();
         self.cntrl.clock.next = self.clock.val();
     }

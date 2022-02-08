@@ -400,7 +400,7 @@ mod tests {
         }
         x.connect_all();
         let vlog = generate_verilog(&x);
-        yosys_validate("test_obj", &vlog).unwrap();
+        yosys_validate("test_obj1", &vlog).unwrap();
     }
 
     #[test]

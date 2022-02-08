@@ -5,6 +5,7 @@ use rust_hdl::sim::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use std::thread::sleep;
 use std::time::Duration;
+use rust_hdl::widgets::prelude::SPIWiresMaster;
 
 #[derive(LogicBlock)]
 pub struct OpalKellySPIMuxTest {
@@ -23,10 +24,7 @@ impl Logic for OpalKellySPIMuxTest {
         self.mux_adc.clock.next = self.ok_host.ti_clk.val();
         self.spi.clock.next = self.ok_host.ti_clk.val();
         // Connect the SPI bus
-        self.mux_adc.mosi.next = self.spi.wires.mosi.val();
-        self.mux_adc.msel.next = self.spi.wires.msel.val();
-        self.mux_adc.mclk.next = self.spi.wires.mclk.val();
-        self.spi.wires.miso.next = self.mux_adc.miso.val();
+        SPIWiresMaster::join(&mut self.spi.wires, &mut self.mux_adc.wires);
         // Connect the ok busses
         self.spi.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.spi.ok2.val();

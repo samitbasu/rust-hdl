@@ -63,31 +63,23 @@ impl Logic for BusTest {
         self.master_from_bus_fifo.clock.next = self.clock.val();
         self.master_to_bus_fifo.clock.next = self.clock.val();
         // Connect the busses
-        self.device
+        FIFOReadController::<Bits<8>>::join(&mut self.device
             .data_to_bus
-            .join(&mut self.device_to_bus_fifo.bus_read);
-        self.device
+            ,&mut self.device_to_bus_fifo.bus_read);
+        FIFOWriteController::<Bits<8>>::join(&mut self.device
             .data_from_bus
-            .join(&mut self.device_from_bus_fifo.bus_write);
-        self.master
+            ,&mut self.device_from_bus_fifo.bus_write);
+        FIFOReadController::<Bits<8>>::join(&mut self.master
             .data_to_bus
-            .join(&mut self.master_to_bus_fifo.bus_read);
-        self.master
+            , &mut self.master_to_bus_fifo.bus_read);
+        FIFOWriteController::<Bits<8>>::join(&mut self.master
             .data_from_bus
-            .join(&mut self.master_from_bus_fifo.bus_write);
-        self.master.bus.join(&mut self.device.bus);
-        self.dtm_feeder
-            .bus
-            .join(&mut self.device_to_bus_fifo.bus_write);
-        self.mtd_feeder
-            .bus
-            .join(&mut self.master_to_bus_fifo.bus_write);
-        self.dtm_reader
-            .bus
-            .join(&mut self.master_from_bus_fifo.bus_read);
-        self.mtd_reader
-            .bus
-            .join(&mut self.device_from_bus_fifo.bus_read);
+            ,&mut self.master_from_bus_fifo.bus_write);
+        BidiBusM::<Bits<8>>::join(&mut self.master.bus, &mut self.device.bus);
+        FIFOWriteController::<Bits<8>>::join(&mut self.dtm_feeder.bus, &mut self.device_to_bus_fifo.bus_write);
+        FIFOWriteController::<Bits<8>>::join(&mut self.mtd_feeder.bus, &mut self.master_to_bus_fifo.bus_write);
+        FIFOReadController::<Bits<8>>::join(&mut self.dtm_reader.bus, &mut self.master_from_bus_fifo.bus_read);
+        FIFOReadController::<Bits<8>>::join(&mut self.mtd_reader.bus, &mut self.device_from_bus_fifo.bus_read);
     }
 }
 

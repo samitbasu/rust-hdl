@@ -1,6 +1,7 @@
 use super::ad7193_sim::AD7193Config;
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
+use crate::widgets::spi::master::SPIWiresSlave;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum MAX31856State {
@@ -25,10 +26,7 @@ enum DAQState {
 #[derive(LogicBlock)]
 pub struct MAX31856Simulator {
     // Slave SPI bus
-    pub mosi: Signal<In, Bit>,
-    pub mclk: Signal<In, Bit>,
-    pub msel: Signal<In, Bit>,
-    pub miso: Signal<Out, Bit>,
+    pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
     // RAM that stores the memory contents
     reg_ram: RAM<Bits<8>, 4>,
@@ -63,10 +61,7 @@ impl MAX31856Simulator {
             .map(|x| Bits::<8>::from(*x))
             .into();
         Self {
-            mosi: Default::default(),
-            mclk: Default::default(),
-            msel: Default::default(),
-            miso: Default::default(),
+            wires: Default::default(),
             clock: Default::default(),
             reg_ram,
             auto_conversions_enabled: Default::default(),
@@ -89,10 +84,7 @@ impl Logic for MAX31856Simulator {
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the spi bus
-        self.spi_slave.mosi.next = self.mosi.val();
-        self.spi_slave.mclk.next = self.mclk.val();
-        self.spi_slave.msel.next = self.msel.val();
-        self.miso.next = self.spi_slave.miso.val();
+        self.wires.link(&mut self.spi_slave.wires);
         // Clock the internal logic
         self.reg_ram.write_clock.next = self.clock.val();
         self.reg_ram.read_clock.next = self.clock.val();
@@ -241,9 +233,7 @@ fn test_max31856_synthesizes() {
         cpha: true,
         cpol: true,
     });
-    uut.mosi.connect();
-    uut.mclk.connect();
-    uut.msel.connect();
+    uut.wires.link_connect_dest();
     uut.clock.connect();
     uut.connect_all();
     yosys_validate("max31856", &generate_verilog(&uut)).unwrap();
@@ -261,10 +251,7 @@ impl Logic for Test31856 {
     fn update(&mut self) {
         self.master.clock.next = self.clock.val();
         self.uut.clock.next = self.clock.val();
-        self.uut.mosi.next = self.master.wires.mosi.val();
-        self.uut.msel.next = self.master.wires.msel.val();
-        self.uut.mclk.next = self.master.wires.mclk.val();
-        self.master.wires.miso.next = self.uut.miso.val();
+        SPIWiresMaster::join(&mut self.master.wires, &mut self.uut.wires);
     }
 }
 

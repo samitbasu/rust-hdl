@@ -23,18 +23,16 @@ impl Logic for ControllerTest {
         self.to_cpu_fifo.clock.next = self.clock.val();
         self.from_cpu_fifo.clock.next = self.clock.val();
         // Connect the test interfaces
-        self.from_cpu.join(&mut self.from_cpu_fifo.bus_write);
-        self.from_cpu_fifo
-            .bus_read
-            .join(&mut self.controller.from_cpu);
-        self.to_cpu.join(&mut self.to_cpu_fifo.bus_read);
-        self.to_cpu_fifo.bus_write.join(&mut self.controller.to_cpu);
+        FIFOWriteController::<Bits<16>>::join(&mut self.from_cpu, &mut self.from_cpu_fifo.bus_write);
+        FIFOReadResponder::<Bits<16>>::join(&mut self.from_cpu_fifo.bus_read, &mut self.controller.from_cpu);
+        FIFOReadController::<Bits<16>>::join(&mut self.to_cpu, &mut self.to_cpu_fifo.bus_read);
+        FIFOWriteResponder::<Bits<16>>::join(&mut self.to_cpu_fifo.bus_write, &mut self.controller.to_cpu);
         self.controller.clock.next = self.clock.val();
         // Connect the controller to the bridge
-        self.controller.bus.join(&mut self.bridge.upstream);
+        SoCBusController::<16, 2>::join(&mut self.controller.bus, &mut self.bridge.upstream);
         // Connect the MOSI port to node 0 of the bridge
-        self.bridge.nodes[0].join(&mut self.port.bus);
-        self.bridge.nodes[1].join(&mut self.iport.bus);
+        SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port.bus);
+        SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.iport.bus);
         self.port.ready.next = true;
     }
 }

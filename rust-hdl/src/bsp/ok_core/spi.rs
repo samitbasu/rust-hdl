@@ -27,7 +27,7 @@ impl Default for OKSPIMasterAddressConfig {
 
 #[derive(LogicBlock)]
 pub struct OKSPIMaster {
-    pub wires: SPIWires,
+    pub wires: SPIWiresMaster,
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     pub clock: Signal<In, Clock>,
@@ -141,7 +141,7 @@ fn test_ok_spi_master_synthesizes() {
 fn test_ok_spi_master_works() {
     #[derive(LogicBlock)]
     pub struct TopOK {
-        wires: SPIWires,
+        wires: SPIWiresMaster,
         ok1: Signal<In, Bits<31>>,
         ok2: Signal<Out, Bits<17>>,
         clock: Signal<In, Clock>,
@@ -157,10 +157,7 @@ fn test_ok_spi_master_works() {
             self.ok2.next = self.core.ok2.val();
             self.core.clock.next = self.clock.val();
             self.slave.clock.next = self.clock.val();
-            self.slave.mclk.next = self.wires.mclk.val();
-            self.slave.msel.next = self.wires.msel.val();
-            self.slave.mosi.next = self.wires.mosi.val();
-            self.wires.miso.next = self.slave.miso.val();
+            SPIWiresMaster::join(&mut self.wires, &mut self.slave.wires);
         }
     }
 

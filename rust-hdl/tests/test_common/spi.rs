@@ -2,6 +2,7 @@ use crate::test_common::tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_tes
 use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::sim::prelude::*;
+use rust_hdl::widgets::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use std::thread::sleep;
 use std::time::Duration;
@@ -34,10 +35,7 @@ impl Logic for OpalKellySPITest {
         self.ok_host.ok2.next = self.spi.ok2.val();
         self.spi.clock.next = self.ok_host.ti_clk.val();
         self.adc.clock.next = self.ok_host.ti_clk.val();
-        self.adc.mosi.next = self.spi.wires.mosi.val();
-        self.adc.mclk.next = self.spi.wires.mclk.val();
-        self.adc.msel.next = self.spi.wires.msel.val();
-        self.spi.wires.miso.next = self.adc.miso.val();
+        SPIWiresMaster::join(&mut self.spi.wires, &mut self.adc.wires);
     }
 }
 

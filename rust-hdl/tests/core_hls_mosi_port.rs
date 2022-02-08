@@ -15,9 +15,9 @@ impl Logic for MOSIPortTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
-        self.bus.join(&mut self.bridge.upstream);
-        self.bridge.nodes[0].join(&mut self.port_a.bus);
-        self.bridge.nodes[1].join(&mut self.port_b.bus);
+        SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
+        SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
+        SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.port_b.bus);
     }
 }
 
@@ -158,9 +158,9 @@ impl Logic for MOSIWidePortTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
-        self.bus.join(&mut self.bridge.upstream);
-        self.bridge.nodes[0].join(&mut self.port_a.bus);
-        self.bridge.nodes[1].join(&mut self.port_b.bus);
+        SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
+        SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
+        SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.port_b.bus);
     }
 }
 
@@ -258,8 +258,8 @@ impl Logic for MOSIPortFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
-        self.bus.join(&mut self.bridge.upstream);
-        self.bridge.nodes[0].join(&mut self.port_a.bus);
+        SoCBusController::<16,2>::join(&mut self.bus, &mut self.bridge.upstream);
+        SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
     }
 }
 

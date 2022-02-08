@@ -2,10 +2,7 @@ use evalexpr::ContextWithMutableVariables;
 use num_bigint::BigUint;
 use regex::Regex;
 
-use crate::core::ast::{
-    VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression,
-    VerilogLink, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary,
-};
+use crate::core::ast::{VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional, VerilogExpression, VerilogLink, VerilogLinkDetails, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary};
 use crate::core::code_writer::CodeWriter;
 use crate::core::verilog_visitor::{walk_block, VerilogVisitor};
 
@@ -44,6 +41,14 @@ impl VerilogCodeGenerator {
             }
         }
         a.to_string()
+    }
+
+    fn link_fixup(&self, x: &VerilogLinkDetails) -> VerilogLinkDetails {
+        VerilogLinkDetails {
+            my_name: self.ident_fixup(&x.my_name),
+            owner_name: self.ident_fixup(&x.owner_name),
+            other_name: self.ident_fixup(&x.other_name),
+        }
     }
 
     fn ident_fixup(&self, a: &str) -> String {
@@ -219,7 +224,12 @@ impl VerilogVisitor for VerilogCodeGenerator {
 
     fn visit_link(&mut self, l: &[VerilogLink]) {
         for link in l {
-            self.links.push(link.clone());
+            self.links.push(
+                match link {
+                    VerilogLink::Forward(x) => VerilogLink::Forward(self.link_fixup(x)),
+                    VerilogLink::Backward(x) => VerilogLink::Backward(self.link_fixup(x)),
+                    VerilogLink::Bidirectional(x) => VerilogLink::Bidirectional(self.link_fixup(x)),
+                })
         }
     }
 

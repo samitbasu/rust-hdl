@@ -34,7 +34,7 @@ impl Logic for HLSSDRAMFIFOTest {
         self.sdram.address.next = self.fifo.address.val();
         self.sdram.bank.next = self.fifo.bank.val();
         self.sdram.cmd.next = self.fifo.cmd.val();
-        self.sdram.data.join(&mut self.fifo.data);
+        Signal::<InOut, Bits<16>>::join(&mut self.sdram.data,&mut self.fifo.data);
     }
 }
 

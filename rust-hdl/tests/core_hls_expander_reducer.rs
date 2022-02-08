@@ -25,10 +25,10 @@ impl Logic for ReducerTestFixture {
         self.reducer.clock.next = self.clock.val();
         self.narrow_fifo.clock.next = self.clock.val();
         self.reader.clock.next = self.clock.val();
-        self.feeder.bus.join(&mut self.wide_fifo.bus_write);
-        self.reducer.bus_read.join(&mut self.wide_fifo.bus_read);
-        self.narrow_fifo.bus_write.join(&mut self.reducer.bus_write);
-        self.narrow_fifo.bus_read.join(&mut self.reader.bus);
+        FIFOWriteController::<Bits<16>>::join(&mut self.feeder.bus, &mut self.wide_fifo.bus_write);
+        FIFOReadController::<Bits<16>>::join(&mut self.reducer.bus_read, &mut self.wide_fifo.bus_read);
+        FIFOWriteResponder::<Bits<4>>::join(&mut self.narrow_fifo.bus_write, &mut self.reducer.bus_write);
+        FIFOReadResponder::<Bits<4>>::join(&mut self.narrow_fifo.bus_read, &mut self.reader.bus);
     }
 }
 
@@ -113,10 +113,10 @@ impl Logic for ExpanderTestFixture {
         self.expander.clock.next = self.clock.val();
         self.word_fifo.clock.next = self.clock.val();
         self.reader.clock.next = self.clock.val();
-        self.feeder.bus.join(&mut self.nibble_fifo.bus_write);
-        self.expander.bus_read.join(&mut self.nibble_fifo.bus_read);
-        self.word_fifo.bus_write.join(&mut self.expander.bus_write);
-        self.word_fifo.bus_read.join(&mut self.reader.bus);
+        FIFOWriteController::<Bits<4>>::join(&mut self.feeder.bus, &mut self.nibble_fifo.bus_write);
+        FIFOReadController::<Bits<4>>::join(&mut self.expander.bus_read, &mut self.nibble_fifo.bus_read);
+        FIFOWriteResponder::<Bits<16>>::join(&mut self.word_fifo.bus_write, &mut self.expander.bus_write);
+        FIFOReadResponder::<Bits<16>>::join(&mut self.word_fifo.bus_read, &mut self.reader.bus);
     }
 }
 

@@ -4,7 +4,7 @@ use rust_hdl::widgets::prelude::*;
 #[derive(LogicBlock)]
 struct SPITestAsync {
     clock: Signal<In, Clock>,
-    bus: SPIWires,
+    bus: SPIWiresMaster,
     master: SPIMaster<64>,
 }
 
@@ -89,10 +89,7 @@ impl Logic for SPITestPair {
     fn update(&mut self) {
         self.master.clock.next = self.clock.val();
         self.slave.clock.next = self.clock.val();
-        self.slave.mosi.next = self.master.wires.mosi.val();
-        self.slave.mclk.next = self.master.wires.mclk.val();
-        self.slave.msel.next = self.master.wires.msel.val();
-        self.master.wires.miso.next = self.slave.miso.val();
+        SPIWiresMaster::join(&mut self.master.wires, &mut self.slave.wires);
     }
 }
 

@@ -1,8 +1,8 @@
 use crate::core::prelude::*;
-use crate::widgets::async_fifo::AsynchronousFIFO;
-use crate::widgets::fifo_expander_n::WordOrder;
+use crate::widgets::fifo::async_fifo::AsynchronousFIFO;
+use crate::widgets::fifo::fifo_expander_n::WordOrder;
+use crate::widgets::fifo::sync_fifo::SynchronousFIFO;
 use crate::widgets::prelude::{FIFOExpanderN, FIFOReducerN};
-use crate::widgets::sync_fifo::SynchronousFIFO;
 
 #[derive(LogicBlock)]
 pub struct CrossWidenFIFO<

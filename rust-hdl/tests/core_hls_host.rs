@@ -19,22 +19,18 @@ struct HostTest {
 impl Logic for HostTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.bidi_dev
-            .data_to_bus
-            .join(&mut self.pc_to_host.bus_read);
-        self.bidi_dev
-            .data_from_bus
-            .join(&mut self.host_to_pc.bus_write);
+        FIFOReadController::<Bits<8>>::join(&mut self.bidi_dev.data_to_bus, &mut self.pc_to_host.bus_read);
+        FIFOWriteController::<Bits<8>>::join(&mut self.bidi_dev.data_from_bus, &mut self.host_to_pc.bus_write);
         self.host_to_pc.clock.next = self.bidi_clock.val();
         self.pc_to_host.clock.next = self.bidi_clock.val();
         self.bidi_dev.clock.next = self.bidi_clock.val();
-        self.bidi_dev.bus.join(&mut self.host.bidi_bus);
+        BidiBusD::<Bits<8>>::join(&mut self.bidi_dev.bus, &mut self.host.bidi_bus);
         self.host.bidi_clock.next = self.bidi_clock.val();
         self.host.sys_clock.next = self.sys_clock.val();
-        self.host.bus.join(&mut self.bridge.upstream);
-        self.bridge.nodes[0].join(&mut self.port.bus);
-        self.bridge.nodes[1].join(&mut self.iport.bus);
-        self.bridge.nodes[2].join(&mut self.fport.bus);
+        SoCBusController::<16, 8>::join(&mut self.host.bus, &mut self.bridge.upstream);
+        SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port.bus);
+        SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.iport.bus);
+        SoCPortController::<16>::join(&mut self.bridge.nodes[2], &mut self.fport.bus);
         self.port.ready.next = true;
     }
 }

@@ -111,12 +111,8 @@ impl Logic for RouterTestDevice {
     #[hdl_gen]
     fn update(&mut self) {
         self.upstream.link(&mut self.bridge.upstream);
-        self.bridge.nodes[0].join(&mut self.mosi_ports[0].bus);
-        self.bridge.nodes[1].join(&mut self.mosi_ports[1].bus);
-        self.bridge.nodes[2].join(&mut self.mosi_ports[2].bus);
-        self.bridge.nodes[3].join(&mut self.mosi_ports[3].bus);
-        self.bridge.nodes[4].join(&mut self.mosi_ports[4].bus);
         for i in 0_usize..5 {
+            SoCPortController::<16>::join(&mut self.bridge.nodes[i], &mut self.mosi_ports[i].bus);
             self.mosi_ports[i].ready.next = self.mosi_ports[i].bus.select.val();
         }
     }
@@ -162,9 +158,9 @@ impl Logic for RouterTestSetup {
     #[hdl_gen]
     fn update(&mut self) {
         self.upstream.link(&mut self.router.upstream);
-        self.router.nodes[0].join(&mut self.dev_a[0].upstream);
-        self.router.nodes[1].join(&mut self.dev_a[1].upstream);
-        self.router.nodes[2].join(&mut self.dev_a[2].upstream);
+        for i in 0_usize..3 {
+            SoCBusController::<16, 8>::join(&mut self.router.nodes[i], &mut self.dev_a[0].upstream);
+        }
         self.upstream.clock.next = self.clock.val();
     }
 }

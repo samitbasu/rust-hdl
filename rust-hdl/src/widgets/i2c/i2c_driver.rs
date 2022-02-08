@@ -315,12 +315,12 @@ impl Logic for I2CDriverTest {
     fn update(&mut self) {
         self.driver.clock.next = self.clock.val();
         self.target.clock.next = self.clock.val();
-        self.pullup_scl.bus.join(&mut self.driver.scl);
-        self.pullup_sda.bus.join(&mut self.driver.sda);
-        self.pullup_scl.bus.join(&mut self.target.scl);
-        self.pullup_sda.bus.join(&mut self.target.sda);
-        self.driver.sda.join(&mut self.target.sda);
-        self.driver.scl.join(&mut self.target.scl);
+        Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.driver.scl);
+        Signal::<InOut, Bit>::join(&mut self.pullup_sda.bus, &mut self.driver.sda);
+        Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.target.scl);
+        Signal::<InOut, Bit>::join(&mut self.pullup_sda.bus, &mut self.target.sda);
+        Signal::<InOut, Bit>::join(&mut self.driver.sda, &mut self.target.sda);
+        Signal::<InOut, Bit>::join(&mut self.driver.scl, &mut self.target.scl);
         self.pullup_scl.write_data.next = true;
         self.pullup_sda.write_data.next = true;
         self.driver.reset.next = false;

@@ -1,14 +1,14 @@
 use super::ad7193_sim::{AD7193Config, AD7193Simulator};
 use crate::core::prelude::*;
+use crate::widgets::prelude::*;
+use crate::widgets::spi::mux::MuxSlaves;
 
 #[derive(LogicBlock)]
 pub struct MuxedAD7193Simulators {
     // Input SPI bus
-    pub mosi: Signal<In, Bit>,
-    pub mclk: Signal<In, Bit>,
-    pub msel: Signal<In, Bit>,
-    pub miso: Signal<Out, Bit>,
+    pub wires: SPIWiresSlave,
     pub addr: Signal<In, Bits<3>>,
+    pub mux: MuxSlaves<8, 3>,
     pub clock: Signal<In, Clock>,
     adcs: [AD7193Simulator; 8],
 }
@@ -16,22 +16,11 @@ pub struct MuxedAD7193Simulators {
 impl MuxedAD7193Simulators {
     pub fn new(config: AD7193Config) -> Self {
         Self {
-            mosi: Default::default(),
-            mclk: Default::default(),
-            msel: Default::default(),
-            miso: Default::default(),
+            wires: Default::default(),
+            mux: Default::default(),
             addr: Default::default(),
             clock: Default::default(),
-            adcs: [
-                AD7193Simulator::new(config),
-                AD7193Simulator::new(config),
-                AD7193Simulator::new(config),
-                AD7193Simulator::new(config),
-                AD7193Simulator::new(config),
-                AD7193Simulator::new(config),
-                AD7193Simulator::new(config),
-                AD7193Simulator::new(config),
-            ],
+            adcs: array_init::array_init(|_| AD7193Simulator::new(config)),
         }
     }
 }
@@ -39,27 +28,19 @@ impl MuxedAD7193Simulators {
 impl Logic for MuxedAD7193Simulators {
     #[hdl_gen]
     fn update(&mut self) {
-        // Latch prevention
-        self.miso.next = true;
-        for i in 0_usize..8_usize {
+        self.wires.link(&mut self.mux.from_master);
+        for i in 0_usize..8 {
             self.adcs[i].clock.next = self.clock.val();
-            self.adcs[i].mosi.next = self.mosi.val();
-            self.adcs[i].mclk.next = self.mclk.val();
-            self.adcs[i].msel.next = true;
-            if self.addr.val().index() == i {
-                self.adcs[i].msel.next = self.msel.val();
-                self.miso.next = self.adcs[i].miso.val();
-            }
+            SPIWiresMaster::join(&mut self.mux.to_slaves[i], &mut self.adcs[i].wires);
         }
+        self.mux.sel.next = self.addr.val();
     }
 }
 
 #[test]
 fn test_mux_is_synthesizable() {
     let mut uut = MuxedAD7193Simulators::new(AD7193Config::hw());
-    uut.mclk.connect();
-    uut.mosi.connect();
-    uut.msel.connect();
+    uut.wires.link_connect_dest();
     uut.addr.connect();
     uut.clock.connect();
     uut.connect_all();

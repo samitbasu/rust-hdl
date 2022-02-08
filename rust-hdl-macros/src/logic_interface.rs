@@ -1,5 +1,5 @@
-use crate::common::get_field_names;
 use crate::common::{get_connect_all, get_has_changed, get_update_all, TS};
+use crate::common::{get_field_names, get_field_types};
 use quote::quote;
 use std::collections::HashMap;
 use syn::spanned::Spanned;
@@ -7,13 +7,14 @@ use syn::{Result, TypeGenerics};
 
 pub(crate) fn get_impl_for_logic_interface(input: &syn::DeriveInput) -> Result<TS> {
     let fields = get_field_names(input)?;
+    let field_types = get_field_types(input)?;
     let link = get_link(fields.clone())?;
     let link_hdl = get_link_hdl(fields.clone())?;
     let update_all = get_update_all(fields.clone())?;
     let has_changed = get_has_changed(fields.clone())?;
     let connect_all = get_connect_all(fields.clone())?;
     let join_connect = get_join_connect(fields.clone())?;
-    let join_hdl = get_join_hdl(fields.clone())?;
+    let join_hdl = get_join_hdl(fields.clone(), field_types.clone())?;
     let accept = get_accept(fields.clone())?;
     let nvps = get_nvps_from_attributes(input)?;
     let (impl_generics, ty_generics, _where_clause) = &input.generics.split_for_impl();
@@ -89,12 +90,12 @@ fn get_link_hdl(fields: Vec<TS>) -> Result<TS> {
     })
 }
 
-fn get_join_hdl(fields: Vec<TS>) -> Result<TS> {
+fn get_join_hdl(fields: Vec<TS>, field_types: Vec<TS>) -> Result<TS> {
     let fields_as_strings = fields.iter().map(|x| x.to_string()).collect::<Vec<_>>();
     Ok(quote! {
-        fn join_hdl(&self, my_name: &str, this: &str, that: &str) -> Vec<ast::VerilogLink> {
+        fn join_hdl(my_name: &str, this: &str, that: &str) -> Vec<ast::VerilogLink> {
             let mut ret = vec![];
-            #(ret.append(&mut self.#fields.join_hdl(#fields_as_strings, this, that));)*
+            #(ret.extend(<#field_types>::join_hdl(#fields_as_strings, this, that));)*
             ret
         }
     })

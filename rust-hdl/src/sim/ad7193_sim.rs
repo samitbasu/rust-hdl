@@ -1,5 +1,6 @@
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
+use crate::widgets::spi::master::SPIWiresSlave;
 use std::time::Duration;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -18,10 +19,7 @@ enum AD7193State {
 #[derive(LogicBlock)]
 pub struct AD7193Simulator {
     // Slave SPI bus
-    pub mosi: Signal<In, Bit>,
-    pub mclk: Signal<In, Bit>,
-    pub msel: Signal<In, Bit>,
-    pub miso: Signal<Out, Bit>,
+    pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
     // ROM that stores register widths
     reg_width_rom: ROM<Bits<5>, 3>,
@@ -96,10 +94,7 @@ impl AD7193Simulator {
             AD7193State::Ready
         };
         Self {
-            mosi: Default::default(),
-            mclk: Default::default(),
-            msel: Default::default(),
-            miso: Default::default(),
+            wires: Default::default(),
             clock: Default::default(),
             reg_width_rom,
             reg_ram,
@@ -119,10 +114,7 @@ impl Logic for AD7193Simulator {
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the spi bus
-        self.spi_slave.mosi.next = self.mosi.val();
-        self.spi_slave.mclk.next = self.mclk.val();
-        self.spi_slave.msel.next = self.msel.val();
-        self.miso.next = self.spi_slave.miso.val();
+        self.wires.link(&mut self.spi_slave.wires);
         // Clock internal components
         self.reg_ram.read_clock.next = self.clock.val();
         self.reg_ram.write_clock.next = self.clock.val();
@@ -235,9 +227,7 @@ impl Logic for AD7193Simulator {
 #[test]
 fn test_ad7193_synthesizes() {
     let mut uut = AD7193Simulator::new(AD7193Config::sw());
-    uut.mosi.connect();
-    uut.mclk.connect();
-    uut.msel.connect();
+    uut.wires.link_connect_dest();
     uut.clock.connect();
     uut.connect_all();
     yosys_validate("ad7193", &generate_verilog(&uut)).unwrap();
@@ -255,10 +245,7 @@ impl Logic for Test7193 {
     fn update(&mut self) {
         self.master.clock.next = self.clock.val();
         self.adc.clock.next = self.clock.val();
-        self.adc.mosi.next = self.master.wires.mosi.val();
-        self.adc.msel.next = self.master.wires.msel.val();
-        self.adc.mclk.next = self.master.wires.mclk.val();
-        self.master.wires.miso.next = self.adc.miso.val();
+        SPIWiresMaster::join(&mut self.master.wires, &mut self.adc.wires);
     }
 }
 

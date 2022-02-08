@@ -3,10 +3,10 @@ use std::ops::Index;
 use quote::format_ident;
 use quote::quote;
 use syn::spanned::Spanned;
-use syn::{BinOp, Expr, Pat, Result, Stmt, UnOp};
+use syn::{BinOp, Expr, Pat, PathSegment, Result, Stmt, UnOp};
 
 use crate::common;
-use crate::common::TS;
+use crate::common::{squash, TS};
 
 pub(crate) fn hdl_gen_process(item: syn::ItemFn) -> Result<TS> {
     let signature = &item.sig;
@@ -83,6 +83,7 @@ fn hdl_inner_statement(expr: &syn::Expr) -> Result<TS> {
         Expr::MethodCall(x) => hdl_method_set(x),
         Expr::Macro(x) => hdl_macro(x),
         Expr::ForLoop(x) => hdl_for_loop(x),
+        Expr::Call(x) => hdl_call(x),
         _ => Err(syn::Error::new(
             expr.span(),
             format!("Expression does not translate {:?}", expr),
@@ -144,7 +145,10 @@ fn hdl_map_path(expr: &syn::ExprPath) -> Result<TS> {
     if expr_expanded.ends_with("$next") {
         return Err(syn::Error::new(
             expr.span(),
-            format!("{} {}", "Do not read from .next in HDL.  Use .val() instead.", expr_expanded),
+            format!(
+                "{} {}",
+                "Do not read from .next in HDL.  Use .val() instead.", expr_expanded
+            ),
         ));
     }
     Ok(quote!(ast::VerilogExpression::Signal(#expr_expanded.to_string())))
@@ -297,6 +301,36 @@ fn hdl_call(call: &syn::ExprCall) -> Result<TS> {
         Ok(quote!({
         ast::VerilogExpression::Unary(ast::VerilogOpUnary::All, Box::new(#arg))
         }))
+    } else if squash(&funcname).contains("::join") {
+        if let Expr::Path(p) = &call.func.as_ref() {
+            let mut call_path = p.path.clone();
+            if call_path.segments.len() < 2 {
+                Err(syn::Error::new(
+                    call.span(),
+                    format!("If using `join`, make sure it is called as <Type>::join(&mut self.a, &mut self.b) got {} {}",
+                    quote!(#call_path).to_string(), call_path.segments.len())
+                ))
+            } else {
+                // Remove the `join`
+                //let mut call_path_shortened = syn::punctuated::Punctuated::new();
+                call_path.segments.pop();
+                call_path
+                    .segments
+                    .push(PathSegment::from(format_ident!("join_hdl")));
+                let left = &call.args[0];
+                let right = &call.args[1];
+                let left = common::fixup_ident(quote!(#left).to_string());
+                let right = common::fixup_ident(quote!(#right).to_string());
+                Ok(quote!({
+                    ast::VerilogStatement::Link(#call_path("", #left, #right))
+                }))
+            }
+        } else {
+            Err(syn::Error::new(
+                call.span(),
+                format!("If using `join`, make sure it is called as <Type>::join(&mut self.a, &mut self.b)")
+            ))
+        }
     } else {
         Err(syn::Error::new(
             call.span(),
@@ -353,14 +387,6 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
         let target = common::fixup_ident(quote!(#target).to_string());
         return Ok(quote!(
             ast::VerilogStatement::Link(#expr.link_hdl("", #signal, #target))
-        ));
-    } else if method_name == "join" {
-        let expr = method.receiver.as_ref();
-        let signal = common::fixup_ident(quote!(#expr).to_string());
-        let target = method.args.index(0);
-        let target = common::fixup_ident(quote!(#target).to_string());
-        return Ok(quote!(
-            ast::VerilogStatement::Link(#expr.join_hdl("", #signal, #target))
         ));
     }
     Err(syn::Error::new(

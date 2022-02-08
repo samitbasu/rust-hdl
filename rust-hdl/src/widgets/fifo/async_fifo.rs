@@ -1,6 +1,6 @@
 use crate::core::prelude::*;
-use crate::widgets::fifo_logic::{FIFOReadLogic, FIFOWriteLogic};
-use crate::widgets::ram::RAM;
+use crate::widgets::fifo::fifo_logic::{FIFOReadLogic, FIFOWriteLogic};
+use crate::widgets::ramrom::ram::RAM;
 use crate::widgets::synchronizer::VectorSynchronizer;
 
 #[macro_export]
