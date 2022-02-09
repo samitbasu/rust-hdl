@@ -46,7 +46,7 @@ impl Logic for OKSPIMaster {
     #[hdl_gen]
     fn update(&mut self) {
         // Link the wires
-        self.wires.link(&mut self.core.wires);
+        SPIWiresMaster::link(&mut self.wires, &mut self.core.wires);
         // Feed the clocks
         self.core.clock.next = self.clock.val();
         self.data_inbound.clk.next = self.clock.val();
@@ -152,7 +152,7 @@ fn test_ok_spi_master_works() {
     impl Logic for TopOK {
         #[hdl_gen]
         fn update(&mut self) {
-            self.wires.link(&mut self.core.wires);
+            SPIWiresMaster::link(&mut self.wires, &mut self.core.wires);
             self.core.ok1.next = self.ok1.val();
             self.ok2.next = self.core.ok2.val();
             self.core.clock.next = self.clock.val();

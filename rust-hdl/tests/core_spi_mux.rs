@@ -25,14 +25,13 @@ impl SPITestMultiMaster {
 impl Logic for SPITestMultiMaster {
     #[hdl_gen]
     fn update(&mut self) {
-        self.masters[0].clock.next = self.clock.val();
-        SPIWiresMaster::join(&mut self.masters[0].wires, &mut self.mux.from_masters[0]);
-        self.masters[1].clock.next = self.clock.val();
-        SPIWiresMaster::join(&mut self.masters[1].wires, &mut self.mux.from_masters[1]);
-        self.masters[2].clock.next = self.clock.val();
-        SPIWiresMaster::join(&mut self.masters[2].wires, &mut self.mux.from_masters[2]);
+        for i in 0_usize..3 {
+            self.masters[i].clock.next = self.clock.val();
+            SPIWiresMaster::join(&mut self.masters[i].wires, &mut self.mux.from_masters[i]);
+        }
         SPIWiresMaster::join(&mut self.mux.to_bus, &mut self.slave.wires);
         self.slave.clock.next = self.clock.val();
+        self.mux.sel.next = self.addr.val();
     }
 }
 

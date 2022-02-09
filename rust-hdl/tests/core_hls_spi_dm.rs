@@ -26,7 +26,7 @@ impl Logic for SPITest {
         self.host.bidi_clock.next = self.bidi_clock.val();
         self.host.sys_clock.next = self.sys_clock.val();
         SoCBusController::<16, 8>::join(&mut self.host.bus, &mut self.core.upstream);
-        self.spi.link(&mut self.core.spi);
+        SPIWiresMaster::link(&mut self.spi, &mut self.core.spi);
     }
 }
 

@@ -37,7 +37,7 @@ impl<L: Logic, const P: usize> Logic for [L; P] {
 */
 pub trait LogicLink {
     fn link(&mut self, other: &mut Self);
-    fn link_hdl(&self, my_name: &str, this: &str, that: &str) -> Vec<VerilogLink>;
+    fn link_hdl(my_name: &str, this: &str, that: &str) -> Vec<VerilogLink>;
     fn link_connect_source(&mut self);
     fn link_connect_dest(&mut self);
 }

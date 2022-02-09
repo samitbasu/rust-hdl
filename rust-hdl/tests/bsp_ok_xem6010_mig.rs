@@ -53,8 +53,8 @@ impl Logic for OpalKellyXEM6010MIGTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interfaces
-        self.hi.link(&mut self.ok_host.hi);
-        self.mcb.link(&mut self.mig.mcb);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
+        MCBInterface1GDDR2::link(&mut self.mcb, &mut self.mig.mcb);
         // Clocks
         self.mig.raw_sys_clk.next = self.raw_clock.val();
         self.mig.p0_wr.clock.next = self.ok_host.ti_clk.val();

@@ -35,7 +35,7 @@ impl Logic for OpalKellyPipeTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
 
         // Clock connections
         self.accum.clk.next = self.ok_host.ti_clk.val();
@@ -106,7 +106,7 @@ impl Logic for OpalKellyPipeRAMTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
 
         // Clock connections
         self.read_address.clk.next = self.ok_host.ti_clk.val();
@@ -172,7 +172,7 @@ impl Logic for OpalKellyPipeFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
 
         // Clock connections
         self.fifo.clock.next = self.ok_host.ti_clk.val();

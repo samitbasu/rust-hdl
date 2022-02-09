@@ -65,8 +65,8 @@ pub struct I2CDriver {
 impl Logic for I2CDriver {
     #[hdl_gen]
     fn update(&mut self) {
-        self.sda.link(&mut self.sda_driver.bus);
-        self.scl.link(&mut self.scl_driver.bus);
+        Signal::<InOut,Bit>::link(&mut self.sda,&mut self.sda_driver.bus);
+        Signal::<InOut,Bit>::link(&mut self.scl,&mut self.scl_driver.bus);
         // Clock the internal structures
         self.state.clk.next = self.clock.val();
         self.delay.clock.next = self.clock.val();

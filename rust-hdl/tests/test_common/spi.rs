@@ -30,7 +30,7 @@ impl OpalKellySPITest {
 impl Logic for OpalKellySPITest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         self.spi.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.spi.ok2.val();
         self.spi.clock.next = self.ok_host.ti_clk.val();

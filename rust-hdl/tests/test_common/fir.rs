@@ -24,7 +24,7 @@ pub struct OpalKellyFIRTest {
 impl Logic for OpalKellyFIRTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         // connect the OK busses
         self.i_pipe.ok1.next = self.ok_host.ok1.val();
         self.o_pipe.ok1.next = self.ok_host.ok1.val();

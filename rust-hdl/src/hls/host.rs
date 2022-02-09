@@ -22,7 +22,7 @@ pub struct Host<const A: usize> {
 impl<const A: usize> Logic for Host<A> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.bidi_bus.link(&mut self.bidi_master.bus);
+        BidiBusM::<Bits<8>>::link(&mut self.bidi_bus, &mut self.bidi_master.bus);
         self.bidi_master.clock.next = self.bidi_clock.val();
         FIFOWriteController::<Bits<8>>::join(
             &mut self.bidi_master.data_from_bus,
@@ -45,7 +45,7 @@ impl<const A: usize> Logic for Host<A> {
             &mut self.controller_to_bus.wide_bus,
         );
         self.controller.clock.next = self.sys_clock.val();
-        self.bus.link(&mut self.controller.bus);
+        SoCBusController::<16, A>::link(&mut self.bus, &mut self.controller.bus);
     }
 }
 

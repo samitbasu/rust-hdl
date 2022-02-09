@@ -90,7 +90,7 @@ impl Logic for ADS868XSimulator {
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the spi bus
-        self.wires.link(&mut self.spi_slave.wires);
+        SPIWiresSlave::link(&mut self.wires, &mut self.spi_slave.wires);
         // Clock internal components
         self.reg_ram.read_clock.next = self.clock.val();
         self.reg_ram.write_clock.next = self.clock.val();

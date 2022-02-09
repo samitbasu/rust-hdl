@@ -11,7 +11,7 @@ struct SPITestAsync {
 impl Logic for SPITestAsync {
     #[hdl_gen]
     fn update(&mut self) {
-        self.bus.link(&mut self.master.wires);
+        SPIWiresMaster::link(&mut self.bus, &mut self.master.wires);
         self.master.clock.next = self.clock.val();
     }
 }

@@ -47,7 +47,7 @@ impl SDRAMSimulatedFIFOTester {
 impl Logic for SDRAMSimulatedFIFOTester {
     #[hdl_gen]
     fn update(&mut self) {
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         // Fast clock for these components
         self.counter.clk.next = self.clock.val();
         self.sdram.clock.next = self.clock.val();

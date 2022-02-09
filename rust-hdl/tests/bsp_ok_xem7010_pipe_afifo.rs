@@ -53,7 +53,7 @@ impl Logic for OpalKellyPipeAFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Interface connections
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
 
         // Clock connections
         self.clock_div.clock_p.next = self.clock_p.val();

@@ -39,7 +39,7 @@ impl OpalKellyWireTest {
 impl Logic for OpalKellyWireTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         self.led.next = bit_cast::<8, 16>(!(self.wire_0.dataout.val() & self.wire_1.dataout.val()));
         self.o_wire.datain.next = self.wire_0.dataout.val();
         //

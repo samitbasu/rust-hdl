@@ -58,7 +58,7 @@ impl OKTest1 {
 impl Logic for OKTest1 {
     #[hdl_gen]
     fn update(&mut self) {
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         self.pulser.clock.next = self.ok_host.ti_clk.val();
         self.pulser.enable.next = true;
         if self.pulser.pulse.val() {

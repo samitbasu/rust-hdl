@@ -80,7 +80,7 @@ impl<T: Synth> LogicLink for Signal<In, T> {
     fn link(&mut self, other: &mut Self) {
         other.next = self.val();
     }
-    fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+    fn link_hdl(my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
         let details = VerilogLinkDetails {
             my_name: my_name.into(),
             owner_name: owner_name.into(),
@@ -100,7 +100,7 @@ impl<T: Synth> LogicLink for Signal<Out, T> {
     fn link(&mut self, other: &mut Self) {
         self.next = other.val();
     }
-    fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+    fn link_hdl(my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
         let details = VerilogLinkDetails {
             my_name: my_name.into(),
             owner_name: owner_name.into(),
@@ -128,7 +128,7 @@ impl<T: Synth> LogicLink for Signal<InOut, T> {
         }
         self.signal_is_undriven = other.signal_is_undriven;
     }
-    fn link_hdl(&self, my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
+    fn link_hdl(my_name: &str, owner_name: &str, other_name: &str) -> Vec<VerilogLink> {
         let details = VerilogLinkDetails {
             my_name: my_name.into(),
             owner_name: owner_name.into(),

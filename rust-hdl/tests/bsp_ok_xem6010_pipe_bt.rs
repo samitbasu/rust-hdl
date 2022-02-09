@@ -31,7 +31,7 @@ impl Logic for OpalKellyBTPipeOutTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Link the interfaces
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
 
         // Connect the clocks
         // Read side objects

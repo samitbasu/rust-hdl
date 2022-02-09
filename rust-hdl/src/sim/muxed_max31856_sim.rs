@@ -28,7 +28,7 @@ impl MuxedMAX31856Simulators {
 impl Logic for MuxedMAX31856Simulators {
     #[hdl_gen]
     fn update(&mut self) {
-        self.wires.link(&mut self.mux.from_master);
+        SPIWiresSlave::link(&mut self.wires, &mut self.mux.from_master);
         self.mux.sel.next = self.addr.val();
         for i in 0_usize..8_usize {
             self.adcs[i].clock.next = self.clock.val();

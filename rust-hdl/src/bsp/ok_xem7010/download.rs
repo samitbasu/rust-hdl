@@ -55,7 +55,7 @@ impl OpalKellyDDRBackedDownloadFIFO7Series {
 impl Logic for OpalKellyDDRBackedDownloadFIFO7Series {
     #[hdl_gen]
     fn update(&mut self) {
-        self.mcb.link(&mut self.ddr_fifo.mcb);
+        MCBInterface4GDDR3::link(&mut self.mcb, &mut self.ddr_fifo.mcb);
         self.ddr_fifo.reset.next = self.reset.val();
         self.ddr_fifo.sys_clock_p.next = self.sys_clock_p.val();
         self.ddr_fifo.sys_clock_n.next = self.sys_clock_n.val();

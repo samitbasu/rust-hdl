@@ -54,8 +54,8 @@ impl I2CTestTarget {
 impl Logic for I2CTestTarget {
     #[hdl_gen]
     fn update(&mut self) {
-        self.sda.link(&mut self.phy.sda);
-        self.scl.link(&mut self.phy.scl);
+        Signal::<InOut, Bit>::link(&mut self.sda,&mut self.phy.sda);
+        Signal::<InOut, Bit>::link(&mut self.scl,&mut self.phy.scl);
         // Clock internal logic
         self.phy.clock.next = self.clock.val();
         self.mem.read_clock.next = self.clock.val();

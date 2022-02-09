@@ -110,7 +110,7 @@ impl Default for RouterTestDevice {
 impl Logic for RouterTestDevice {
     #[hdl_gen]
     fn update(&mut self) {
-        self.upstream.link(&mut self.bridge.upstream);
+        SoCBusResponder::<16, 8>::link(&mut self.upstream, &mut self.bridge.upstream);
         for i in 0_usize..5 {
             SoCPortController::<16>::join(&mut self.bridge.nodes[i], &mut self.mosi_ports[i].bus);
             self.mosi_ports[i].ready.next = self.mosi_ports[i].bus.select.val();
@@ -157,9 +157,9 @@ impl Default for RouterTestSetup {
 impl Logic for RouterTestSetup {
     #[hdl_gen]
     fn update(&mut self) {
-        self.upstream.link(&mut self.router.upstream);
+        SoCBusResponder::<16, 8>::link(&mut self.upstream, &mut self.router.upstream);
         for i in 0_usize..3 {
-            SoCBusController::<16, 8>::join(&mut self.router.nodes[i], &mut self.dev_a[0].upstream);
+            SoCBusController::<16, 8>::join(&mut self.router.nodes[i], &mut self.dev_a[i].upstream);
         }
         self.upstream.clock.next = self.clock.val();
     }

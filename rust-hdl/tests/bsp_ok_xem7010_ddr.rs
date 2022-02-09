@@ -53,8 +53,8 @@ impl Logic for OpalKellyDDR7Test {
     #[hdl_gen]
     fn update(&mut self) {
         // DDR and clocks
-        self.mcb.link(&mut self.ddr_fifo.mcb);
-        self.hi.link(&mut self.ok_host.hi);
+        MCBInterface4GDDR3::link(&mut self.mcb, &mut self.ddr_fifo.mcb);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         self.ddr_fifo.sys_clock_p.next = self.sys_clock_p.val();
         self.ddr_fifo.sys_clock_n.next = self.sys_clock_n.val();
         // Pipe in connects to DDR FIFO input

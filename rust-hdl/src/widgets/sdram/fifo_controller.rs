@@ -167,7 +167,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> Logic
         self.cmd.next = SDRAMCommand::NOP;
         self.address.next = 0_usize.into();
         self.bank.next = 0_usize.into();
-        self.data.link(&mut self.bufz.bus);
+        Signal::<InOut, Bits<D>>::link(&mut self.data,&mut self.bufz.bus);
         self.bufz.write_enable.next = false;
         self.bufz.write_data.next = self.fp.data_out.val();
         self.bp.data_in.next = self.bufz.read_data.val();

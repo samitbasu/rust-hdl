@@ -51,7 +51,7 @@ impl<const N: usize> Logic for DDR7FIFO<N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Link the mcb interface
-        self.mcb.link(&mut self.mig.mcb);
+        MCBInterface4GDDR3::link(&mut self.mcb, &mut self.mig.mcb);
         // Forward the raw clocks
         self.mig.raw_pos_clock.next = self.sys_clock_p.val();
         self.mig.raw_neg_clock.next = self.sys_clock_n.val();

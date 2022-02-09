@@ -31,7 +31,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> Logic
         self.cmd.next = self.controller.cmd.val();
         self.bank.next = self.controller.bank.val();
         self.address.next = self.controller.address.val();
-        self.data.link(&mut self.controller.data);
+        Signal::<InOut, Bits<D>>::link(&mut self.data, &mut self.controller.data);
     }
 }
 

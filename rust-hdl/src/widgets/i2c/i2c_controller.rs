@@ -82,8 +82,8 @@ impl I2CController {
 impl Logic for I2CController {
     #[hdl_gen]
     fn update(&mut self) {
-        self.sda.link(&mut self.driver.sda);
-        self.scl.link(&mut self.driver.scl);
+        Signal::<InOut, Bit>::link(&mut self.sda,&mut self.driver.sda);
+        Signal::<InOut, Bit>::link(&mut self.scl,&mut self.driver.scl);
         self.driver.clock.next = self.clock.val();
         self.driver.run.next = false;
         self.driver.cmd.next = I2CDriverCmd::Noop;

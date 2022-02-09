@@ -73,7 +73,7 @@ impl Logic for DDRFIFO {
     #[hdl_gen]
     fn update(&mut self) {
         // Link the mcb interface
-        self.mcb.link(&mut self.mig.mcb);
+        MCBInterface1GDDR2::link(&mut self.mcb, &mut self.mig.mcb);
         // Forward the raw clock
         self.mig.raw_sys_clk.next = self.raw_sys_clock.val();
         // Update the output clock with the generated (buffered) clock

@@ -49,8 +49,8 @@ impl Default for OpalKellyDownloadDDRFIFO7SeriesStressTest {
 impl Logic for OpalKellyDownloadDDRFIFO7SeriesStressTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.hi.link(&mut self.ok_host.hi);
-        self.mcb.link(&mut self.download.mcb);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
+        MCBInterface4GDDR3::link(&mut self.mcb, &mut self.download.mcb);
         self.download.reset.next = self.reset.dataout.val().any();
         self.download.sys_clock_p.next = self.sys_clock_p.val();
         self.download.sys_clock_n.next = self.sys_clock_n.val();

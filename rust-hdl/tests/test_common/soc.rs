@@ -62,8 +62,8 @@ impl Logic for SoCTestChip {
         self.data_fifo.read.next = self.miso_port.strobe_out.val();
         self.miso_port.ready_in.next = !self.data_fifo.empty.val();
         // Wire the cpu fifos to the host
-        self.from_cpu.link(&mut self.from_cpu_fifo.bus_write);
-        self.to_cpu.link(&mut self.to_cpu_fifo.bus_read);
+        FIFOWriteResponder::<Bits<16>>::link(&mut self.from_cpu, &mut self.from_cpu_fifo.bus_write);
+        FIFOReadResponder::<Bits<16>>::link(&mut self.to_cpu, &mut self.to_cpu_fifo.bus_read);
         FIFOReadResponder::<Bits<16>>::join(&mut self.from_cpu_fifo.bus_read, &mut self.soc_host.from_cpu);
         FIFOWriteResponder::<Bits<16>>::join(&mut self.to_cpu_fifo.bus_write, &mut self.soc_host.to_cpu);
     }

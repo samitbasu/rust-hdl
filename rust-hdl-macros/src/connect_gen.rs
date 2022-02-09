@@ -38,7 +38,6 @@ fn connect_inner_statement(expr: &syn::Expr) -> Result<TS> {
         Expr::If(x) => connect_conditional(x),
         Expr::Match(x) => connect_match(x),
         Expr::ForLoop(x) => connect_for_loop(x),
-        Expr::MethodCall(x) => connect_method_call(x),
         Expr::Call(x) => connect_call(x),
         _ => Ok(TS::new()),
     }
@@ -54,27 +53,28 @@ fn connect_for_loop(node: &syn::ExprForLoop) -> Result<TS> {
 }
 
 fn connect_call(node: &syn::ExprCall) -> Result<TS> {
-    let source = node.args.index(0);
-    let target = node.args.index(1);
-    Ok(quote!(
-        logic::logic_connect_join_fn(#source, #target);
-    ))
-}
-
-fn connect_method_call(node: &syn::ExprMethodCall) -> Result<TS> {
-    let source = &node.receiver;
-    let method_name = node.method.to_string();
-    if method_name == "link" {
-        let target = node.args.index(0);
-        if let Expr::Reference(t) = target {
-            let target = &t.expr;
-            return Ok(quote!(
-                logic::logic_connect_link_fn(&mut #source, &mut #target);
-            ));
+    if let Expr::Path(p) = &node.func.as_ref() {
+        let call_path = p.path.clone();
+        if call_path.segments.len() >= 2 {
+            let name = &call_path.segments.last().unwrap().ident;
+            if name == "join" {
+                let source = node.args.index(0);
+                let target = node.args.index(1);
+                return Ok(quote!(
+                    logic::logic_connect_join_fn(#source, #target);
+                ))
+            } else if name == "link" {
+                let source = node.args.index(0);
+                let target = node.args.index(1);
+                return Ok(quote!(
+                    logic::logic_connect_link_fn(#source, #target);
+                ))
+            }
         }
     }
     Ok(TS::new())
 }
+
 
 fn connect_assignment(node: &syn::ExprAssign) -> Result<TS> {
     if let Expr::Field(field) = node.left.as_ref() {

@@ -19,7 +19,7 @@ pub struct OpalKellySPIMuxTest {
 impl Logic for OpalKellySPIMuxTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.hi.link(&mut self.ok_host.hi);
+        OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         // Connect the clocks...
         self.mux_adc.clock.next = self.ok_host.ti_clk.val();
         self.spi.clock.next = self.ok_host.ti_clk.val();

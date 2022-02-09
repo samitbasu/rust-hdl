@@ -1,5 +1,5 @@
 use crate::core::prelude::*;
-use crate::hls::bus::FIFOWriteResponder;
+use crate::hls::bus::{FIFOWriteController, FIFOWriteResponder};
 use crate::hls::fifo::SyncFIFO;
 use crate::hls::miso_port::MISOPort;
 use crate::hls::prelude::SoCPortResponder;
@@ -17,12 +17,12 @@ impl<const W: usize, const N: usize, const NP1: usize, const BLOCK: u32> Logic
 {
     #[hdl_gen]
     fn update(&mut self) {
-        self.bus.link(&mut self.port.bus);
+        SoCPortResponder::<W>::link(&mut self.bus, &mut self.port.bus);
         self.fifo.clock.next = self.bus.clock.val();
         self.fifo.bus_read.read.next = self.port.strobe_out.val();
         self.port.ready_in.next = !self.fifo.bus_read.empty.val();
         self.port.port_in.next = self.fifo.bus_read.data.val();
-        self.fifo_bus.link(&mut self.fifo.bus_write);
+        FIFOWriteResponder::<Bits<W>>::link(&mut self.fifo_bus, &mut self.fifo.bus_write);
     }
 }
 
