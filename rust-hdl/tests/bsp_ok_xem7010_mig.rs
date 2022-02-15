@@ -5,11 +5,10 @@ use rust_hdl::bsp::ok_xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 #[cfg(feature = "frontpanel")]
-use rust_hdl_ok_frontpanel_sys::OkError;
-use std::thread::sleep;
-use std::time::Duration;
-#[cfg(feature = "frontpanel")]
-use test_common::tools::*;
+use {
+    rust_hdl_ok_frontpanel_sys::OkError,
+    test_common::tools::*,
+};
 
 mod test_common;
 
@@ -189,18 +188,18 @@ fn test_opalkelly_xem_7010_mig_runtime() -> Result<(), OkError> {
     hnd.reset_firmware(0);
     let data = (0..64).collect::<Vec<u8>>();
     println!("Input data {:?}", data);
-    hnd.write_to_pipe_in(0x80, &data).unwrap();
+    hnd.write_to_pipe_in(0x80, &data)?;
     for packet in 0..4 {
         // Issue a write command
         hnd.set_wire_in(0x1, packet);
         hnd.update_wire_ins();
-        hnd.activate_trigger_in(0x40, 0);
+        hnd.activate_trigger_in(0x40, 0)?;
         hnd.update_trigger_outs();
         while !hnd.is_triggered(0x60, 0x01) {
             hnd.update_trigger_outs();
         }
         // Issue a read command
-        hnd.activate_trigger_in(0x40, 1);
+        hnd.activate_trigger_in(0x40, 1)?;
         hnd.update_trigger_outs();
         while !hnd.is_triggered(0x60, 0x02) {
             hnd.update_trigger_outs();

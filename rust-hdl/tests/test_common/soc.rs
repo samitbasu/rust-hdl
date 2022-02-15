@@ -64,24 +64,18 @@ impl Logic for SoCTestChip {
         // Wire the cpu fifos to the host
         FIFOWriteResponder::<Bits<16>>::link(&mut self.from_cpu, &mut self.from_cpu_fifo.bus_write);
         FIFOReadResponder::<Bits<16>>::link(&mut self.to_cpu, &mut self.to_cpu_fifo.bus_read);
-        FIFOReadResponder::<Bits<16>>::join(&mut self.from_cpu_fifo.bus_read, &mut self.soc_host.from_cpu);
-        FIFOWriteResponder::<Bits<16>>::join(&mut self.to_cpu_fifo.bus_write, &mut self.soc_host.to_cpu);
+        FIFOReadResponder::<Bits<16>>::join(
+            &mut self.from_cpu_fifo.bus_read,
+            &mut self.soc_host.from_cpu,
+        );
+        FIFOWriteResponder::<Bits<16>>::join(
+            &mut self.to_cpu_fifo.bus_write,
+            &mut self.soc_host.to_cpu,
+        );
     }
 }
 
-#[test]
-fn test_soc_test_chip_synthesizes() {
-    let mut uut = SoCTestChip::default();
-    uut.sys_clock.connect();
-    uut.clock.connect();
-    uut.from_cpu.write.connect();
-    uut.from_cpu.data.connect();
-    uut.to_cpu.read.connect();
-    uut.connect_all();
-    let vlog = generate_verilog(&uut);
-    yosys_validate("soc_test", &vlog).unwrap();
-}
-
+#[cfg(feature = "frontpanel")]
 fn mk_u8(dat: &[u16]) -> Vec<u8> {
     let mut ret = vec![0_u8; dat.len() * 2];
     for (ndx, el) in dat.iter().enumerate() {
@@ -120,7 +114,7 @@ fn read_array(hnd: &OkHandle, address: u8, len: usize) -> Result<Vec<u16>, OkErr
     let mut msg = vec![0_u16; 2];
     msg[0] = 0x0200 | (address as u16);
     msg[1] = len as u16;
-    hnd.write_to_pipe_in(0x80, &mk_u8(&msg));
+    hnd.write_to_pipe_in(0x80, &mk_u8(&msg))?;
     let mut data = vec![0x0_u8; len * 2];
     hnd.read_from_pipe_out(0xA0, &mut data)?;
     Ok(make_u16_buffer(&data))

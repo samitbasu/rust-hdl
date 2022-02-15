@@ -1,6 +1,6 @@
 use crate::core::prelude::*;
 use crate::hls::bridge::Bridge;
-use crate::hls::bus::{SoCBusResponder, SoCPortController, SoCPortResponder};
+use crate::hls::bus::{SoCBusResponder, SoCPortController};
 use crate::hls::miso_wide_port::MISOWidePort;
 use crate::hls::mosi_port::MOSIPort;
 use crate::hls::mosi_wide_port::MOSIWidePort;
@@ -38,7 +38,7 @@ impl<const D: usize, const A: usize, const W: usize> Logic for HLSSPIMaster<D, A
         SoCPortController::<D>::join(&mut self.bridge.nodes[1], &mut self.data_inbound.bus);
         SoCPortController::<D>::join(&mut self.bridge.nodes[2], &mut self.num_bits.bus);
         SoCPortController::<D>::join(&mut self.bridge.nodes[3], &mut self.start.bus);
-        SPIWiresMaster::link(&mut self.spi,&mut self.core.wires);
+        SPIWiresMaster::link(&mut self.spi, &mut self.core.wires);
         self.num_bits.ready.next = true;
         self.start.ready.next = !self.core.busy.val();
     }
@@ -143,14 +143,13 @@ fn test_hls_spi_master_dynamic_mode_is_synthesizable() {
     yosys_validate("hsl_spi_dm", &vlog).unwrap();
 }
 
-
 #[derive(LogicBlock)]
 pub struct HLSSPIMux<const D: usize, const A: usize, const N: usize> {
     pub from_masters: [SPIWiresSlave; N],
     pub upstream: SoCBusResponder<D, A>,
     mux: MuxMasters<N, D>,
     bridge: Bridge<D, A, 1>,
-    select: MOSIPort<D>
+    select: MOSIPort<D>,
 }
 
 impl<const D: usize, const A: usize, const N: usize> Logic for HLSSPIMux<D, A, N> {

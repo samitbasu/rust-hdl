@@ -1,13 +1,10 @@
 use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
 
 mod test_common;
 #[cfg(feature = "frontpanel")]
 use test_common::mux_spi::*;
-#[cfg(feature = "frontpanel")]
-use test_common::tools::*;
 
 #[cfg(feature = "frontpanel")]
 #[test]

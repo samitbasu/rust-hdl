@@ -41,6 +41,7 @@ impl OpalKellyDownload32FIFOTest {
     }
 }
 
+#[cfg(test)]
 pub fn test_opalkelly_download32_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     // Read the data in 256*2 = 512 byte blocks
@@ -96,6 +97,7 @@ impl OpalKellyDownloadFIFOTest {
     }
 }
 
+#[cfg(test)]
 pub fn test_opalkelly_download_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     // Read the data in 256*2 = 512 byte blocks

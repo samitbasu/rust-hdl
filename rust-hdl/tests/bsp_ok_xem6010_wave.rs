@@ -1,4 +1,3 @@
-use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem6010::*;
 use rust_hdl::core::prelude::*;
 

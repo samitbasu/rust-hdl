@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
 
@@ -44,6 +46,7 @@ pub struct FaderWithSyncROM {
 }
 
 impl FaderWithSyncROM {
+    #[cfg(test)]
     pub fn new(clock_frequency: u64, phase: u32) -> Self {
         let rom = (0..256_u32)
             .map(|x| (Bits::<8>::from(x), snore(x + phase)))

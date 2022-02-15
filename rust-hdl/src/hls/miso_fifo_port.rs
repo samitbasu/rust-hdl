@@ -1,5 +1,5 @@
 use crate::core::prelude::*;
-use crate::hls::bus::{FIFOWriteController, FIFOWriteResponder};
+use crate::hls::bus::FIFOWriteResponder;
 use crate::hls::fifo::SyncFIFO;
 use crate::hls::miso_port::MISOPort;
 use crate::hls::prelude::SoCPortResponder;

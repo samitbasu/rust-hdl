@@ -6,7 +6,6 @@ mod test_common;
 use rust_hdl::bsp::ok_xem7010::sys_clock::OpalKellySystemClock7;
 use rust_hdl::bsp::ok_xem7010::XEM7010;
 use std::time::Duration;
-use test_common::blinky::OpalKellyBlinky;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyFastBlinky {
@@ -46,6 +45,16 @@ impl Logic for OpalKellyFastBlinky {
             self.led.next = 0x00_u8.into();
         }
     }
+}
+
+#[test]
+fn test_fast_blinky_is_synthesizable() {
+    let mut uut = OpalKellyFastBlinky::new::<XEM7010>();
+    uut.clock_n.connect();
+    uut.clock_p.connect();
+    uut.connect_all();
+    check_connected(&uut);
+    yosys_validate("fast_blinky_7010", &generate_verilog(&uut)).unwrap();
 }
 
 #[cfg(feature = "frontpanel")]

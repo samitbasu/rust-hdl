@@ -1,5 +1,4 @@
 use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
 
 mod test_common;
 use test_common::soc::SoCTestChip;
@@ -69,7 +68,7 @@ fn test_soc_chip_works() {
 
 #[test]
 fn test_soc_chip_read_write_works() {
-    let mut uut = make_test_chip();
+    let uut = make_test_chip();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<SoCTestChip>| x.clock.next = !x.clock.val());
     sim.add_clock(4, |x: &mut Box<SoCTestChip>| {

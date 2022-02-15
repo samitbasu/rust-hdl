@@ -17,7 +17,7 @@ pub struct OpalKellyTristateBuffer {
 impl Logic for OpalKellyTristateBuffer {
     #[hdl_gen]
     fn update(&mut self) {
-        Signal::<InOut,Bit>::link(&mut self.bus_pin,&mut self.buffer.bus);
+        Signal::<InOut, Bit>::link(&mut self.bus_pin, &mut self.buffer.bus);
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         self.control.ok1.next = self.ok_host.ok1.val();
         self.readout.ok1.next = self.ok_host.ok1.val();

@@ -2,7 +2,7 @@ use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 use std::time::Duration;
 
-const MHZ100: u64 = 100_000_000;
+pub const MHZ100: u64 = 100_000_000;
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPulser {

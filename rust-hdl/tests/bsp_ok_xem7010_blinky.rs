@@ -1,6 +1,7 @@
 use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::core::prelude::*;
 
+#[cfg(feature = "frontpanel")]
 mod test_common;
 
 use rust_hdl::bsp::ok_xem7010::XEM7010;

@@ -5,11 +5,10 @@ use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 #[cfg(feature = "frontpanel")]
-use rust_hdl_ok_frontpanel_sys::OkError;
-use std::thread::sleep;
-use std::time::Duration;
-#[cfg(feature = "frontpanel")]
-use test_common::tools::*;
+use {
+    rust_hdl_ok_frontpanel_sys::OkError, std::thread::sleep, std::time::Duration,
+    test_common::tools::*,
+};
 
 mod test_common;
 

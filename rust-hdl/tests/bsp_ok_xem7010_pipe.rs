@@ -9,8 +9,6 @@ use rust_hdl::bsp::ok_xem7010::XEM7010;
 #[cfg(feature = "frontpanel")]
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
 #[cfg(feature = "frontpanel")]
-use test_common::pipe::*;
-#[cfg(feature = "frontpanel")]
 use test_common::tools::*;
 
 declare_async_fifo!(OKTestAFIFO2, Bits<16>, 1024, 256);

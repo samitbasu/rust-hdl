@@ -46,7 +46,7 @@ impl<T: Synth> Logic for BidiMaster<T> {
         self.bus.sig_not_read.next = true;
         self.bus.sig_not_write.next = true;
         // Wire up the tristate buffer
-        Signal::<InOut, T>::link(&mut self.bus.sig_inout,&mut self.bus_buffer.bus);
+        Signal::<InOut, T>::link(&mut self.bus.sig_inout, &mut self.bus_buffer.bus);
         self.bus_buffer.write_data.next = self.data_to_bus.data.val();
         self.data_from_bus.data.next = self.bus_buffer.read_data.val();
         // Now we do the FSM logic
@@ -136,7 +136,7 @@ impl<T: Synth> Logic for BidiSimulatedDevice<T> {
     #[hdl_gen]
     fn update(&mut self) {
         // Wire up the tristate buffer
-        Signal::<InOut,T>::link(&mut self.bus.sig_inout,&mut self.bus_buffer.bus);
+        Signal::<InOut, T>::link(&mut self.bus.sig_inout, &mut self.bus_buffer.bus);
         // The bus interfaces
         self.data_to_bus.read.next = !self.bus.sig_not_read.val();
         self.bus.sig_empty.next = self.data_to_bus.empty.val();

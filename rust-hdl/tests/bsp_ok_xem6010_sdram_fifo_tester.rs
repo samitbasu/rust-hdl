@@ -75,7 +75,7 @@ impl Logic for SDRAMSimulatedFIFOTester {
         self.dl.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.dl.ok2.val();
         // Link the SDRAM and the controller
-        Signal::<InOut, Bits<16>>::join(&mut self.sdram.data,&mut self.fifo.data);
+        Signal::<InOut, Bits<16>>::join(&mut self.sdram.data, &mut self.fifo.data);
         self.sdram.address.next = self.fifo.address.val();
         self.sdram.cmd.next = self.fifo.cmd.val();
         self.sdram.bank.next = self.fifo.bank.val();

@@ -1,7 +1,6 @@
 use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
-use rust_hdl::widgets::prelude::*;
 
 mod test_common;
 use crate::test_common::fifo_tester::bursty_vec;
@@ -26,10 +25,10 @@ impl Default for BusTest {
     fn default() -> Self {
         let dlen = 256;
         let data1 = (0..dlen)
-            .map(|x| Bits::<8>::from(rand::thread_rng().gen::<u8>()))
+            .map(|_| Bits::<8>::from(rand::thread_rng().gen::<u8>()))
             .collect::<Vec<_>>();
         let data2 = (0..dlen)
-            .map(|x| Bits::<8>::from(rand::thread_rng().gen::<u8>()))
+            .map(|_| Bits::<8>::from(rand::thread_rng().gen::<u8>()))
             .collect::<Vec<_>>();
 
         Self {
@@ -63,23 +62,39 @@ impl Logic for BusTest {
         self.master_from_bus_fifo.clock.next = self.clock.val();
         self.master_to_bus_fifo.clock.next = self.clock.val();
         // Connect the busses
-        FIFOReadController::<Bits<8>>::join(&mut self.device
-            .data_to_bus
-            ,&mut self.device_to_bus_fifo.bus_read);
-        FIFOWriteController::<Bits<8>>::join(&mut self.device
-            .data_from_bus
-            ,&mut self.device_from_bus_fifo.bus_write);
-        FIFOReadController::<Bits<8>>::join(&mut self.master
-            .data_to_bus
-            , &mut self.master_to_bus_fifo.bus_read);
-        FIFOWriteController::<Bits<8>>::join(&mut self.master
-            .data_from_bus
-            ,&mut self.master_from_bus_fifo.bus_write);
+        FIFOReadController::<Bits<8>>::join(
+            &mut self.device.data_to_bus,
+            &mut self.device_to_bus_fifo.bus_read,
+        );
+        FIFOWriteController::<Bits<8>>::join(
+            &mut self.device.data_from_bus,
+            &mut self.device_from_bus_fifo.bus_write,
+        );
+        FIFOReadController::<Bits<8>>::join(
+            &mut self.master.data_to_bus,
+            &mut self.master_to_bus_fifo.bus_read,
+        );
+        FIFOWriteController::<Bits<8>>::join(
+            &mut self.master.data_from_bus,
+            &mut self.master_from_bus_fifo.bus_write,
+        );
         BidiBusM::<Bits<8>>::join(&mut self.master.bus, &mut self.device.bus);
-        FIFOWriteController::<Bits<8>>::join(&mut self.dtm_feeder.bus, &mut self.device_to_bus_fifo.bus_write);
-        FIFOWriteController::<Bits<8>>::join(&mut self.mtd_feeder.bus, &mut self.master_to_bus_fifo.bus_write);
-        FIFOReadController::<Bits<8>>::join(&mut self.dtm_reader.bus, &mut self.master_from_bus_fifo.bus_read);
-        FIFOReadController::<Bits<8>>::join(&mut self.mtd_reader.bus, &mut self.device_from_bus_fifo.bus_read);
+        FIFOWriteController::<Bits<8>>::join(
+            &mut self.dtm_feeder.bus,
+            &mut self.device_to_bus_fifo.bus_write,
+        );
+        FIFOWriteController::<Bits<8>>::join(
+            &mut self.mtd_feeder.bus,
+            &mut self.master_to_bus_fifo.bus_write,
+        );
+        FIFOReadController::<Bits<8>>::join(
+            &mut self.dtm_reader.bus,
+            &mut self.master_from_bus_fifo.bus_read,
+        );
+        FIFOReadController::<Bits<8>>::join(
+            &mut self.mtd_reader.bus,
+            &mut self.device_from_bus_fifo.bus_read,
+        );
     }
 }
 

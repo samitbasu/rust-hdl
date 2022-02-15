@@ -1,7 +1,5 @@
 use std::time::Instant;
 
-use std::thread::sleep;
-
 mod test_common;
 #[cfg(feature = "frontpanel")]
 use test_common::tools::*;
@@ -97,7 +95,7 @@ fn test_opalkelly_xem_7010_ddr_runtime() -> Result<(), OkError> {
     let hnd = ok_test_prelude(target_path!("xem_7010/ddr/top.bit"))?;
     hnd.reset_firmware(0);
     let test_size = 1024 * 1024 * 10;
-    let mut data = (0..test_size)
+    let data = (0..test_size)
         .map(|_| rand::random::<u8>())
         .collect::<Vec<_>>();
     let now = Instant::now();

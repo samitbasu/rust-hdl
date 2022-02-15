@@ -49,8 +49,8 @@ pub struct I2CTarget {
 impl Logic for I2CTarget {
     #[hdl_gen]
     fn update(&mut self) {
-        Signal::<InOut, Bit>::link(&mut self.sda,&mut self.sda_driver.bus);
-        Signal::<InOut, Bit>::link(&mut self.scl,&mut self.scl_driver.bus);
+        Signal::<InOut, Bit>::link(&mut self.sda, &mut self.sda_driver.bus);
+        Signal::<InOut, Bit>::link(&mut self.scl, &mut self.scl_driver.bus);
         // Clock the internal structures
         self.state.clk.next = self.clock.val();
         self.sda_flop.clk.next = self.clock.val();

@@ -86,7 +86,7 @@ pub fn test_opalkelly_fir_runtime(bit_name: &str) -> Result<(), OkError> {
     hnd.write_to_pipe_in(0x80, &data)?;
     sleep(Duration::from_secs(1));
     let mut data_out = [0_u8; 256];
-    hnd.read_from_pipe_out(0xA0, &mut data_out);
+    hnd.read_from_pipe_out(0xA0, &mut data_out)?;
     let data_out = make_i16_buffer(&data_out);
     for (ndx, val) in data_out.iter().enumerate() {
         if *val != 0 {

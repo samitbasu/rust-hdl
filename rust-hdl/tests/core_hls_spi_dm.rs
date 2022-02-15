@@ -17,8 +17,14 @@ struct SPITest {
 impl Logic for SPITest {
     #[hdl_gen]
     fn update(&mut self) {
-        FIFOReadController::<Bits<8>>::join(&mut self.bidi_dev.data_to_bus, &mut self.pc_to_host.bus_read);
-        FIFOWriteController::<Bits<8>>::join(&mut self.bidi_dev.data_from_bus, &mut self.host_to_pc.bus_write);
+        FIFOReadController::<Bits<8>>::join(
+            &mut self.bidi_dev.data_to_bus,
+            &mut self.pc_to_host.bus_read,
+        );
+        FIFOWriteController::<Bits<8>>::join(
+            &mut self.bidi_dev.data_from_bus,
+            &mut self.host_to_pc.bus_write,
+        );
         self.host_to_pc.clock.next = self.bidi_clock.val();
         self.pc_to_host.clock.next = self.bidi_clock.val();
         self.bidi_dev.clock.next = self.bidi_clock.val();

@@ -1,6 +1,5 @@
 mod test_common;
 
-use crate::test_common::fifo_tester::{LazyFIFOFeeder, LazyFIFOReader};
 use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
@@ -34,7 +33,7 @@ impl Logic for HLSSDRAMFIFOTest {
         self.sdram.address.next = self.fifo.address.val();
         self.sdram.bank.next = self.fifo.bank.val();
         self.sdram.cmd.next = self.fifo.cmd.val();
-        Signal::<InOut, Bits<16>>::join(&mut self.sdram.data,&mut self.fifo.data);
+        Signal::<InOut, Bits<16>>::join(&mut self.sdram.data, &mut self.fifo.data);
     }
 }
 
@@ -58,7 +57,7 @@ fn test_hls_sdram_fifo_works() {
     uut.connect_all();
     let mut sim = Simulation::new();
     let data = (0..1256)
-        .map(|x| rand::thread_rng().gen::<u16>())
+        .map(|_| rand::thread_rng().gen::<u16>())
         .collect::<Vec<_>>();
     let data2 = data.clone();
     sim.add_clock(4000, |x: &mut Box<HLSSDRAMFIFOTest>| {

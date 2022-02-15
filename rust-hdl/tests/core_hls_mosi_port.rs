@@ -1,6 +1,5 @@
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
-use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 struct MOSIPortTest {
@@ -258,7 +257,7 @@ impl Logic for MOSIPortFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
-        SoCBusController::<16,2>::join(&mut self.bus, &mut self.bridge.upstream);
+        SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
     }
 }

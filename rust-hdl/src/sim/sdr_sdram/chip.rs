@@ -66,7 +66,7 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
         //
         self.test_error.next = false;
         self.test_ready.next = false;
-        Signal::<InOut, Bits<D>>::link(&mut self.data,&mut self.bufz.bus);
+        Signal::<InOut, Bits<D>>::link(&mut self.data, &mut self.bufz.bus);
         // Connect up the banks to the I/O buffer
         self.bufz.write_enable.next = false;
         self.bufz.write_data.next = 0_usize.into();

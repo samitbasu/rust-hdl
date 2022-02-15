@@ -20,6 +20,7 @@ pub struct OpalKellyPipeTest {
 }
 
 impl OpalKellyPipeTest {
+    #[cfg(test)]
     pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),
@@ -54,6 +55,7 @@ impl Logic for OpalKellyPipeTest {
     }
 }
 
+#[cfg(test)]
 fn sum_vec(t: &[u16]) -> u16 {
     let mut ret = Wrapping(0_u16);
     for x in t {
@@ -62,6 +64,7 @@ fn sum_vec(t: &[u16]) -> u16 {
     ret.0
 }
 
+#[cfg(test)]
 pub fn test_opalkelly_pipe_in_runtime(bit_name: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_name)?;
     let data = (0..1024 * 1024)
@@ -89,6 +92,7 @@ pub struct OpalKellyPipeRAMTest {
 }
 
 impl OpalKellyPipeRAMTest {
+    #[cfg(test)]
     pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),
@@ -132,6 +136,7 @@ impl Logic for OpalKellyPipeRAMTest {
     }
 }
 
+#[cfg(test)]
 pub fn test_opalkelly_pipe_ram_runtime(bitfile: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bitfile)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
@@ -156,6 +161,7 @@ pub struct OpalKellyPipeFIFOTest {
 }
 
 impl OpalKellyPipeFIFOTest {
+#[cfg(test)]
     pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),
@@ -192,6 +198,7 @@ impl Logic for OpalKellyPipeFIFOTest {
     }
 }
 
+#[cfg(test)]
 pub fn test_opalkelly_pipe_fifo_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
@@ -204,6 +211,7 @@ pub fn test_opalkelly_pipe_fifo_runtime(bit_file: &str) -> Result<(), OkError> {
     Ok(())
 }
 
+#[cfg(test)]
 pub fn test_opalkelly_pipe_afifo_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
