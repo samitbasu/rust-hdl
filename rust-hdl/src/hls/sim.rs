@@ -157,3 +157,26 @@ macro_rules! hls_host_drain {
         }
     }
 }
+
+#[macro_export]
+macro_rules! bus_address_strobe {
+    ($sim: ident, $uut: ident, $field: ident, $addr: expr) => {{
+        wait_clock_true!($sim, $field.clock, $uut);
+        $uut.$field.address.next = ($addr as usize).into();
+        $uut.$field.address_strobe.next = true;
+        wait_clock_cycle!($sim, $field.clock, $uut);
+        $uut.$field.address_strobe.next = false;
+        $uut = $sim.watch(|x| x.$field.ready.val(), $uut)?;
+    }};
+}
+
+#[macro_export]
+macro_rules! bus_write_strobe {
+    ($sim: ident,$uut: ident, $field: ident, $val: expr) => {{
+        wait_clock_true!($sim, $field.clock, $uut);
+        $uut.$field.from_controller.next = $val.into();
+        $uut.$field.strobe.next = true;
+        wait_clock_cycle!($sim, $field.clock, $uut);
+        $uut.$field.strobe.next = false;
+    }};
+}

@@ -5,7 +5,7 @@ use rust_hdl::widgets::prelude::*;
 use {
     crate::test_common::tools::ok_test_prelude,
     rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError, OkHandle},
-    std::thread::sleep
+    std::thread::sleep,
 };
 
 #[derive(LogicBlock)]

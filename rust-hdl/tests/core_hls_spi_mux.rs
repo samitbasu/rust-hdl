@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::hls::spi::{HLSSPIMaster, HLSSPIMux};
@@ -68,7 +67,7 @@ impl Default for SPIMuxTest {
             mosi_off: false,
             speed_hz: 10_000_000,
             cpha: false,
-            cpol: false
+            cpol: false,
         };
         let core_1 = HLSSPIMaster::new(spi_config_1);
         let core_2 = HLSSPIMaster::new(spi_config_2);
@@ -127,6 +126,23 @@ fn test_spi_mux_works() {
     });
     sim.add_testbench(move |mut sim: Sim<SPIMuxTest>| {
         let mut x = sim.init()?;
+        let ports = x.ports();
+        let spi1_data_outbound = ports
+            .iter()
+            .position(|x| x == "spi1_data_outbound")
+            .unwrap();
+        let spi1_data_inbound = ports.iter().position(|x| x == "spi1_data_inbound").unwrap();
+        let spi1_num_bits = ports.iter().position(|x| x == "spi1_num_bits").unwrap();
+        let spi1_start_flag = ports.iter().position(|x| x == "spi1_start_flag").unwrap();
+        let spi2_data_outbound = ports
+            .iter()
+            .position(|x| x == "spi2_data_outbound")
+            .unwrap();
+        let spi2_data_inbound = ports.iter().position(|x| x == "spi2_data_inbound").unwrap();
+        let spi2_num_bits = ports.iter().position(|x| x == "spi2_num_bits").unwrap();
+        let spi2_start_flag = ports.iter().position(|x| x == "spi2_start_flag").unwrap();
+        let mux_select = ports.iter().position(|x| x == "mux_select").unwrap();
+        println!("{:?}", ports);
         wait_clock_true!(sim, bidi_clock, x);
         // Write the outgoing word
         hls_host_write!(
@@ -134,35 +150,35 @@ fn test_spi_mux_works() {
             bidi_clock,
             x,
             pc_to_host,
-            0,
+            spi1_data_outbound,
             [0_u16, 0, 0xDEAD_u16, 0xBEEF]
         );
         // Write the transaction length
-        hls_host_write!(sim, bidi_clock, x, pc_to_host, 2, [32_u16]);
+        hls_host_write!(sim, bidi_clock, x, pc_to_host, spi1_num_bits, [32_u16]);
         // Write a start to start the transaction
-        hls_host_write!(sim, bidi_clock, x, pc_to_host, 3, [0_u16]);
+        hls_host_write!(sim, bidi_clock, x, pc_to_host, spi1_start_flag, [0_u16]);
         // Read back the results
-        hls_host_issue_read!(sim, bidi_clock, x, pc_to_host, 1, 4);
+        hls_host_issue_read!(sim, bidi_clock, x, pc_to_host, spi1_data_inbound, 4);
         let ret = hls_host_get_words!(sim, bidi_clock, x, host_to_pc, 4);
         wait_clock_cycle!(sim, bidi_clock, x, 10);
         println!("{:x?}", ret);
         // Switch to the second controller
-        hls_host_write!(sim, bidi_clock, x, pc_to_host, 16, [1_u16]);
+        hls_host_write!(sim, bidi_clock, x, pc_to_host, mux_select, [1_u16]);
         // Write the outgoing word, this time to the second SPI controller
         hls_host_write!(
             sim,
             bidi_clock,
             x,
             pc_to_host,
-            8,
+            spi2_data_outbound,
             [0_u16, 0, 0xDEAD_u16, 0xBEEF]
         );
         // Write the transaction length
-        hls_host_write!(sim, bidi_clock, x, pc_to_host, 10, [32_u16]);
+        hls_host_write!(sim, bidi_clock, x, pc_to_host, spi2_num_bits, [32_u16]);
         // Write a start to start the transaction
-        hls_host_write!(sim, bidi_clock, x, pc_to_host, 11, [0_u16]);
+        hls_host_write!(sim, bidi_clock, x, pc_to_host, spi2_start_flag, [0_u16]);
         // Read back the results
-        hls_host_issue_read!(sim, bidi_clock, x, pc_to_host, 9, 4);
+        hls_host_issue_read!(sim, bidi_clock, x, pc_to_host, spi2_data_inbound, 4);
         let ret = hls_host_get_words!(sim, bidi_clock, x, host_to_pc, 4);
         println!("{:x?}", ret);
         wait_clock_cycle!(sim, bidi_clock, x, 100);
@@ -170,7 +186,7 @@ fn test_spi_mux_works() {
     });
     let ret = sim.run_traced(
         Box::new(uut),
-        200_000,
+        10_000,
         std::fs::File::create(vcd_path!("host_spi_mux.vcd")).unwrap(),
     );
     ret.unwrap();

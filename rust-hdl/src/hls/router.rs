@@ -28,14 +28,19 @@ impl<const D: usize, const A: usize, const N: usize> HLSNamedPorts for Router<D,
 
 impl<const D: usize, const A: usize, const N: usize> Router<D, A, N> {
     pub fn new(downstream_names: [&str; N], downstream_devices: [&dyn HLSNamedPorts; N]) -> Self {
-        let address_count =
-            downstream_devices.iter()
-                .map(|x| x.ports().len())
-                .collect::<Vec<_>>();
+        let address_count = downstream_devices
+            .iter()
+            .map(|x| x.ports().len())
+            .collect::<Vec<_>>();
         let mut _address_map = vec![];
         for ndx in 0..N {
             let prefix = downstream_names[ndx];
-            _address_map.extend(downstream_devices[ndx].ports().iter().map(|x| format!("{}_{}", prefix, x)));
+            _address_map.extend(
+                downstream_devices[ndx]
+                    .ports()
+                    .iter()
+                    .map(|x| format!("{}_{}", prefix, x)),
+            );
         }
         let zero = Constant::<Bits<A>>::new(0usize.into());
         let mut node_start_address: [Constant<Bits<A>>; N] = array_init::array_init(|_| zero);
@@ -107,8 +112,10 @@ fn test_router_is_synthesizable() {
     use crate::hls::bridge::Bridge;
     let bridge1 = Bridge::<16, 8, 4>::new(["Top", "Left", "Right", "Bottom"]);
     let bridge2 = Bridge::<16, 8, 2>::new(["Red", "Blue"]);
-    let bridge3 = Bridge::<16, 8, 6>::new(["Club", "Spades", "Diamond", "Heart", "Joker", "Instruction"]);
-    let mut router = Router::<16, 8, 3>::new(["Sides", "Colors", "Faces"], [&bridge1, &bridge2, &bridge3]);
+    let bridge3 =
+        Bridge::<16, 8, 6>::new(["Club", "Spades", "Diamond", "Heart", "Joker", "Instruction"]);
+    let mut router =
+        Router::<16, 8, 3>::new(["Sides", "Colors", "Faces"], [&bridge1, &bridge2, &bridge3]);
     router.upstream.address.connect();
     router.upstream.address_strobe.connect();
     router.upstream.from_controller.connect();

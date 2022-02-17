@@ -28,7 +28,7 @@ impl Default for HostTest {
             iport: Default::default(),
             fport: Default::default(),
             bidi_clock: Default::default(),
-            sys_clock: Default::default()
+            sys_clock: Default::default(),
         }
     }
 }

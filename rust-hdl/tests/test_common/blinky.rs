@@ -12,7 +12,7 @@ pub struct OpalKellyBlinky {
 }
 
 impl OpalKellyBlinky {
-    #[cfg(feature="frontpanel")]
+    #[cfg(feature = "frontpanel")]
     pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),

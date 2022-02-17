@@ -17,7 +17,7 @@ impl Default for MOSIPortTest {
             bridge: Bridge::new(["port_a", "port_b"]),
             port_a: Default::default(),
             port_b: Default::default(),
-            clock: Default::default()
+            clock: Default::default(),
         }
     }
 }
@@ -172,7 +172,7 @@ impl Default for MOSIWidePortTest {
             bridge: Bridge::new(["port_a", "port_b"]),
             port_a: Default::default(),
             port_b: Default::default(),
-            clock: Default::default()
+            clock: Default::default(),
         }
     }
 }
@@ -182,7 +182,6 @@ impl HLSNamedPorts for MOSIWidePortTest {
         self.bridge.ports()
     }
 }
-
 
 impl Logic for MOSIWidePortTest {
     #[hdl_gen]
@@ -290,7 +289,7 @@ impl Default for MOSIPortFIFOTest {
             bus: Default::default(),
             bridge: Bridge::new(["port_a"]),
             port_a: Default::default(),
-            clock: Default::default()
+            clock: Default::default(),
         }
     }
 }

@@ -3,7 +3,7 @@ use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-#[cfg(feature="frontpanel")]
+#[cfg(feature = "frontpanel")]
 #[cfg(test)]
 pub fn test_opalkelly_ddr_stress_runtime(bit_file: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_file)?;

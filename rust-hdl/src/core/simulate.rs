@@ -337,27 +337,27 @@ impl<T> Sim<T> {
 
 #[macro_export]
 macro_rules! wait_clock_true {
-    ($sim: ident, $clock: ident, $me: expr) => {
-        $me = $sim.watch(|x| x.$clock.val().0, $me)?
+    ($sim: ident, $($clock: ident).+, $me: expr) => {
+        $me = $sim.watch(|x| x.$($clock).+.val().0, $me)?
     };
 }
 
 #[macro_export]
 macro_rules! wait_clock_false {
-    ($sim: ident, $clock: ident, $me: expr) => {
-        $me = $sim.watch(|x| !x.$clock.val().0, $me)?
+    ($sim: ident, $($clock: ident).+, $me: expr) => {
+        $me = $sim.watch(|x| !x.$($clock).+.val().0, $me)?
     };
 }
 
 #[macro_export]
 macro_rules! wait_clock_cycle {
-    ($sim: ident, $clock: ident, $me: expr) => {
-        if $me.$clock.val().0 {
-            wait_clock_false!($sim, $clock, $me);
-            wait_clock_true!($sim, $clock, $me);
+    ($sim: ident, $($clock: ident).+, $me: expr) => {
+        if $me.$($clock).+.val().0 {
+            wait_clock_false!($sim, $($clock).+, $me);
+            wait_clock_true!($sim, $($clock).+, $me);
         } else {
-            wait_clock_true!($sim, $clock, $me);
-            wait_clock_false!($sim, $clock, $me);
+            wait_clock_true!($sim, $($clock).+, $me);
+            wait_clock_false!($sim, $($clock).+, $me);
         }
     };
     ($sim: ident, $clock: ident, $me: expr, $count: expr) => {
@@ -369,9 +369,9 @@ macro_rules! wait_clock_cycle {
 
 #[macro_export]
 macro_rules! wait_clock_cycles {
-    ($sim: ident, $clock: ident, $me: expr, $count: expr) => {
+    ($sim: ident, $($clock: ident).+, $me: expr, $count: expr) => {
         for _i in 0..$count {
-            wait_clock_cycle!($sim, $clock, $me);
+            wait_clock_cycle!($sim, $($clock).+, $me);
         }
     };
 }

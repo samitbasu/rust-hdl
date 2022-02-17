@@ -3,10 +3,7 @@ use rust_hdl::core::prelude::*;
 mod test_common;
 
 #[cfg(feature = "frontpanel")]
-use {
-    rust_hdl::bsp::ok_xem7010::XEM7010,
-    test_common::pipe::*,
-};
+use {rust_hdl::bsp::ok_xem7010::XEM7010, test_common::pipe::*};
 
 #[cfg(feature = "frontpanel")]
 #[test]

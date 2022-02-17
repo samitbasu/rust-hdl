@@ -1,5 +1,5 @@
-use test_common::soc::SoCTestChip;
 use rust_hdl::core::prelude::*;
+use test_common::soc::SoCTestChip;
 
 mod test_common;
 

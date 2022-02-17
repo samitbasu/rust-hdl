@@ -1,6 +1,6 @@
 use rust_hdl::bsp::alchitry_cu::ice_pll::ICE40PLLBlock;
 #[cfg(test)]
-use {rust_hdl::core::prelude::*};
+use rust_hdl::core::prelude::*;
 mod test_common;
 use test_common::*;
 

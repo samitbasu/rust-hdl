@@ -1,7 +1,5 @@
 #[cfg(feature = "frontpanel")]
-use {
-    rust_hdl::bsp::ok_core::prelude::*, rust_hdl::core::prelude::*,
-};
+use {rust_hdl::bsp::ok_core::prelude::*, rust_hdl::core::prelude::*};
 
 mod test_common;
 

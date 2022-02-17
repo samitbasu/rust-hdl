@@ -1,4 +1,3 @@
-
 mod test_common;
 
 use rust_hdl::bsp::ok_core::prelude::*;

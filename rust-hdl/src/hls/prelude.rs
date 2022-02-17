@@ -1,3 +1,5 @@
+pub use crate::bus_address_strobe;
+pub use crate::bus_write_strobe;
 pub use crate::hls::bidi::{BidiBusD, BidiBusM, BidiMaster, BidiSimulatedDevice};
 pub use crate::hls::bridge::Bridge;
 pub use crate::hls::bus::{
@@ -19,6 +21,7 @@ pub use crate::hls::reducer::Reducer;
 pub use crate::hls::router::Router;
 pub use crate::hls::spi::HLSSPIMaster;
 pub use crate::hls::spi::HLSSPIMasterDynamicMode;
+pub use crate::hls::HLSNamedPorts;
 pub use crate::hls_fifo_read;
 pub use crate::hls_fifo_read_lazy;
 pub use crate::hls_fifo_write;
@@ -31,4 +34,3 @@ pub use crate::hls_host_noop;
 pub use crate::hls_host_ping;
 pub use crate::hls_host_put_word;
 pub use crate::hls_host_write;
-pub use crate::hls::HLSNamedPorts;

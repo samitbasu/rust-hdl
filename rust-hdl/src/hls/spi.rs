@@ -1,10 +1,10 @@
 use crate::core::prelude::*;
 use crate::hls::bridge::Bridge;
 use crate::hls::bus::{SoCBusResponder, SoCPortController};
-use crate::hls::HLSNamedPorts;
 use crate::hls::miso_wide_port::MISOWidePort;
 use crate::hls::mosi_port::MOSIPort;
 use crate::hls::mosi_wide_port::MOSIWidePort;
+use crate::hls::HLSNamedPorts;
 use crate::widgets::prelude::*;
 
 // HLS ports
@@ -96,7 +96,9 @@ pub struct HLSSPIMasterDynamicMode<const D: usize, const A: usize, const W: usiz
     core: SPIMasterDynamicMode<W>,
 }
 
-impl<const D: usize, const A: usize, const W: usize> HLSNamedPorts for HLSSPIMasterDynamicMode<D, A, W> {
+impl<const D: usize, const A: usize, const W: usize> HLSNamedPorts
+    for HLSSPIMasterDynamicMode<D, A, W>
+{
     fn ports(&self) -> Vec<String> {
         self.bridge.ports()
     }
@@ -130,7 +132,12 @@ impl<const D: usize, const A: usize, const W: usize> HLSSPIMasterDynamicMode<D, 
         Self {
             spi: Default::default(),
             upstream: Default::default(),
-            bridge: Bridge::new(["data_outbound", "data_inbound", "num_bits_mode", "start_flag"]),
+            bridge: Bridge::new([
+                "data_outbound",
+                "data_inbound",
+                "num_bits_mode",
+                "start_flag",
+            ]),
             data_outbound: Default::default(),
             data_inbound: Default::default(),
             num_bits_mode: Default::default(),
@@ -170,7 +177,7 @@ impl<const D: usize, const A: usize, const N: usize> HLSNamedPorts for HLSSPIMux
     fn ports(&self) -> Vec<String> {
         self.bridge.ports()
     }
-} 
+}
 
 impl<const D: usize, const A: usize, const N: usize> Logic for HLSSPIMux<D, A, N> {
     #[hdl_gen]
@@ -195,11 +202,10 @@ impl<const D: usize, const A: usize, const N: usize> Default for HLSSPIMux<D, A,
             to_bus: Default::default(),
             mux: Default::default(),
             bridge: Bridge::new(["select"]),
-            select: Default::default()
+            select: Default::default(),
         }
     }
 }
-
 
 #[test]
 fn test_hls_spi_mux_is_synthesizable() {

@@ -26,7 +26,7 @@ impl Default for ControllerTest {
             bridge: Bridge::new(["port", "iport"]),
             port: Default::default(),
             iport: Default::default(),
-            clock: Default::default()
+            clock: Default::default(),
         }
     }
 }

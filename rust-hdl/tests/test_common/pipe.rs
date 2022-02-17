@@ -161,7 +161,7 @@ pub struct OpalKellyPipeFIFOTest {
 }
 
 impl OpalKellyPipeFIFOTest {
-#[cfg(test)]
+    #[cfg(test)]
     pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),

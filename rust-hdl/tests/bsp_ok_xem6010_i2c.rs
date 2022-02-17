@@ -60,8 +60,8 @@ impl Logic for OKI2CTest {
     fn update(&mut self) {
         // Link the signals
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
-        Signal::<InOut, Bit>::link(&mut self.sda,&mut self.i2c.sda);
-        Signal::<InOut, Bit>::link(&mut self.scl,&mut self.i2c.scl);
+        Signal::<InOut, Bit>::link(&mut self.sda, &mut self.i2c.sda);
+        Signal::<InOut, Bit>::link(&mut self.scl, &mut self.i2c.scl);
         // Clock the internal logic
         self.i2c.clock.next = self.ok_host.ti_clk.val();
         self.trig_in.clk.next = self.ok_host.ti_clk.val();

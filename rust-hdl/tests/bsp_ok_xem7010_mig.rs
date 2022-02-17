@@ -5,10 +5,7 @@ use rust_hdl::bsp::ok_xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 #[cfg(feature = "frontpanel")]
-use {
-    rust_hdl_ok_frontpanel_sys::OkError,
-    test_common::tools::*,
-};
+use {rust_hdl_ok_frontpanel_sys::OkError, test_common::tools::*};
 
 mod test_common;
 

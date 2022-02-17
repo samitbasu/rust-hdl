@@ -18,7 +18,7 @@ impl Default for MISOPortTest {
             bridge: Bridge::new(["port_a", "port_b"]),
             port_a: Default::default(),
             port_b: Default::default(),
-            clock: Default::default()
+            clock: Default::default(),
         }
     }
 }
@@ -142,7 +142,7 @@ impl Default for MISOWidePortTest {
             bridge: Bridge::new(["port_a", "port_b"]),
             port_a: Default::default(),
             port_b: Default::default(),
-            clock: Default::default()
+            clock: Default::default(),
         }
     }
 }
@@ -280,7 +280,7 @@ impl Default for MISOPortFIFOTest {
             bus: Default::default(),
             bridge: Bridge::new(["port_a"]),
             port_a: Default::default(),
-            clock: Default::default()
+            clock: Default::default(),
         }
     }
 }

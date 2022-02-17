@@ -15,7 +15,6 @@ impl HLSNamedPorts for DummyBridge {
     }
 }
 
-
 impl Default for RouterTest {
     fn default() -> Self {
         let dummy_bridges = [
@@ -174,8 +173,7 @@ impl Default for RouterTestSetup {
         let names = ["a", "b", "c"];
         Self {
             upstream: Default::default(),
-            router: Router::new(names,
-                                [&dev_a[0], &dev_a[1], &dev_a[2]]),
+            router: Router::new(names, [&dev_a[0], &dev_a[1], &dev_a[2]]),
             dev_a,
             clock: Default::default(),
         }
