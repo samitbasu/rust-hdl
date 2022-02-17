@@ -2,7 +2,7 @@ use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 struct HostTest {
     pc_to_host: SyncFIFO<Bits<8>, 3, 4, 1>,
     host_to_pc: SyncFIFO<Bits<8>, 3, 4, 1>,
@@ -14,6 +14,23 @@ struct HostTest {
     fport: MISOFIFOPort<16, 3, 4, 1>,
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
+}
+
+impl Default for HostTest {
+    fn default() -> Self {
+        Self {
+            pc_to_host: Default::default(),
+            host_to_pc: Default::default(),
+            bidi_dev: Default::default(),
+            host: Default::default(),
+            bridge: Bridge::new(["port", "iport", "fport"]),
+            port: Default::default(),
+            iport: Default::default(),
+            fport: Default::default(),
+            bidi_clock: Default::default(),
+            sys_clock: Default::default()
+        }
+    }
 }
 
 impl Logic for HostTest {

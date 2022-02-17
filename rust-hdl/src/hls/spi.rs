@@ -1,6 +1,7 @@
 use crate::core::prelude::*;
 use crate::hls::bridge::Bridge;
 use crate::hls::bus::{SoCBusResponder, SoCPortController};
+use crate::hls::HLSNamedPorts;
 use crate::hls::miso_wide_port::MISOWidePort;
 use crate::hls::mosi_port::MOSIPort;
 use crate::hls::mosi_wide_port::MOSIWidePort;
@@ -21,6 +22,12 @@ pub struct HLSSPIMaster<const D: usize, const A: usize, const W: usize> {
     num_bits: MOSIPort<D>,
     start: MOSIPort<D>,
     core: SPIMaster<W>,
+}
+
+impl<const D: usize, const A: usize, const W: usize> HLSNamedPorts for HLSSPIMaster<D, A, W> {
+    fn ports(&self) -> Vec<String> {
+        self.bridge.ports()
+    }
 }
 
 impl<const D: usize, const A: usize, const W: usize> Logic for HLSSPIMaster<D, A, W> {
@@ -49,7 +56,7 @@ impl<const D: usize, const A: usize, const W: usize> HLSSPIMaster<D, A, W> {
         Self {
             spi: Default::default(),
             upstream: Default::default(),
-            bridge: Default::default(),
+            bridge: Bridge::new(["data_outbound", "data_inbound", "num_bits", "start_flag"]),
             data_outbound: Default::default(),
             data_inbound: Default::default(),
             num_bits: Default::default(),
@@ -89,6 +96,12 @@ pub struct HLSSPIMasterDynamicMode<const D: usize, const A: usize, const W: usiz
     core: SPIMasterDynamicMode<W>,
 }
 
+impl<const D: usize, const A: usize, const W: usize> HLSNamedPorts for HLSSPIMasterDynamicMode<D, A, W> {
+    fn ports(&self) -> Vec<String> {
+        self.bridge.ports()
+    }
+}
+
 // Assert D >= 8 + 2
 
 impl<const D: usize, const A: usize, const W: usize> Logic for HLSSPIMasterDynamicMode<D, A, W> {
@@ -117,7 +130,7 @@ impl<const D: usize, const A: usize, const W: usize> HLSSPIMasterDynamicMode<D, 
         Self {
             spi: Default::default(),
             upstream: Default::default(),
-            bridge: Default::default(),
+            bridge: Bridge::new(["data_outbound", "data_inbound", "num_bits_mode", "start_flag"]),
             data_outbound: Default::default(),
             data_inbound: Default::default(),
             num_bits_mode: Default::default(),
@@ -147,10 +160,17 @@ fn test_hls_spi_master_dynamic_mode_is_synthesizable() {
 pub struct HLSSPIMux<const D: usize, const A: usize, const N: usize> {
     pub from_masters: [SPIWiresSlave; N],
     pub upstream: SoCBusResponder<D, A>,
+    pub to_bus: SPIWiresMaster,
     mux: MuxMasters<N, D>,
     bridge: Bridge<D, A, 1>,
     select: MOSIPort<D>,
 }
+
+impl<const D: usize, const A: usize, const N: usize> HLSNamedPorts for HLSSPIMux<D, A, N> {
+    fn ports(&self) -> Vec<String> {
+        self.bridge.ports()
+    }
+} 
 
 impl<const D: usize, const A: usize, const N: usize> Logic for HLSSPIMux<D, A, N> {
     #[hdl_gen]
@@ -162,8 +182,34 @@ impl<const D: usize, const A: usize, const N: usize> Logic for HLSSPIMux<D, A, N
         }
         self.mux.sel.next = self.select.port_out.val();
         self.select.ready.next = true;
+        SPIWiresMaster::link(&mut self.to_bus, &mut self.mux.to_bus);
     }
 }
 
-//#[derive(LogicBlock)]
-//pub struct
+impl<const D: usize, const A: usize, const N: usize> Default for HLSSPIMux<D, A, N> {
+    fn default() -> Self {
+        assert!((1 << D) > N);
+        Self {
+            from_masters: array_init::array_init(|_| Default::default()),
+            upstream: Default::default(),
+            to_bus: Default::default(),
+            mux: Default::default(),
+            bridge: Bridge::new(["select"]),
+            select: Default::default()
+        }
+    }
+}
+
+
+#[test]
+fn test_hls_spi_mux_is_synthesizable() {
+    let mut uut = TopWrap::new(HLSSPIMux::<8, 16, 4>::default());
+    uut.uut.upstream.link_connect_dest();
+    for i in 0..4 {
+        uut.uut.from_masters[i].link_connect_dest();
+    }
+    uut.uut.to_bus.link_connect_source();
+    uut.uut.to_bus.miso.connect();
+    uut.connect_all();
+    yosys_validate("hls_spi_mux", &generate_verilog(&uut)).unwrap()
+}

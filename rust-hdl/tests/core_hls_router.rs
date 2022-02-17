@@ -7,9 +7,28 @@ struct RouterTest {
     clock: Signal<In, Clock>,
 }
 
+struct DummyBridge(pub usize);
+
+impl HLSNamedPorts for DummyBridge {
+    fn ports(&self) -> Vec<String> {
+        (0..self.0).map(|x| format!("port_{}", x)).collect()
+    }
+}
+
+
 impl Default for RouterTest {
     fn default() -> Self {
-        let router = Router::<16, 8, 6>::new([4, 8, 12, 4, 4, 4]);
+        let dummy_bridges = [
+            &DummyBridge(4) as &dyn HLSNamedPorts,
+            &DummyBridge(8),
+            &DummyBridge(12),
+            &DummyBridge(4),
+            &DummyBridge(4),
+            &DummyBridge(4),
+        ];
+
+        let names = ["a", "b", "c", "d", "e", "f"];
+        let router = Router::<16, 8, 6>::new(names, dummy_bridges);
         Self {
             router,
             clock: Default::default(),
@@ -97,11 +116,17 @@ struct RouterTestDevice {
     mosi_ports: [MOSIPort<16>; 5],
 }
 
+impl HLSNamedPorts for RouterTestDevice {
+    fn ports(&self) -> Vec<String> {
+        self.bridge.ports()
+    }
+}
+
 impl Default for RouterTestDevice {
     fn default() -> Self {
         Self {
             upstream: Default::default(),
-            bridge: Default::default(),
+            bridge: Bridge::new(["mosi_0", "mosi_1", "mosi_2", "mosi_3", "mosi_4"]),
             mosi_ports: array_init::array_init(|_| Default::default()),
         }
     }
@@ -145,10 +170,13 @@ struct RouterTestSetup {
 
 impl Default for RouterTestSetup {
     fn default() -> Self {
+        let dev_a = array_init::array_init(|_| Default::default());
+        let names = ["a", "b", "c"];
         Self {
             upstream: Default::default(),
-            router: Router::new([5, 5, 5]),
-            dev_a: array_init::array_init(|_| Default::default()),
+            router: Router::new(names,
+                                [&dev_a[0], &dev_a[1], &dev_a[2]]),
+            dev_a,
             clock: Default::default(),
         }
     }

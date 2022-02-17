@@ -5,6 +5,7 @@ use rust_hdl::core::prelude::*;
 mod test_common;
 
 use rust_hdl::bsp::ok_xem7010::XEM7010;
+#[cfg(feature = "frontpanel")]
 use test_common::blinky::OpalKellyBlinky;
 
 #[cfg(feature = "frontpanel")]

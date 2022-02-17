@@ -1,5 +1,6 @@
 use crate::core::prelude::*;
 use crate::hls::bus::*;
+use crate::hls::HLSNamedPorts;
 use crate::widgets::prelude::DFF;
 
 // A simple bus bridge.  It connects to the master on the one side, and
@@ -12,17 +13,25 @@ pub struct Bridge<const D: usize, const A: usize, const N: usize> {
     pub nodes: [SoCPortController<D>; N],
     pub clock_out: Signal<Out, Clock>,
     address_latch: DFF<Bits<A>>,
+    _port_names: Vec<String>,
 }
 
-impl<const D: usize, const A: usize, const N: usize> Default for Bridge<D, A, N> {
-    fn default() -> Self {
+impl<const D: usize, const A: usize, const N: usize> Bridge<D, A, N> {
+    pub fn new(names: [&str; N]) -> Self {
         assert!(N <= 2_usize.pow(A as u32));
         Self {
             upstream: Default::default(),
             nodes: array_init::array_init(|_| Default::default()),
             clock_out: Default::default(),
             address_latch: Default::default(),
+            _port_names: names.iter().map(|x| x.to_string()).collect(),
         }
+    }
+}
+
+impl<const D: usize, const A: usize, const N: usize> HLSNamedPorts for Bridge<D, A, N> {
+    fn ports(&self) -> Vec<String> {
+        self._port_names.clone()
     }
 }
 
@@ -56,7 +65,7 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Bridge<D, A, N> {
 
 #[test]
 fn test_bridge_is_synthesizable() {
-    let mut uut = Bridge::<16, 8, 6>::default();
+    let mut uut = Bridge::<16, 8, 6>::new(["a", "b", "c", "d", "e", "f"]);
     uut.upstream.address.connect();
     uut.upstream.address_strobe.connect();
     uut.upstream.ready.connect();

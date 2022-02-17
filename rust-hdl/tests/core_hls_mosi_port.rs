@@ -1,13 +1,25 @@
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 struct MOSIPortTest {
     bus: SoCBusController<16, 2>,
     bridge: Bridge<16, 2, 2>,
     port_a: MOSIPort<16>,
     port_b: MOSIPort<16>,
     clock: Signal<In, Clock>,
+}
+
+impl Default for MOSIPortTest {
+    fn default() -> Self {
+        Self {
+            bus: Default::default(),
+            bridge: Bridge::new(["port_a", "port_b"]),
+            port_a: Default::default(),
+            port_b: Default::default(),
+            clock: Default::default()
+        }
+    }
 }
 
 impl Logic for MOSIPortTest {
@@ -144,7 +156,7 @@ fn test_port_pipeline() {
     .unwrap();
 }
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 struct MOSIWidePortTest {
     bus: SoCBusController<16, 2>,
     bridge: Bridge<16, 2, 2>,
@@ -152,6 +164,25 @@ struct MOSIWidePortTest {
     port_b: MOSIWidePort<64, 16>,
     clock: Signal<In, Clock>,
 }
+
+impl Default for MOSIWidePortTest {
+    fn default() -> Self {
+        Self {
+            bus: Default::default(),
+            bridge: Bridge::new(["port_a", "port_b"]),
+            port_a: Default::default(),
+            port_b: Default::default(),
+            clock: Default::default()
+        }
+    }
+}
+
+impl HLSNamedPorts for MOSIWidePortTest {
+    fn ports(&self) -> Vec<String> {
+        self.bridge.ports()
+    }
+}
+
 
 impl Logic for MOSIWidePortTest {
     #[hdl_gen]
@@ -245,12 +276,29 @@ fn test_wide_port_test_works() {
     .unwrap();
 }
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 struct MOSIPortFIFOTest {
     bus: SoCBusController<16, 2>,
     bridge: Bridge<16, 2, 1>,
     port_a: MOSIFIFOPort<16, 4, 5, 1>,
     clock: Signal<In, Clock>,
+}
+
+impl Default for MOSIPortFIFOTest {
+    fn default() -> Self {
+        Self {
+            bus: Default::default(),
+            bridge: Bridge::new(["port_a"]),
+            port_a: Default::default(),
+            clock: Default::default()
+        }
+    }
+}
+
+impl HLSNamedPorts for MOSIPortFIFOTest {
+    fn ports(&self) -> Vec<String> {
+        self.bridge.ports()
+    }
 }
 
 impl Logic for MOSIPortFIFOTest {

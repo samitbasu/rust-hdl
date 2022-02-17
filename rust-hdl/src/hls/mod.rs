@@ -18,3 +18,7 @@ pub mod router;
 pub mod sdram_fifo;
 pub mod sim;
 pub mod spi;
+
+pub trait HLSNamedPorts {
+    fn ports(&self) -> Vec<String>;
+}

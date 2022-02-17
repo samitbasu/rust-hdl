@@ -1,5 +1,6 @@
 use crate::core::prelude::*;
 use crate::hls::bus::{SoCBusController, SoCBusResponder};
+use crate::hls::HLSNamedPorts;
 use crate::widgets::prelude::*;
 
 // A router allows you to connect multiple bridges to a single master
@@ -16,10 +17,26 @@ pub struct Router<const D: usize, const A: usize, const N: usize> {
     active: DFF<Bits<8>>,
     virtual_address: DFF<Bits<A>>,
     address_strobe_delay: DFF<Bit>,
+    _address_map: Vec<String>,
+}
+
+impl<const D: usize, const A: usize, const N: usize> HLSNamedPorts for Router<D, A, N> {
+    fn ports(&self) -> Vec<String> {
+        self._address_map.clone()
+    }
 }
 
 impl<const D: usize, const A: usize, const N: usize> Router<D, A, N> {
-    pub fn new(address_count: [usize; N]) -> Self {
+    pub fn new(downstream_names: [&str; N], downstream_devices: [&dyn HLSNamedPorts; N]) -> Self {
+        let address_count =
+            downstream_devices.iter()
+                .map(|x| x.ports().len())
+                .collect::<Vec<_>>();
+        let mut _address_map = vec![];
+        for ndx in 0..N {
+            let prefix = downstream_names[ndx];
+            _address_map.extend(downstream_devices[ndx].ports().iter().map(|x| format!("{}_{}", prefix, x)));
+        }
         let zero = Constant::<Bits<A>>::new(0usize.into());
         let mut node_start_address: [Constant<Bits<A>>; N] = array_init::array_init(|_| zero);
         let mut node_end_address: [Constant<Bits<A>>; N] = array_init::array_init(|_| zero);
@@ -38,6 +55,7 @@ impl<const D: usize, const A: usize, const N: usize> Router<D, A, N> {
             active: Default::default(),
             virtual_address: Default::default(),
             address_strobe_delay: Default::default(),
+            _address_map,
         }
     }
 }
@@ -86,18 +104,23 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Router<D, A, N> {
 
 #[test]
 fn test_router_is_synthesizable() {
-    let mut router = Router::<16, 8, 6>::new([4, 8, 12, 4, 4, 4]);
+    use crate::hls::bridge::Bridge;
+    let bridge1 = Bridge::<16, 8, 4>::new(["Top", "Left", "Right", "Bottom"]);
+    let bridge2 = Bridge::<16, 8, 2>::new(["Red", "Blue"]);
+    let bridge3 = Bridge::<16, 8, 6>::new(["Club", "Spades", "Diamond", "Heart", "Joker", "Instruction"]);
+    let mut router = Router::<16, 8, 3>::new(["Sides", "Colors", "Faces"], [&bridge1, &bridge2, &bridge3]);
     router.upstream.address.connect();
     router.upstream.address_strobe.connect();
     router.upstream.from_controller.connect();
     router.upstream.strobe.connect();
     router.upstream.clock.connect();
-    for i in 0..6 {
+    for i in 0..3 {
         router.nodes[i].ready.connect();
         router.nodes[i].to_controller.connect();
     }
     router.connect_all();
     let vlog = generate_verilog(&router);
-    println!("{}", vlog);
+    //println!("{}", vlog);
+    println!("{:?}", router.ports());
     yosys_validate("router", &vlog).unwrap();
 }

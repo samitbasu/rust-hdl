@@ -2,13 +2,25 @@ use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 struct MISOPortTest {
     bus: SoCBusController<16, 2>,
     bridge: Bridge<16, 2, 2>,
     port_a: MISOPort<16>,
     port_b: MISOPort<16>,
     clock: Signal<In, Clock>,
+}
+
+impl Default for MISOPortTest {
+    fn default() -> Self {
+        Self {
+            bus: Default::default(),
+            bridge: Bridge::new(["port_a", "port_b"]),
+            port_a: Default::default(),
+            port_b: Default::default(),
+            clock: Default::default()
+        }
+    }
 }
 
 impl Logic for MISOPortTest {
@@ -114,13 +126,25 @@ fn test_port_test_works() {
     .unwrap();
 }
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 struct MISOWidePortTest {
     bus: SoCBusController<16, 2>,
     bridge: Bridge<16, 2, 2>,
     port_a: MISOWidePort<64, 16>,
     port_b: MISOWidePort<64, 16>,
     clock: Signal<In, Clock>,
+}
+
+impl Default for MISOWidePortTest {
+    fn default() -> Self {
+        Self {
+            bus: Default::default(),
+            bridge: Bridge::new(["port_a", "port_b"]),
+            port_a: Default::default(),
+            port_b: Default::default(),
+            clock: Default::default()
+        }
+    }
 }
 
 impl Logic for MISOWidePortTest {
@@ -242,12 +266,23 @@ fn test_wide_port_test_works() {
     ret.unwrap();
 }
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 struct MISOPortFIFOTest {
     bus: SoCBusController<16, 2>,
     bridge: Bridge<16, 2, 1>,
     port_a: MISOFIFOPort<16, 2, 3, 1>,
     clock: Signal<In, Clock>,
+}
+
+impl Default for MISOPortFIFOTest {
+    fn default() -> Self {
+        Self {
+            bus: Default::default(),
+            bridge: Bridge::new(["port_a"]),
+            port_a: Default::default(),
+            clock: Default::default()
+        }
+    }
 }
 
 impl Logic for MISOPortFIFOTest {

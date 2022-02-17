@@ -1,11 +1,12 @@
-#[cfg(feature = "frontpanel")]
-use crate::test_common::tools::ok_test_prelude;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::widgets::prelude::*;
 #[cfg(feature = "frontpanel")]
-use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError, OkHandle};
-use std::thread::sleep;
+use {
+    crate::test_common::tools::ok_test_prelude,
+    rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError, OkHandle},
+    std::thread::sleep
+};
 
 #[derive(LogicBlock)]
 pub struct SoCTestChip {
@@ -32,7 +33,7 @@ impl Default for SoCTestChip {
             from_cpu_fifo: Default::default(),
             to_cpu_fifo: Default::default(),
             soc_host: Default::default(),
-            bridge: Default::default(),
+            bridge: Bridge::new(["mosi", "miso"]),
             mosi_port: Default::default(),
             miso_port: Default::default(),
             data_fifo: Default::default(),

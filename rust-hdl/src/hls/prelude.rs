@@ -31,3 +31,4 @@ pub use crate::hls_host_noop;
 pub use crate::hls_host_ping;
 pub use crate::hls_host_put_word;
 pub use crate::hls_host_write;
+pub use crate::hls::HLSNamedPorts;

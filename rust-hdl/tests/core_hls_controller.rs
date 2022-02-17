@@ -2,7 +2,7 @@ use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 
-#[derive(LogicBlock, Default)]
+#[derive(LogicBlock)]
 struct ControllerTest {
     to_cpu: FIFOReadController<Bits<16>>,
     from_cpu: FIFOWriteController<Bits<16>>,
@@ -13,6 +13,22 @@ struct ControllerTest {
     port: MOSIPort<16>,
     iport: MISOPort<16>,
     clock: Signal<In, Clock>,
+}
+
+impl Default for ControllerTest {
+    fn default() -> Self {
+        Self {
+            to_cpu: Default::default(),
+            from_cpu: Default::default(),
+            to_cpu_fifo: Default::default(),
+            from_cpu_fifo: Default::default(),
+            controller: Default::default(),
+            bridge: Bridge::new(["port", "iport"]),
+            port: Default::default(),
+            iport: Default::default(),
+            clock: Default::default()
+        }
+    }
 }
 
 impl Logic for ControllerTest {

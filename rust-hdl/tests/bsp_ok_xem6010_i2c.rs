@@ -139,7 +139,7 @@ impl Default for OKI2CTest {
 
 #[cfg(feature = "frontpanel")]
 #[test]
-fn test_opalkelly_xem_6010_synth_i2c() {
+fn test_opalkelly_xem_6010_i2c() {
     let mut uut = OKI2CTest::default();
     uut.hi.link_connect_dest();
     uut.sda.connect();
@@ -147,6 +147,7 @@ fn test_opalkelly_xem_6010_synth_i2c() {
     uut.connect_all();
     check_connected(&uut);
     XEM6010::synth(uut, target_path!("xem_6010/i2c_test"));
+    test_opalkelly_xem_6010_run_i2c().unwrap()
 }
 
 #[cfg(feature = "frontpanel")]
@@ -247,7 +248,6 @@ fn ok_i2c_end_transmission(hnd: &OkHandle) -> Result<(), OkError> {
 }
 
 #[cfg(feature = "frontpanel")]
-#[test]
 fn test_opalkelly_xem_6010_run_i2c() -> Result<(), OkError> {
     let hnd = ok_test_prelude(target_path!("xem_6010/i2c_test/top.bit"))?;
     ok_i2c_reset(&hnd)?;
