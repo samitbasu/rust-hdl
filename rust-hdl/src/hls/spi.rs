@@ -6,6 +6,7 @@ use crate::hls::mosi_port::MOSIPort;
 use crate::hls::mosi_wide_port::MOSIWidePort;
 use crate::hls::HLSNamedPorts;
 use crate::widgets::prelude::*;
+use crate::widgets::spi::mux::MuxSlaves;
 
 // HLS ports
 // 0 - data in
@@ -164,7 +165,64 @@ fn test_hls_spi_master_dynamic_mode_is_synthesizable() {
 }
 
 #[derive(LogicBlock)]
-pub struct HLSSPIMux<const D: usize, const A: usize, const N: usize> {
+pub struct HLSSPIMuxSlaves<const D: usize, const A: usize, const N: usize> {
+    pub to_slaves: [SPIWiresMaster; N],
+    pub from_bus: SPIWiresSlave,
+    pub upstream: SoCBusResponder<D, A>,
+    mux: MuxSlaves<N, D>,
+    bridge: Bridge<D, A, 1>,
+    select: MOSIPort<D>,
+}
+
+impl<const D: usize, const A: usize, const N: usize> HLSNamedPorts for HLSSPIMuxSlaves<D, A, N> {
+    fn ports(&self) -> Vec<String> {
+        self.bridge.ports()
+    }
+}
+
+impl<const D: usize, const A: usize, const N: usize> Logic for HLSSPIMuxSlaves<D, A, N> {
+    #[hdl_gen]
+    fn update(&mut self) {
+        SoCBusResponder::<D, A>::link(&mut self.upstream, &mut self.bridge.upstream);
+        SoCPortController::<D>::join(&mut self.bridge.nodes[0], &mut self.select.bus);
+        for i in 0_usize..N {
+            SPIWiresMaster::link(&mut self.to_slaves[i], &mut self.mux.to_slaves[i]);
+        }
+        self.mux.sel.next = self.select.port_out.val();
+        self.select.ready.next = true;
+        SPIWiresSlave::link(&mut self.from_bus, &mut self.mux.from_master);
+    }
+}
+
+impl<const D: usize, const A: usize, const N: usize> Default for HLSSPIMuxSlaves<D, A, N> {
+    fn default() -> Self {
+        assert!((1 << D) > N);
+        Self {
+            to_slaves: array_init::array_init(|_| Default::default()),
+            upstream: Default::default(),
+            from_bus: Default::default(),
+            mux: Default::default(),
+            bridge: Bridge::new(["select"]),
+            select: Default::default(),
+        }
+    }
+}
+
+#[test]
+fn test_hls_spi_mux_slaves_is_synthesizable() {
+    let mut uut = TopWrap::new(HLSSPIMuxSlaves::<8, 16, 4>::default());
+    uut.uut.upstream.link_connect_dest();
+    for i in 0..4 {
+        uut.uut.to_slaves[i].link_connect_source();
+        uut.uut.to_slaves[i].miso.connect();
+    }
+    uut.uut.from_bus.link_connect_dest();
+    uut.connect_all();
+    yosys_validate("hls_spi_mux_slaves", &generate_verilog(&uut)).unwrap()
+}
+
+#[derive(LogicBlock)]
+pub struct HLSSPIMuxMasters<const D: usize, const A: usize, const N: usize> {
     pub from_masters: [SPIWiresSlave; N],
     pub upstream: SoCBusResponder<D, A>,
     pub to_bus: SPIWiresMaster,
@@ -173,13 +231,13 @@ pub struct HLSSPIMux<const D: usize, const A: usize, const N: usize> {
     select: MOSIPort<D>,
 }
 
-impl<const D: usize, const A: usize, const N: usize> HLSNamedPorts for HLSSPIMux<D, A, N> {
+impl<const D: usize, const A: usize, const N: usize> HLSNamedPorts for HLSSPIMuxMasters<D, A, N> {
     fn ports(&self) -> Vec<String> {
         self.bridge.ports()
     }
 }
 
-impl<const D: usize, const A: usize, const N: usize> Logic for HLSSPIMux<D, A, N> {
+impl<const D: usize, const A: usize, const N: usize> Logic for HLSSPIMuxMasters<D, A, N> {
     #[hdl_gen]
     fn update(&mut self) {
         SoCBusResponder::<D, A>::link(&mut self.upstream, &mut self.bridge.upstream);
@@ -193,7 +251,7 @@ impl<const D: usize, const A: usize, const N: usize> Logic for HLSSPIMux<D, A, N
     }
 }
 
-impl<const D: usize, const A: usize, const N: usize> Default for HLSSPIMux<D, A, N> {
+impl<const D: usize, const A: usize, const N: usize> Default for HLSSPIMuxMasters<D, A, N> {
     fn default() -> Self {
         assert!((1 << D) > N);
         Self {
@@ -209,7 +267,7 @@ impl<const D: usize, const A: usize, const N: usize> Default for HLSSPIMux<D, A,
 
 #[test]
 fn test_hls_spi_mux_is_synthesizable() {
-    let mut uut = TopWrap::new(HLSSPIMux::<8, 16, 4>::default());
+    let mut uut = TopWrap::new(HLSSPIMuxMasters::<8, 16, 4>::default());
     uut.uut.upstream.link_connect_dest();
     for i in 0..4 {
         uut.uut.from_masters[i].link_connect_dest();

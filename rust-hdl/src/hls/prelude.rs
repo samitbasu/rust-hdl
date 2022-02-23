@@ -21,6 +21,7 @@ pub use crate::hls::reducer::Reducer;
 pub use crate::hls::router::Router;
 pub use crate::hls::spi::HLSSPIMaster;
 pub use crate::hls::spi::HLSSPIMasterDynamicMode;
+pub use crate::hls::spi::{HLSSPIMuxMasters, HLSSPIMuxSlaves};
 pub use crate::hls::HLSNamedPorts;
 pub use crate::hls_fifo_read;
 pub use crate::hls_fifo_read_lazy;

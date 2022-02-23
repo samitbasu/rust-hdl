@@ -77,7 +77,7 @@ impl Logic for SoCTestChip {
 }
 
 #[cfg(feature = "frontpanel")]
-fn mk_u8(dat: &[u16]) -> Vec<u8> {
+pub fn mk_u8(dat: &[u16]) -> Vec<u8> {
     let mut ret = vec![0_u8; dat.len() * 2];
     for (ndx, el) in dat.iter().enumerate() {
         ret[2 * ndx] = (el & 0xFF) as u8;

@@ -1,7 +1,6 @@
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
-use rust_hdl::hls::spi::{HLSSPIMaster, HLSSPIMux};
-use rust_hdl::widgets::prelude::{SPIConfig, SPIWiresMaster};
+use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]
 struct SPIMuxTest {
@@ -12,7 +11,7 @@ struct SPIMuxTest {
     route: Router<16, 8, 3>,
     core_1: HLSSPIMaster<16, 8, 64>,
     core_2: HLSSPIMaster<16, 8, 64>,
-    mux: HLSSPIMux<16, 8, 2>,
+    mux: HLSSPIMuxMasters<16, 8, 2>,
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
     pub spi: SPIWiresMaster,
@@ -48,6 +47,7 @@ impl Logic for SPIMuxTest {
         SPIWiresMaster::join(&mut self.core_1.spi, &mut self.mux.from_masters[0]);
         SPIWiresMaster::join(&mut self.core_2.spi, &mut self.mux.from_masters[1]);
         SPIWiresMaster::link(&mut self.spi, &mut self.mux.to_bus);
+        self.mux.to_bus.miso.next = !self.mux.to_bus.mosi.val(); // Echo...
     }
 }
 
@@ -71,7 +71,7 @@ impl Default for SPIMuxTest {
         };
         let core_1 = HLSSPIMaster::new(spi_config_1);
         let core_2 = HLSSPIMaster::new(spi_config_2);
-        let mux = HLSSPIMux::default();
+        let mux = HLSSPIMuxMasters::default();
         Self {
             pc_to_host: Default::default(),
             host_to_pc: Default::default(),
@@ -112,6 +112,20 @@ fn test_spi_mux_test_synthesizes() {
 fn test_spi_mux_test_map() {
     let uut = make_spi_mux_test();
     println!("{:?}", uut.ports());
+    assert_eq!(
+        uut.ports(),
+        [
+            "spi1_data_outbound",
+            "spi1_data_inbound",
+            "spi1_num_bits",
+            "spi1_start_flag",
+            "spi2_data_outbound",
+            "spi2_data_inbound",
+            "spi2_num_bits",
+            "spi2_start_flag",
+            "mux_select"
+        ]
+    );
 }
 
 #[test]
@@ -161,7 +175,7 @@ fn test_spi_mux_works() {
         hls_host_issue_read!(sim, bidi_clock, x, pc_to_host, spi1_data_inbound, 4);
         let ret = hls_host_get_words!(sim, bidi_clock, x, host_to_pc, 4);
         wait_clock_cycle!(sim, bidi_clock, x, 10);
-        println!("{:x?}", ret);
+        sim_assert!(sim, ret == [0x0, 0x0, !0xDEAD_u16, !0xBEEF_u16], x);
         // Switch to the second controller
         hls_host_write!(sim, bidi_clock, x, pc_to_host, mux_select, [1_u16]);
         // Write the outgoing word, this time to the second SPI controller
@@ -171,7 +185,7 @@ fn test_spi_mux_works() {
             x,
             pc_to_host,
             spi2_data_outbound,
-            [0_u16, 0, 0xDEAD_u16, 0xBEEF]
+            [0_u16, 0, 0xCAFE_u16, 0xBABE]
         );
         // Write the transaction length
         hls_host_write!(sim, bidi_clock, x, pc_to_host, spi2_num_bits, [32_u16]);
@@ -180,14 +194,9 @@ fn test_spi_mux_works() {
         // Read back the results
         hls_host_issue_read!(sim, bidi_clock, x, pc_to_host, spi2_data_inbound, 4);
         let ret = hls_host_get_words!(sim, bidi_clock, x, host_to_pc, 4);
-        println!("{:x?}", ret);
+        sim_assert!(sim, ret == [0x0, 0x0, !0xCAFE_u16, !0xBABE_u16], x);
         wait_clock_cycle!(sim, bidi_clock, x, 100);
         sim.done(x)
     });
-    let ret = sim.run_traced(
-        Box::new(uut),
-        10_000,
-        std::fs::File::create(vcd_path!("host_spi_mux.vcd")).unwrap(),
-    );
-    ret.unwrap();
+    sim.run(Box::new(uut), 10_000).unwrap();
 }

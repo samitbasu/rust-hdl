@@ -7,6 +7,7 @@ pub mod bsp;
 pub mod clock;
 pub mod ok_download;
 pub mod ok_hi;
+pub mod ok_hls_bridge;
 pub mod ok_host;
 pub mod ok_pipe;
 pub mod ok_trigger;

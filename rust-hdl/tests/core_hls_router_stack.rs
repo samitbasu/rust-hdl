@@ -188,15 +188,38 @@ fn test_nested_router_function() {
     });
     sim.add_testbench(move |mut sim: Sim<RouterNest>| {
         let mut x = sim.init()?;
-        bus_address_strobe!(sim, x, upstream, 2);
+        let test_one = x
+            .ports()
+            .iter()
+            .position(|v| v == "pairs_0_dev_1_port_a_mosi")
+            .unwrap();
+        let test_two = x
+            .ports()
+            .iter()
+            .position(|v| v == "solo_port_a_mosi")
+            .unwrap();
+        bus_address_strobe!(sim, x, upstream, test_one);
         bus_write_strobe!(sim, x, upstream, 0xDEAD_u16);
+        bus_address_strobe!(sim, x, upstream, test_two);
+        bus_write_strobe!(sim, x, upstream, 0xBEEF_u16);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<RouterNest>| {
         let mut x = sim.init()?;
         x.pairs[0].devs[1].port_a.ready.next = true;
         x = sim.watch(|x| x.pairs[0].devs[1].port_a.strobe_out.val(), x)?;
-        sim_assert!(sim, x.pairs[0].devs[1].port_a.port_out.val() == 0xDEAD_u16, x);
+        sim_assert!(
+            sim,
+            x.pairs[0].devs[1].port_a.port_out.val() == 0xDEAD_u16,
+            x
+        );
+        sim.done(x)
+    });
+    sim.add_testbench(move |mut sim: Sim<RouterNest>| {
+        let mut x = sim.init()?;
+        x.solo.port_a.ready.next = true;
+        x = sim.watch(|x| x.solo.port_a.strobe_out.val(), x)?;
+        sim_assert!(sim, x.solo.port_a.port_out.val() == 0xBEEF_u16, x);
         sim.done(x)
     });
     sim.run_to_file(Box::new(uut), 1_000, &vcd_path!("nested_router.vcd"))
