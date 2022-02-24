@@ -133,6 +133,47 @@ impl Logic for SynchronousFIFOTest {
     }
 }
 
+#[test]
+fn test_sync_fifo_read_behavior_bug() {
+    let mut uut = SynchronousFIFOTest::default();
+    uut.clock.connect();
+    uut.fifo.read.connect();
+    uut.fifo.data_in.connect();
+    uut.fifo.write.connect();
+    uut.connect_all();
+    let mut sim = Simulation::new();
+    sim.add_clock(5, |x: &mut Box<SynchronousFIFOTest>| {
+        x.clock.next = !x.clock.val()
+    });
+    sim.add_testbench(move |mut sim: Sim<SynchronousFIFOTest>| {
+        let mut x = sim.init()?;
+        wait_clock_true!(sim, clock, x);
+        for counter in 0_u32..8 {
+            x.fifo.data_in.next = counter.into();
+            x.fifo.write.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo.write.next = false;
+        }
+        wait_clock_cycle!(sim, clock, x);
+        for counter in 0_u32..6 {
+            sim_assert!(sim, x.fifo.data_out.val() == counter, x);
+            x.fifo.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo.read.next = false;
+        }
+        wait_clock_cycle!(sim, clock, x, 2);
+        for counter in 6_u32..8 {
+            sim_assert!(sim, x.fifo.data_out.val() == counter, x);
+            x.fifo.read.next = true;
+            wait_clock_cycle!(sim, clock, x);
+            x.fifo.read.next = false;
+        }
+        sim.done(x)
+    });
+    sim.run_to_file(Box::new(uut), 10_000, &vcd_path!("fifo_bug_test.vcd")).unwrap()
+}
+
+
 declare_sync_fifo!(BigFIFO, Bits<8>, 1024, 256);
 
 #[derive(LogicBlock, Default)]

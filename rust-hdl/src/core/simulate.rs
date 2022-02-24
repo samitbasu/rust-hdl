@@ -22,6 +22,7 @@ pub enum SimError {
     SimTerminated,
     MaxTimeReached,
     SimHalted,
+    FailedToConverge,
 }
 
 impl From<RecvError> for SimError {
@@ -143,16 +144,22 @@ impl<T: Send + 'static + Block> Simulation<T> {
         let mut x = self.recv.recv()?;
         worker.kind = x.kind;
         // Update the circuit
-        for _ in 0..10 {
+        let mut converged = false;
+        for _ in 0..100 {
             for l in &self.custom_logic {
                 l(&mut x.circuit);
             }
             x.circuit.update_all();
             if !x.circuit.has_changed() {
+                converged = true;
                 break;
             }
         }
-        Ok(x.circuit)
+        if !converged {
+            Err(SimError::FailedToConverge)
+        } else {
+            Ok(x.circuit)
+        }
     }
     fn scan_workers(&self, x: &T) -> NextTime {
         let mut min_time = !0_u64;
