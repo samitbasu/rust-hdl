@@ -44,7 +44,6 @@ impl Default for ISEOptions {
 
 pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, options: ISEOptions) {
     uut.connect_all();
-    check_connected(&uut);
     let verilog_text = filter_blackbox_directives(&generate_verilog(&uut));
     let ucf_text = generate_ucf(&uut);
     let dir = PathBuf::from(prefix);
@@ -266,7 +265,6 @@ GENERATE
 }
 
 pub fn synth_obj<U: Block>(uut: U, dir: &str) {
-    check_connected(&uut);
     let vlog = generate_verilog(&uut);
     find_ok_bus_collisions(&vlog);
     let _ucf = crate::toolchain::ise::generate_ucf(&uut);

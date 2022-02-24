@@ -4,10 +4,10 @@ use crate::core::atom::{Atom, AtomKind};
 use crate::core::block::Block;
 use crate::core::code_writer::CodeWriter;
 use crate::core::named_path::NamedPath;
-use crate::core::prelude::check_connected;
 use crate::core::probe::Probe;
 use crate::core::verilog_gen::verilog_combinatorial;
 use std::collections::BTreeMap;
+use crate::core::check_error::check_all;
 
 #[derive(Clone, Debug, Default)]
 struct SubModuleInvocation {
@@ -311,7 +311,7 @@ impl ModuleDefines {
 
 pub fn generate_verilog<U: Block>(uut: &U) -> String {
     let mut defines = ModuleDefines::default();
-    check_connected(uut);
+    check_all(uut).unwrap(); // TODO - make this not panic...
     uut.accept("top", &mut defines);
     defines.defines()
 }

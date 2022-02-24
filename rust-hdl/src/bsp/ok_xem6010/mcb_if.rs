@@ -24,7 +24,7 @@ pub struct MCBInterface1GDDR2 {
 }
 
 fn mk_pin<D: Direction>(loc: &str, kind: SignalType) -> Signal<D, Bit> {
-    let mut p = Signal::default();
+    let mut p = Signal::<D, _>::default();
     p.add_location(0, loc);
     p.add_signal_type(0, kind);
     p

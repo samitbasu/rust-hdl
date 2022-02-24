@@ -127,23 +127,7 @@ pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
         .collect::<Vec<_>>()
         .join("\n");
 
-    /*
-    let links = gen
-        .links
-        .iter()
-        .map(|x| {
-            x.replace("link!(", "")
-                .replace(")", "")
-                .replace(",", "=")
-                .replace("self.", "")
-                .replace(".", "_")
-        })
-        .map(|x| format!("assign {};", x))
-        .collect::<Vec<_>>()
-        .join("\n");
-     */
     format!("always @(*) {}\n{}", gen.to_string(), links)
-    //    format!("always @(*) {}\n", gen.to_string())
 }
 
 impl VerilogVisitor for VerilogCodeGenerator {

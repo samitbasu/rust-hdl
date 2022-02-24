@@ -1,3 +1,4 @@
+use rust_hdl::core::check_error::{CheckError, LogicLoop};
 use rust_hdl::core::prelude::*;
 
 #[allow(dead_code)]
@@ -74,7 +75,7 @@ mod tests {
         uut.clock.connect();
         uut.enable.connect();
         uut.connect_all();
-        check_connected(&uut);
+        check_all(&uut).unwrap();
         let mut strobe_count = 0;
         for clock in 0..10_000_000 {
             uut.clock.next = (clock % 2 == 0).into();
@@ -178,7 +179,7 @@ mod tests {
         uut.clock.connect();
         uut.advance.connect();
         uut.connect_all();
-        check_connected(&uut);
+        check_all(&uut).unwrap();
         for clock in 0..10 {
             uut.clock.next = Clock(clock % 2 == 0).into();
             uut.advance.next = true;
@@ -235,7 +236,6 @@ mod tests {
         uut.clock.connect();
         uut.enable.connect();
         uut.connect_all();
-        check_connected(&uut);
         println!("{}", generate_verilog(&uut));
     }
 
@@ -279,7 +279,7 @@ mod tests {
         uut.pop.connect();
         uut.push.connect();
         uut.connect_all();
-        check_connected(&uut);
+        check_all(&uut).unwrap();
     }
 
     /*
@@ -426,5 +426,82 @@ mod tests {
         x.connect_all();
         let vlog = generate_verilog(&x);
         yosys_validate("test_obj", &vlog).unwrap();
+    }
+}
+
+#[test]
+fn test_local_logic() {
+    #[derive(LogicBlock, Default)]
+    struct EvenOddTest {
+        pub signal: Signal<In, Bit>,
+        pub is_odd: Signal<Out, Bit>,
+        pub is_even: Signal<Out, Bit>,
+        pub local: Signal<Local, Bits<3>>,
+    }
+
+    impl Logic for EvenOddTest {
+        #[hdl_gen]
+        fn update(&mut self) {
+            self.local.next = bit_cast::<3, 1>(self.signal.val().into());
+            self.local.next = self.local.val() + 1_usize;
+            self.is_odd.next = self.local.val().get_bit(0_usize);
+            self.local.next = self.local.val() + 1_usize;
+            self.is_even.next = self.local.val().get_bit(1_usize);
+        }
+    }
+
+    let mut uut = EvenOddTest::default();
+    uut.signal.connect();
+    uut.connect_all();
+    yosys_validate("even_odd_test", &generate_verilog(&uut)).unwrap();
+
+    let mut sim = Simulation::new();
+    sim.add_testbench(move |mut sim: Sim<EvenOddTest>| {
+        let mut x = sim.init()?;
+        x.signal.next = true;
+        x = sim.wait(10, x)?;
+        sim_assert!(sim, x.local.val() == 3_usize, x);
+        x.signal.next = false;
+        x = sim.wait(10, x)?;
+        sim_assert!(sim, x.local.val() == 2_usize, x);
+        x.signal.next = true;
+        x = sim.wait(10, x)?;
+        sim_assert!(sim, x.local.val() == 3_usize, x);
+        x.signal.next = false;
+        x = sim.wait(10, x)?;
+        sim_assert!(sim, x.local.val() == 2_usize, x);
+        sim.done(x)
+    });
+    sim.run_to_file(Box::new(uut), 100, &vcd_path!("even_odd_test.vcd")).unwrap()
+}
+
+#[test]
+fn test_local_logic_loop_detection() {
+    #[derive(LogicBlock, Default)]
+    struct LoopTest {
+        pub signal: Signal<In, Bit>,
+        pub is_odd: Signal<Out, Bit>,
+        pub is_even: Signal<Out, Bit>,
+        pub foo: Signal<Local, Bits<3>>,
+    }
+
+    impl Logic for LoopTest {
+        #[hdl_gen]
+        fn update(&mut self) {
+            self.foo.next = self.foo.val() + self.signal.val();
+            self.is_odd.next = self.foo.val().get_bit(0_usize);
+            self.foo.next = self.foo.val() + 1_usize;
+            self.is_even.next = self.foo.val().get_bit(1_usize);
+        }
+    }
+
+    let mut uut = LoopTest::default();
+    uut.signal.connect();
+    uut.connect_all();
+    let e = check_all(&uut).expect_err("Loop should have been found");
+    if let CheckError::LogicLoops(m) = e {
+        assert!(m.contains(&LogicLoop{path: "uut".to_string(), name: "foo".to_string()}))
+    } else {
+        panic!("Error mismatch on loop detector")
     }
 }

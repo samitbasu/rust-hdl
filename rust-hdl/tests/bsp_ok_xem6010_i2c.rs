@@ -145,7 +145,6 @@ fn test_opalkelly_xem_6010_i2c() {
     uut.sda.connect();
     uut.scl.connect();
     uut.connect_all();
-    check_connected(&uut);
     XEM6010::synth(uut, target_path!("xem_6010/i2c_test"));
     test_opalkelly_xem_6010_run_i2c().unwrap()
 }

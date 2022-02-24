@@ -7,7 +7,7 @@ use crate::core::bits::Bit;
 use crate::core::block::Block;
 use crate::core::clock::Clock;
 use crate::core::constraint::{Constraint, PinConstraint, SignalType};
-use crate::core::direction::{Direction, In, Out};
+use crate::core::direction::{Direction, In, Local, Out};
 use crate::core::logic::{Logic, LogicJoin, LogicLink};
 use crate::core::prelude::InOut;
 use crate::core::probe::Probe;
@@ -145,10 +145,6 @@ impl<T: Synth> LogicLink for Signal<InOut, T> {
 }
 
 impl<D: Direction, T: Synth> Signal<D, T> {
-    pub fn val(&self) -> T {
-        self.val
-    }
-
     pub fn add_constraint(&mut self, constraint: PinConstraint) {
         self.constraints.push(constraint);
     }
@@ -341,5 +337,36 @@ impl<T: Synth> Signal<InOut, T> {
             other_name: other_name.into(),
         };
         vec![VerilogLink::Bidirectional(details)]
+    }
+}
+
+// For local signals only
+// There should be a write before a read
+//  (will that trigger latch detection if violated?)
+// .val() -> next
+// local signals do not generate changes.
+// Need loop detection
+
+impl<T:Synth> Signal<Local, T> {
+    pub fn val(&self) -> T {
+        self.next
+    }
+}
+
+impl<T: Synth> Signal<In, T> {
+    pub fn val(&self) -> T {
+        self.val
+    }
+}
+
+impl<T: Synth> Signal<Out, T> {
+    pub fn val(&self) -> T {
+        self.next
+    }
+}
+
+impl<T: Synth> Signal<InOut, T> {
+    pub fn val(&self) -> T {
+        self.val
     }
 }

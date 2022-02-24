@@ -77,7 +77,6 @@ fn test_ok_host_synthesizable() {
     uut.hi.sig_inout.connect();
     uut.hi.sig_aa.connect();
     uut.connect_all();
-    check_connected(&uut);
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
     let ucf = crate::toolchain::ise::generate_ucf(&uut);

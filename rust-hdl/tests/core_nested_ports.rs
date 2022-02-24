@@ -96,7 +96,7 @@ fn test_write_modules_nested_ports() {
     uut.bus.data.read.connect();
     uut.select.connect();
     uut.connect_all();
-    check_connected(&uut);
+    check_all(&uut).unwrap();
     let mut defines = ModuleDefines::default();
     uut.accept("uut", &mut defines);
     defines.defines();

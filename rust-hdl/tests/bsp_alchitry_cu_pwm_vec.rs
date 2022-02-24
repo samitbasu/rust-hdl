@@ -96,7 +96,6 @@ impl<const P: usize> AlchitryCuPWMVec<P> {
 fn test_pwm_vec_synthesizes() {
     let mut uut: AlchitryCuPWMVec<6> = AlchitryCuPWMVec::new(100_000_000);
     uut.connect_all();
-    check_connected(&uut);
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
     yosys_validate("pwm_cu", &vlog).unwrap();

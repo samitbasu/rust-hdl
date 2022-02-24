@@ -53,7 +53,6 @@ fn test_fast_blinky_is_synthesizable() {
     uut.clock_n.connect();
     uut.clock_p.connect();
     uut.connect_all();
-    check_connected(&uut);
     yosys_validate("fast_blinky_7010", &generate_verilog(&uut)).unwrap();
 }
 
@@ -64,6 +63,5 @@ fn test_opalkelly_xem_7010_synth_fast_blinky() {
     uut.clock_n.connect();
     uut.clock_p.connect();
     uut.connect_all();
-    check_connected(&uut);
     XEM7010::synth(uut, target_path!("xem_7010/fast_blinky"));
 }

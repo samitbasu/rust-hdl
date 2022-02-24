@@ -57,7 +57,6 @@ impl<const P: usize> AlchitryCuPWM<P> {
 fn test_pwm_synthesizes() {
     let mut uut: AlchitryCuPWM<6> = AlchitryCuPWM::new(100_000_000);
     uut.connect_all();
-    check_connected(&uut);
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);
     yosys_validate("pwm_cu2", &vlog).unwrap();

@@ -58,7 +58,6 @@ impl<const P: usize> AlchitryCuPWMVecSyncROM<P> {
 fn test_pwm_vec_sync_rom_synthesizes() {
     let mut uut: AlchitryCuPWMVecSyncROM<6> = AlchitryCuPWMVecSyncROM::new(25_000_000);
     uut.connect_all();
-    check_connected(&uut);
     let vlog = generate_verilog(&uut);
     yosys_validate("pwm_cu_srom", &vlog).unwrap();
     rust_hdl::bsp::alchitry_cu::synth::generate_bitstream(

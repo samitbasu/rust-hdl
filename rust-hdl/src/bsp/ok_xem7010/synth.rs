@@ -181,7 +181,6 @@ generate_target {{instantiation_template}} [get_files mig7.xci]", mig_path=mig_p
 
 pub fn generate_bitstream_xem_7010<U: Block>(mut uut: U, prefix: &str, options: VivadoOptions) {
     uut.connect_all();
-    check_connected(&uut);
     let verilog_text = filter_blackbox_directives(&generate_verilog(&uut));
     let xdc_text = generate_xdc(&uut);
     let dir = PathBuf::from(prefix);
@@ -276,7 +275,6 @@ exit
 }
 
 pub fn synth_obj<U: Block>(uut: U, dir: &str) {
-    check_connected(&uut);
     let vlog = generate_verilog(&uut);
     find_ok_bus_collisions(&vlog);
     let _xcd = crate::toolchain::vivado::generate_xdc(&uut);

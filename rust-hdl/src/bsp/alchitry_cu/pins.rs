@@ -3,14 +3,14 @@ use crate::core::prelude::*;
 pub const CLOCK_SPEED_100MHZ: u64 = 100_000_000;
 
 pub fn clock() -> Signal<In, Clock> {
-    let mut x = Signal::default();
+    let mut x = Signal::<In, _>::default();
     x.add_location(0, "P7");
     x.connect();
     x
 }
 
 pub fn leds() -> Signal<Out, Bits<8>> {
-    let mut x = Signal::default();
+    let mut x = Signal::<Out, _>::default();
     for (ndx, uname) in ["J11", "K11", "K12", "K14", "L12", "L14", "M12", "N14"]
         .iter()
         .enumerate()
