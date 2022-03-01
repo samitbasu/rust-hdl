@@ -48,5 +48,5 @@ pub use crate::wait_clock_cycle;
 pub use crate::wait_clock_cycles;
 pub use crate::wait_clock_false;
 pub use crate::wait_clock_true;
-pub use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface, LogicState};
+pub use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface, LogicState, LogicStruct};
 pub use crate::core::check_error::check_all;

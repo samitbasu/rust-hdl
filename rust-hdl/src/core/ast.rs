@@ -583,7 +583,7 @@ pub type VerilogBlock = Vec<VerilogStatement>;
 pub enum VerilogStatement {
     Assignment(VerilogExpression, VerilogExpression),
     SliceAssignment {
-        base: String,
+        base: VerilogExpression,
         width: usize,
         offset: VerilogExpression,
         replacement: VerilogExpression,

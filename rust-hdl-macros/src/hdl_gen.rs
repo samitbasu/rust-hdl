@@ -105,6 +105,41 @@ fn hdl_assignment(expr: &syn::ExprAssign) -> Result<TS> {
 fn hdl_non_indexed_assignment(expr: &syn::ExprAssign) -> Result<TS> {
     let target;
     if let Expr::Field(p) = &*expr.left {
+        // Check for .next.field = foo - this indicates a struct membership assignment
+        let base = &p.base;
+        let base_expanded = common::fixup_ident(quote!(#base).to_string());
+        if base_expanded.ends_with("$next") {
+            return if let syn::Member::Named(x) = &p.member {
+                let field = x.to_string();
+                let get_width_name = format_ident!("get_my_width_{}", field);
+                let get_offset_name = format_ident!("get_my_offset_{}", field);
+                if let Expr::Field(q) = &**base {
+                    let root = &q.base;
+                    let target = hdl_compute(root)?;
+                    let width = quote!(#base.#get_width_name());
+                    let offset = quote!(#base.#get_offset_name());
+                    let value = hdl_compute(&expr.right)?;
+                    Ok(quote!({
+                    ast::VerilogStatement::SliceAssignment{
+                        base: #target,
+                        width: #width,
+                        offset: ast::VerilogExpression::Literal(#offset.into()),
+                        replacement: #value,
+                    }
+                    }))
+                } else {
+                    Err(syn::Error::new(
+                        expr.span(),
+                        "HDL field assignments should be of the form <expr>.next.field",
+                    ))
+                }
+            } else {
+                Err(syn::Error::new(
+                    expr.span(),
+                    "Unsupported assignment type  for HDL",
+                ))
+            };
+        }
         target = hdl_map_field_assign(p)?;
     } else {
         return Err(syn::Error::new(
@@ -129,7 +164,26 @@ fn hdl_map_field_assign(expr: &syn::ExprField) -> Result<TS> {
     Ok(quote!(ast::VerilogExpression::Signal(#expr_expanded.to_string())))
 }
 
+// We want to map <expr>.val().field to a call to the verilog slice retrieve
+// To detect this, we need
 fn hdl_map_field(expr: &syn::ExprField) -> Result<TS> {
+    // Check for .val().field - as this indicates a struct membership
+    let base = &expr.base;
+    if common::fixup_ident(quote!(#base).to_string()).ends_with("val()") {
+        return if let syn::Member::Named(x) = &expr.member {
+            let field = x.to_string();
+            let get_width_name = format_ident!("get_my_width_{}", field);
+            let get_offset_name = format_ident!("get_my_offset_{}", field);
+            let target = hdl_compute(&expr.base)?;
+            let width = quote!(#base.#get_width_name());
+            let offset = quote!(#base.#get_offset_name());
+            Ok(quote!({
+                ast::VerilogExpression::Slice(Box::new(#target), #width, Box::new(ast::VerilogExpression::Literal(#offset.into())))
+            }))
+        } else {
+            Err(syn::Error::new(expr.span(), "Unsupported HDL construct"))
+        };
+    }
     let expr_expanded = common::fixup_ident(quote!(#expr).to_string());
     if expr_expanded.ends_with("$next") {
         return Err(syn::Error::new(
@@ -199,6 +253,7 @@ fn hdl_match(m: &syn::ExprMatch) -> Result<TS> {
 }
 
 fn hdl_compute(m: &syn::Expr) -> Result<TS> {
+    //println!("Compute : {} {:?}", quote!(#m).to_string(), m);
     match m {
         Expr::Path(path) => hdl_map_path(path),
         Expr::Field(field) => hdl_map_field(field),
@@ -301,14 +356,14 @@ fn hdl_join_or_link(call: &syn::ExprCall, name: &str) -> Result<TS> {
             call_path.segments.pop();
             call_path
                 .segments
-                .push(PathSegment::from(format_ident!("{}_hdl",name)));
+                .push(PathSegment::from(format_ident!("{}_hdl", name)));
             let left = &call.args[0];
             let right = &call.args[1];
             let left = common::fixup_ident(quote!(#left).to_string());
             let right = common::fixup_ident(quote!(#right).to_string());
             Ok(quote!({
-                    ast::VerilogStatement::Link(#call_path("", #left, #right))
-                }))
+                ast::VerilogStatement::Link(#call_path("", #left, #right))
+            }))
         }
     } else {
         Err(syn::Error::new(
@@ -353,21 +408,22 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
     let field_set_match = regex::Regex::new(r"set_value_([a-zA-Z][a-zA-Z0-9_]*)").unwrap();
     if field_set_match.is_match(method_name.as_ref()) {
         let expr = method.receiver.as_ref();
-        let signal = common::fixup_ident(quote!(#expr).to_string());
+        let expr_expanded = common::fixup_ident(quote!(#expr).to_string());
+        let target = quote!(ast::VerilogExpression::Signal(#expr_expanded.to_string()));
         let field = field_set_match
             .captures(method_name.as_ref())
             .unwrap()
             .get(1)
             .unwrap()
             .as_str();
-        let get_width_name = format_ident!("get_width_{}", field);
+        let get_width_name = format_ident!("get_my_width_{}", field);
         let get_offset_name = format_ident!("get_my_offset_{}", field);
         let width = quote!(#expr.#get_width_name());
         let offset = quote!(#expr.#get_offset_name());
         let value = hdl_compute(method.args.index(0))?;
         return Ok(quote!({
            ast::VerilogStatement::SliceAssignment{
-               base: #signal.to_string(),
+               base: #target,
                width: #width,
                offset: ast::VerilogExpression::Literal(#offset.into()),
                replacement: #value,
@@ -386,7 +442,7 @@ fn hdl_method_set(method: &syn::ExprMethodCall) -> Result<TS> {
                replacement: #value,
            }
         }));
-    } 
+    }
     Err(syn::Error::new(
         method.span(),
         format!(
@@ -401,19 +457,19 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
     let field_get_match = regex::Regex::new(r"get_value_([a-zA-Z][a-zA-Z0-9_]*)").unwrap();
     if field_get_match.is_match(method_name.as_ref()) {
         let expr = method.receiver.as_ref();
-        let signal = common::fixup_ident(quote!(#expr).to_string());
+        let target = hdl_compute(expr)?;
         let field = field_get_match
             .captures(method_name.as_ref())
             .unwrap()
             .get(1)
             .unwrap()
             .as_str();
-        let get_width_name = format_ident!("get_width_{}", field);
+        let get_width_name = format_ident!("get_my_width_{}", field);
         let get_offset_name = format_ident!("get_my_offset_{}", field);
         let width = quote!(#expr.#get_width_name());
         let offset = quote!(#expr.#get_offset_name());
         return Ok(quote!({
-           ast::VerilogExpression::Slice(#signal.to_string(), #width, Box::new(ast::VerilogExpression::Literal(#offset.into())))
+           ast::VerilogExpression::Slice(Box::new(#target), #width, Box::new(ast::VerilogExpression::Literal(#offset.into())))
         }));
     }
     match method_name.as_ref() {

@@ -123,14 +123,6 @@ impl Probe for ModuleDefines {
         let top_level = self.path.to_string();
         self.path.push(name);
         self.namespace.reset();
-        // TODO - make this a log statement?
-        /*        println!(
-                   "Add submodule: top_level {} name {} kind {}",
-                   top_level,
-                   name,
-                   &self.path.to_string()
-               );
-        */
         self.add_submodule(&top_level, name, &self.path.to_string());
         self.add_code(&self.path.to_string(), node.hdl());
     }

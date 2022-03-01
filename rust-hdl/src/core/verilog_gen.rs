@@ -154,12 +154,13 @@ impl VerilogVisitor for VerilogCodeGenerator {
 
     fn visit_slice_assignment(
         &mut self,
-        base: &str,
+        base: &VerilogExpression,
         width: &usize,
         offset: &VerilogExpression,
         replacement: &VerilogExpression,
     ) {
-        self.io.write(format!("{}[(", base));
+        self.visit_expression(base);
+        self.io.write("[(");
         self.visit_expression(offset);
         self.io.write(format!(")+:({})] = ", width));
         self.visit_expression(replacement);

@@ -23,7 +23,7 @@ pub trait VerilogVisitor {
 
     fn visit_slice_assignment(
         &mut self,
-        base: &str,
+        base: &VerilogExpression,
         width: &usize,
         offset: &VerilogExpression,
         replacement: &VerilogExpression,
@@ -99,6 +99,10 @@ pub trait VerilogVisitor {
         walk_slice(self, a, b, c);
     }
 
+    fn visit_slice_replace(&mut self, a: &VerilogExpression, b: &usize, c: &VerilogExpression, d: &VerilogExpression) {
+        walk_slice_replace(self, a, b, c, d);
+    }
+
     fn visit_index_replace(
         &mut self,
         a: &VerilogExpression,
@@ -129,6 +133,19 @@ pub fn walk_slice<V: VerilogVisitor + ?Sized>(
     visitor.visit_expression(a);
     visitor.visit_expression(c);
 }
+
+pub fn walk_slice_replace<V: VerilogVisitor + ?Sized>(
+    visitor: &mut V,
+    a: &VerilogExpression,
+    _b: &usize,
+    c: &VerilogExpression,
+    d: &VerilogExpression,
+) {
+    visitor.visit_expression(a);
+    visitor.visit_expression(c);
+    visitor.visit_expression(d);
+}
+
 
 pub fn walk_index<V: VerilogVisitor + ?Sized>(
     visitor: &mut V,
@@ -161,12 +178,12 @@ pub fn walk_loop<V: VerilogVisitor + ?Sized>(visitor: &mut V, lp: &VerilogLoop) 
 
 pub fn walk_slice_assignment<V: VerilogVisitor + ?Sized>(
     visitor: &mut V,
-    base: &str,
+    base: &VerilogExpression,
     _width: &usize,
     offset: &VerilogExpression,
     replacement: &VerilogExpression,
 ) {
-    visitor.visit_signal(base);
+    visitor.visit_expression(base);
     visitor.visit_expression(offset);
     visitor.visit_expression(replacement);
 }

@@ -1,5 +1,7 @@
 use super::mcb_if::MCBInterface1GDDR2;
 use crate::core::prelude::*;
+use crate::hls::fifo::AsyncFIFO;
+use crate::widgets::prelude::AsynchronousFIFO;
 
 #[derive(LogicInterface, Default)]
 pub struct CommandPort {
@@ -57,6 +59,8 @@ pub struct MemoryInterfaceGenerator {
     pub p0_rd: ReadPort,
     // MCB interface
     pub mcb: MCBInterface1GDDR2,
+    // FIFO for the commands
+//    cmd_fifo: AsynchronousFIFO<>
 }
 
 // TODO - currently assumes the MIG is at the top level of the

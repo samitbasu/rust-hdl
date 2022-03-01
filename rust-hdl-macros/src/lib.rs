@@ -4,6 +4,7 @@ mod hdl_gen;
 mod logic_block;
 mod logic_interface;
 mod logic_state;
+mod logic_struct;
 
 use syn::parse_macro_input;
 use syn::DeriveInput;
@@ -14,6 +15,7 @@ use crate::hdl_gen::hdl_gen_process;
 use crate::logic_block::get_impl_for_logic_block;
 use crate::logic_interface::get_impl_for_logic_interface;
 use crate::logic_state::get_logic_state_impls;
+use crate::logic_struct::get_impl_for_logic_struct;
 use proc_macro::TokenStream;
 use quote::quote;
 
@@ -42,6 +44,16 @@ pub fn logic_state(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     match get_logic_state_impls(&input) {
+        Err(e) => e.to_compile_error().into(),
+        Ok(x) => x.into(),
+    }
+}
+
+#[proc_macro_derive(LogicStruct)]
+pub fn logic_struct(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    match get_impl_for_logic_struct(&input) {
         Err(e) => e.to_compile_error().into(),
         Ok(x) => x.into(),
     }

@@ -31,13 +31,13 @@ impl Default for VerilogLogicLoopDetector {
 }
 
 impl VerilogVisitor for VerilogLogicLoopDetector {
-    fn visit_slice_assignment(&mut self, base: &str, _width: &usize, offset: &VerilogExpression, replacement: &VerilogExpression) {
+    fn visit_slice_assignment(&mut self, base: &VerilogExpression, _width: &usize, offset: &VerilogExpression, replacement: &VerilogExpression) {
         let current_mode = self.mode;
         self.mode = Mode::Read;
         self.visit_expression(offset);
         self.visit_expression(replacement);
         self.mode = Mode::Write;
-        self.visit_signal(base);
+        self.visit_expression(base);
         self.mode = current_mode;
     }
 

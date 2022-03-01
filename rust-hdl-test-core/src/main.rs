@@ -25,7 +25,7 @@ struct MIGTester {
     pub cmd_in: Signal<In, MIGStruct>,
     pub cmd_out: Signal<Out, MIGStruct>,
     pub cmd_local: Signal<Local, MIGStruct>,
-    pub dummy: Signal<In, MIGCommand>,
+    //pub dummy: Signal<In, MIGCommand>,
 }
 
 impl Logic for MIGTester {
@@ -41,17 +41,9 @@ impl Logic for MIGTester {
 }
 
 #[test]
-fn test_mig_tester_function() {
-    let mut uut = MIGTester::default();
-    let mut sim = Simulation::new();
-}
-
-
-#[test]
 fn test_mig_tester_synthesizes() {
     let mut uut = TopWrap::new(MIGTester::default());
     uut.uut.cmd_in.connect();
-    uut.uut.dummy.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("mig_tester_struct", &generate_verilog(&uut)).unwrap();
@@ -87,3 +79,6 @@ fn test_struct_pack() {
     }
 }
 
+fn main() {
+    println!("Hello");
+}

@@ -62,19 +62,18 @@ fn connect_call(node: &syn::ExprCall) -> Result<TS> {
                 let target = node.args.index(1);
                 return Ok(quote!(
                     logic::logic_connect_join_fn(#source, #target);
-                ))
+                ));
             } else if name == "link" {
                 let source = node.args.index(0);
                 let target = node.args.index(1);
                 return Ok(quote!(
                     logic::logic_connect_link_fn(#source, #target);
-                ))
+                ));
             }
         }
     }
     Ok(TS::new())
 }
-
 
 fn connect_assignment(node: &syn::ExprAssign) -> Result<TS> {
     if let Expr::Field(field) = node.left.as_ref() {

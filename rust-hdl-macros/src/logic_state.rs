@@ -72,6 +72,14 @@ pub fn get_logic_state_impls(input: &syn::DeriveInput) -> Result<TS> {
             }
         }
 
+        impl Into<Bits<{#name::BITS}>> for #name {
+            fn into(self) -> Bits<{#name::BITS}> {
+                match self {
+                    #(#name::#variants => #discriminants.into(),)*
+                }
+            }
+        }
+
         impl Default for #name {
             fn default() -> #name {
                 #name::#first_variant
