@@ -9,6 +9,7 @@ use crate::core::verilog_gen::verilog_combinatorial;
 use std::collections::BTreeMap;
 use crate::core::check_error::check_all;
 use crate::core::type_descriptor::{TypeDescriptor, TypeKind};
+use crate::wait_clock_true;
 
 #[derive(Clone, Debug, Default)]
 struct SubModuleInvocation {
@@ -49,6 +50,7 @@ fn verilog_atom_name(x: &AtomKind) -> &str {
         AtomKind::Constant => "localparam",
         AtomKind::LocalSignal => "reg",
         AtomKind::InOutParameter => "inout wire",
+        AtomKind::OutputPassthrough => "output wire",
     }
 }
 
@@ -195,7 +197,25 @@ impl ModuleDefines {
             .for_each(|k| {
                 let module_name = k.0;
                 let module_details = k.1;
-                let atoms = &module_details.atoms;
+                // Remap the output parameters to pass throughs (net type) in case we have a wrapper
+                let atoms_passthrough = &module_details.atoms.iter().map(|x| {
+                    let mut y = x.clone();
+                    if y.kind == AtomKind::OutputParameter {
+                        y.kind = AtomKind::OutputPassthrough;
+                    }
+                    y
+                }).collect::<Vec<_>>();
+                let wrapper_mode = if let Verilog::Wrapper(_) = &module_details.code {
+                    true
+                } else {
+                    false
+                };
+                let atoms = if wrapper_mode {
+                    io.add("\n// v-- Setting output parameters to net type for wrapped code.\n");
+                    &atoms_passthrough
+                } else {
+                    &module_details.atoms
+                };
                 let args = atoms
                     .iter()
                     .filter(|x| x.kind.is_parameter())
@@ -228,7 +248,7 @@ impl ModuleDefines {
                     io.add("\n// Constant declarations");
                     consts.iter().for_each(|x| io.add(decl(x)));
                 }
-                if !module_details.enums.is_empty() {
+                if !module_details.enums.is_empty() & !wrapper_mode {
                     io.add("\n// Enums");
                     module_details.enums.iter().for_each(|x| {
                         io.add(format!(
@@ -238,15 +258,15 @@ impl ModuleDefines {
                         ))
                     });
                 }
-                if !stubs.is_empty() {
+                if !stubs.is_empty() & !wrapper_mode {
                     io.add("\n// Stub signals");
                     stubs.iter().for_each(|x| io.add(decl(x)));
                 }
-                if !locals.is_empty() {
+                if !locals.is_empty() & !wrapper_mode {
                     io.add("\n// Local signals");
                     locals.iter().for_each(|x| io.add(decl(x)));
                 }
-                if !submodules.is_empty() {
+                if !submodules.is_empty() & !wrapper_mode {
                     io.add("\n// Sub module instances");
                     for child in submodules {
                         let entry = self.details.get(&child.kind).unwrap();

@@ -19,6 +19,7 @@ pub struct AsynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BL
     pub almost_empty: Signal<Out, Bit>,
     pub underflow: Signal<Out, Bit>,
     pub read_clock: Signal<In, Clock>,
+    pub read_fill: Signal<Out, Bits<NP1>>,
     // Write interface
     pub write: Signal<In, Bit>,
     pub data_in: Signal<In, D>,
@@ -26,6 +27,7 @@ pub struct AsynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BL
     pub almost_full: Signal<Out, Bit>,
     pub overflow: Signal<Out, Bit>,
     pub write_clock: Signal<In, Clock>,
+    pub write_fill: Signal<Out, Bits<NP1>>,
     // Internal RAM
     ram: RAM<D, N>,
     // Read Logic
@@ -77,6 +79,9 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
         self.write_to_read.sig_in.next = self.write_logic.write_address_delayed.val();
         self.read_logic.write_address_delayed.next = self.write_to_read.sig_out.val();
         self.write_to_read.send.next = !self.write_to_read.busy.val();
+        // Provide the fill level estimates
+        self.write_fill.next = self.write_logic.fill_level.val();
+        self.read_fill.next = self.read_logic.fill_level.val();
     }
 }
 
@@ -93,5 +98,4 @@ fn component_async_fifo_is_synthesizable() {
     dev.uut.read.connect();
     dev.connect_all();
     yosys_validate("async_fifo", &generate_verilog(&dev)).unwrap();
-    println!("{}", generate_verilog(&dev));
 }

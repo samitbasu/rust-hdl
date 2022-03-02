@@ -1,15 +1,36 @@
+use std::collections::{BTreeMap};
 use super::mcb_if::MCBInterface1GDDR2;
 use crate::core::prelude::*;
 use crate::hls::fifo::AsyncFIFO;
-use crate::widgets::prelude::AsynchronousFIFO;
+use crate::widgets::prelude::*;
+
+#[derive(LogicState, Copy, Clone, Debug, PartialEq)]
+pub enum MIGInstruction {
+    Write,
+    Read,
+    WritePrecharge,
+    ReadPrecharge,
+    Refresh
+}
+
+#[derive(LogicStruct, Copy, Clone, Debug, Default, PartialEq)]
+pub struct MIGCommand {
+    pub instruction: MIGInstruction,
+    pub burst_len: Bits<6>,
+    pub byte_address: Bits<30>,
+}
+
+#[derive(LogicStruct, Copy, Clone, Debug, Default, PartialEq)]
+pub struct MaskedWrite {
+    pub mask: Bits<4>,
+    pub data: Bits<32>,
+}
 
 #[derive(LogicInterface, Default)]
 pub struct CommandPort {
     pub clock: Signal<In, Clock>,
     pub enable: Signal<In, Bit>,
-    pub instruction: Signal<In, Bits<3>>,
-    pub burst_length: Signal<In, Bits<6>>,
-    pub byte_address: Signal<In, Bits<30>>,
+    pub cmd: Signal<In, MIGCommand>,
     pub empty: Signal<Out, Bit>,
     pub full: Signal<Out, Bit>,
 }
@@ -18,8 +39,7 @@ pub struct CommandPort {
 pub struct WritePort {
     pub clock: Signal<In, Clock>,
     pub enable: Signal<In, Bit>,
-    pub mask: Signal<In, Bits<4>>,
-    pub data: Signal<In, Bits<32>>,
+    pub data: Signal<In, MaskedWrite>,
     pub full: Signal<Out, Bit>,
     pub empty: Signal<Out, Bit>,
     pub count: Signal<Out, Bits<7>>,
@@ -37,6 +57,17 @@ pub struct ReadPort {
     pub count: Signal<Out, Bits<7>>,
     pub overflow: Signal<Out, Bit>,
     pub error: Signal<Out, Bit>,
+}
+
+#[derive(LogicState, Copy, Clone, Debug, PartialEq)]
+enum State {
+    Init,
+    Calibrating,
+    Idle,
+    Reading,
+    Writing,
+    Error,
+    Refresh,
 }
 
 #[derive(LogicBlock)]
@@ -60,7 +91,15 @@ pub struct MemoryInterfaceGenerator {
     // MCB interface
     pub mcb: MCBInterface1GDDR2,
     // FIFO for the commands
-//    cmd_fifo: AsynchronousFIFO<>
+    cmd_fifo: AsynchronousFIFO<MIGCommand, 2, 3, 1>,
+    write_fifo: AsynchronousFIFO<MaskedWrite, 6, 7, 1>,
+    read_fifo: AsynchronousFIFO<Bits<32>, 6, 7, 1>,
+    timer: DFF<Bits<16>>,
+    address: DFF<Bits<32>>,
+    state: DFF<State>,
+    calib: DFF<bool>,
+    _dram: BTreeMap<Bits<32>, Bits<32>>,
+    cmd: Signal<Local, MIGCommand>,
 }
 
 // TODO - currently assumes the MIG is at the top level of the
@@ -95,12 +134,132 @@ impl Default for MemoryInterfaceGenerator {
             p0_wr: Default::default(),
             p0_rd: Default::default(),
             mcb: Default::default(),
+            cmd_fifo: AsynchronousFIFO::default(),
+            write_fifo: AsynchronousFIFO::default(),
+            read_fifo: Default::default(),
+            timer: Default::default(),
+            address: Default::default(),
+            state: Default::default(),
+            calib: Default::default(),
+            _dram: Default::default(),
+            cmd: Default::default(),
         }
     }
 }
 
 impl Logic for MemoryInterfaceGenerator {
-    fn update(&mut self) {}
+    fn update(&mut self) {
+        // Connect the hardware side of the fifos to the raw clock
+        self.cmd_fifo.read_clock.next = self.raw_sys_clk.val();
+        self.write_fifo.read_clock.next = self.raw_sys_clk.val();
+        self.read_fifo.write_clock.next = self.raw_sys_clk.val();
+        self.state.clk.next = self.raw_sys_clk.val();
+        self.calib.clk.next = self.raw_sys_clk.val();
+        self.timer.clk.next = self.raw_sys_clk.val();
+        self.address.clk.next = self.raw_sys_clk.val();
+        // Latch prevention
+        self.state.d.next = self.state.q.val();
+        self.calib.d.next = self.calib.q.val();
+        self.address.d.next = self.address.q.val();
+        // Connect the command fifo to the command port
+        self.cmd_fifo.data_in.next = self.p0_cmd.cmd.val();
+        self.cmd_fifo.write.next = self.p0_cmd.enable.val();
+        self.p0_cmd.empty.next = !self.cmd_fifo.write_fill.val().any();
+        self.p0_cmd.full.next = self.cmd_fifo.full.val();
+        self.cmd_fifo.write_clock.next = self.p0_cmd.clock.val();
+        // Connect the write fifo to the write port
+        self.write_fifo.data_in.next = self.p0_wr.data.val();
+        self.write_fifo.write.next = self.p0_wr.enable.val();
+        self.p0_wr.empty.next = !self.write_fifo.write_fill.val().any();
+        self.p0_wr.full.next = self.write_fifo.full.val();
+        self.p0_wr.error.next = self.write_fifo.underflow.val() | self.write_fifo.overflow.val();
+        self.p0_wr.underrun.next = self.write_fifo.underflow.val();
+        self.write_fifo.write_clock.next = self.p0_wr.clock.val();
+        self.p0_wr.count.next = self.write_fifo.write_fill.val();
+        // Connect the read fifo to the read port
+        self.p0_rd.data.next = self.read_fifo.data_out.val();
+        self.read_fifo.read.next = self.p0_rd.enable.val();
+        self.p0_rd.error.next = self.read_fifo.underflow.val() | self.read_fifo.overflow.val();
+        self.p0_rd.overflow.next = self.read_fifo.overflow.val();
+        self.p0_rd.empty.next = self.read_fifo.empty.val();
+        self.p0_rd.full.next = self.read_fifo.full.val();
+        self.read_fifo.read_clock.next = self.p0_rd.clock.val();
+        self.p0_rd.count.next = self.read_fifo.read_fill.val();
+        self.calib_done.next = self.calib.q.val();
+        self.cmd.next = self.cmd_fifo.data_out.val();
+        if self.timer.q.val().any() {
+            self.timer.d.next = self.timer.q.val() - 1_usize;
+        } else {
+            self.timer.d.next = self.timer.q.val();
+        }
+        self.cmd_fifo.read.next = false;
+        self.write_fifo.read.next = false;
+        self.read_fifo.write.next = false;
+        match self.state.q.val() {
+            State::Init => {
+                if self.reset.val() {
+                    self.state.d.next = State::Calibrating;
+                    self.timer.d.next = 100_usize.into();
+                }
+            }
+            State::Calibrating => {
+                if (self.timer.q.val() == 0_usize) & !self.reset.val() {
+                    self.calib.d.next = true;
+                    self.state.d.next = State::Idle;
+                }
+            }
+            State::Idle => {
+                if !self.cmd_fifo.empty.val() {
+                    // Byte address lower 2 bits must be zero
+                    if self.cmd.val().byte_address.get_bits::<2>(0).any() {
+                        self.state.d.next = State::Error;
+                    } else {
+                        match self.cmd.val().instruction {
+                            MIGInstruction::Write | MIGInstruction::WritePrecharge => {
+                                self.state.d.next = State::Writing;
+                                self.timer.d.next = bit_cast::<16, 6>(self.cmd.val().burst_len) + 1_usize;
+                                self.address.d.next = bit_cast::<32, 30>(self.cmd.val().byte_address) >> 2_usize;
+                                self.cmd_fifo.read.next = true;
+                            }
+                            MIGInstruction::Read | MIGInstruction::ReadPrecharge => {
+                                self.timer.d.next = bit_cast::<16, 6>(self.cmd.val().burst_len) + 1_usize;
+                                self.address.d.next = bit_cast::<32, 30>(self.cmd.val().byte_address) >> 2_usize;
+                                self.state.d.next = State::Reading;
+                                self.cmd_fifo.read.next = true;
+                            }
+                            MIGInstruction::Refresh => {
+                                self.state.d.next = State::Refresh;
+                            }
+                        }
+                    }
+                }
+            }
+            State::Reading => {
+                if self.timer.q.val().any() {
+                    self.read_fifo.data_in.next = *self._dram.get(&self.address.q.val()).unwrap_or(&Default::default());
+                    self.read_fifo.write.next = true;
+                    self.address.d.next = self.address.q.val() + 1_usize;
+                } else {
+                    self.state.d.next = State::Idle;
+                }
+            }
+            State::Writing => {
+                if self.timer.q.val().any() {
+                    self._dram.insert(self.address.q.val(), self.write_fifo.data_out.val().data);
+                    self.write_fifo.read.next = true;
+                    self.address.d.next = self.address.q.val() + 1_usize;
+                } else {
+                    self.state.d.next = State::Idle;
+                }
+            }
+            State::Refresh => {
+                self.cmd_fifo.read.next = true;
+                self.state.d.next = State::Idle;
+            }
+            State::Error => {}
+        }
+
+    }
     fn connect(&mut self) {
         self.calib_done.connect();
         self.clk_out.connect();
@@ -120,73 +279,36 @@ impl Logic for MemoryInterfaceGenerator {
         self.p0_rd.overflow.connect();
         self.mcb.link_connect_source();
         self.mcb.link_connect_dest();
+        self.write_fifo.write_clock.connect();
+        self.cmd_fifo.write_clock.connect();
+        self.state.clk.connect();
+        self.cmd_fifo.read.connect();
+        self.cmd_fifo.data_in.connect();
+        self.read_fifo.write.connect();
+        self.read_fifo.write_clock.connect();
+        self.timer.clk.connect();
+        self.write_fifo.read_clock.connect();
+        self.read_fifo.read_clock.connect();
+        self.state.d.connect();
+        self.write_fifo.write.connect();
+        self.write_fifo.write_clock.connect();
+        self.calib.clk.connect();
+        self.read_fifo.data_in.connect();
+        self.calib.d.connect();
+        self.cmd_fifo.write.connect();
+        self.timer.d.connect();
+        self.cmd_fifo.read_clock.connect();
+        self.read_fifo.read.connect();
+        self.write_fifo.read.connect();
+        self.write_fifo.data_in.connect();
+        self.address.d.connect();
+        self.cmd.connect();
+        self.address.clk.connect();
     }
     fn hdl(&self) -> Verilog {
-        Verilog::Blackbox(BlackBox {
+        Verilog::Wrapper(Wrapper {
             code: r##"
-module MemoryInterfaceGenerator(raw_sys_clk,reset,calib_done,clk_out,reset_out,
-p0_cmd$clock,p0_cmd$enable,p0_cmd$instruction,p0_cmd$burst_length,p0_cmd$byte_address,
-p0_cmd$empty,p0_cmd$full,p0_wr$clock,p0_wr$enable,p0_wr$mask,p0_wr$data,p0_wr$full,
-p0_wr$empty,p0_wr$count,p0_wr$underrun,p0_wr$error,p0_rd$clock,p0_rd$enable,p0_rd$data,
-p0_rd$full,p0_rd$empty,p0_rd$count,p0_rd$overflow,p0_rd$error,mcb$data_bus,mcb$address,
-mcb$bank_select,mcb$row_address_strobe_not,mcb$column_address_strobe_not,mcb$write_enable_not,
-mcb$on_die_termination,mcb$clock_enable,mcb$data_mask,mcb$upper_byte_data_strobe,
-mcb$upper_byte_data_strobe_neg,mcb$rzq,mcb$zio,mcb$upper_data_mask,mcb$data_strobe_signal,
-mcb$data_strobe_signal_neg,mcb$dram_clock,mcb$dram_clock_neg,mcb$chip_select_neg,mcb$dram_reset_not);
-
-    // Module arguments
-    input raw_sys_clk;
-    input reset;
-    output calib_done;
-    output clk_out;
-    output reset_out;
-    input p0_cmd$clock;
-    input p0_cmd$enable;
-    input [2:0] p0_cmd$instruction;
-    input [5:0] p0_cmd$burst_length;
-    input [29:0] p0_cmd$byte_address;
-    output p0_cmd$empty;
-    output p0_cmd$full;
-    input p0_wr$clock;
-    input p0_wr$enable;
-    input [3:0] p0_wr$mask;
-    input [31:0] p0_wr$data;
-    output p0_wr$full;
-    output p0_wr$empty;
-    output [6:0] p0_wr$count;
-    output p0_wr$underrun;
-    output p0_wr$error;
-    input p0_rd$clock;
-    input p0_rd$enable;
-    output [31:0] p0_rd$data;
-    output p0_rd$full;
-    output p0_rd$empty;
-    output [6:0] p0_rd$count;
-    output p0_rd$overflow;
-    output p0_rd$error;
-    inout [15:0] mcb$data_bus;
-    output [12:0] mcb$address;
-    output [2:0] mcb$bank_select;
-    output mcb$row_address_strobe_not;
-    output mcb$column_address_strobe_not;
-    output mcb$write_enable_not;
-    output mcb$on_die_termination;
-    output mcb$clock_enable;
-    output mcb$data_mask;
-    output mcb$upper_byte_data_strobe;
-    output mcb$upper_byte_data_strobe_neg;
-    inout mcb$rzq;
-    inout mcb$zio;
-    output mcb$upper_data_mask;
-    inout mcb$data_strobe_signal;
-    inout mcb$data_strobe_signal_neg;
-    output mcb$dram_clock;
-    output mcb$dram_clock_neg;
-    output mcb$chip_select_neg;
-    output mcb$dram_reset_not;
-
-    assign mcb$dram_reset_not=1'b1; // Unused for DDR2
-
+// assign mcb$dram_reset_not=1'b1;
 // Unfortunately, the generated MIG for Spartan6 is not particularly
 // useful for us, since it assumes the raw clock is running at memory
 // speeds.  You are advised to edit the MIG directly, and change
@@ -218,15 +340,15 @@ mcb$data_strobe_signal_neg,mcb$dram_clock,mcb$dram_clock_neg,mcb$chip_select_neg
           .mcb3_dram_ck_n                      (mcb$dram_clock_neg),
           .c3_p0_cmd_clk                       (p0_cmd$clock),
           .c3_p0_cmd_en                        (p0_cmd$enable),
-          .c3_p0_cmd_instr                     (p0_cmd$instruction),
-          .c3_p0_cmd_bl                        (p0_cmd$burst_length),
-          .c3_p0_cmd_byte_addr                 (p0_cmd$byte_address),
+          .c3_p0_cmd_instr                     (p0_cmd$cmd[2:0]), // Lowest 3 bits are the cmd
+          .c3_p0_cmd_bl                        (p0_cmd$cmd[8:3]), // 6 bits for the burst length
+          .c3_p0_cmd_byte_addr                 (p0_cmd$cmd[38:9]), // 30 bits for the byte address
           .c3_p0_cmd_empty                     (p0_cmd$empty),
           .c3_p0_cmd_full                      (p0_cmd$full),
           .c3_p0_wr_clk                        (p0_wr$clock),
           .c3_p0_wr_en                         (p0_wr$enable),
-          .c3_p0_wr_mask                       (p0_wr$mask),
-          .c3_p0_wr_data                       (p0_wr$data),
+          .c3_p0_wr_mask                       (p0_wr$data[3:0]), // Lowest 4 bits are the byte mask
+          .c3_p0_wr_data                       (p0_wr$data[35:4]), // Upper 32 bits are the data
           .c3_p0_wr_full                       (p0_wr$full),
           .c3_p0_wr_empty                      (p0_wr$empty),
           .c3_p0_wr_count                      (p0_wr$count),
@@ -241,8 +363,8 @@ mcb$data_strobe_signal_neg,mcb$dram_clock,mcb$dram_clock_neg,mcb$chip_select_neg
           .c3_p0_rd_overflow                   (p0_rd$overflow),
           .c3_p0_rd_error                      (p0_rd$error)
     );
-endmodule
-
+"##.into(),
+cores: r##"
 (* blackbox *)
 module mig #
 (
@@ -327,7 +449,6 @@ module mig #
 );
 endmodule
     "##.into(),
-            name: "MemoryInterfaceGenerator".into()
         })
     }
 }
@@ -336,5 +457,4 @@ endmodule
 fn test_mig_gen() {
     let mig = MemoryInterfaceGenerator::default();
     let vlog = generate_verilog_unchecked(&mig);
-    println!("{}", vlog);
 }

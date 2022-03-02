@@ -303,7 +303,7 @@ pub struct BlackBox {
     pub name: String,
 }
 
-/// The Wrapper struct provides a more convenient and flexible way to wrap external
+/// The [Wrapper] struct provides a more convenient and flexible way to wrap external
 /// IP cores than [BlackBox].
 ///
 /// While you can wrap IP cores with [BlackBox], it has some limitations.

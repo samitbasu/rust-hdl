@@ -81,6 +81,8 @@ fn get_base_of_next(expr: &Expr) -> Result<TS> {
             if nxt.eq("next") {
                 let lhs = &field.base;
                 return Ok(quote!(logic::logic_connect_fn(&mut #lhs)));
+            } else {
+                return get_base_of_next(&field.base);
             }
         } else {
             return get_base_of_next(&field.base);

@@ -1,6 +1,6 @@
 use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem6010::mcb_if::MCBInterface1GDDR2;
-use rust_hdl::bsp::ok_xem6010::mig::MemoryInterfaceGenerator;
+use rust_hdl::bsp::ok_xem6010::mig::{MemoryInterfaceGenerator, MIGInstruction};
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
@@ -65,7 +65,8 @@ impl Logic for OpalKellyXEM6010MIGTest {
         // Reset
         self.mig.reset.next = self.reset.dataout.val().any();
         // Couple the input pipe to the write fifo
-        self.mig.p0_wr.data.next = bit_cast::<32, 16>(self.pipe_in.dataout.val());
+        self.mig.p0_wr.data.next.mask = 0_u32.into();
+        self.mig.p0_wr.data.next.data = bit_cast::<32, 16>(self.pipe_in.dataout.val());
         self.mig.p0_wr.enable.next = self.pipe_in.write.val();
         // Couple the output pipe to the read fifo
         // Use a delay register, since the MIG FIFOs are 0-delay
@@ -73,18 +74,18 @@ impl Logic for OpalKellyXEM6010MIGTest {
         self.mig.p0_rd.enable.next = self.read_delay.q.val();
         self.read_delay.d.next = self.pipe_out.read.val();
         // Hard code the burst length
-        self.mig.p0_cmd.burst_length.next = 63_u32.into();
+        self.mig.p0_cmd.cmd.next.burst_len = 63_u32.into();
         // set the address value
-        self.mig.p0_cmd.byte_address.next = bit_cast::<30, 16>(self.address.dataout.val());
+        self.mig.p0_cmd.cmd.next.byte_address = bit_cast::<30, 16>(self.address.dataout.val());
         // Default command is to do nothing... refresh
-        self.mig.p0_cmd.instruction.next = 4_u8.into();
+        self.mig.p0_cmd.cmd.next.instruction = MIGInstruction::Refresh;
         self.mig.p0_cmd.enable.next = false;
         // Set the appropriate command.
         if self.start_cmd.trigger.val().get_bit(0_usize) {
-            self.mig.p0_cmd.instruction.next = 0_u8.into();
+            self.mig.p0_cmd.cmd.next.instruction = MIGInstruction::Write;
             self.mig.p0_cmd.enable.next = true;
         } else if self.start_cmd.trigger.val().get_bit(1_usize) {
-            self.mig.p0_cmd.instruction.next = 1_u8.into();
+            self.mig.p0_cmd.cmd.next.instruction = MIGInstruction::Read;
             self.mig.p0_cmd.enable.next = true;
         }
         self.cmd_done.trigger.next = 0_u32.into();
@@ -100,8 +101,6 @@ impl Logic for OpalKellyXEM6010MIGTest {
         self.address.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next =
             self.pipe_in.ok2.val() | self.pipe_out.ok2.val() | self.cmd_done.ok2.val();
-        // Unused inputs
-        self.mig.p0_wr.mask.next = 0_u32.into();
     }
 }
 

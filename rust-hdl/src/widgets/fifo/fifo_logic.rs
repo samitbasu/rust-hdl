@@ -21,11 +21,11 @@ pub struct FIFOReadLogic<D: Synth, const N: usize, const NP1: usize, const BLOCK
     pub ram_read_clock: Signal<Out, Clock>,
     // Read address
     pub read_address_out: Signal<Out, Bits<NP1>>,
+    pub fill_level: Signal<Out, Bits<NP1>>,
     // Internal details
     read_address: DFF<Bits<NP1>>,
     is_empty: Signal<Local, Bit>,
     is_full: Signal<Local, Bit>,
-    fill_level: Signal<Local, Bits<NP1>>,
     dff_underflow: DFF<Bit>,
     fifo_address_mask: Constant<Bits<NP1>>,
     fifo_size: Constant<Bits<NP1>>,
@@ -140,7 +140,7 @@ pub struct FIFOWriteLogic<D: Synth, const N: usize, const NP1: usize, const BLOC
     dff_write_address_delay: DFF<Bits<NP1>>,
     is_empty: Signal<Local, Bit>,
     is_full: Signal<Local, Bit>,
-    fill_level: Signal<Local, Bits<NP1>>,
+    pub fill_level: Signal<Out, Bits<NP1>>,
     dff_overflow: DFF<Bit>,
     fifo_address_mask: Constant<Bits<NP1>>,
     fifo_size: Constant<Bits<NP1>>,

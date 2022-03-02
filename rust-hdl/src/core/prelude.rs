@@ -41,6 +41,7 @@ pub use crate::core::verilog_gen::VerilogCodeGenerator;
 pub use crate::core::verilog_visitor::VerilogVisitor;
 pub use crate::core::yosys::*;
 pub use crate::sim_assert;
+pub use crate::sim_assert_eq;
 pub use crate::target_path;
 pub use crate::top_wrap;
 pub use crate::vcd_path;

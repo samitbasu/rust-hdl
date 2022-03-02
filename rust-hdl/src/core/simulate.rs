@@ -403,3 +403,13 @@ macro_rules! sim_assert {
         }
     };
 }
+
+#[macro_export]
+macro_rules! sim_assert_eq {
+    ($sim: ident, $lhs: expr, $rhs: expr, $circuit: ident) => {
+        if !($lhs == $rhs) {
+            println!("HALT {} != {},  {:?} != {:?}", stringify!($lhs), stringify!($rhs), $lhs, $rhs);
+            return $sim.halt($circuit);
+        }
+    }
+}

@@ -12,5 +12,5 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
 rust-hdl = {path="../rust-hdl"}
-rust-hdl-macros = {path="../rust-hdl-macros"}
+rust-hdl-macros = {version = "0.10.1", path="../rust-hdl-macros"}
 rand = "0.8.5"

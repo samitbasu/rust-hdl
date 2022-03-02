@@ -1,16 +1,8 @@
+use crate::bsp::ok_xem6010::mig::MIGInstruction;
 use super::mcb_if::MCBInterface1GDDR2;
 use super::mig::MemoryInterfaceGenerator;
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
-
-#[derive(LogicState, Debug, Copy, Clone, PartialEq)]
-pub enum MIGInstruction {
-    Write,
-    Read,
-    WritePreCharge,
-    ReadPreCharge,
-    Refresh,
-}
 
 #[derive(LogicState, Debug, Copy, Clone, PartialEq)]
 pub enum DDRFIFOState {
@@ -91,7 +83,8 @@ impl Logic for DDRFIFO {
         self.transfer_out_count.clk.next = self.mig.clk_out.val();
         // Connect the data signals from the front and back porch
         // FIFOs to the MIG FIFOs
-        self.mig.p0_wr.data.next = self.front_porch.data_out.val();
+        self.mig.p0_wr.data.next.data = self.front_porch.data_out.val();
+        self.mig.p0_wr.data.next.mask = 0_usize.into();
         self.back_porch.data_in.next = self.mig.p0_rd.data.val();
         // Connect the front porch fifo to our published
         // interfaces
@@ -110,9 +103,9 @@ impl Logic for DDRFIFO {
         // State management...
         self.state.d.next = self.state.q.val();
         // By default, do nothing.
-        self.mig.p0_cmd.instruction.next = 0_usize.into();
-        self.mig.p0_cmd.byte_address.next = 0_usize.into();
-        self.mig.p0_cmd.burst_length.next = 31_usize.into(); // Always work with 32 word packets
+        self.mig.p0_cmd.cmd.next.instruction = MIGInstruction::Refresh;
+        self.mig.p0_cmd.cmd.next.byte_address = 0_usize.into();
+        self.mig.p0_cmd.cmd.next.burst_len = 31_usize.into(); // Always work with 32 word packets
         self.mig.p0_cmd.enable.next = false;
         // The DDR FIFO contains data if the write address is not equal to the
         // read address.  NOTE! There should be some protection for the DDR FIFO
@@ -144,8 +137,8 @@ impl Logic for DDRFIFO {
             }
             DDRFIFOState::Idle => {
                 if self.have_data.val() & !self.back_porch.almost_full.val() {
-                    self.mig.p0_cmd.instruction.next = 1_usize.into();
-                    self.mig.p0_cmd.byte_address.next =
+                    self.mig.p0_cmd.cmd.next.instruction = MIGInstruction::Read;
+                    self.mig.p0_cmd.cmd.next.byte_address =
                         bit_cast::<30, 27>(self.read_address.q.val());
                     self.mig.p0_cmd.enable.next = true;
                     self.transfer_out_count.d.next = 32_usize.into();
@@ -170,8 +163,8 @@ impl Logic for DDRFIFO {
                 }
             }
             DDRFIFOState::WriteComplete => {
-                self.mig.p0_cmd.instruction.next = 0_usize.into();
-                self.mig.p0_cmd.byte_address.next = bit_cast::<30, 27>(self.write_address.q.val());
+                self.mig.p0_cmd.cmd.next.instruction = MIGInstruction::Write;
+                self.mig.p0_cmd.cmd.next.byte_address = bit_cast::<30, 27>(self.write_address.q.val());
                 self.mig.p0_cmd.enable.next = true;
                 self.state.d.next = DDRFIFOState::UpdateWriteAddress;
             }
@@ -187,8 +180,6 @@ impl Logic for DDRFIFO {
         }
         // Wire up the reset
         self.mig.reset.next = self.reset.val();
-        // We don't use the mask input
-        self.mig.p0_wr.mask.next = 0_usize.into();
         // Set the status byte
         self.status.next = bit_cast::<8, 1>(self.mig.p0_wr.error.val().into())
             | (bit_cast::<8, 1>(self.mig.p0_wr.underrun.val().into()) << 1_usize)

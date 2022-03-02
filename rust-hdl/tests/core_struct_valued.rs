@@ -35,7 +35,9 @@ impl Logic for MIGTester {
             self.cmd_local.next.byte_address = 1_usize.into();
             self.cmd_local.next.instruction = MIGCommand::Write;
         }
-        self.cmd_out.next = self.cmd_local.val();
+        self.cmd_out.next.instruction = self.cmd_local.val().instruction;
+        self.cmd_out.next.byte_address = self.cmd_local.val().byte_address;
+        self.cmd_out.next.burst_length = self.cmd_local.val().burst_length;
     }
 }
 
