@@ -75,18 +75,22 @@ fn connect_call(node: &syn::ExprCall) -> Result<TS> {
     Ok(TS::new())
 }
 
-fn connect_assignment(node: &syn::ExprAssign) -> Result<TS> {
-    if let Expr::Field(field) = node.left.as_ref() {
+fn get_base_of_next(expr: &Expr) -> Result<TS> {
+    if let Expr::Field(field) = expr {
         if let Member::Named(nxt) = &field.member {
             if nxt.eq("next") {
                 let lhs = &field.base;
-                return Ok(quote!(
-                    logic::logic_connect_fn(&mut #lhs)
-                ));
+                return Ok(quote!(logic::logic_connect_fn(&mut #lhs)));
             }
+        } else {
+            return get_base_of_next(&field.base);
         }
     }
-    Ok(TS::new())
+    Ok(TS::default())
+}
+
+fn connect_assignment(node: &syn::ExprAssign) -> Result<TS> {
+    get_base_of_next(node.left.as_ref())
 }
 
 fn connect_conditional(conditions: &syn::ExprIf) -> Result<TS> {

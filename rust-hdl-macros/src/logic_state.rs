@@ -52,12 +52,10 @@ pub fn get_logic_state_impls(input: &syn::DeriveInput) -> Result<TS> {
     Ok(quote!(
         impl Synth for #name {
             const BITS: usize = clog2(#num_variants);
-            const ENUM_TYPE: bool = true;
-            const TYPE_NAME: &'static str = #name_as_string;
-            fn name(ndx: usize) -> &'static str {
-                match ndx {
-                    #(#discriminants => #variants_as_strings,)*
-                    _ => "",
+            fn descriptor() -> TypeDescriptor {
+                TypeDescriptor {
+                    name: #name_as_string.to_string(),
+                    kind: TypeKind::Enum(vec![#(#variants_as_strings.to_string(),)*])
                 }
             }
             fn vcd(self) -> VCDValue {

@@ -1,6 +1,6 @@
 use crate::core::ast::{Verilog, VerilogLiteral};
 use crate::core::atom::AtomKind::{StubInputSignal, StubOutputSignal};
-use crate::core::atom::{Atom, AtomKind};
+use crate::core::atom::{Atom, AtomKind, get_atom_typename, is_atom_an_enum, is_atom_signed};
 use crate::core::block::Block;
 use crate::core::code_writer::CodeWriter;
 use crate::core::named_path::NamedPath;
@@ -8,6 +8,7 @@ use crate::core::probe::Probe;
 use crate::core::verilog_gen::verilog_combinatorial;
 use std::collections::BTreeMap;
 use crate::core::check_error::check_all;
+use crate::core::type_descriptor::{TypeDescriptor, TypeKind};
 
 #[derive(Clone, Debug, Default)]
 struct SubModuleInvocation {
@@ -95,21 +96,28 @@ impl ModuleDefines {
             name: name.to_owned(),
         });
     }
-    fn add_enum(&mut self, module: &str, signal: &dyn Atom) {
+    fn add_enums(&mut self, module: &str, descriptor: &TypeDescriptor) {
         let entry = self.details.entry(module.into()).or_default();
-        let enum_name = signal.type_name();
-        let enum_values = (0..(1 << signal.bits()))
-            .map(|x| EnumDefinition {
-                type_name: enum_name.into(),
-                discriminant: signal.name(x).into(),
-                value: x,
-            })
-            .filter(|x| x.discriminant.len() != 0)
-            .collect::<Vec<_>>();
-        for x in enum_values {
-            if !entry.enums.contains(&x) {
-                entry.enums.push(x);
+        let enum_name = descriptor.name.clone();
+        match &descriptor.kind {
+            TypeKind::Enum(x) => {
+                for (ndx, label) in x.iter().enumerate() {
+                    let def = EnumDefinition {
+                        type_name: enum_name.clone(),
+                        discriminant: label.into(),
+                        value: ndx
+                    };
+                    if !entry.enums.contains(&def) {
+                        entry.enums.push(def);
+                    }
+                }
             }
+            TypeKind::Composite(x) => {
+                for item in x {
+                    self.add_enums(module, &item.kind);
+                }
+            }
+            _ => {}
         }
     }
     fn add_code(&mut self, module: &str, code: Verilog) {
@@ -132,17 +140,6 @@ impl Probe for ModuleDefines {
     }
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
-        // TODO - add proper logging
-        /*
-        println!(
-            "Atom: name {} path {} namespace {} enum {} type {}",
-            name,
-            self.path.to_string(),
-            self.namespace.flat("$"),
-            signal.is_enum(),
-            signal.type_name()
-        );
-         */
         let module_path = self.path.to_string();
         let module_name = self.path.last();
         let namespace = self.namespace.flat("$");
@@ -156,7 +153,7 @@ impl Probe for ModuleDefines {
             kind: signal.kind(),
             width: signal.bits(),
             const_val: signal.verilog(),
-            signed: signal.signed(),
+            signed: is_atom_signed(signal),
         };
         if param.kind.is_parameter() {
             let kind = if param.kind == AtomKind::InputParameter {
@@ -169,16 +166,13 @@ impl Probe for ModuleDefines {
                 kind,
                 width: signal.bits(),
                 const_val: signal.verilog(),
-                signed: signal.signed(),
+                signed: is_atom_signed(signal),
             };
             let parent_name = self.path.parent();
             self.add_atom(&parent_name, parent_param);
         }
-        if signal.is_enum() {
-            self.add_enum(&module_path, signal);
-            let parent_name = self.path.parent();
-            self.add_enum(&parent_name, signal);
-        }
+        self.add_enums(&module_path, &signal.descriptor());
+        self.add_enums(&self.path.parent(), &signal.descriptor());
         self.add_atom(&module_path, param);
     }
 

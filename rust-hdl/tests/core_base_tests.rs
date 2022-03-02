@@ -17,53 +17,13 @@ mod tests {
     use rust_hdl::core::prelude::*;
     use rust_hdl::widgets::prelude::*;
 
-    #[derive(Copy, Clone, Debug, PartialEq)]
+    #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
     enum MyState {
         Init,
         Start,
         Running,
         Paused,
         Stopped,
-    }
-
-    impl Default for MyState {
-        fn default() -> Self {
-            Self::Init
-        }
-    }
-
-    impl Synth for MyState {
-        const BITS: usize = clog2(5);
-        const ENUM_TYPE: bool = true;
-        const TYPE_NAME: &'static str = "MyState";
-        fn name(ndx: usize) -> &'static str {
-            match ndx {
-                0 => "Init",
-                1 => "Start",
-                2 => "Running",
-                3 => "Paused",
-                4 => "Stopped",
-                _ => "",
-            }
-        }
-        fn vcd(self) -> VCDValue {
-            match self {
-                MyState::Init => VCDValue::String("Init".into()),
-                MyState::Start => VCDValue::String("Start".into()),
-                MyState::Running => VCDValue::String("Running".into()),
-                MyState::Paused => VCDValue::String("Paused".into()),
-                MyState::Stopped => VCDValue::String("Stopped".into()),
-            }
-        }
-        fn verilog(self) -> VerilogLiteral {
-            match self {
-                MyState::Init => 0_u32.into(),
-                MyState::Start => 1_u32.into(),
-                MyState::Running => 2_u32.into(),
-                MyState::Paused => 3_u32.into(),
-                MyState::Stopped => 4_u32.into(),
-            }
-        }
     }
 
     #[test]
@@ -91,53 +51,13 @@ mod tests {
 
     #[test]
     fn test_enum_state() {
-        #[derive(Copy, Clone, Debug, PartialEq)]
+        #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
         enum MyState {
             Init,
             Start,
             Running,
             Paused,
             Stopped,
-        }
-
-        impl Default for MyState {
-            fn default() -> Self {
-                Self::Init
-            }
-        }
-
-        impl Synth for MyState {
-            const BITS: usize = clog2(5);
-            const ENUM_TYPE: bool = true;
-            const TYPE_NAME: &'static str = "MyState";
-            fn name(ndx: usize) -> &'static str {
-                match ndx {
-                    0 => "Init",
-                    1 => "Start",
-                    2 => "Running",
-                    3 => "Paused",
-                    4 => "Stopped",
-                    _ => "",
-                }
-            }
-            fn vcd(self) -> VCDValue {
-                match self {
-                    MyState::Init => VCDValue::String("Init".into()),
-                    MyState::Start => VCDValue::String("Start".into()),
-                    MyState::Running => VCDValue::String("Running".into()),
-                    MyState::Paused => VCDValue::String("Paused".into()),
-                    MyState::Stopped => VCDValue::String("Stopped".into()),
-                }
-            }
-            fn verilog(self) -> VerilogLiteral {
-                match self {
-                    MyState::Init => 0_u32.into(),
-                    MyState::Start => 1_u32.into(),
-                    MyState::Running => 2_u32.into(),
-                    MyState::Paused => 3_u32.into(),
-                    MyState::Stopped => 4_u32.into(),
-                }
-            }
         }
 
         #[derive(Clone, Debug, LogicBlock)]

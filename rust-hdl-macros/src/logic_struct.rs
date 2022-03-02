@@ -48,11 +48,25 @@ pub(crate) fn get_impl_for_logic_struct(input: &syn::DeriveInput) -> Result<TS> 
 
         impl #impl_generics Synth for #name #ty_generics {
             const BITS: usize = 0_usize #(+<#field_types>::BITS)*;
-            const TYPE_NAME: &'static str = stringify!(#name);
+
+            fn descriptor() -> TypeDescriptor {
+                TypeDescriptor {
+                    name: stringify!(#name).to_string(),
+                    kind: TypeKind::Composite(
+                        vec![ #( Box::new(
+                            TypeField {
+                                fieldname: stringify!(#fields).to_string(),
+                                kind: <#field_types>::descriptor()
+                            }) ,
+                        )*]
+                    )
+                }
+            }
 
             fn vcd(self) -> VCDValue {
-                let t: Bits<{Self::BITS}> = self.into();
-                t.into()
+                let mut ret = vec![];
+                #(ret.push(Box::new(self.#fields.vcd()));)*
+                VCDValue::Composite(ret)
             }
 
             fn verilog(self) -> VerilogLiteral {

@@ -4,12 +4,14 @@ use crate::core::ast::VerilogLiteral;
 use crate::core::bits::{Bit, Bits};
 use crate::core::clock::Clock;
 use crate::core::signed::Signed;
+use crate::core::type_descriptor::{TypeDescriptor, TypeKind};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum VCDValue {
     Single(vcd::Value),
     Vector(Vec<vcd::Value>),
     String(String),
+    Composite(Vec<Box<VCDValue>>),
 }
 
 impl From<bool> for VCDValue {
@@ -24,18 +26,20 @@ impl From<bool> for VCDValue {
 
 pub trait Synth: Default + Copy + PartialEq + Debug {
     const BITS: usize;
-    const ENUM_TYPE: bool = false;
-    const TYPE_NAME: &'static str = "Bits";
-    const SIGNED: bool = false;
-    fn name(_ndx: usize) -> &'static str {
-        ""
-    }
+    fn descriptor() -> TypeDescriptor;
     fn vcd(self) -> VCDValue;
     fn verilog(self) -> VerilogLiteral;
 }
 
 impl<const N: usize> Synth for Bits<N> {
     const BITS: usize = N;
+
+    fn descriptor() -> TypeDescriptor {
+        TypeDescriptor {
+            name: format!("Bits::<{}>", Self::BITS),
+            kind: TypeKind::Bits(Self::BITS)
+        }
+    }
 
     fn vcd(self) -> VCDValue {
         self.into()
@@ -48,6 +52,13 @@ impl<const N: usize> Synth for Bits<N> {
 
 impl Synth for Bit {
     const BITS: usize = 1;
+
+    fn descriptor() -> TypeDescriptor {
+        TypeDescriptor {
+            name: "Bit".to_string(),
+            kind: TypeKind::Bits(1)
+        }
+    }
 
     fn vcd(self) -> VCDValue {
         if self {
@@ -65,6 +76,13 @@ impl Synth for Bit {
 impl Synth for Clock {
     const BITS: usize = 1;
 
+    fn descriptor() -> TypeDescriptor {
+        TypeDescriptor {
+            name: "clock".to_string(),
+            kind: TypeKind::Bits(1)
+        }
+    }
+
     fn vcd(self) -> VCDValue {
         self.0.into()
     }
@@ -76,8 +94,12 @@ impl Synth for Clock {
 
 impl<const N: usize> Synth for Signed<N> {
     const BITS: usize = N;
-    const TYPE_NAME: &'static str = "Signed";
-    const SIGNED: bool = true;
+    fn descriptor() -> TypeDescriptor {
+        TypeDescriptor {
+            name: format!("Signed::<{}>", Self::BITS),
+            kind: TypeKind::Signed(Self::BITS),
+        }
+    }
     fn vcd(self) -> VCDValue {
         self.inner().vcd()
     }

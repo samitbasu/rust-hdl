@@ -27,3 +27,4 @@ pub mod verilog_visitor;
 pub mod yosys;
 pub mod check_logic_loops;
 pub mod check_error;
+pub mod type_descriptor;

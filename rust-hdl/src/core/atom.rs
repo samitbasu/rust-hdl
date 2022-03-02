@@ -1,6 +1,8 @@
 use crate::core::ast::VerilogLiteral;
 use crate::core::constraint::PinConstraint;
+use crate::core::prelude::TypeKind;
 use crate::core::synth::VCDValue;
+use crate::core::type_descriptor::TypeDescriptor;
 
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -35,12 +37,27 @@ pub trait Atom {
     fn connected(&self) -> bool;
     fn changed(&self) -> bool;
     fn kind(&self) -> AtomKind;
-    fn is_enum(&self) -> bool;
-    fn name(&self, ndx: usize) -> &'static str;
-    fn type_name(&self) -> &'static str;
+    fn descriptor(&self) -> TypeDescriptor;
     fn vcd(&self) -> VCDValue;
     fn id(&self) -> usize;
     fn verilog(&self) -> VerilogLiteral;
     fn constraints(&self) -> Vec<PinConstraint>;
-    fn signed(&self) -> bool;
+}
+
+pub fn is_atom_an_enum(atom: &dyn Atom) -> bool {
+    match atom.descriptor().kind {
+        TypeKind::Enum(_) => true,
+        _ => false
+    }
+}
+
+pub fn is_atom_signed(atom: &dyn Atom) -> bool {
+    match atom.descriptor().kind {
+        TypeKind::Signed(_) => true,
+        _ => false
+    }
+}
+
+pub fn get_atom_typename(atom: &dyn Atom) -> String {
+    atom.descriptor().name.to_string()
 }

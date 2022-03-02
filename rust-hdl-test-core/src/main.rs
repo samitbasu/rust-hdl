@@ -34,10 +34,35 @@ impl Logic for MIGTester {
         self.cmd_local.next = self.cmd_in.val();
         if self.cmd_local.val().instruction == MIGCommand::Read {
             self.cmd_local.next.instruction = MIGCommand::Write;
+            self.cmd_local.next.byte_address = 1_usize.into();
         }
-        self.cmd_local.next.byte_address = 1_usize.into();
         self.cmd_out.next = self.cmd_local.val();
     }
+}
+
+#[test]
+fn test_mig_tester_vcd() {
+    let mut uut = MIGTester::default();
+    uut.cmd_in.connect();
+    uut.connect_all();
+    let mut sim = Simulation::new();
+    sim.add_testbench(move |mut sim: Sim<MIGTester>| {
+        let mut x = sim.init()?;
+        x.cmd_in.next.instruction = MIGCommand::Read;
+        x.cmd_in.next.burst_length = 53_usize.into();
+        x.cmd_in.next.byte_address = 15342_usize.into();
+        x = sim.wait(10, x)?;
+        x.cmd_in.next.instruction = MIGCommand::Write;
+        x.cmd_in.next.burst_length = 42_usize.into();
+        x.cmd_in.next.byte_address = 142_usize.into();
+        x = sim.wait(10, x)?;
+        x.cmd_in.next.instruction = MIGCommand::WritePrechage;
+        x.cmd_in.next.burst_length = 13_usize.into();
+        x.cmd_in.next.byte_address = 14_usize.into();
+        x = sim.wait(10, x)?;
+        sim.done(x)
+    });
+    sim.run_to_file(Box::new(uut), 1000, "mig_test.vcd").unwrap();
 }
 
 #[test]

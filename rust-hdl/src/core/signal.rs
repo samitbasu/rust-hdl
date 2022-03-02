@@ -9,7 +9,7 @@ use crate::core::clock::Clock;
 use crate::core::constraint::{Constraint, PinConstraint, SignalType};
 use crate::core::direction::{Direction, In, Local, Out};
 use crate::core::logic::{Logic, LogicJoin, LogicLink};
-use crate::core::prelude::InOut;
+use crate::core::prelude::{InOut, TypeDescriptor};
 use crate::core::probe::Probe;
 use crate::core::synth::{Synth, VCDValue};
 
@@ -180,16 +180,8 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
         D::KIND
     }
 
-    fn is_enum(&self) -> bool {
-        T::ENUM_TYPE
-    }
-
-    fn name(&self, ndx: usize) -> &'static str {
-        T::name(ndx)
-    }
-
-    fn type_name(&self) -> &'static str {
-        T::TYPE_NAME
+    fn descriptor(&self) -> TypeDescriptor {
+        T::descriptor()
     }
 
     fn vcd(&self) -> VCDValue {
@@ -210,10 +202,6 @@ impl<D: Direction, T: Synth> Atom for Signal<D, T> {
 
     fn constraints(&self) -> Vec<PinConstraint> {
         self.constraints.clone()
-    }
-
-    fn signed(&self) -> bool {
-        T::SIGNED
     }
 }
 
