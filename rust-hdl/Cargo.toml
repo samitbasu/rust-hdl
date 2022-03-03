@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl"
-version = "0.11.3"
+version = "0.11.4"
 edition = "2018"
 license = "MIT"
 description = "Write firmware for FPGAs in Rust"

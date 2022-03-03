@@ -196,7 +196,7 @@ impl Logic for MemoryInterfaceGenerator {
         self.cmd_fifo.read.next = false;
         self.write_fifo.read.next = false;
         self.read_fifo.write.next = false;
-        self.reset.next = false;
+        self.reset_out.next = false;
         match self.state.q.val() {
             State::Init => {
                 if self.reset.val() {
