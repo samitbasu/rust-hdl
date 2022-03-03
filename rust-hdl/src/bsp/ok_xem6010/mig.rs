@@ -192,9 +192,11 @@ impl Logic for MemoryInterfaceGenerator {
         } else {
             self.timer.d.next = self.timer.q.val();
         }
+        self.clk_out.next = self.raw_sys_clk.val();
         self.cmd_fifo.read.next = false;
         self.write_fifo.read.next = false;
         self.read_fifo.write.next = false;
+        self.reset.next = false;
         match self.state.q.val() {
             State::Init => {
                 if self.reset.val() {
@@ -206,6 +208,7 @@ impl Logic for MemoryInterfaceGenerator {
                 if (self.timer.q.val() == 0_usize) & !self.reset.val() {
                     self.calib.d.next = true;
                     self.state.d.next = State::Idle;
+                    self.reset.next = true;
                 }
             }
             State::Idle => {
