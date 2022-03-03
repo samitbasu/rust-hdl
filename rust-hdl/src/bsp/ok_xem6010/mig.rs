@@ -208,7 +208,7 @@ impl Logic for MemoryInterfaceGenerator {
                 if (self.timer.q.val() == 0_usize) & !self.reset.val() {
                     self.calib.d.next = true;
                     self.state.d.next = State::Idle;
-                    self.reset.next = true;
+                    self.reset_out.next = true;
                 }
             }
             State::Idle => {
