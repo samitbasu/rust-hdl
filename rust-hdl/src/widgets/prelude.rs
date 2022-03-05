@@ -33,7 +33,7 @@ pub use crate::widgets::shot::Shot;
 pub use crate::widgets::spi::master::SPIWiresSlave;
 pub use crate::widgets::spi::master::{SPIConfig, SPIMaster, SPIWiresMaster};
 pub use crate::widgets::spi::master_dynamic_mode::{SPIConfigDynamicMode, SPIMasterDynamicMode};
-pub use crate::widgets::spi::mux::MuxMasters;
+pub use crate::widgets::spi::mux::{MuxMasters, MuxSlaves};
 pub use crate::widgets::spi::slave::SPISlave;
 pub use crate::widgets::strobe::Strobe;
 pub use crate::widgets::synchronizer::{

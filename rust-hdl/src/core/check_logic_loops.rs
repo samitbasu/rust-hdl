@@ -84,14 +84,14 @@ fn get_logic_loop_candidates(uut: &dyn Block) -> Vec<String> {
 #[derive(Default, Clone, Debug)]
 struct LocalVars {
     path: NamedPath,
-    names: HashSet<String>,
+    names: Vec<HashSet<String>>,
     loops: LoopMap,
 }
 
 impl LocalVars {
     fn update_loops(&mut self, candidates: &[String]) {
         for candidate in candidates {
-            if self.names.contains(candidate) {
+            if self.names.last().unwrap().contains(candidate) {
                 self.loops.push(LogicLoop {
                     path: self.path.to_string(),
                     name: candidate.to_string(),
@@ -104,29 +104,32 @@ impl LocalVars {
 impl Probe for LocalVars {
     fn visit_start_scope(&mut self, name: &str, _node: &dyn Block) {
         self.path.push(name);
-        self.names.clear();
+        self.names.push(Default::default());
     }
 
     fn visit_start_namespace(&mut self, name: &str, _node: &dyn Block) {
         self.path.push(name);
+        self.names.push(Default::default());
     }
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
         match signal.kind() {
             AtomKind::LocalSignal | AtomKind::OutputParameter => {
-                self.names.insert(name.to_string());
+                self.names.last_mut().unwrap().insert(name.to_string());
             }
             _ => {}
         }
     }
 
     fn visit_end_namespace(&mut self, _name: &str, _node: &dyn Block) {
+        self.names.pop();
         self.path.pop();
     }
 
     fn visit_end_scope(&mut self, _name: &str, node: &dyn Block) {
         self.update_loops(&get_logic_loop_candidates(node));
         self.path.pop();
+        self.names.pop();
     }
 }
 
