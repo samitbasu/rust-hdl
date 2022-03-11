@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 pub struct ROM<D: Synth, const N: usize> {
     pub address: Signal<In, Bits<N>>,
     pub data: Signal<Out, D>,
-    _sim: BTreeMap<Bits<N>, D>,
+    _sim: Box<BTreeMap<Bits<N>, D>>,
 }
 
 impl<D: Synth, const N: usize> ROM<D, N> {
@@ -13,7 +13,7 @@ impl<D: Synth, const N: usize> ROM<D, N> {
         Self {
             address: Signal::default(),
             data: Signal::new_with_default(D::default()),
-            _sim: values,
+            _sim: Box::new(values),
         }
     }
 }

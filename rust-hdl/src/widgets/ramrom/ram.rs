@@ -19,13 +19,13 @@ pub struct RAM<D: Synth, const N: usize> {
     pub write_clock: Signal<In, Clock>,
     pub write_data: Signal<In, D>,
     pub write_enable: Signal<In, bool>,
-    _sim: BTreeMap<Bits<N>, D>,
+    _sim: Box<BTreeMap<Bits<N>, D>>,
 }
 
 impl<D: Synth, const N: usize> RAM<D, N> {
     pub fn new(values: BTreeMap<Bits<N>, D>) -> Self {
         Self {
-            _sim: values,
+            _sim: Box::new(values),
             ..Default::default()
         }
     }

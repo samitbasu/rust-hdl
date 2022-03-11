@@ -7,7 +7,7 @@ pub struct SyncROM<D: Synth, const N: usize> {
     pub address: Signal<In, Bits<N>>,
     pub clock: Signal<In, Clock>,
     pub data: Signal<Out, D>,
-    _sim: BTreeMap<Bits<N>, D>,
+    _sim: Box<BTreeMap<Bits<N>, D>>,
 }
 
 impl<D: Synth, const N: usize> SyncROM<D, N> {
@@ -16,7 +16,7 @@ impl<D: Synth, const N: usize> SyncROM<D, N> {
             address: Signal::default(),
             data: Signal::new_with_default(D::default()),
             clock: Signal::default(),
-            _sim: values,
+            _sim: Box::new(values),
         }
     }
 }
