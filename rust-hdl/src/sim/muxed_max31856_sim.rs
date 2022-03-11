@@ -10,7 +10,7 @@ pub struct MuxedMAX31856Simulators {
     pub mux: MuxSlaves<8, 3>,
     pub addr: Signal<In, Bits<3>>,
     pub clock: Signal<In, Clock>,
-    adcs: [MAX31856Simulator; 8],
+    adcs: Vec<MAX31856Simulator>,
 }
 
 impl MuxedMAX31856Simulators {
@@ -20,7 +20,7 @@ impl MuxedMAX31856Simulators {
             mux: Default::default(),
             addr: Default::default(),
             clock: Default::default(),
-            adcs: array_init::array_init(|_| MAX31856Simulator::new(config)),
+            adcs: (0..8).map(|_| MAX31856Simulator::new(config)).collect()
         }
     }
 }

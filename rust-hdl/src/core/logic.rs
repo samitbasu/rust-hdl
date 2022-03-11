@@ -16,6 +16,10 @@ impl<L: Logic, const P: usize> Logic for [L; P] {
     fn update(&mut self) {}
 }
 
+impl<L: Logic> Logic for Vec<L> {
+    fn update(&mut self) {}
+}
+
 /*
  A link is always
  In --> In
