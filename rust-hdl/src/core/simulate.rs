@@ -104,11 +104,24 @@ impl<T: Send + 'static + Block> Simulation<T> {
         }
     }
     pub fn add_clock<F>(&mut self, interval: u64, clock_fn: F)
-    where
-        F: Fn(&mut Box<T>) -> () + Send + 'static,
+        where
+            F: Fn(&mut Box<T>) -> () + Send + 'static,
     {
         self.add_testbench(move |mut ep: Sim<T>| {
             let mut x = ep.init()?;
+            loop {
+                x = ep.clock(interval, x)?;
+                clock_fn(&mut x);
+            }
+        });
+    }
+    pub fn add_phased_clock<F>(&mut self, interval: u64, phase_delay: u64, clock_fn: F)
+        where
+            F: Fn(&mut Box<T>) -> () + Send + 'static,
+    {
+        self.add_testbench(move |mut ep: Sim<T>| {
+            let mut x = ep.init()?;
+            x = ep.wait(phase_delay, x)?;
             loop {
                 x = ep.clock(interval, x)?;
                 clock_fn(&mut x);
