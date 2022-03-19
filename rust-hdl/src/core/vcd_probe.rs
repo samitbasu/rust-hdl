@@ -1,4 +1,4 @@
-use crate::core::atom::{Atom, is_atom_an_enum};
+use crate::core::atom::{Atom};
 use crate::core::block::Block;
 use crate::core::probe::Probe;
 use crate::core::synth::VCDValue;

@@ -24,7 +24,7 @@ pub struct MemoryBank<const R: usize, const C: usize, const A: usize, const D: u
     pub clock: Signal<In, Clock>,
     pub cas_delay: Signal<In, Bits<3>>,
     pub write_burst: Signal<In, Bit>,
-    pub address: Signal<In, Bits<12>>,
+    pub address: Signal<In, Bits<13>>,
     pub burst_len: Signal<In, Bits<4>>,
     pub cmd: Signal<In, SDRAMCommand>,
     pub error: Signal<Out, Bit>,

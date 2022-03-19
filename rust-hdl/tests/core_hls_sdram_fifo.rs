@@ -6,6 +6,7 @@ use rust_hdl::hls::prelude::*;
 use rust_hdl::hls::sdram_fifo::SDRAMFIFO;
 use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
 use rust_hdl::widgets::prelude::MemoryTimings;
+use rust_hdl::widgets::sdram::SDRAMDriver;
 
 #[derive(LogicBlock)]
 struct HLSSDRAMFIFOTest {
@@ -29,11 +30,7 @@ impl Logic for HLSSDRAMFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.fifo.clock.next = self.clock.val();
-        self.sdram.clock.next = self.clock.val();
-        self.sdram.address.next = self.fifo.address.val();
-        self.sdram.bank.next = self.fifo.bank.val();
-        self.sdram.cmd.next = self.fifo.cmd.val();
-        Signal::<InOut, Bits<16>>::join(&mut self.sdram.data, &mut self.fifo.data);
+        SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.sdram.sdram);
     }
 }
 

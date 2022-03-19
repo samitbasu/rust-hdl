@@ -1,6 +1,6 @@
 use crate::core::ast::{Verilog, VerilogLiteral};
 use crate::core::atom::AtomKind::{StubInputSignal, StubOutputSignal};
-use crate::core::atom::{Atom, AtomKind, get_atom_typename, is_atom_an_enum, is_atom_signed};
+use crate::core::atom::{Atom, AtomKind, is_atom_signed};
 use crate::core::block::Block;
 use crate::core::code_writer::CodeWriter;
 use crate::core::named_path::NamedPath;
@@ -9,7 +9,6 @@ use crate::core::verilog_gen::verilog_combinatorial;
 use std::collections::BTreeMap;
 use crate::core::check_error::check_all;
 use crate::core::type_descriptor::{TypeDescriptor, TypeKind};
-use crate::wait_clock_true;
 
 #[derive(Clone, Debug, Default)]
 struct SubModuleInvocation {

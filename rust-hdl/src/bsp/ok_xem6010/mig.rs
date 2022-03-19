@@ -1,7 +1,6 @@
 use std::collections::{BTreeMap};
 use super::mcb_if::MCBInterface1GDDR2;
 use crate::core::prelude::*;
-use crate::hls::fifo::AsyncFIFO;
 use crate::widgets::prelude::*;
 
 #[derive(LogicState, Copy, Clone, Debug, PartialEq)]
@@ -459,5 +458,5 @@ endmodule
 #[test]
 fn test_mig_gen() {
     let mig = MemoryInterfaceGenerator::default();
-    let vlog = generate_verilog_unchecked(&mig);
+    let _vlog = generate_verilog_unchecked(&mig);
 }

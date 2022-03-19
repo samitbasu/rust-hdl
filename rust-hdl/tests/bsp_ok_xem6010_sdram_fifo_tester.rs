@@ -7,6 +7,7 @@ use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl::hls::sdram_fifo::SDRAMFIFO;
 use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
+use rust_hdl::widgets::sdram::SDRAMDriver;
 #[cfg(feature = "frontpanel")]
 use test_common::download::*;
 
@@ -15,7 +16,7 @@ struct SDRAMSimulatedFIFOTester {
     pub hi: OpalKellyHostInterface,
     ok_host: OpalKellyHost,
     counter: DFF<Bits<16>>,
-    sdram: SDRAMSimulator<16>,
+    chip: SDRAMSimulator<16>,
     fifo: SDRAMFIFO<5, 5, 12, 16>,
     clock: Signal<In, Clock>,
     cross: AsynchronousFIFO<Bits<16>, 4, 5, 1>,
@@ -32,7 +33,7 @@ impl SDRAMSimulatedFIFOTester {
             hi: B::hi(),
             ok_host: B::ok_host(),
             counter: Default::default(),
-            sdram: SDRAMSimulator::new(timing),
+            chip: SDRAMSimulator::new(timing),
             fifo: SDRAMFIFO::new(3, timing),
             clock: xem_6010_base_clock(),
             cross: Default::default(),
@@ -50,7 +51,6 @@ impl Logic for SDRAMSimulatedFIFOTester {
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         // Fast clock for these components
         self.counter.clk.next = self.clock.val();
-        self.sdram.clock.next = self.clock.val();
         self.fifo.clock.next = self.clock.val();
         self.cross.write_clock.next = self.clock.val();
         // Slow clock here
@@ -75,10 +75,7 @@ impl Logic for SDRAMSimulatedFIFOTester {
         self.dl.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.dl.ok2.val();
         // Link the SDRAM and the controller
-        Signal::<InOut, Bits<16>>::join(&mut self.sdram.data, &mut self.fifo.data);
-        self.sdram.address.next = self.fifo.address.val();
-        self.sdram.cmd.next = self.fifo.cmd.val();
-        self.sdram.bank.next = self.fifo.bank.val();
+        SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.chip.sdram);
     }
 }
 

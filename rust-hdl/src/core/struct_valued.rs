@@ -30,4 +30,9 @@ fn test_composite() {
     assert_eq!(y.get_bits::<{ CmdType::BITS }>(0), 1u32);
     assert_eq!(y.get_bits::<{ bool::BITS }>(2), true);
     assert_eq!(y.get_bits::<6>(3), 35_u32);
+    let _x = MIGCmd {
+        cmd: CmdType::Write,
+        active: false,
+        len: 30_usize.into(),
+    };
 }

@@ -55,8 +55,12 @@ impl Probe for PCFGenerator {
                     }
                 }
                 Constraint::Custom(s) => self.pcf.push(s.clone()),
-                _ => {
-                    unimplemented!("Unsupported constraint type for PCF files")
+                Constraint::Slew(k) => {
+                    let tag = match k {
+                        SlewType::Fast => "FAST",
+                        SlewType::Normal => "SLOW",
+                    };
+                    self.pcf.push(format!("IOBUF PORT \"{}\" SLEWRATE={}", prefix, tag));
                 }
             }
         }

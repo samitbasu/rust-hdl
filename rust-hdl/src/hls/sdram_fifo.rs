@@ -1,14 +1,12 @@
 use crate::core::prelude::*;
 use crate::hls::bus::{FIFOReadResponder, FIFOWriteResponder};
 use crate::widgets::prelude::*;
+use crate::widgets::sdram::SDRAMDriver;
 
 #[derive(LogicBlock)]
 pub struct SDRAMFIFO<const R: usize, const C: usize, const P: usize, const D: usize> {
     pub clock: Signal<In, Clock>,
-    pub cmd: Signal<Out, SDRAMCommand>,
-    pub bank: Signal<Out, Bits<2>>,
-    pub address: Signal<Out, Bits<12>>,
-    pub data: Signal<InOut, Bits<D>>,
+    pub sdram: SDRAMDriver<D>,
     pub bus_write: FIFOWriteResponder<Bits<D>>,
     pub bus_read: FIFOReadResponder<Bits<D>>,
     controller: SDRAMFIFOController<R, C, P, D>,
@@ -28,10 +26,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> Logic
         self.bus_read.almost_empty.next = self.controller.empty.val();
         self.controller.read.next = self.bus_read.read.val();
         self.controller.clock.next = self.clock.val();
-        self.cmd.next = self.controller.cmd.val();
-        self.bank.next = self.controller.bank.val();
-        self.address.next = self.controller.address.val();
-        Signal::<InOut, Bits<D>>::link(&mut self.data, &mut self.controller.data);
+        SDRAMDriver::<D>::link(&mut self.sdram, &mut self.controller.sdram);
     }
 }
 
@@ -39,10 +34,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> SDRAMFIFO<R
     pub fn new(cas_delay: u32, timings: MemoryTimings) -> SDRAMFIFO<R, C, P, D> {
         Self {
             clock: Default::default(),
-            cmd: Default::default(),
-            bank: Default::default(),
-            address: Default::default(),
-            data: Default::default(),
+            sdram: Default::default(),
             bus_write: Default::default(),
             bus_read: Default::default(),
             controller: SDRAMFIFOController::new(cas_delay, timings),
