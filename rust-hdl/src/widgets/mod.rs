@@ -16,3 +16,5 @@ pub mod spi;
 pub mod strobe;
 pub mod synchronizer;
 pub mod tristate;
+pub mod registered_edge_tristate;
+pub mod edge_ff;

@@ -4,6 +4,7 @@ use crate::hls::bus::FIFOWriteController;
 use crate::hls::bus::{FIFOReadController, SoCBusController};
 use crate::hls::controller::BaseController;
 use crate::hls::cross_fifo::{CrossNarrow, CrossWiden};
+use crate::widgets::prelude::*;
 
 // Creates a Host object that connects a bidirectional 8-bit
 // bus to a Controller with the appropriate intermediate pieces.
@@ -17,6 +18,16 @@ pub struct Host<const A: usize> {
     pub bus: SoCBusController<16, A>,
     pub sys_clock: Signal<In, Clock>,
     pub bidi_clock: Signal<In, Clock>,
+}
+
+impl<const A: usize> Host<A> {
+    pub fn new(order: WordOrder) -> Self {
+        Self {
+            bus_to_controller: CrossWiden::new(order),
+            controller_to_bus: CrossNarrow::new(order),
+            .. Default::default()
+        }
+    }
 }
 
 impl<const A: usize> Logic for Host<A> {

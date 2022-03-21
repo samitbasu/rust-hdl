@@ -1,6 +1,7 @@
 use crate::core::prelude::*;
 use crate::widgets::dff::DFF;
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum WordOrder {
     LeastSignificantFirst,
     MostSignificantFirst,
