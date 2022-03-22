@@ -15,7 +15,7 @@ fn test_mig() {
     uut.p0_rd.clock.connect();
     uut.reset.connect();
     uut.connect_all();
-    yosys_validate("mig_test", &generate_verilog(&uut));
+    yosys_validate("mig_test", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     sim.add_clock(4, |x: &mut Box<MemoryInterfaceGenerator>| x.raw_sys_clk.next = !x.raw_sys_clk.val());
     sim.add_clock(5, |x: &mut Box<MemoryInterfaceGenerator>| x.p0_cmd.clock.next = !x.p0_cmd.clock.val());

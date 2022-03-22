@@ -48,6 +48,7 @@ fn test_sdram_fifo_synthesizes() {
     uut.clock.connect();
     uut.bus_read.link_connect_dest();
     uut.bus_write.link_connect_dest();
+    uut.sdram.read_data.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     println!("{}", vlog);

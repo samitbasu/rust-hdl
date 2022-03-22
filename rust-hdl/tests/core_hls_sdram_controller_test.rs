@@ -3,6 +3,8 @@ use rust_hdl::hls::prelude::*;
 use rust_hdl::hls::sdram_controller::SDRAMController;
 use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
 use rust_hdl::widgets::prelude::MemoryTimings;
+use rust_hdl::widgets::sdram::basic_controller::OutputBuffer::Registered;
+use rust_hdl::widgets::sdram::buffer::SDRAMOnChipBuffer;
 use rust_hdl::widgets::sdram::SDRAMDriver;
 
 #[derive(LogicBlock)]
@@ -12,6 +14,7 @@ struct HostSDRAMControllerTest {
     bidi_dev: BidiSimulatedDevice<Bits<8>>,
     host: Host<8>,
     core: SDRAMController<5, 5>,
+    buffer: SDRAMOnChipBuffer<16>,
     chip: SDRAMSimulator<16>,
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
@@ -35,7 +38,8 @@ impl Logic for HostSDRAMControllerTest {
         self.host.bidi_clock.next = self.bidi_clock.val();
         self.host.sys_clock.next = self.sys_clock.val();
         SoCBusController::<16, 8>::join(&mut self.host.bus, &mut self.core.upstream);
-        SDRAMDriver::<16>::join(&mut self.core.dram, &mut self.chip.sdram);
+        SDRAMDriver::<16>::join(&mut self.core.dram, &mut self.buffer.buf_in);
+        SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.chip.sdram);
     }
 }
 
@@ -47,7 +51,8 @@ impl Default for HostSDRAMControllerTest {
             host_to_pc: Default::default(),
             bidi_dev: Default::default(),
             host: Default::default(),
-            core: SDRAMController::new(3, timings),
+            core: SDRAMController::new(3, timings, Registered),
+            buffer: Default::default(),
             chip: SDRAMSimulator::new(timings),
             bidi_clock: Default::default(),
             sys_clock: Default::default()

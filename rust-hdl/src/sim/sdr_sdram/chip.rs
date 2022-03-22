@@ -19,6 +19,7 @@ enum MasterState {
 #[derive(LogicBlock)]
 pub struct SDRAMSimulator<const D: usize> {
     pub sdram: SDRAMDevice<D>,
+    pub write_enable: Signal<Out, Bit>,
     pub test_error: Signal<Out, Bit>,
     pub test_ready: Signal<Out, Bit>,
     decode: SDRAMCommandDecoder,
@@ -32,7 +33,6 @@ pub struct SDRAMSimulator<const D: usize> {
     burst_type: DFF<Bit>,
     burst_len: DFF<Bits<3>>,
     op_mode: DFF<Bits<2>>,
-    bufz: TristateBuffer<Bits<D>>,
     banks: [MemoryBank<5, 5, 10, D>; 4],
     // Timings
     // Number of clocks to delay for boot initialization
@@ -74,16 +74,15 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
         //
         self.test_error.next = false;
         self.test_ready.next = false;
-        Signal::<InOut, Bits<D>>::link(&mut self.sdram.data, &mut self.bufz.bus);
         // Connect up the banks to the I/O buffer
-        self.bufz.write_enable.next = false;
-        self.bufz.write_data.next = 0_usize.into();
+        self.write_enable.next = false;
+        self.sdram.read_data.next = 0_usize.into();
         for i in 0..4 {
             self.banks[i].clock.next = self.clock.val();
-            self.banks[i].write_data.next = self.bufz.read_data.val();
+            self.banks[i].write_data.next = self.sdram.write_data.val();
             if self.banks[i].read_valid.val() {
-                self.bufz.write_data.next = self.banks[i].read_data.val();
-                self.bufz.write_enable.next = self.banks[i].read_valid.val();
+                self.sdram.read_data.next = self.banks[i].read_data.val();
+                self.write_enable.next = self.banks[i].read_valid.val();
             }
             self.banks[i].address.next = self.sdram.address.val();
             self.banks[i].cmd.next = self.cmd.val();
@@ -230,6 +229,7 @@ impl<const D: usize> SDRAMSimulator<D> {
             clock: Default::default(),
             cmd: Signal::default(),
             sdram: Default::default(),
+            write_enable: Default::default(),
             test_error: Default::default(),
             test_ready: Default::default(),
             state: Default::default(),
@@ -240,7 +240,6 @@ impl<const D: usize> SDRAMSimulator<D> {
             burst_type: Default::default(),
             burst_len: Default::default(),
             op_mode: Default::default(),
-            bufz: Default::default(),
             banks: array_init::array_init(|_| MemoryBank::new(timings)),
             boot_delay: Constant::new(boot_delay.into()),
             t_rp: Constant::new(precharge_delay.into()),
@@ -332,12 +331,12 @@ macro_rules! sdram_write {
     ($sim: ident, $clock: ident, $uut: ident, $bank: expr, $addr: expr, $data: expr) => {
         sdram_cmd!($uut, SDRAMCommand::Write);
         $uut.sdram.bank.next = ($bank as u32).into();
-        $uut.sdram.data.next = ($data[0] as u32).into();
+        $uut.sdram.write_data.next = ($data[0] as u32).into();
         $uut.sdram.address.next = ($addr as u32).into();
         wait_clock_cycle!($sim, $clock, $uut);
         for i in 1..($data).len() {
             sdram_cmd!($uut, SDRAMCommand::NOP);
-            $uut.sdram.data.next = ($data[i] as u32).into();
+            $uut.sdram.write_data.next = ($data[i] as u32).into();
             $uut.sdram.address.next = 0_u32.into();
             wait_clock_cycle!($sim, $clock, $uut);
         }
@@ -355,7 +354,7 @@ macro_rules! sdram_read {
         wait_clock_cycles!($sim, $clock, $uut, 2); // Programmed CAS delay - 1
         for datum in $data {
             sdram_cmd!($uut, SDRAMCommand::NOP);
-            sim_assert!($sim, $uut.sdram.data.val() == (datum as u32), $uut);
+            sim_assert!($sim, $uut.sdram.read_data.val() == (datum as u32), $uut);
             wait_clock_cycle!($sim, $clock, $uut);
         }
     };
@@ -372,7 +371,7 @@ macro_rules! sdram_reada {
         wait_clock_cycles!($sim, $clock, $uut, 2); // Programmed CAS delay
         for datum in $data {
             sdram_cmd!($uut, SDRAMCommand::NOP);
-            sim_assert!($sim, $uut.sdram.data.val() == (datum as u32), $uut);
+            sim_assert!($sim, $uut.sdram.read_data.val() == (datum as u32), $uut);
             wait_clock_cycle!($sim, $clock, $uut);
         }
     };

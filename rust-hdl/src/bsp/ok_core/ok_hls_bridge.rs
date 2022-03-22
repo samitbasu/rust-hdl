@@ -8,6 +8,7 @@ use rust_hdl_ok_frontpanel_sys::{
     make_u16_buffer, ok_ErrorCode_ok_DataAlignmentError, ok_ErrorCode_ok_InvalidParameter,
     ok_ErrorCode_ok_Timeout, OkError, OkHandle,
 };
+#[cfg(feature = "frontpanel")]
 use std::time::Duration;
 
 #[derive(Copy, Clone, Debug)]

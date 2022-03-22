@@ -1,7 +1,8 @@
 use crate::core::prelude::*;
 use crate::sim::sdr_sdram::chip::SDRAMSimulator;
 use crate::widgets::dff::DFF;
-use crate::widgets::prelude::{DelayLine, MemoryTimings, TristateBuffer};
+use crate::widgets::prelude::{DelayLine, MemoryTimings};
+use crate::widgets::sdram::buffer::SDRAMOnChipBuffer;
 use crate::widgets::sdram::cmd::{SDRAMCommand, SDRAMCommandEncoder};
 use crate::widgets::sdram::SDRAMDriver;
 
@@ -41,6 +42,7 @@ pub struct SDRAMBaseController<
 > {
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
+    pub write_enable: Signal<Out, Bit>,
     // Command interface
     pub data_in: Signal<In, Bits<L>>,
     pub write_not_read: Signal<In, Bit>,
@@ -52,7 +54,6 @@ pub struct SDRAMBaseController<
     pub error: Signal<Out, Bit>,
     cmd: Signal<Local, SDRAMCommand>,
     encode: SDRAMCommandEncoder,
-    bufz: TristateBuffer<Bits<D>>,
     boot_delay: Constant<Bits<32>>,
     t_rp: Constant<Bits<32>>,
     t_rfc: Constant<Bits<32>>,
@@ -83,10 +84,16 @@ pub struct SDRAMBaseController<
     data_out_counter: DFF<Bits<8>>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum OutputBuffer {
+    Wired,
+    Registered,
+}
+
 impl<const R: usize, const C: usize, const L: usize, const D: usize>
 SDRAMBaseController<R, C, L, D>
 {
-    pub fn new(cas_delay: u32, timings: MemoryTimings) -> SDRAMBaseController<R, C, L, D> {
+    pub fn new(cas_delay: u32, timings: MemoryTimings, buffer: OutputBuffer) -> SDRAMBaseController<R, C, L, D> {
         assert_eq!(L % D, 0);
         // mode register definitions
         // A2:A0 are the burst length, this design does not use burst transfers
@@ -108,7 +115,6 @@ SDRAMBaseController<R, C, L, D>
             data_out: Default::default(),
             data_valid: Default::default(),
             error: Default::default(),
-            bufz: Default::default(),
             boot_delay: Constant::new((timings.t_boot() + 10).into()),
             t_rp: Constant::new((timings.t_rp()).into()),
             t_rfc: Constant::new((timings.t_rfc()).into()),
@@ -117,7 +123,16 @@ SDRAMBaseController<R, C, L, D>
             t_wr: Constant::new((timings.t_wr()).into()),
             max_transfer_size: Constant::new({L/D}.into()),
             mode_register: Constant::new(mode_register.into()),
-            cas_delay: Constant::new(cas_delay.into()),
+/*
+ * For a registered buffer, we need to add 2 cycles to the cas delay
+ * - we add 1 on the send side because we add 1 on the send side and
+ *   1 on the receive side
+ */
+            cas_delay: Constant::new(
+                match buffer {
+                    OutputBuffer::Wired => cas_delay,
+                    OutputBuffer::Registered => cas_delay + 2,
+                }.into()),
             state: Default::default(),
             reg_data_write: Default::default(),
             reg_data_read: Default::default(),
@@ -137,7 +152,8 @@ SDRAMBaseController<R, C, L, D>
             read_pending: Default::default(),
             data_out_counter: Default::default(),
             read_ready: Default::default(),
-            encode: Default::default()
+            encode: Default::default(),
+            write_enable: Default::default()
         }
     }
 }
@@ -175,10 +191,8 @@ for SDRAMBaseController<R, C, L, D>
         self.read_pending.d.next = self.read_pending.q.val();
         self.data_out_counter.d.next = self.data_out_counter.q.val() + self.read_valid.data_out.val();
         self.data_valid.next = self.read_ready.q.val();
-        // SDRAM signal drivers
-        Signal::<InOut, Bits<D>>::link(&mut self.sdram.data, &mut self.bufz.bus);
-        self.bufz.write_enable.next = false;
-        self.bufz.write_data.next = self.reg_data_write.q.val().get_bits::<D>(0_usize);
+        self.write_enable.next = false;
+        self.sdram.write_data.next = self.reg_data_write.q.val().get_bits::<D>(0_usize);
         self.read_valid.data_in.next = false;
         self.read_valid.delay.next = self.cas_delay.val();
         // Calculate the read and write addresses
@@ -281,7 +295,7 @@ for SDRAMBaseController<R, C, L, D>
                     self.sdram.bank.next = self.addr_bank.val();
                     self.sdram.address.next = self.addr_col.val();
                     self.cmd.next = SDRAMCommand::Write;
-                    self.bufz.write_enable.next = true;
+                    self.write_enable.next = true;
                     self.transfer_counter.d.next = self.transfer_counter.q.val() + 1_usize;
                     self.reg_data_write.d.next = self.reg_data_write.q.val() >> self.data_bits.val();
                     self.reg_address.d.next = self.reg_address.q.val() + 1_usize;
@@ -331,7 +345,7 @@ for SDRAMBaseController<R, C, L, D>
         }
         if self.read_valid.data_out.val() {
             self.reg_data_read.d.next =
-                bit_cast::<L, D>(self.bufz.read_data.val()) << self.data_shift_in.val() |
+                bit_cast::<L, D>(self.sdram.read_data.val()) << self.data_shift_in.val() |
                     (self.reg_data_read.q.val() >> self.data_bits.val());
         }
         self.read_ready.d.next = !self.read_ready.q.val() & (self.data_out_counter.q.val() == self.max_transfer_size.val());
@@ -351,6 +365,7 @@ for SDRAMBaseController<R, C, L, D>
 #[derive(LogicBlock)]
 struct TestSDRAMDevice {
     dram: SDRAMSimulator<16>,
+    buffer: SDRAMOnChipBuffer<16>,
     cntrl: SDRAMBaseController<5, 5, 64, 16>,
     clock: Signal<In, Clock>,
 }
@@ -358,7 +373,8 @@ struct TestSDRAMDevice {
 impl Logic for TestSDRAMDevice {
     #[hdl_gen]
     fn update(&mut self) {
-        SDRAMDriver::<16>::join(&mut self.cntrl.sdram, &mut self.dram.sdram);
+        SDRAMDriver::<16>::join(&mut self.cntrl.sdram, &mut self.buffer.buf_in);
+        SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.dram.sdram);
         self.cntrl.clock.next = self.clock.val();
     }
 }
@@ -366,9 +382,12 @@ impl Logic for TestSDRAMDevice {
 #[cfg(test)]
 fn make_test_device() -> TestSDRAMDevice {
     let timings = MemoryTimings::fast_boot_sim(100e6);
+    // Because the buffer adds 1 cycle of read delay
+    // we need to extend the SDRAM CAS by 1 clock.
     let mut uut = TestSDRAMDevice {
         dram: SDRAMSimulator::new(timings),
-        cntrl: SDRAMBaseController::new(3, timings),
+        buffer: Default::default(),
+        cntrl: SDRAMBaseController::new(3, timings, OutputBuffer::Registered),
         clock: Default::default(),
     };
     uut.clock.connect();
@@ -383,7 +402,7 @@ fn make_test_device() -> TestSDRAMDevice {
 #[cfg(test)]
 fn make_test_controller() -> SDRAMBaseController<5, 5, 64, 16> {
     let timings = MemoryTimings::fast_boot_sim(100e6);
-    let mut uut = SDRAMBaseController::new(3, timings);
+    let mut uut = SDRAMBaseController::new(3, timings, OutputBuffer::Registered);
     uut.cmd.connect();
     uut.cmd_strobe.connect();
     uut.cmd_address.connect();
@@ -413,7 +432,7 @@ fn test_unit_is_synthesizable() {
 fn test_unit_boots() {
     let uut = make_test_device();
     let mut sim = Simulation::new();
-    sim.add_clock(4000, |x: &mut Box<TestSDRAMDevice>| {
+    sim.add_clock(5000, |x: &mut Box<TestSDRAMDevice>| {
         x.clock.next = !x.clock.val()
     });
     sim.add_testbench(move |mut sim: Sim<TestSDRAMDevice>| {
@@ -479,6 +498,7 @@ fn test_unit_writes() {
         sdram_basic_write!(sim, x, cntrl, 0_usize, 0xDEAD_BEEF_CAFE_BABE_u64);
         sdram_basic_write!(sim, x, cntrl, 4_usize, 0x1234_ABCD_5678_EFFE_u64);
         let read = sdram_basic_read!(sim, x, cntrl, 2_usize);
+        wait_clock_cycles!(sim, clock, x, 10);
         sim_assert_eq!(sim, read, 0x5678_EFFE_DEAD_BEEF_u64, x);
         let read = sdram_basic_read!(sim, x, cntrl, 4_usize);
         sim_assert_eq!(sim, read, 0x1234_ABCD_5678_EFFE_u64, x);
@@ -489,6 +509,7 @@ fn test_unit_writes() {
             let read = sdram_basic_read!(sim, x, cntrl, ndx*4+8);
             sim_assert_eq!(sim, read, *val, x);
         }
+        sim_assert!(sim, !x.dram.test_error.val(), x);
         sim.done(x)
     });
     sim.run_to_file(Box::new(uut), 100_000_000, "base_sdram_writes.vcd")

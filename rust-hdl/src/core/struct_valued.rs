@@ -1,7 +1,8 @@
+#[cfg(test)]
 use crate::core::prelude::*;
 
 // We want to be able to combine a set of signals into a struct
-
+#[cfg(test)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, LogicState)]
 enum CmdType {
     Noop,
@@ -10,6 +11,7 @@ enum CmdType {
 }
 
 
+#[cfg(test)]
 #[derive(Copy, Clone, Default, Debug, PartialEq, Eq, LogicStruct)]
 struct MIGCmd {
     pub cmd: CmdType,

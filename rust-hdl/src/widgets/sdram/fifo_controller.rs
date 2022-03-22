@@ -1,7 +1,7 @@
 use crate::core::prelude::*;
 use crate::sim::sdr_sdram::chip::SDRAMSimulator;
 use crate::widgets::dff::DFF;
-use crate::widgets::prelude::{DelayLine, MemoryTimings, SynchronousFIFO, TristateBuffer};
+use crate::widgets::prelude::{DelayLine, MemoryTimings, SynchronousFIFO};
 use crate::widgets::sdram::cmd::{SDRAMCommand, SDRAMCommandEncoder};
 use crate::widgets::sdram::SDRAMDriver;
 
@@ -28,6 +28,7 @@ enum State {
 #[derive(LogicBlock)]
 pub struct SDRAMFIFOController<const R: usize, const C: usize, const P: usize, const D: usize> {
     pub sdram: SDRAMDriver<D>,
+    pub write_enable: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
     cmd: Signal<Local, SDRAMCommand>,
     encoder: SDRAMCommandEncoder,
@@ -37,7 +38,6 @@ pub struct SDRAMFIFOController<const R: usize, const C: usize, const P: usize, c
     pub data_out: Signal<Out, Bits<D>>,
     pub read: Signal<In, Bit>,
     pub empty: Signal<Out, Bit>,
-    bufz: TristateBuffer<Bits<D>>,
     boot_delay: Constant<Bits<32>>,
     t_rp: Constant<Bits<32>>,
     t_rfc: Constant<Bits<32>>,
@@ -87,6 +87,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize>
         let mode_register = cas_delay << 4;
         Self {
             sdram: Default::default(),
+            write_enable: Default::default(),
             clock: Default::default(),
             cmd: Default::default(),
             encoder: Default::default(),
@@ -96,7 +97,6 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize>
             data_out: Default::default(),
             read: Default::default(),
             empty: Default::default(),
-            bufz: Default::default(),
             boot_delay: Constant::new((timings.t_boot() + 10).into()),
             t_rp: Constant::new((timings.t_rp()).into()),
             t_rfc: Constant::new((timings.t_rfc()).into()),
@@ -166,10 +166,9 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> Logic
         self.cmd.next = SDRAMCommand::NOP;
         self.sdram.address.next = 0_usize.into();
         self.sdram.bank.next = 0_usize.into();
-        Signal::<InOut, Bits<D>>::link(&mut self.sdram.data, &mut self.bufz.bus);
-        self.bufz.write_enable.next = false;
-        self.bufz.write_data.next = self.fp.data_out.val();
-        self.bp.data_in.next = self.bufz.read_data.val();
+        self.write_enable.next = false;
+        self.sdram.write_data.next = self.fp.data_out.val();
+        self.bp.data_in.next = self.sdram.read_data.val();
         self.fp.read.next = false;
         self.read_valid.data_in.next = false;
         self.bp.write.next = self.read_valid.data_out.val();
@@ -301,7 +300,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> Logic
                     self.sdram.bank.next = self.write_bank.val();
                     self.sdram.address.next = self.write_col.val();
                     self.cmd.next = SDRAMCommand::Write;
-                    self.bufz.write_enable.next = true;
+                    self.write_enable.next = true;
                     self.transfer_counter.d.next = self.transfer_counter.q.val() + 1_usize;
                     self.fp.read.next = true;
                     self.write_pointer.d.next = self.write_pointer.q.val() + 1_usize;

@@ -5,7 +5,7 @@ use crate::hls::HLSNamedPorts;
 use crate::hls::miso_wide_port::MISOWidePort;
 use crate::hls::prelude::{MOSIPort, MOSIWidePort};
 use crate::widgets::prelude::*;
-use crate::widgets::sdram::basic_controller::SDRAMBaseController;
+use crate::widgets::sdram::basic_controller::{OutputBuffer, SDRAMBaseController};
 use crate::widgets::sdram::SDRAMDriver;
 
 
@@ -22,7 +22,7 @@ pub struct SDRAMController<const R: usize, const C: usize> {
 }
 
 impl<const R: usize, const C: usize> SDRAMController<R, C> {
-    pub fn new(cas_delay: u32, timings: MemoryTimings) -> SDRAMController<R, C> {
+    pub fn new(cas_delay: u32, timings: MemoryTimings, buffer: OutputBuffer) -> SDRAMController<R, C> {
         Self {
             dram: Default::default(),
             upstream: Default::default(),
@@ -31,7 +31,7 @@ impl<const R: usize, const C: usize> SDRAMController<R, C> {
             address: Default::default(),
             cmd: Default::default(),
             data_out: Default::default(),
-            controller: SDRAMBaseController::new(cas_delay, timings),
+            controller: SDRAMBaseController::new(cas_delay, timings, buffer),
         }
     }
 }
@@ -64,7 +64,8 @@ impl<const R: usize, const C: usize> Logic for SDRAMController<R, C> {
 
 #[test]
 fn test_sdram_controller_synthesizes() {
-    let mut uut = SDRAMController::<5, 5>::new(3, MemoryTimings::fast_boot_sim(100e6));
+    let mut uut = SDRAMController::<5, 5>::new(3, MemoryTimings::fast_boot_sim(100e6), OutputBuffer::Wired);
+    uut.dram.read_data.connect();
     uut.upstream.link_connect_dest();
     uut.connect_all();
     yosys_validate("sdram_controller_hls", &generate_verilog(&uut)).unwrap();
