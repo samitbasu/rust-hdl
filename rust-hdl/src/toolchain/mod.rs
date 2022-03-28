@@ -3,7 +3,10 @@ use crate::core::prelude::*;
 pub fn map_signal_type_to_lattice_string(k: &SignalType) -> &str {
     match k {
         SignalType::LowVoltageCMOS_3v3 => "LVCMOS33",
-        _ => panic!("Unsupported mapping for signal type {:?} in Lattice mapping", k),
+        _ => panic!(
+            "Unsupported mapping for signal type {:?} in Lattice mapping",
+            k
+        ),
     }
 }
 
@@ -25,7 +28,7 @@ pub fn map_signal_type_to_xilinx_string(k: &SignalType) -> &str {
     }
 }
 
+pub mod ecp5;
 pub mod icestorm;
 pub mod ise;
 pub mod vivado;
-pub mod ecp5;

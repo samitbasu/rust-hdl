@@ -335,7 +335,7 @@ impl<T: Synth> Signal<InOut, T> {
 // local signals do not generate changes.
 // Need loop detection
 
-impl<T:Synth> Signal<Local, T> {
+impl<T: Synth> Signal<Local, T> {
     pub fn val(&self) -> T {
         self.next
     }

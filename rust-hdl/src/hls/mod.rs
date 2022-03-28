@@ -15,10 +15,11 @@ pub mod mosi_wide_port;
 pub mod prelude;
 pub mod reducer;
 pub mod router;
+pub mod sdram_controller;
+pub mod sdram_controller_tester;
 pub mod sdram_fifo;
 pub mod sim;
 pub mod spi;
-pub mod sdram_controller;
 
 pub trait HLSNamedPorts {
     fn ports(&self) -> Vec<String>;

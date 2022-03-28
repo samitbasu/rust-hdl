@@ -34,7 +34,8 @@ impl<const W: usize> Logic for RegisteredEdgeTristate<W> {
     }
     fn hdl(&self) -> Verilog {
         Verilog::Wrapper(Wrapper {
-            code: format!(r#"
+            code: format!(
+                r#"
 
 reg [{WIDTH}:0] dff_in;
 reg [{WIDTH}:0] dff_out;
@@ -42,12 +43,13 @@ assign bus = write_enable ? dff_out : {WIDTH}'bz;
 assign read_data = dff_in;
 always @(posedge clock) dff_in <= bus;
 always @(posedge clock) dff_out <= write_data;
-            "#, WIDTH=W-1),
+            "#,
+                WIDTH = W - 1
+            ),
             cores: r#""#.to_string(),
         })
     }
 }
-
 
 #[test]
 fn test_tristate_edge_synthesizes() {

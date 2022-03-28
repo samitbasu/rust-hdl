@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use crate::core::block::Block;
 use crate::core::check_logic_loops::check_logic_loops;
 use crate::core::prelude::check_connected;
+use std::collections::HashMap;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct OpenConnection {
@@ -9,7 +9,7 @@ pub struct OpenConnection {
     pub name: String,
 }
 
-pub type OpenMap = HashMap::<usize, OpenConnection>;
+pub type OpenMap = HashMap<usize, OpenConnection>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct LogicLoop {

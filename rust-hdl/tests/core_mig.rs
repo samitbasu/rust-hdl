@@ -1,4 +1,4 @@
-use rust_hdl::bsp::ok_xem6010::mig::{MemoryInterfaceGenerator, MIGInstruction};
+use rust_hdl::bsp::ok_xem6010::mig::{MIGInstruction, MemoryInterfaceGenerator};
 use rust_hdl::core::prelude::*;
 
 #[test]
@@ -17,10 +17,18 @@ fn test_mig() {
     uut.connect_all();
     yosys_validate("mig_test", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
-    sim.add_clock(4, |x: &mut Box<MemoryInterfaceGenerator>| x.raw_sys_clk.next = !x.raw_sys_clk.val());
-    sim.add_clock(5, |x: &mut Box<MemoryInterfaceGenerator>| x.p0_cmd.clock.next = !x.p0_cmd.clock.val());
-    sim.add_clock(5, |x: &mut Box<MemoryInterfaceGenerator>| x.p0_wr.clock.next = !x.p0_wr.clock.val());
-    sim.add_clock(5, |x: &mut Box<MemoryInterfaceGenerator>| x.p0_rd.clock.next = !x.p0_rd.clock.val());
+    sim.add_clock(4, |x: &mut Box<MemoryInterfaceGenerator>| {
+        x.raw_sys_clk.next = !x.raw_sys_clk.val()
+    });
+    sim.add_clock(5, |x: &mut Box<MemoryInterfaceGenerator>| {
+        x.p0_cmd.clock.next = !x.p0_cmd.clock.val()
+    });
+    sim.add_clock(5, |x: &mut Box<MemoryInterfaceGenerator>| {
+        x.p0_wr.clock.next = !x.p0_wr.clock.val()
+    });
+    sim.add_clock(5, |x: &mut Box<MemoryInterfaceGenerator>| {
+        x.p0_rd.clock.next = !x.p0_rd.clock.val()
+    });
     sim.add_testbench(move |mut sim: Sim<MemoryInterfaceGenerator>| {
         let mut x = sim.init()?;
         x.reset.next = true;
@@ -29,7 +37,13 @@ fn test_mig() {
         x = sim.watch(|x| x.calib_done.val(), x)?;
         wait_clock_true!(sim, p0_cmd.clock, x);
         // Feed in a set of values
-        let data_vec = [0x1423_5686_u32, 0xa423_5123, 0x9851_5312, 0xcafe_babe, 0xdead_beef];
+        let data_vec = [
+            0x1423_5686_u32,
+            0xa423_5123,
+            0x9851_5312,
+            0xcafe_babe,
+            0xdead_beef,
+        ];
         for val in &data_vec {
             x.p0_wr.data.next.data = (*val).into();
             x.p0_wr.enable.next = true;
@@ -79,5 +93,6 @@ fn test_mig() {
         sim_assert!(sim, !x.p0_wr.error.val(), x);
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 10000, &vcd_path!("mig_basic.vcd")).unwrap();
+    sim.run_to_file(Box::new(uut), 10000, &vcd_path!("mig_basic.vcd"))
+        .unwrap();
 }

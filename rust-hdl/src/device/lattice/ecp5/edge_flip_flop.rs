@@ -14,12 +14,18 @@ OFS1P3DX inst_OFS1P3DX(.SCLK(clk), .SP(1), .D(d), .Q(q), .CD(0));
 }
 
 fn wrapper_multiple(count: usize) -> String {
-    (0..count).map(|x|
-        format!("
-OFS1P3DX ofs_{x}(.SCLK(clk), .SP(1), .D(d[{x}]), .Q(d[{x}]), .CD(0));
-", x=x)).collect::<Vec<_>>().join("\n")
+    (0..count)
+        .map(|x| {
+            format!(
+                "
+OFS1P3DX ofs_{x}(.SCLK(clk), .SP(1), .D(d[{x}]), .Q(q[{x}]), .CD(0));
+",
+                x = x
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
-
 
 impl<T: Synth> Logic for EdgeFlipFlop<T> {
     fn update(&mut self) {
@@ -41,7 +47,8 @@ impl<T: Synth> Logic for EdgeFlipFlop<T> {
 (* blackbox *)
 module OFS1P3DX(input D, input SP, input SCLK, input CD, output Q);
 endmodule
-            "##.into(),
+            "##
+            .into(),
         })
     }
 }

@@ -1,14 +1,14 @@
 use crate::core::ast::{Verilog, VerilogLiteral};
 use crate::core::atom::AtomKind::{StubInputSignal, StubOutputSignal};
-use crate::core::atom::{Atom, AtomKind, is_atom_signed};
+use crate::core::atom::{is_atom_signed, Atom, AtomKind};
 use crate::core::block::Block;
+use crate::core::check_error::check_all;
 use crate::core::code_writer::CodeWriter;
 use crate::core::named_path::NamedPath;
 use crate::core::probe::Probe;
+use crate::core::type_descriptor::{TypeDescriptor, TypeKind};
 use crate::core::verilog_gen::verilog_combinatorial;
 use std::collections::BTreeMap;
-use crate::core::check_error::check_all;
-use crate::core::type_descriptor::{TypeDescriptor, TypeKind};
 
 #[derive(Clone, Debug, Default)]
 struct SubModuleInvocation {
@@ -106,7 +106,7 @@ impl ModuleDefines {
                     let def = EnumDefinition {
                         type_name: enum_name.clone(),
                         discriminant: label.into(),
-                        value: ndx
+                        value: ndx,
                     };
                     if !entry.enums.contains(&def) {
                         entry.enums.push(def);
@@ -197,13 +197,17 @@ impl ModuleDefines {
                 let module_name = k.0;
                 let module_details = k.1;
                 // Remap the output parameters to pass throughs (net type) in case we have a wrapper
-                let atoms_passthrough = &module_details.atoms.iter().map(|x| {
-                    let mut y = x.clone();
-                    if y.kind == AtomKind::OutputParameter {
-                        y.kind = AtomKind::OutputPassthrough;
-                    }
-                    y
-                }).collect::<Vec<_>>();
+                let atoms_passthrough = &module_details
+                    .atoms
+                    .iter()
+                    .map(|x| {
+                        let mut y = x.clone();
+                        if y.kind == AtomKind::OutputParameter {
+                            y.kind = AtomKind::OutputPassthrough;
+                        }
+                        y
+                    })
+                    .collect::<Vec<_>>();
                 let wrapper_mode = if let Verilog::Wrapper(_) = &module_details.code {
                     true
                 } else {

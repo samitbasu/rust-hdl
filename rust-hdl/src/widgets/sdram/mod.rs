@@ -1,13 +1,13 @@
+pub mod basic_controller;
+pub mod buffer;
 pub mod cmd;
 pub mod fifo_controller;
 pub mod timings;
-pub mod basic_controller;
-pub mod buffer;
 
 use crate::core::prelude::*;
 
 #[derive(LogicInterface, Clone, Debug, Default)]
-#[join="SDRAMDevice"]
+#[join = "SDRAMDevice"]
 pub struct SDRAMDriver<const D: usize> {
     pub clk: Signal<Out, Clock>,
     pub we_not: Signal<Out, Bit>,
@@ -21,7 +21,7 @@ pub struct SDRAMDriver<const D: usize> {
 }
 
 #[derive(LogicInterface, Clone, Debug, Default)]
-#[join="SDRAMDriver"]
+#[join = "SDRAMDriver"]
 pub struct SDRAMDevice<const D: usize> {
     pub clk: Signal<In, Clock>,
     pub we_not: Signal<In, Bit>,

@@ -7,7 +7,6 @@ pub struct EdgeDFF<T: Synth> {
     pub clk: Signal<In, Clock>,
 }
 
-
 impl<T: Synth> EdgeDFF<T> {
     pub fn new(init: T) -> EdgeDFF<T> {
         Self {

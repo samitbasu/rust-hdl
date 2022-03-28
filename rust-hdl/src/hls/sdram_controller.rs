@@ -1,18 +1,16 @@
 use crate::core::prelude::*;
 use crate::hls::bridge::Bridge;
 use crate::hls::bus::{SoCBusResponder, SoCPortController};
-use crate::hls::HLSNamedPorts;
 use crate::hls::miso_wide_port::MISOWidePort;
 use crate::hls::prelude::{MOSIPort, MOSIWidePort};
+use crate::hls::HLSNamedPorts;
 use crate::widgets::prelude::*;
-use crate::widgets::sdram::basic_controller::{OutputBuffer, SDRAMBaseController};
-use crate::widgets::sdram::SDRAMDriver;
-
 
 #[derive(LogicBlock)]
 pub struct SDRAMController<const R: usize, const C: usize> {
     pub dram: SDRAMDriver<16>,
     pub upstream: SoCBusResponder<16, 8>,
+    pub write_enable: Signal<Out, Bit>,
     local_bridge: Bridge<16, 8, 4>,
     data_in: MOSIWidePort<64, 16>,
     address: MOSIWidePort<32, 16>,
@@ -22,10 +20,15 @@ pub struct SDRAMController<const R: usize, const C: usize> {
 }
 
 impl<const R: usize, const C: usize> SDRAMController<R, C> {
-    pub fn new(cas_delay: u32, timings: MemoryTimings, buffer: OutputBuffer) -> SDRAMController<R, C> {
+    pub fn new(
+        cas_delay: u32,
+        timings: MemoryTimings,
+        buffer: OutputBuffer,
+    ) -> SDRAMController<R, C> {
         Self {
             dram: Default::default(),
             upstream: Default::default(),
+            write_enable: Default::default(),
             local_bridge: Bridge::new(["data_in", "address", "cmd", "data_out"]),
             data_in: Default::default(),
             address: Default::default(),
@@ -59,12 +62,14 @@ impl<const R: usize, const C: usize> Logic for SDRAMController<R, C> {
         self.controller.write_not_read.next = self.cmd.port_out.val().any();
         self.controller.cmd_strobe.next = self.cmd.strobe_out.val();
         self.cmd.ready.next = !self.controller.busy.val();
+        self.write_enable.next = self.controller.write_enable.val();
     }
 }
 
 #[test]
 fn test_sdram_controller_synthesizes() {
-    let mut uut = SDRAMController::<5, 5>::new(3, MemoryTimings::fast_boot_sim(100e6), OutputBuffer::Wired);
+    let mut uut =
+        SDRAMController::<5, 5>::new(3, MemoryTimings::fast_boot_sim(100e6), OutputBuffer::Wired);
     uut.dram.read_data.connect();
     uut.upstream.link_connect_dest();
     uut.connect_all();

@@ -37,7 +37,7 @@ impl<const N: usize> Synth for Bits<N> {
     fn descriptor() -> TypeDescriptor {
         TypeDescriptor {
             name: format!("Bits::<{}>", Self::BITS),
-            kind: TypeKind::Bits(Self::BITS)
+            kind: TypeKind::Bits(Self::BITS),
         }
     }
 
@@ -56,7 +56,7 @@ impl Synth for Bit {
     fn descriptor() -> TypeDescriptor {
         TypeDescriptor {
             name: "Bit".to_string(),
-            kind: TypeKind::Bits(1)
+            kind: TypeKind::Bits(1),
         }
     }
 
@@ -79,7 +79,7 @@ impl Synth for Clock {
     fn descriptor() -> TypeDescriptor {
         TypeDescriptor {
             name: "clock".to_string(),
-            kind: TypeKind::Bits(1)
+            kind: TypeKind::Bits(1),
         }
     }
 

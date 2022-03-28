@@ -1,11 +1,11 @@
-use crate::core::atom::{Atom};
+use crate::core::atom::Atom;
 use crate::core::block::Block;
+use crate::core::prelude::TypeKind;
 use crate::core::probe::Probe;
 use crate::core::synth::VCDValue;
+use crate::core::type_descriptor::TypeDescriptor;
 use std::collections::HashMap;
 use std::io::Write;
-use crate::core::prelude::TypeKind;
-use crate::core::type_descriptor::TypeDescriptor;
 
 #[derive(Clone, Debug)]
 enum VCDIDCode {
@@ -35,14 +35,16 @@ impl<W: Write> VCDProbe<W> {
 
 struct VCDHeader<W: Write>(VCDProbe<W>);
 
-fn register_signal<W: Write>(name: &str, descriptor: &TypeDescriptor, vcd: &mut vcd::Writer<W>) -> VCDIDCode {
+fn register_signal<W: Write>(
+    name: &str,
+    descriptor: &TypeDescriptor,
+    vcd: &mut vcd::Writer<W>,
+) -> VCDIDCode {
     match &descriptor.kind {
         TypeKind::Bits(width) | TypeKind::Signed(width) => {
             VCDIDCode::Singleton(vcd.add_wire(*width as u32, name).unwrap())
         }
-        TypeKind::Enum(_) => {
-            VCDIDCode::Singleton(vcd.add_wire(0, name).unwrap())
-        }
+        TypeKind::Enum(_) => VCDIDCode::Singleton(vcd.add_wire(0, name).unwrap()),
         TypeKind::Composite(k) => {
             let mut ret = vec![];
             for field in k {
@@ -65,9 +67,10 @@ impl<W: Write> Probe for VCDHeader<W> {
     }
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
-        self.0.id_map.insert(signal.id(),
-                             register_signal(name, &signal.descriptor(),
-                                             &mut self.0.vcd));
+        self.0.id_map.insert(
+            signal.id(),
+            register_signal(name, &signal.descriptor(), &mut self.0.vcd),
+        );
     }
 
     fn visit_end_namespace(&mut self, _name: &str, _node: &dyn Block) {
@@ -92,7 +95,13 @@ struct VCDChange<W: Write>(VCDProbe<W>);
 impl<W: Write> Probe for VCDChange<W> {
     fn visit_atom(&mut self, _name: &str, signal: &dyn Atom) {
         if let Some(idc) = self.0.id_map.get(&signal.id()) {
-            do_vcd_change(&mut self.0.val_map, &mut self.0.vcd, idc, &signal.vcd(), false);
+            do_vcd_change(
+                &mut self.0.val_map,
+                &mut self.0.vcd,
+                idc,
+                &signal.vcd(),
+                false,
+            );
         }
     }
 }
@@ -108,12 +117,24 @@ struct VCDDump<W: Write>(VCDProbe<W>);
 impl<W: Write> Probe for VCDDump<W> {
     fn visit_atom(&mut self, _name: &str, signal: &dyn Atom) {
         if let Some(idc) = &self.0.id_map.get(&signal.id()) {
-            do_vcd_change(&mut self.0.val_map, &mut self.0.vcd, idc, &signal.vcd(), true);
+            do_vcd_change(
+                &mut self.0.val_map,
+                &mut self.0.vcd,
+                idc,
+                &signal.vcd(),
+                true,
+            );
         }
     }
 }
 
-fn do_vcd_change<W: Write>(val_map: &mut HashMap<vcd::IdCode, VCDValue>, vcd: &mut vcd::Writer<W>, idc: &VCDIDCode, val: &VCDValue, dump: bool) {
+fn do_vcd_change<W: Write>(
+    val_map: &mut HashMap<vcd::IdCode, VCDValue>,
+    vcd: &mut vcd::Writer<W>,
+    idc: &VCDIDCode,
+    val: &VCDValue,
+    dump: bool,
+) {
     match idc {
         VCDIDCode::Singleton(idc) => {
             if !dump {
@@ -143,23 +164,23 @@ fn do_vcd_change<W: Write>(val_map: &mut HashMap<vcd::IdCode, VCDValue>, vcd: &m
                 }
             }
         }
-        VCDIDCode::Composite(idcs) => {
-            match val {
-                VCDValue::Composite(vals) => {
-                    assert_eq!(idcs.len(), vals.len(), "Mismatch in values versus type information");
-                    for n in 0..idcs.len() {
-                        do_vcd_change(val_map, vcd, &idcs[n], &vals[n], dump);
-                    }
-                }
-                _ => {
-                    panic!("Scalar data received for composite type");
+        VCDIDCode::Composite(idcs) => match val {
+            VCDValue::Composite(vals) => {
+                assert_eq!(
+                    idcs.len(),
+                    vals.len(),
+                    "Mismatch in values versus type information"
+                );
+                for n in 0..idcs.len() {
+                    do_vcd_change(val_map, vcd, &idcs[n], &vals[n], dump);
                 }
             }
-        }
+            _ => {
+                panic!("Scalar data received for composite type");
+            }
+        },
     }
-
 }
-
 
 pub fn write_vcd_dump<W: Write>(vcd: VCDProbe<W>, uut: &dyn Block) -> VCDProbe<W> {
     let mut visitor = VCDDump(vcd);

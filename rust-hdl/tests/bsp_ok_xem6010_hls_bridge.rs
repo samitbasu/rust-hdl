@@ -1,8 +1,6 @@
 mod test_common;
 
 #[cfg(feature = "frontpanel")]
-use rust_hdl_ok_frontpanel_sys::OkError;
-#[cfg(feature = "frontpanel")]
 use crate::test_common::tools::ok_test_prelude;
 #[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_core::ok_hls_bridge::{
@@ -14,6 +12,8 @@ use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::widgets::prelude::*;
+#[cfg(feature = "frontpanel")]
+use rust_hdl_ok_frontpanel_sys::OkError;
 
 #[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
@@ -97,7 +97,7 @@ fn test_ok_hls_bridge_test_synth() {
 }
 
 #[cfg(feature = "frontpanel")]
-fn test_ok_hls_runtime(bit_name: &str) -> Result<(), OkError>{
+fn test_ok_hls_runtime(bit_name: &str) -> Result<(), OkError> {
     use std::time::Instant;
     let hnd = ok_test_prelude(bit_name)?;
     let config = OKHLSBridgeAddressConfig::default();

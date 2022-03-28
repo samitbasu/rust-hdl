@@ -317,7 +317,8 @@ fn test_local_logic() {
         sim_assert!(sim, x.local.val() == 2_usize, x);
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 100, &vcd_path!("even_odd_test.vcd")).unwrap()
+    sim.run_to_file(Box::new(uut), 100, &vcd_path!("even_odd_test.vcd"))
+        .unwrap()
 }
 
 #[test]
@@ -345,7 +346,10 @@ fn test_local_logic_loop_detection() {
     uut.connect_all();
     let e = check_all(&uut).expect_err("Loop should have been found");
     if let CheckError::LogicLoops(m) = e {
-        assert!(m.contains(&LogicLoop{path: "uut".to_string(), name: "foo".to_string()}))
+        assert!(m.contains(&LogicLoop {
+            path: "uut".to_string(),
+            name: "foo".to_string()
+        }))
     } else {
         panic!("Error mismatch on loop detector")
     }

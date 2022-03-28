@@ -20,7 +20,7 @@ impl MuxedMAX31856Simulators {
             mux: Default::default(),
             addr: Default::default(),
             clock: Default::default(),
-            adcs: (0..8).map(|_| MAX31856Simulator::new(config)).collect()
+            adcs: (0..8).map(|_| MAX31856Simulator::new(config)).collect(),
         }
     }
 }

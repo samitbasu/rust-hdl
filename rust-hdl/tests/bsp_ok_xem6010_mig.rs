@@ -1,6 +1,6 @@
 use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::bsp::ok_xem6010::mcb_if::MCBInterface1GDDR2;
-use rust_hdl::bsp::ok_xem6010::mig::{MemoryInterfaceGenerator, MIGInstruction};
+use rust_hdl::bsp::ok_xem6010::mig::{MIGInstruction, MemoryInterfaceGenerator};
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;

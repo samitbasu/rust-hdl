@@ -1,3 +1,4 @@
+use crate::core::check_error::check_all;
 use crate::core::prelude::*;
 use crate::toolchain::icestorm::generate_pcf;
 use std::fs::{create_dir_all, remove_dir_all, File};
@@ -5,7 +6,6 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Output};
 use std::str::FromStr;
-use crate::core::check_error::check_all;
 
 fn save_stdout(output: Output, dir: &PathBuf, basename: &str) -> Result<(), std::io::Error> {
     let stdout = String::from_utf8(output.stdout).unwrap();

@@ -25,7 +25,7 @@ impl<const A: usize> Host<A> {
         Self {
             bus_to_controller: CrossWiden::new(order),
             controller_to_bus: CrossNarrow::new(order),
-            .. Default::default()
+            ..Default::default()
         }
     }
 }

@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use crate::core::ast::{Verilog, VerilogExpression};
 use crate::core::atom::{Atom, AtomKind};
 use crate::core::block::Block;
@@ -6,6 +5,7 @@ use crate::core::check_error::{CheckError, LogicLoop, LoopMap};
 use crate::core::named_path::NamedPath;
 use crate::core::probe::Probe;
 use crate::core::verilog_visitor::VerilogVisitor;
+use std::collections::HashSet;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum Mode {
@@ -31,7 +31,13 @@ impl Default for VerilogLogicLoopDetector {
 }
 
 impl VerilogVisitor for VerilogLogicLoopDetector {
-    fn visit_slice_assignment(&mut self, base: &VerilogExpression, _width: &usize, offset: &VerilogExpression, replacement: &VerilogExpression) {
+    fn visit_slice_assignment(
+        &mut self,
+        base: &VerilogExpression,
+        _width: &usize,
+        offset: &VerilogExpression,
+        replacement: &VerilogExpression,
+    ) {
         let current_mode = self.mode;
         self.mode = Mode::Read;
         self.visit_expression(offset);
@@ -44,13 +50,13 @@ impl VerilogVisitor for VerilogLogicLoopDetector {
     fn visit_signal(&mut self, c: &str) {
         let myname = c.replace("$next", "");
         match self.mode {
-            Mode::Ignore => {},
+            Mode::Ignore => {}
             Mode::Write => {
                 self.local_vars_written.insert(myname);
-            },
+            }
             Mode::Read => {
                 if !self.local_vars_written.contains(&myname) {
-                    self.violations.push(myname );
+                    self.violations.push(myname);
                 }
             }
         }
@@ -77,7 +83,7 @@ fn get_logic_loop_candidates(uut: &dyn Block) -> Vec<String> {
                 det.violations
             }
         }
-        _ => vec![]
+        _ => vec![],
     }
 }
 
@@ -132,7 +138,6 @@ impl Probe for LocalVars {
         self.names.pop();
     }
 }
-
 
 pub fn check_logic_loops(uut: &dyn Block) -> Result<(), CheckError> {
     let mut visitor = LocalVars::default();

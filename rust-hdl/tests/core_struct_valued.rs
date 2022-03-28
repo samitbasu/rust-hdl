@@ -1,7 +1,6 @@
 use rand::Rng;
 use rust_hdl::core::prelude::*;
 
-
 // Create a test struxt
 #[derive(Clone, Copy, Debug, PartialEq, LogicState)]
 enum MIGCommand {
@@ -74,14 +73,18 @@ fn test_mig_tester_vcd() {
         sim_assert!(sim, x.cmd_out.val().byte_address == 142_usize, x);
         sim_assert!(sim, x.cmd_out.val().burst_length == 42_usize, x);
         x = sim.wait(10, x)?;
-        sim_assert!(sim, x.cmd_out.val().instruction == MIGCommand::WritePrechage, x);
+        sim_assert!(
+            sim,
+            x.cmd_out.val().instruction == MIGCommand::WritePrechage,
+            x
+        );
         sim_assert!(sim, x.cmd_out.val().byte_address == 14_usize, x);
         sim_assert!(sim, x.cmd_out.val().burst_length == 13_usize, x);
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 1000, "mig_test.vcd").unwrap();
+    sim.run_to_file(Box::new(uut), 1000, "mig_test.vcd")
+        .unwrap();
 }
-
 
 #[test]
 fn test_mig_tester_synthesizes() {
@@ -103,7 +106,7 @@ fn test_struct_pack() {
             3 => MIGCommand::ReadPrecharge,
             4 => MIGCommand::WritePrechage,
             5 => MIGCommand::Refresh,
-            _ => panic!("Unexpected random enum value")
+            _ => panic!("Unexpected random enum value"),
         };
         let burst_length = Bits::<6>::from(rand::thread_rng().gen::<u8>());
         let byte_address = Bits::<30>::from(rand::thread_rng().gen::<u32>());
@@ -112,13 +115,12 @@ fn test_struct_pack() {
             burst_length,
             byte_address,
         };
-        let y : Bits::<{MIGStruct::BITS}> = x.into();
+        let y: Bits<{ MIGStruct::BITS }> = x.into();
         let recon_byte_address = y.get_bits::<30>(x.get_my_offset_byte_address());
         let recon_burst_length = y.get_bits::<6>(x.get_my_offset_burst_length());
-        let recon_opcode = y.get_bits::<{MIGCommand::BITS}>(x.get_my_offset_instruction());
+        let recon_opcode = y.get_bits::<{ MIGCommand::BITS }>(x.get_my_offset_instruction());
         assert_eq!(recon_burst_length, burst_length);
         assert_eq!(recon_opcode, bits(opcode as u128));
         assert_eq!(recon_byte_address, byte_address);
     }
 }
-

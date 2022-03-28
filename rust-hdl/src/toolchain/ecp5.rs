@@ -1,7 +1,7 @@
 // Covers the ECP5 via nextpnr, not via Diamond
-use std::collections::HashMap;
 use crate::core::prelude::*;
 use crate::toolchain::map_signal_type_to_lattice_string;
+use std::collections::HashMap;
 
 #[derive(Default)]
 struct PCFGenerator {
@@ -36,16 +36,22 @@ impl Probe for PCFGenerator {
             };
             match &pin.constraint {
                 Constraint::Location(l) => {
-                    self.pcf.push(format!("LOCATE COMP \"{}\" SITE \"{}\"", prefix, l));
+                    self.pcf
+                        .push(format!("LOCATE COMP \"{}\" SITE \"{}\"", prefix, l));
                 }
                 Constraint::Kind(k) => {
                     let name = map_signal_type_to_lattice_string(k);
-                    self.pcf.push(format!("IOBUF PORT \"{}\" IO_TYPE={}", prefix, name))
+                    self.pcf
+                        .push(format!("IOBUF PORT \"{}\" IO_TYPE={}", prefix, name))
                 }
                 Constraint::Timing(t) => {
                     let timing = match t {
                         Timing::Periodic(p) => {
-                            format!("FREQUENCY PORT \"{prefix}\" {freq} MHz", prefix=prefix, freq = 1000.0/p.period_nanoseconds)
+                            format!(
+                                "FREQUENCY PORT \"{prefix}\" {freq} MHz",
+                                prefix = prefix,
+                                freq = 1000.0 / p.period_nanoseconds
+                            )
                         }
                         Timing::Custom(c) => c.to_string(),
                         _ => unimplemented!("Unknown timing constraint for ECP5 generation"),
@@ -60,7 +66,8 @@ impl Probe for PCFGenerator {
                         SlewType::Fast => "FAST",
                         SlewType::Normal => "SLOW",
                     };
-                    self.pcf.push(format!("IOBUF PORT \"{}\" SLEWRATE={}", prefix, tag));
+                    self.pcf
+                        .push(format!("IOBUF PORT \"{}\" SLEWRATE={}", prefix, tag));
                 }
             }
         }

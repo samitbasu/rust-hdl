@@ -3,11 +3,11 @@ use crossbeam::channel::{RecvError, SendError};
 
 use crate::core::block::Block;
 use crate::core::check_connected::check_connected;
+use crate::core::check_error::CheckError;
+use crate::core::check_logic_loops::check_logic_loops;
 use crate::core::vcd_probe::{write_vcd_change, write_vcd_dump, write_vcd_header};
 use std::io::Write;
 use std::thread::JoinHandle;
-use crate::core::check_error::CheckError;
-use crate::core::check_logic_loops::check_logic_loops;
 
 pub fn simulate<B: Block>(uut: &mut B, max_iters: usize) -> bool {
     for _ in 0..max_iters {
@@ -104,8 +104,8 @@ impl<T: Send + 'static + Block> Simulation<T> {
         }
     }
     pub fn add_clock<F>(&mut self, interval: u64, clock_fn: F)
-        where
-            F: Fn(&mut Box<T>) -> () + Send + 'static,
+    where
+        F: Fn(&mut Box<T>) -> () + Send + 'static,
     {
         self.add_testbench(move |mut ep: Sim<T>| {
             let mut x = ep.init()?;
@@ -116,8 +116,8 @@ impl<T: Send + 'static + Block> Simulation<T> {
         });
     }
     pub fn add_phased_clock<F>(&mut self, interval: u64, phase_delay: u64, clock_fn: F)
-        where
-            F: Fn(&mut Box<T>) -> () + Send + 'static,
+    where
+        F: Fn(&mut Box<T>) -> () + Send + 'static,
     {
         self.add_testbench(move |mut ep: Sim<T>| {
             let mut x = ep.init()?;
@@ -421,8 +421,14 @@ macro_rules! sim_assert {
 macro_rules! sim_assert_eq {
     ($sim: ident, $lhs: expr, $rhs: expr, $circuit: ident) => {
         if !($lhs == $rhs) {
-            println!("HALT {} != {},  {:?} != {:?}", stringify!($lhs), stringify!($rhs), $lhs, $rhs);
+            println!(
+                "HALT {} != {},  {:?} != {:?}",
+                stringify!($lhs),
+                stringify!($rhs),
+                $lhs,
+                $rhs
+            );
             return $sim.halt($circuit);
         }
-    }
+    };
 }

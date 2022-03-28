@@ -1,6 +1,6 @@
-use crate::bsp::ok_xem6010::mig::MIGInstruction;
 use super::mcb_if::MCBInterface1GDDR2;
 use super::mig::MemoryInterfaceGenerator;
+use crate::bsp::ok_xem6010::mig::MIGInstruction;
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
 
@@ -164,7 +164,8 @@ impl Logic for DDRFIFO {
             }
             DDRFIFOState::WriteComplete => {
                 self.mig.p0_cmd.cmd.next.instruction = MIGInstruction::Write;
-                self.mig.p0_cmd.cmd.next.byte_address = bit_cast::<30, 27>(self.write_address.q.val());
+                self.mig.p0_cmd.cmd.next.byte_address =
+                    bit_cast::<30, 27>(self.write_address.q.val());
                 self.mig.p0_cmd.enable.next = true;
                 self.state.d.next = DDRFIFOState::UpdateWriteAddress;
             }

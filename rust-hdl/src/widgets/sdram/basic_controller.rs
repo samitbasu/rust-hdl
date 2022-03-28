@@ -34,12 +34,7 @@ enum State {
 //  D - Data bus width
 //  L - Line width (multiple of D)
 #[derive(LogicBlock)]
-pub struct SDRAMBaseController<
-    const R: usize,
-    const C: usize,
-    const L: usize,
-    const D: usize,
-> {
+pub struct SDRAMBaseController<const R: usize, const C: usize, const L: usize, const D: usize> {
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
     pub write_enable: Signal<Out, Bit>,
@@ -54,22 +49,22 @@ pub struct SDRAMBaseController<
     pub error: Signal<Out, Bit>,
     cmd: Signal<Local, SDRAMCommand>,
     encode: SDRAMCommandEncoder,
-    boot_delay: Constant<Bits<32>>,
-    t_rp: Constant<Bits<32>>,
-    t_rfc: Constant<Bits<32>>,
-    t_refresh_max: Constant<Bits<32>>,
-    t_rcd: Constant<Bits<32>>,
-    t_wr: Constant<Bits<32>>,
-    max_transfer_size: Constant<Bits<8>>,
+    boot_delay: Constant<Bits<16>>,
+    t_rp: Constant<Bits<16>>,
+    t_rfc: Constant<Bits<16>>,
+    t_refresh_max: Constant<Bits<16>>,
+    t_rcd: Constant<Bits<16>>,
+    t_wr: Constant<Bits<16>>,
+    max_transfer_size: Constant<Bits<4>>,
     mode_register: Constant<Bits<13>>,
     cas_delay: Constant<Bits<3>>,
     state: DFF<State>,
     reg_data_write: DFF<Bits<L>>,
     reg_data_read: DFF<Bits<L>>,
     reg_address: DFF<Bits<32>>,
-    delay_counter: DFF<Bits<32>>,
-    refresh_counter: DFF<Bits<32>>,
-    transfer_counter: DFF<Bits<8>>,
+    delay_counter: DFF<Bits<16>>,
+    refresh_counter: DFF<Bits<16>>,
+    transfer_counter: DFF<Bits<4>>,
     read_valid: DelayLine<Bit, 8, 3>,
     addr_bank: Signal<Local, Bits<2>>,
     addr_row: Signal<Local, Bits<13>>,
@@ -77,24 +72,31 @@ pub struct SDRAMBaseController<
     write_pending: DFF<Bit>,
     read_pending: DFF<Bit>,
     read_ready: DFF<Bit>,
+    refresh_needed: DFF<Bit>,
     row_bits: Constant<Bits<32>>,
     col_bits: Constant<Bits<32>>,
     data_bits: Constant<Bits<L>>,
     data_shift_in: Constant<Bits<L>>,
-    data_out_counter: DFF<Bits<8>>,
+    data_out_counter: DFF<Bits<4>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum OutputBuffer {
     Wired,
-    Registered,
+    DelayOne,
+    DelayTwo,
 }
 
 impl<const R: usize, const C: usize, const L: usize, const D: usize>
-SDRAMBaseController<R, C, L, D>
+    SDRAMBaseController<R, C, L, D>
 {
-    pub fn new(cas_delay: u32, timings: MemoryTimings, buffer: OutputBuffer) -> SDRAMBaseController<R, C, L, D> {
+    pub fn new(
+        cas_delay: u32,
+        timings: MemoryTimings,
+        buffer: OutputBuffer,
+    ) -> SDRAMBaseController<R, C, L, D> {
         assert_eq!(L % D, 0);
+        assert!(L / D <= 8);
         // mode register definitions
         // A2:A0 are the burst length, this design does not use burst transfers
         // so A2:A0 are 0
@@ -121,18 +123,21 @@ SDRAMBaseController<R, C, L, D>
             t_refresh_max: Constant::new((timings.t_refresh_max() * 9 / 10).into()),
             t_rcd: Constant::new((timings.t_rcd()).into()),
             t_wr: Constant::new((timings.t_wr()).into()),
-            max_transfer_size: Constant::new({L/D}.into()),
+            max_transfer_size: Constant::new({ L / D }.into()),
             mode_register: Constant::new(mode_register.into()),
-/*
- * For a registered buffer, we need to add 2 cycles to the cas delay
- * - we add 1 on the send side because we add 1 on the send side and
- *   1 on the receive side
- */
+            /*
+             * For a registered buffer, we need to add 2 cycles to the cas delay
+             * - we add 1 on the send side because we add 1 on the send side and
+             *   1 on the receive side
+             */
             cas_delay: Constant::new(
                 match buffer {
                     OutputBuffer::Wired => cas_delay,
-                    OutputBuffer::Registered => cas_delay + 2,
-                }.into()),
+                    OutputBuffer::DelayOne => cas_delay + 1,
+                    OutputBuffer::DelayTwo => cas_delay + 2,
+                }
+                .into(),
+            ),
             state: Default::default(),
             reg_data_write: Default::default(),
             reg_data_read: Default::default(),
@@ -148,18 +153,19 @@ SDRAMBaseController<R, C, L, D>
             row_bits: Constant::new(R.into()),
             col_bits: Constant::new(C.into()),
             data_bits: Constant::new(D.into()),
-            data_shift_in: Constant::new({L - D}.into()),
+            data_shift_in: Constant::new({ L - D }.into()),
             read_pending: Default::default(),
             data_out_counter: Default::default(),
             read_ready: Default::default(),
             encode: Default::default(),
-            write_enable: Default::default()
+            write_enable: Default::default(),
+            refresh_needed: Default::default(),
         }
     }
 }
 
 impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
-for SDRAMBaseController<R, C, L, D>
+    for SDRAMBaseController<R, C, L, D>
 {
     #[hdl_gen]
     fn update(&mut self) {
@@ -176,6 +182,7 @@ for SDRAMBaseController<R, C, L, D>
         self.read_pending.clk.next = self.clock.val();
         self.data_out_counter.clk.next = self.clock.val();
         self.read_ready.clk.next = self.clock.val();
+        self.refresh_needed.clk.next = self.clock.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
@@ -189,7 +196,9 @@ for SDRAMBaseController<R, C, L, D>
         self.reg_address.d.next = self.reg_address.q.val();
         self.write_pending.d.next = self.write_pending.q.val();
         self.read_pending.d.next = self.read_pending.q.val();
-        self.data_out_counter.d.next = self.data_out_counter.q.val() + self.read_valid.data_out.val();
+        self.refresh_needed.d.next = self.refresh_needed.q.val();
+        self.data_out_counter.d.next =
+            self.data_out_counter.q.val() + self.read_valid.data_out.val();
         self.data_valid.next = self.read_ready.q.val();
         self.write_enable.next = false;
         self.sdram.write_data.next = self.reg_data_write.q.val().get_bits::<D>(0_usize);
@@ -198,7 +207,8 @@ for SDRAMBaseController<R, C, L, D>
         // Calculate the read and write addresses
         self.addr_col.next = bit_cast::<13, C>(self.reg_address.q.val().get_bits::<C>(0_usize));
         self.addr_row.next = bit_cast::<13, R>(
-            self.reg_address.q
+            self.reg_address
+                .q
                 .val()
                 .get_bits::<R>(self.col_bits.val().index()),
         );
@@ -251,26 +261,26 @@ for SDRAMBaseController<R, C, L, D>
             State::Idle => {
                 self.delay_counter.d.next = 0_usize.into();
                 self.transfer_counter.d.next = 0_usize.into();
-                if self.refresh_counter.q.val() >= self.t_refresh_max.val() {
+                if self.refresh_needed.q.val() {
                     // Refresh takes the highest priority
                     self.cmd.next = SDRAMCommand::AutoRefresh;
                     self.state.d.next = State::Refresh;
                     self.refresh_counter.d.next = 0_usize.into();
-                } else {
-                    if self.read_pending.q.val() {
-                        self.cmd.next = SDRAMCommand::Active;
-                        self.sdram.bank.next = self.addr_bank.val();
-                        self.sdram.address.next = self.addr_row.val();
-                        self.state.d.next = State::ReadActivate;
-                        self.read_pending.d.next = false;
-                        self.data_out_counter.d.next = 0_u8.into();
-                    } else if self.write_pending.q.val() {
-                        self.cmd.next = SDRAMCommand::Active;
-                        self.sdram.bank.next = self.addr_bank.val();
-                        self.sdram.address.next = self.addr_row.val();
-                        self.state.d.next = State::WriteActivate;
-                        self.write_pending.d.next = false;
-                    }
+                    self.refresh_needed.d.next = false;
+                } else if self.read_pending.q.val() {
+                    self.cmd.next = SDRAMCommand::Active;
+                    self.sdram.bank.next = self.addr_bank.val();
+                    self.sdram.address.next = self.addr_row.val();
+                    self.state.d.next = State::ReadActivate;
+                    self.read_pending.d.next = false;
+                    self.data_out_counter.d.next = 0_u8.into();
+                } else if self.write_pending.q.val() {
+                    self.cmd.next = SDRAMCommand::Active;
+                    self.sdram.bank.next = self.addr_bank.val();
+                    self.sdram.address.next = self.addr_row.val();
+                    self.state.d.next = State::WriteActivate;
+                    self.write_pending.d.next = false;
+                    self.write_enable.next = true;
                 }
             }
             State::Refresh => {
@@ -285,19 +295,21 @@ for SDRAMBaseController<R, C, L, D>
                 }
             }
             State::WriteActivate => {
+                self.write_enable.next = true;
                 if self.delay_counter.q.val() == self.t_rcd.val() {
                     self.state.d.next = State::WriteCycle;
                     self.transfer_counter.d.next = 0_usize.into();
                 }
             }
             State::WriteCycle => {
+                self.write_enable.next = true;
                 if self.transfer_counter.q.val() < self.max_transfer_size.val() {
                     self.sdram.bank.next = self.addr_bank.val();
                     self.sdram.address.next = self.addr_col.val();
                     self.cmd.next = SDRAMCommand::Write;
-                    self.write_enable.next = true;
                     self.transfer_counter.d.next = self.transfer_counter.q.val() + 1_usize;
-                    self.reg_data_write.d.next = self.reg_data_write.q.val() >> self.data_bits.val();
+                    self.reg_data_write.d.next =
+                        self.reg_data_write.q.val() >> self.data_bits.val();
                     self.reg_address.d.next = self.reg_address.q.val() + 1_usize;
                 } else {
                     self.delay_counter.d.next = 0_usize.into();
@@ -305,6 +317,7 @@ for SDRAMBaseController<R, C, L, D>
                 }
             }
             State::Recovery => {
+                self.write_enable.next = true;
                 if self.delay_counter.q.val() == self.t_wr.val() {
                     self.cmd.next = SDRAMCommand::Precharge;
                     self.sdram.address.next = 0xFFFF_u32.into();
@@ -344,13 +357,17 @@ for SDRAMBaseController<R, C, L, D>
             }
         }
         if self.read_valid.data_out.val() {
-            self.reg_data_read.d.next =
-                bit_cast::<L, D>(self.sdram.read_data.val()) << self.data_shift_in.val() |
-                    (self.reg_data_read.q.val() >> self.data_bits.val());
+            self.reg_data_read.d.next = bit_cast::<L, D>(self.sdram.read_data.val())
+                << self.data_shift_in.val()
+                | (self.reg_data_read.q.val() >> self.data_bits.val());
         }
-        self.read_ready.d.next = !self.read_ready.q.val() & (self.data_out_counter.q.val() == self.max_transfer_size.val());
+        self.read_ready.d.next = !self.read_ready.q.val()
+            & (self.data_out_counter.q.val() == self.max_transfer_size.val());
         if self.read_ready.q.val() {
             self.data_out_counter.d.next = 0_usize.into();
+        }
+        if self.refresh_counter.q.val() >= self.t_refresh_max.val() {
+            self.refresh_needed.d.next = true;
         }
         // Connect up the command encoder
         self.sdram.cs_not.next = self.encode.cs_not.val();
@@ -376,6 +393,7 @@ impl Logic for TestSDRAMDevice {
         SDRAMDriver::<16>::join(&mut self.cntrl.sdram, &mut self.buffer.buf_in);
         SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.dram.sdram);
         self.cntrl.clock.next = self.clock.val();
+        self.buffer.buf_in_write_enable.next = self.cntrl.write_enable.val();
     }
 }
 
@@ -387,7 +405,7 @@ fn make_test_device() -> TestSDRAMDevice {
     let mut uut = TestSDRAMDevice {
         dram: SDRAMSimulator::new(timings),
         buffer: Default::default(),
-        cntrl: SDRAMBaseController::new(3, timings, OutputBuffer::Registered),
+        cntrl: SDRAMBaseController::new(3, timings, OutputBuffer::DelayOne),
         clock: Default::default(),
     };
     uut.clock.connect();
@@ -402,7 +420,7 @@ fn make_test_device() -> TestSDRAMDevice {
 #[cfg(test)]
 fn make_test_controller() -> SDRAMBaseController<5, 5, 64, 16> {
     let timings = MemoryTimings::fast_boot_sim(100e6);
-    let mut uut = SDRAMBaseController::new(3, timings, OutputBuffer::Registered);
+    let mut uut = SDRAMBaseController::new(3, timings, OutputBuffer::DelayOne);
     uut.cmd.connect();
     uut.cmd_strobe.connect();
     uut.cmd_address.connect();
@@ -458,26 +476,23 @@ macro_rules! sdram_basic_write {
         $uut.$cntrl.cmd_address.next = 0_usize.into();
         $uut.$cntrl.write_not_read.next = false;
         $uut.$cntrl.data_in.next = 0_usize.into();
-    }
+    };
 }
 
 #[macro_export]
 macro_rules! sdram_basic_read {
-    ($sim: ident, $uut: ident, $cntrl: ident, $addr: expr) => {
-        {
-            $uut = $sim.watch(|x| !x.$cntrl.busy.val(), $uut)?;
-            $uut.$cntrl.cmd_address.next = ($addr).into();
-            $uut.$cntrl.write_not_read.next = false;
-            $uut.$cntrl.cmd_strobe.next = true;
-            wait_clock_cycle!($sim, clock, $uut);
-            $uut.$cntrl.cmd_strobe.next = false;
-            $uut.$cntrl.cmd_address.next = 0_usize.into();
-            $uut = $sim.watch(|x| x.$cntrl.data_valid.val(), $uut)?;
-            $uut.$cntrl.data_out.val()
-        }
-    }
+    ($sim: ident, $uut: ident, $cntrl: ident, $addr: expr) => {{
+        $uut = $sim.watch(|x| !x.$cntrl.busy.val(), $uut)?;
+        $uut.$cntrl.cmd_address.next = ($addr).into();
+        $uut.$cntrl.write_not_read.next = false;
+        $uut.$cntrl.cmd_strobe.next = true;
+        wait_clock_cycle!($sim, clock, $uut);
+        $uut.$cntrl.cmd_strobe.next = false;
+        $uut.$cntrl.cmd_address.next = 0_usize.into();
+        $uut = $sim.watch(|x| x.$cntrl.data_valid.val(), $uut)?;
+        $uut.$cntrl.data_out.val()
+    }};
 }
-
 
 #[test]
 fn test_unit_writes() {
@@ -503,10 +518,10 @@ fn test_unit_writes() {
         let read = sdram_basic_read!(sim, x, cntrl, 4_usize);
         sim_assert_eq!(sim, read, 0x1234_ABCD_5678_EFFE_u64, x);
         for (ndx, val) in send.iter().enumerate() {
-            sdram_basic_write!(sim, x, cntrl, ndx*4+8, *val);
+            sdram_basic_write!(sim, x, cntrl, ndx * 4 + 8, *val);
         }
         for (ndx, val) in recv.iter().enumerate() {
-            let read = sdram_basic_read!(sim, x, cntrl, ndx*4+8);
+            let read = sdram_basic_read!(sim, x, cntrl, ndx * 4 + 8);
             sim_assert_eq!(sim, read, *val, x);
         }
         sim_assert!(sim, !x.dram.test_error.val(), x);

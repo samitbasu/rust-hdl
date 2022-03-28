@@ -11,6 +11,8 @@ pub enum SynthError {
     ImplicitlyDeclared(Vec<String>),
     DuplicateModule(Vec<String>),
     IOError(std::io::Error),
+    WireHasNoDriver(Vec<String>),
+    MissingModule(Vec<String>),
 }
 
 impl From<std::io::Error> for SynthError {
@@ -41,35 +43,45 @@ pub fn yosys_validate(prefix: &str, translation: &str) -> Result<(), SynthError>
         let mut dump = File::create(dir.join("yosys.v"))?;
         write!(dump, "{}", translation).unwrap();
     }
-    if stdout.contains("Re-definition of") {
-        let regex = regex::Regex::new(r#"Re-definition of module (\S*)"#).unwrap();
+    fn capture(stdout: &str, reg_exp: &str) -> Vec<String> {
+        let regex = regex::Regex::new(reg_exp).unwrap();
         let mut signal_name = vec![];
         if regex.is_match(&stdout) {
             for capture in regex.captures(&stdout).unwrap().iter() {
                 signal_name.push(capture.unwrap().as_str().to_string());
             }
         }
-        return Err(SynthError::DuplicateModule(signal_name));
+        signal_name
+    }
+    if stdout.contains("Re-definition of") {
+        return Err(SynthError::DuplicateModule(capture(
+            &stdout,
+            r#"Re-definition of module (\S*)"#,
+        )));
     }
     if stdout.contains("implicitly declared.") {
-        let regex = regex::Regex::new(r#"Identifier (\S*) is implicitly declared"#).unwrap();
-        let mut signal_name = vec![];
-        if regex.is_match(&stdout) {
-            for capture in regex.captures(&stdout).unwrap().iter() {
-                signal_name.push(capture.unwrap().as_str().to_string());
-            }
-        }
-        return Err(SynthError::ImplicitlyDeclared(signal_name));
+        return Err(SynthError::ImplicitlyDeclared(capture(
+            &stdout,
+            r#"Identifier (\S*) is implicitly declared"#,
+        )));
     }
     if stdout.contains("Latch inferred for") {
-        let regex = regex::Regex::new(r#"Latch inferred for signal (\S*)"#).unwrap();
-        let mut signal_name = vec![];
-        if regex.is_match(&stdout) {
-            for capture in regex.captures(&stdout).unwrap().iter() {
-                signal_name.push(capture.unwrap().as_str().to_string());
-            }
-        }
-        return Err(SynthError::LatchingWriteToSignal(signal_name));
+        return Err(SynthError::LatchingWriteToSignal(capture(
+            &stdout,
+            r#"Latch inferred for signal (\S*)"#,
+        )));
+    }
+    if stdout.contains("is used but has no driver") {
+        return Err(SynthError::WireHasNoDriver(capture(
+            &stdout,
+            r#"Wire (\S*) .*? is used but has no driver."#,
+        )));
+    }
+    if stderr.contains("is not part of the design") {
+        return Err(SynthError::MissingModule(capture(
+            &stderr,
+            r#"Module (\S*) .*? is not part of the design"#,
+        )));
     }
     if !stdout.contains("End of script.") {
         return Err(SynthError::SynthesisFailed { stdout, stderr });

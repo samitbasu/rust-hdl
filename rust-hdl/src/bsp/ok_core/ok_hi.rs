@@ -41,7 +41,7 @@ impl OpalKellyHostInterface {
                 });
             }
         }
-        let mut hi_out = Signal::<Out,_>::default();
+        let mut hi_out = Signal::<Out, _>::default();
         for (ndx, name) in ["Y19", "AA8"].iter().enumerate() {
             hi_out.add_location(ndx, name);
             hi_out.add_signal_type(ndx, SignalType::LowVoltageCMOS_3v3);
@@ -56,7 +56,7 @@ impl OpalKellyHostInterface {
                 })),
             })
         }
-        let mut hi_inout = Signal::<InOut,_>::default();
+        let mut hi_inout = Signal::<InOut, _>::default();
         for (ndx, name) in [
             "AB12", "AA12", "Y13", "AB18", "AA18", "V15", "AB2", "AA2", "Y7", "Y4", "W4", "AB6",
             "AA6", "U13", "U14", "AA20",
@@ -104,7 +104,7 @@ impl OpalKellyHostInterface {
     }
 
     pub fn xem_7010() -> OpalKellyHostInterface {
-        let mut hi_in = Signal::<In,_>::default();
+        let mut hi_in = Signal::<In, _>::default();
         for (ndx, name) in ["Y18", "V17", "AA19", "V20", "W17", "AB20", "V19", "AA18"]
             .iter()
             .enumerate()
@@ -145,7 +145,7 @@ impl OpalKellyHostInterface {
                 })
             }
         }
-        let mut hi_out = Signal::<Out,_>::default();
+        let mut hi_out = Signal::<Out, _>::default();
         for (ndx, name) in ["Y21", "U20"].iter().enumerate() {
             hi_out.add_location(ndx, name);
             hi_out.add_signal_type(ndx, SignalType::LowVoltageCMOS_3v3);
@@ -184,10 +184,10 @@ impl OpalKellyHostInterface {
                 })),
             });
         }
-        let mut hi_aa = Signal::<InOut,_>::default();
+        let mut hi_aa = Signal::<InOut, _>::default();
         hi_aa.add_location(0, "V22");
         hi_aa.add_signal_type(0, SignalType::LowVoltageCMOS_3v3);
-        let mut hi_mux = Signal::<Out,_>::default();
+        let mut hi_mux = Signal::<Out, _>::default();
         hi_mux.add_location(0, "P20");
         hi_mux.add_signal_type(0, SignalType::LowVoltageCMOS_3v3);
         Self {

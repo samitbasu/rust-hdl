@@ -170,9 +170,9 @@ fn test_sync_fifo_read_behavior_bug() {
         }
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 10_000, &vcd_path!("fifo_bug_test.vcd")).unwrap()
+    sim.run_to_file(Box::new(uut), 10_000, &vcd_path!("fifo_bug_test.vcd"))
+        .unwrap()
 }
-
 
 declare_sync_fifo!(BigFIFO, Bits<8>, 1024, 256);
 

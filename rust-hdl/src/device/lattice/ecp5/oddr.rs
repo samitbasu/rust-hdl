@@ -30,12 +30,14 @@ impl Logic for OutputDDR {
         Verilog::Wrapper(Wrapper {
             code: r##"
 ODDRX1F inst_ODDRX1F(.SCLK(clock), .RST(reset), .D0(d[0]), .D1(d[1]), .Q(q));
-            "##.into(),
+            "##
+            .into(),
             cores: r##"
 (* blackbox *)
 module ODDRX1F(input D0, input D1, input SCLK, input RST, output Q);
 endmodule
-            "##.into(),
+            "##
+            .into(),
         })
     }
 }

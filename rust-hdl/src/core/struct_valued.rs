@@ -1,4 +1,3 @@
-#[cfg(test)]
 use crate::core::prelude::*;
 
 // We want to be able to combine a set of signals into a struct
@@ -9,7 +8,6 @@ enum CmdType {
     Read,
     Write,
 }
-
 
 #[cfg(test)]
 #[derive(Copy, Clone, Default, Debug, PartialEq, Eq, LogicStruct)]
@@ -37,4 +35,50 @@ fn test_composite() {
         active: false,
         len: 30_usize.into(),
     };
+}
+
+#[derive(Clone, Debug, Default, Copy, PartialEq, LogicStruct)]
+struct CoreConfig {
+    pub foo: Bits<6>,
+    pub bar: Bits<32>,
+    pub baz: Bits<16>,
+}
+
+#[derive(LogicBlock)]
+struct TestBlock {
+    pub f: Signal<Out, Bits<6>>,
+    pub g: Signal<Out, Bits<32>>,
+    pub h: Signal<Out, Bits<16>>,
+    vals: Constant<CoreConfig>,
+}
+
+impl Logic for TestBlock {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.f.next = self.vals.val().foo;
+        self.g.next = self.vals.val().bar;
+        self.h.next = self.vals.val().baz;
+    }
+}
+
+impl Default for TestBlock {
+    fn default() -> Self {
+        Self {
+            f: Default::default(),
+            g: Default::default(),
+            h: Default::default(),
+            vals: Constant::new(CoreConfig {
+                foo: 7_u16.into(),
+                bar: 32_u32.into(),
+                baz: 8_u16.into(),
+            }),
+        }
+    }
+}
+
+#[test]
+fn test_test_block_synthesizes() {
+    let mut uut = TopWrap::new(TestBlock::default());
+    uut.connect_all();
+    println!("Vlog {}", generate_verilog(&uut));
 }

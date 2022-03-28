@@ -110,7 +110,9 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
             if self.cmd.val() == SDRAMCommand::AutoRefresh {
                 self.banks[i].select.next = true;
             }
-            if (self.cmd.val() == SDRAMCommand::Precharge) & self.sdram.address.val().get_bit(10_usize) {
+            if (self.cmd.val() == SDRAMCommand::Precharge)
+                & self.sdram.address.val().get_bit(10_usize)
+            {
                 self.banks[i].select.next = true;
             }
         }
@@ -120,7 +122,7 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
             | self.banks[3].busy.val();
         match self.state.q.val() {
             MasterState::Boot => {
-                if self.cmd.val() != SDRAMCommand::NOP {
+                if (self.cmd.val() != SDRAMCommand::NOP) & (self.counter.q.val().any()) {
                     self.state.d.next = MasterState::Error;
                 }
                 self.counter.d.next = self.counter.q.val() + 1_usize;
@@ -246,7 +248,7 @@ impl<const D: usize> SDRAMSimulator<D> {
             t_rrd: Constant::new(bank_bank_delay.into()),
             load_mode_timing: Constant::new((timings.load_mode_command_timing_clocks - 1).into()),
             banks_busy: Default::default(),
-            decode: Default::default()
+            decode: Default::default(),
         }
     }
 }
@@ -312,7 +314,7 @@ macro_rules! sdram_cmd {
                 $uut.sdram.we_not.next = false;
             }
         }
-    }
+    };
 }
 
 #[macro_export]

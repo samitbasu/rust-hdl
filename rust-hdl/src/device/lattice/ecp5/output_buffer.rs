@@ -17,12 +17,14 @@ impl Logic for OutputBuffer {
         Verilog::Wrapper(Wrapper {
             code: r##"
 OB inst_OB(.I(i), .O(o));
-            "##.into(),
+            "##
+            .into(),
             cores: r##"
 (* blackbox *)
 module OB(input I, output O);
 endmodule
-            "##.into()
+            "##
+            .into(),
         })
     }
 }

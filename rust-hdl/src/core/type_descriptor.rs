@@ -1,4 +1,3 @@
-
 #[derive(Clone, Debug)]
 pub struct TypeDescriptor {
     pub name: String,
@@ -18,5 +17,3 @@ pub enum TypeKind {
     Enum(Vec<String>),
     Composite(Vec<Box<TypeField>>),
 }
-
-

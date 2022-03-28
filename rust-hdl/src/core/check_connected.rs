@@ -21,7 +21,13 @@ impl Probe for CheckConnected {
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
         if !signal.connected() {
-            self.failures.insert(signal.id(), OpenConnection{ path: self.path.to_string(), name: name.to_string() });
+            self.failures.insert(
+                signal.id(),
+                OpenConnection {
+                    path: self.path.to_string(),
+                    name: name.to_string(),
+                },
+            );
         }
     }
 

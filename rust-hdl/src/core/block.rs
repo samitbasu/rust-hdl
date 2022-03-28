@@ -36,7 +36,6 @@ impl<B: Block> Block for Vec<B> {
             x.1.accept(&name, probe);
         }
     }
-
 }
 
 impl<B: Block, const P: usize> Block for [B; P] {

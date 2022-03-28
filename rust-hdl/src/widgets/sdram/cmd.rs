@@ -70,7 +70,6 @@ impl Logic for SDRAMCommandEncoder {
     }
 }
 
-
 #[derive(LogicBlock, Default)]
 pub struct SDRAMCommandDecoder {
     pub ras_not: Signal<In, Bit>,
@@ -106,4 +105,3 @@ impl Logic for SDRAMCommandDecoder {
         }
     }
 }
-

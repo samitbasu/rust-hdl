@@ -20,7 +20,10 @@ pub enum AtomKind {
 impl AtomKind {
     pub fn is_parameter(&self) -> bool {
         match self {
-            AtomKind::InputParameter | AtomKind::OutputParameter | AtomKind::InOutParameter | AtomKind::OutputPassthrough => true,
+            AtomKind::InputParameter
+            | AtomKind::OutputParameter
+            | AtomKind::InOutParameter
+            | AtomKind::OutputPassthrough => true,
             _ => false,
         }
     }
@@ -48,14 +51,14 @@ pub trait Atom {
 pub fn is_atom_an_enum(atom: &dyn Atom) -> bool {
     match atom.descriptor().kind {
         TypeKind::Enum(_) => true,
-        _ => false
+        _ => false,
     }
 }
 
 pub fn is_atom_signed(atom: &dyn Atom) -> bool {
     match atom.descriptor().kind {
         TypeKind::Signed(_) => true,
-        _ => false
+        _ => false,
     }
 }
 

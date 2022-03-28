@@ -99,7 +99,13 @@ pub trait VerilogVisitor {
         walk_slice(self, a, b, c);
     }
 
-    fn visit_slice_replace(&mut self, a: &VerilogExpression, b: &usize, c: &VerilogExpression, d: &VerilogExpression) {
+    fn visit_slice_replace(
+        &mut self,
+        a: &VerilogExpression,
+        b: &usize,
+        c: &VerilogExpression,
+        d: &VerilogExpression,
+    ) {
         walk_slice_replace(self, a, b, c, d);
     }
 
@@ -145,7 +151,6 @@ pub fn walk_slice_replace<V: VerilogVisitor + ?Sized>(
     visitor.visit_expression(c);
     visitor.visit_expression(d);
 }
-
 
 pub fn walk_index<V: VerilogVisitor + ?Sized>(
     visitor: &mut V,

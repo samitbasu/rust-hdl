@@ -53,8 +53,8 @@
 
 pub mod bsp;
 pub mod core;
+pub mod device;
 pub mod hls;
 pub mod sim;
 pub mod toolchain;
 pub mod widgets;
-pub mod device;

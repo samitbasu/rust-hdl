@@ -1,7 +1,7 @@
-use std::collections::{BTreeMap};
 use super::mcb_if::MCBInterface1GDDR2;
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
+use std::collections::BTreeMap;
 
 #[derive(LogicState, Copy, Clone, Debug, PartialEq)]
 pub enum MIGInstruction {
@@ -9,7 +9,7 @@ pub enum MIGInstruction {
     Read,
     WritePrecharge,
     ReadPrecharge,
-    Refresh
+    Refresh,
 }
 
 #[derive(LogicStruct, Copy, Clone, Debug, Default, PartialEq)]
@@ -219,13 +219,17 @@ impl Logic for MemoryInterfaceGenerator {
                         match self.cmd.val().instruction {
                             MIGInstruction::Write | MIGInstruction::WritePrecharge => {
                                 self.state.d.next = State::Writing;
-                                self.timer.d.next = bit_cast::<16, 6>(self.cmd.val().burst_len) + 1_usize;
-                                self.address.d.next = bit_cast::<32, 30>(self.cmd.val().byte_address) >> 2_usize;
+                                self.timer.d.next =
+                                    bit_cast::<16, 6>(self.cmd.val().burst_len) + 1_usize;
+                                self.address.d.next =
+                                    bit_cast::<32, 30>(self.cmd.val().byte_address) >> 2_usize;
                                 self.cmd_fifo.read.next = true;
                             }
                             MIGInstruction::Read | MIGInstruction::ReadPrecharge => {
-                                self.timer.d.next = bit_cast::<16, 6>(self.cmd.val().burst_len) + 1_usize;
-                                self.address.d.next = bit_cast::<32, 30>(self.cmd.val().byte_address) >> 2_usize;
+                                self.timer.d.next =
+                                    bit_cast::<16, 6>(self.cmd.val().burst_len) + 1_usize;
+                                self.address.d.next =
+                                    bit_cast::<32, 30>(self.cmd.val().byte_address) >> 2_usize;
                                 self.state.d.next = State::Reading;
                                 self.cmd_fifo.read.next = true;
                             }
@@ -238,7 +242,10 @@ impl Logic for MemoryInterfaceGenerator {
             }
             State::Reading => {
                 if self.timer.q.val().any() {
-                    self.read_fifo.data_in.next = *self._dram.get(&self.address.q.val()).unwrap_or(&Default::default());
+                    self.read_fifo.data_in.next = *self
+                        ._dram
+                        .get(&self.address.q.val())
+                        .unwrap_or(&Default::default());
                     self.read_fifo.write.next = true;
                     self.address.d.next = self.address.q.val() + 1_usize;
                 } else {
@@ -247,7 +254,8 @@ impl Logic for MemoryInterfaceGenerator {
             }
             State::Writing => {
                 if self.timer.q.val().any() {
-                    self._dram.insert(self.address.q.val(), self.write_fifo.data_out.val().data);
+                    self._dram
+                        .insert(self.address.q.val(), self.write_fifo.data_out.val().data);
                     self.write_fifo.read.next = true;
                     self.address.d.next = self.address.q.val() + 1_usize;
                 } else {
@@ -260,7 +268,6 @@ impl Logic for MemoryInterfaceGenerator {
             }
             State::Error => {}
         }
-
     }
     fn connect(&mut self) {
         self.calib_done.connect();
