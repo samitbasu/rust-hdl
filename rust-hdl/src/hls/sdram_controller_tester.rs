@@ -16,7 +16,6 @@ enum State {
 pub struct SDRAMControllerTester<const R: usize, const C: usize> {
     pub dram: SDRAMDriver<16>,
     pub upstream: SoCBusResponder<16, 8>,
-    pub write_enable: Signal<Out, Bit>,
     local_bridge: Bridge<16, 8, 5>,
     count: MOSIWidePort<32, 16>,
     cmd: MOSIPort<16>,
@@ -42,7 +41,6 @@ impl<const R: usize, const C: usize> SDRAMControllerTester<R, C> {
         Self {
             dram: Default::default(),
             upstream: Default::default(),
-            write_enable: Default::default(),
             local_bridge: Bridge::new(["count", "cmd", "errors", "valid", "write"]),
             count: Default::default(),
             cmd: Default::default(),
@@ -109,7 +107,6 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         self.controller.write_not_read.next = false;
         self.controller.cmd_strobe.next = false;
         self.entropy_funnel.read.next = false;
-        self.write_enable.next = self.controller.write_enable.val();
         self.output_funnel.data_in.next = self.controller.data_out.val();
         self.output_funnel.write.next = self.controller.data_valid.val();
         self.output_funnel.write_clock.next = self.upstream.clock.val();

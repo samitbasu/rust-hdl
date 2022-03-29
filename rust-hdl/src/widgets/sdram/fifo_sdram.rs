@@ -1,8 +1,10 @@
 use crate::core::prelude::*;
+#[cfg(test)]
 use crate::sim::sdr_sdram::chip::SDRAMSimulator;
 use crate::widgets::prelude::{
     MemoryTimings, OutputBuffer, SDRAMBaseController, SynchronousFIFO, DFF,
 };
+#[cfg(test)]
 use crate::widgets::sdram::buffer::SDRAMOnChipBuffer;
 use crate::widgets::sdram::SDRAMDriver;
 
@@ -23,7 +25,6 @@ pub struct SDRAMFIFOController<
 > {
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
-    pub write_enable: Signal<Out, Bit>,
     // FIFO interface
     pub data_in: Signal<In, Bits<L>>,
     pub write: Signal<In, Bit>,
@@ -66,7 +67,6 @@ impl<
         Self {
             clock: Default::default(),
             sdram: Default::default(),
-            write_enable: Default::default(),
             data_in: Default::default(),
             write: Default::default(),
             full: Default::default(),
@@ -106,7 +106,6 @@ impl<
     fn update(&mut self) {
         self.core.clock.next = self.clock.val();
         SDRAMDriver::<D>::link(&mut self.sdram, &mut self.core.sdram);
-        self.write_enable.next = self.core.write_enable.val();
         self.fill_level.clk.next = self.clock.val();
         self.fill_level.d.next = self.fill_level.q.val();
         self.read_pointer.clk.next = self.clock.val();
@@ -191,7 +190,6 @@ impl Logic for FIFOSDRAMTest {
         SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.buffer.buf_in);
         SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.dram.sdram);
         self.fifo.clock.next = self.clock.val();
-        self.buffer.buf_in_write_enable.next = self.fifo.write_enable.val();
     }
 }
 

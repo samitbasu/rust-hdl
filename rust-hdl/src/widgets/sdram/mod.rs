@@ -18,6 +18,7 @@ pub struct SDRAMDriver<const D: usize> {
     pub address: Signal<Out, Bits<13>>,
     pub write_data: Signal<Out, Bits<D>>,
     pub read_data: Signal<In, Bits<D>>,
+    pub write_enable: Signal<Out, Bit>,
 }
 
 #[derive(LogicInterface, Clone, Debug, Default)]
@@ -32,4 +33,5 @@ pub struct SDRAMDevice<const D: usize> {
     pub address: Signal<In, Bits<13>>,
     pub write_data: Signal<In, Bits<D>>,
     pub read_data: Signal<Out, Bits<D>>,
+    pub write_enable: Signal<In, Bit>,
 }

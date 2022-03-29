@@ -24,7 +24,6 @@ pub struct SDRAMSimulator<
     const D: usize, // Bits per word
 > {
     pub sdram: SDRAMDevice<D>,
-    pub write_enable: Signal<Out, Bit>,
     pub test_error: Signal<Out, Bit>,
     pub test_ready: Signal<Out, Bit>,
     decode: SDRAMCommandDecoder,
@@ -80,14 +79,16 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic for S
         self.test_error.next = false;
         self.test_ready.next = false;
         // Connect up the banks to the I/O buffer
-        self.write_enable.next = false;
         self.sdram.read_data.next = 0_usize.into();
         for i in 0..4 {
             self.banks[i].clock.next = self.clock.val();
-            self.banks[i].write_data.next = self.sdram.write_data.val();
+            if self.sdram.write_enable.val() {
+                self.banks[i].write_data.next = self.sdram.write_data.val();
+            } else {
+                self.banks[i].write_data.next = 0_usize.into();
+            }
             if self.banks[i].read_valid.val() {
                 self.sdram.read_data.next = self.banks[i].read_data.val();
-                self.write_enable.next = self.banks[i].read_valid.val();
             }
             self.banks[i].address.next = self.sdram.address.val();
             self.banks[i].cmd.next = self.cmd.val();
@@ -236,7 +237,6 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> SDRAMSimula
             clock: Default::default(),
             cmd: Signal::default(),
             sdram: Default::default(),
-            write_enable: Default::default(),
             test_error: Default::default(),
             test_ready: Default::default(),
             state: Default::default(),
@@ -338,6 +338,7 @@ macro_rules! sdram_write {
     ($sim: ident, $clock: ident, $uut: ident, $bank: expr, $addr: expr, $data: expr) => {
         sdram_cmd!($uut, SDRAMCommand::Write);
         $uut.sdram.bank.next = ($bank as u32).into();
+        $uut.sdram.write_enable.next = true;
         $uut.sdram.write_data.next = ($data[0] as u32).into();
         $uut.sdram.address.next = ($addr as u32).into();
         wait_clock_cycle!($sim, $clock, $uut);
@@ -347,6 +348,7 @@ macro_rules! sdram_write {
             $uut.sdram.address.next = 0_u32.into();
             wait_clock_cycle!($sim, $clock, $uut);
         }
+        $uut.sdram.write_enable.next = false;
     };
 }
 

@@ -386,7 +386,7 @@ fn test_i2c_controller_operation() {
         }
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 40_000_000_000, "i2c_controller.vcd")
+    sim.run_to_file(Box::new(uut), 60_000_000_000, "i2c_controller.vcd")
         .unwrap()
     //    sim.run(Box::new(uut), 40_000_000_000).unwrap()
 }

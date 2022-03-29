@@ -4,7 +4,6 @@ use crate::widgets::sdram::*;
 
 #[derive(LogicBlock, Clone)]
 pub struct SDRAMOnChipBuffer<const D: usize> {
-    pub buf_in_write_enable: Signal<In, Bit>,
     pub buf_in: SDRAMDevice<D>,
     pub buf_out: SDRAMDriver<D>,
     we_not_flop: DFF<Bit>,
@@ -20,7 +19,6 @@ pub struct SDRAMOnChipBuffer<const D: usize> {
 impl<const D: usize> Default for SDRAMOnChipBuffer<D> {
     fn default() -> Self {
         Self {
-            buf_in_write_enable: Default::default(),
             buf_in: Default::default(),
             buf_out: Default::default(),
             we_not_flop: DFF::new(true),
@@ -54,12 +52,9 @@ impl<const D: usize> Logic for SDRAMOnChipBuffer<D> {
         self.buf_out.cs_not.next = self.cs_not_flop.q.val();
         self.buf_out.bank.next = self.bank_flop.q.val();
         self.buf_out.address.next = self.address_flop.q.val();
-        if self.buf_in_write_enable.val() {
-            self.buf_out.write_data.next = self.write_flop.q.val();
-        } else {
-            self.buf_out.write_data.next = 0_u32.into();
-        }
+        self.buf_out.write_enable.next = self.buf_in.write_enable.val();
         self.buf_in.read_data.next = self.read_flop.q.val();
+        self.buf_out.write_data.next = self.write_flop.q.val();
         // Clock the flops
         self.we_not_flop.clk.next = self.buf_in.clk.val();
         self.cas_not_flop.clk.next = self.buf_in.clk.val();
@@ -79,7 +74,6 @@ fn test_buffer_synthesizes() {
     let mut uut = TopWrap::new(SDRAMOnChipBuffer::<16>::default());
     uut.uut.buf_in.link_connect_dest();
     uut.uut.buf_out.link_connect_dest();
-    uut.uut.buf_in_write_enable.connect();
     uut.connect_all();
     yosys_validate("sdram_buffer", &generate_verilog(&uut)).unwrap();
 }

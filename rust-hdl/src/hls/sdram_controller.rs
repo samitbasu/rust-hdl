@@ -10,7 +10,6 @@ use crate::widgets::prelude::*;
 pub struct SDRAMController<const R: usize, const C: usize> {
     pub dram: SDRAMDriver<16>,
     pub upstream: SoCBusResponder<16, 8>,
-    pub write_enable: Signal<Out, Bit>,
     local_bridge: Bridge<16, 8, 4>,
     data_in: MOSIWidePort<64, 16>,
     address: MOSIWidePort<32, 16>,
@@ -28,7 +27,6 @@ impl<const R: usize, const C: usize> SDRAMController<R, C> {
         Self {
             dram: Default::default(),
             upstream: Default::default(),
-            write_enable: Default::default(),
             local_bridge: Bridge::new(["data_in", "address", "cmd", "data_out"]),
             data_in: Default::default(),
             address: Default::default(),
@@ -62,7 +60,6 @@ impl<const R: usize, const C: usize> Logic for SDRAMController<R, C> {
         self.controller.write_not_read.next = self.cmd.port_out.val().any();
         self.controller.cmd_strobe.next = self.cmd.strobe_out.val();
         self.cmd.ready.next = !self.controller.busy.val();
-        self.write_enable.next = self.controller.write_enable.val();
     }
 }
 

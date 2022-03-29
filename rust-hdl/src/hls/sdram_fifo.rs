@@ -14,7 +14,6 @@ pub struct SDRAMFIFO<
 > {
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
-    pub write_enable: Signal<Out, Bit>,
     pub bus_write: FIFOWriteResponder<Bits<P>>,
     pub bus_read: FIFOReadResponder<Bits<P>>,
     controller: SDRAMFIFOController<R, C, P, D, A, AP1>,
@@ -35,7 +34,6 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize, const A: us
         self.controller.read.next = self.bus_read.read.val();
         self.controller.clock.next = self.clock.val();
         SDRAMDriver::<D>::link(&mut self.sdram, &mut self.controller.sdram);
-        self.write_enable.next = self.controller.write_enable.val();
     }
 }
 
@@ -44,7 +42,6 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize, const A: us
         Self {
             clock: Default::default(),
             sdram: Default::default(),
-            write_enable: Default::default(),
             bus_write: Default::default(),
             bus_read: Default::default(),
             controller: SDRAMFIFOController::new(cas_delay, timings, buffer),

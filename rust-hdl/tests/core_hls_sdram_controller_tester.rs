@@ -40,7 +40,6 @@ impl Logic for HostSDRAMControllerFixture {
         SoCBusController::<16, 8>::join(&mut self.host.bus, &mut self.core.upstream);
         SDRAMDriver::<16>::join(&mut self.core.dram, &mut self.buffer.buf_in);
         SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.chip.sdram);
-        self.buffer.buf_in_write_enable.next = self.core.write_enable.val();
     }
 }
 

@@ -37,7 +37,6 @@ enum State {
 pub struct SDRAMBaseController<const R: usize, const C: usize, const L: usize, const D: usize> {
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
-    pub write_enable: Signal<Out, Bit>,
     // Command interface
     pub data_in: Signal<In, Bits<L>>,
     pub write_not_read: Signal<In, Bit>,
@@ -159,7 +158,6 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
             data_out_counter: Default::default(),
             read_ready: Default::default(),
             encode: Default::default(),
-            write_enable: Default::default(),
             refresh_needed: Default::default(),
         }
     }
@@ -201,7 +199,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
         self.data_out_counter.d.next =
             self.data_out_counter.q.val() + self.read_valid.data_out.val();
         self.data_valid.next = self.read_ready.q.val();
-        self.write_enable.next = false;
+        self.sdram.write_enable.next = false;
         self.sdram.write_data.next = self.reg_data_write.q.val().get_bits::<D>(0_usize);
         self.read_valid.data_in.next = false;
         self.read_valid.delay.next = self.cas_delay.val();
@@ -281,7 +279,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
                     self.sdram.address.next = self.addr_row.val();
                     self.state.d.next = State::WriteActivate;
                     self.write_pending.d.next = false;
-                    self.write_enable.next = true;
+                    self.sdram.write_enable.next = true;
                 }
             }
             State::Refresh => {
@@ -296,14 +294,14 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
                 }
             }
             State::WriteActivate => {
-                self.write_enable.next = true;
+                self.sdram.write_enable.next = true;
                 if self.delay_counter.q.val() == self.t_rcd.val() {
                     self.state.d.next = State::WriteCycle;
                     self.transfer_counter.d.next = 0_usize.into();
                 }
             }
             State::WriteCycle => {
-                self.write_enable.next = true;
+                self.sdram.write_enable.next = true;
                 if self.transfer_counter.q.val() < self.max_transfer_size.val() {
                     self.sdram.bank.next = self.addr_bank.val();
                     self.sdram.address.next = self.addr_col.val();
@@ -318,7 +316,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
                 }
             }
             State::Recovery => {
-                self.write_enable.next = true;
+                self.sdram.write_enable.next = true;
                 if self.delay_counter.q.val() == self.t_wr.val() {
                     self.cmd.next = SDRAMCommand::Precharge;
                     self.sdram.address.next = 0xFFFF_u32.into();
@@ -394,7 +392,6 @@ impl Logic for TestSDRAMDevice {
         SDRAMDriver::<16>::join(&mut self.cntrl.sdram, &mut self.buffer.buf_in);
         SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.dram.sdram);
         self.cntrl.clock.next = self.clock.val();
-        self.buffer.buf_in_write_enable.next = self.cntrl.write_enable.val();
     }
 }
 
