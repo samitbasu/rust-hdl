@@ -13,7 +13,7 @@ enum State {
 }
 
 #[derive(LogicBlock)]
-pub struct FIFOSDRAMController<
+pub struct SDRAMFIFOController<
     const R: usize,   // Number of rows in the SDRAM
     const C: usize,   // Number of columns in the SDRAM
     const L: usize,   // Line size (multiple of the SDRAM interface width) - rem(C, L) = 0
@@ -56,10 +56,10 @@ impl<
         const D: usize,
         const A: usize,
         const AP1: usize,
-    > FIFOSDRAMController<R, C, L, D, A, AP1>
+    > SDRAMFIFOController<R, C, L, D, A, AP1>
 {
     pub fn new(cas_delay: u32, timings: MemoryTimings, buffer: OutputBuffer) -> Self {
-        assert_eq!(C % (L / D), 0);
+        assert_eq!((1 << C) % (L / D), 0);
         assert_eq!(L % D, 0);
         assert_eq!(A + 1, AP1);
         assert_eq!(A, C + R);
@@ -100,7 +100,7 @@ impl<
         const D: usize,
         const A: usize,
         const AP1: usize,
-    > Logic for FIFOSDRAMController<R, C, L, D, A, AP1>
+    > Logic for SDRAMFIFOController<R, C, L, D, A, AP1>
 {
     #[hdl_gen]
     fn update(&mut self) {
@@ -175,14 +175,16 @@ impl<
     }
 }
 
+#[cfg(test)]
 #[derive(LogicBlock)]
 struct FIFOSDRAMTest {
-    dram: SDRAMSimulator<16>,
+    dram: SDRAMSimulator<6, 4, 10, 16>,
     buffer: SDRAMOnChipBuffer<16>,
-    fifo: FIFOSDRAMController<6, 4, 64, 16, 10, 11>,
+    fifo: SDRAMFIFOController<6, 4, 64, 16, 10, 11>,
     clock: Signal<In, Clock>,
 }
 
+#[cfg(test)]
 impl Logic for FIFOSDRAMTest {
     #[hdl_gen]
     fn update(&mut self) {
@@ -193,12 +195,13 @@ impl Logic for FIFOSDRAMTest {
     }
 }
 
+#[cfg(test)]
 impl FIFOSDRAMTest {
     pub fn new(cas_latency: u32, timings: MemoryTimings, buffer: OutputBuffer) -> Self {
         Self {
             dram: SDRAMSimulator::new(timings.clone()),
             buffer: Default::default(),
-            fifo: FIFOSDRAMController::new(cas_latency, timings, buffer),
+            fifo: SDRAMFIFOController::new(cas_latency, timings, buffer),
             clock: Default::default(),
         }
     }
@@ -232,7 +235,7 @@ fn test_sdram_works() {
     sim.add_testbench(move |mut sim: Sim<FIFOSDRAMTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..1024_u32 {
+        for counter in 0_u32..128_u32 {
             x = sim.watch(|x| !x.fifo.full.val(), x)?;
             x.fifo.data_in.next = counter.into();
             x.fifo.write.next = true;
@@ -244,7 +247,7 @@ fn test_sdram_works() {
     sim.add_testbench(move |mut sim: Sim<FIFOSDRAMTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..1024_u32 {
+        for counter in 0_u32..128_u32 {
             x = sim.watch(|x| !x.fifo.empty.val(), x)?;
             sim_assert_eq!(sim, x.fifo.data_out.val(), counter, x);
             x.fifo.read.next = true;

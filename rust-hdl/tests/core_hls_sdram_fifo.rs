@@ -5,13 +5,13 @@ use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::hls::sdram_fifo::SDRAMFIFO;
 use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
-use rust_hdl::widgets::prelude::MemoryTimings;
+use rust_hdl::widgets::prelude::{MemoryTimings, OutputBuffer};
 use rust_hdl::widgets::sdram::SDRAMDriver;
 
 #[derive(LogicBlock)]
 struct HLSSDRAMFIFOTest {
-    fifo: SDRAMFIFO<5, 5, 12, 16>,
-    sdram: SDRAMSimulator<16>,
+    fifo: SDRAMFIFO<5, 5, 64, 16, 10, 11>,
+    sdram: SDRAMSimulator<5, 5, 10, 16>,
     clock: Signal<In, Clock>,
 }
 
@@ -19,7 +19,7 @@ impl Default for HLSSDRAMFIFOTest {
     fn default() -> Self {
         let timings = MemoryTimings::fast_boot_sim(125e6);
         Self {
-            fifo: SDRAMFIFO::new(3, timings),
+            fifo: SDRAMFIFO::new(3, timings, OutputBuffer::Wired),
             sdram: SDRAMSimulator::new(timings),
             clock: Default::default(),
         }
@@ -53,8 +53,8 @@ fn test_hls_sdram_fifo_works() {
     uut.fifo.bus_read.link_connect_dest();
     uut.connect_all();
     let mut sim = Simulation::new();
-    let data = (0..1256)
-        .map(|_| rand::thread_rng().gen::<u16>())
+    let data = (0..256)
+        .map(|_| rand::thread_rng().gen::<u64>())
         .collect::<Vec<_>>();
     let data2 = data.clone();
     sim.add_clock(4000, |x: &mut Box<HLSSDRAMFIFOTest>| {
@@ -70,6 +70,6 @@ fn test_hls_sdram_fifo_works() {
         hls_fifo_read_lazy!(sim, clock, x, fifo.bus_read, &data2);
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 80_000_000, &vcd_path!("hls_sdram_fifo.vcd"))
+    sim.run_to_file(Box::new(uut), 200_000_000, &vcd_path!("hls_sdram_fifo.vcd"))
         .unwrap();
 }

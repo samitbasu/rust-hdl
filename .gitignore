@@ -11,6 +11,7 @@ Cargo.lock
 
 **/*.vcd
 **/yosys.*
+**/*.v
 
 # Working dir for jetbrains IDEs
 .idea

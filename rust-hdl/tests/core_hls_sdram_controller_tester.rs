@@ -15,7 +15,7 @@ struct HostSDRAMControllerFixture {
     host: Host<8>,
     core: SDRAMControllerTester<5, 5>,
     buffer: SDRAMOnChipBuffer<16>,
-    chip: SDRAMSimulator<16>,
+    chip: SDRAMSimulator<5, 5, 10, 16>,
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
 }

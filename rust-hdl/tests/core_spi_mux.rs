@@ -46,6 +46,7 @@ fn test_spi_mux() {
         cpol: true,
     };
     let mut uut = TopWrap::new(SPITestMultiMaster::new(config));
+    uut.uut.addr.connect();
     uut.uut.clock.connect();
     for i in 0..3 {
         uut.uut.masters[i].continued_transaction.connect();

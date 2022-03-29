@@ -97,7 +97,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
     ) -> SDRAMBaseController<R, C, L, D> {
         assert_eq!(L % D, 0);
         assert!(L / D <= 8);
-        assert_eq!(C % (L / D), 0);
+        assert_eq!( (1 << C) % (L / D), 0);
         // mode register definitions
         // A2:A0 are the burst length, this design does not use burst transfers
         // so A2:A0 are 0
@@ -382,9 +382,9 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
 
 #[derive(LogicBlock)]
 struct TestSDRAMDevice {
-    dram: SDRAMSimulator<16>,
+    dram: SDRAMSimulator<5, 5, 10, 16>,
     buffer: SDRAMOnChipBuffer<16>,
-    cntrl: SDRAMBaseController<5, 8, 64, 16>,
+    cntrl: SDRAMBaseController<5, 5, 64, 16>,
     clock: Signal<In, Clock>,
 }
 

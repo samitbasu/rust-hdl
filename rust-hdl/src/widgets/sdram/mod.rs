@@ -1,7 +1,6 @@
 pub mod basic_controller;
 pub mod buffer;
 pub mod cmd;
-pub mod fifo_controller;
 pub mod fifo_sdram;
 pub mod timings;
 

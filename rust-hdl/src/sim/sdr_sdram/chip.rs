@@ -17,7 +17,12 @@ enum MasterState {
 
 // Clock enable, and DQM are ignored.
 #[derive(LogicBlock)]
-pub struct SDRAMSimulator<const D: usize> {
+pub struct SDRAMSimulator<
+    const R: usize, // Number of rows
+    const C: usize, // Number of columns
+    const A: usize, // A = R + C
+    const D: usize, // Bits per word
+> {
     pub sdram: SDRAMDevice<D>,
     pub write_enable: Signal<Out, Bit>,
     pub test_error: Signal<Out, Bit>,
@@ -33,7 +38,7 @@ pub struct SDRAMSimulator<const D: usize> {
     burst_type: DFF<Bit>,
     burst_len: DFF<Bits<3>>,
     op_mode: DFF<Bits<2>>,
-    banks: [MemoryBank<6, 4, 10, D>; 4],
+    banks: [MemoryBank<R, C, A, D>; 4],
     // Timings
     // Number of clocks to delay for boot initialization
     boot_delay: Constant<Bits<32>>,
@@ -43,7 +48,7 @@ pub struct SDRAMSimulator<const D: usize> {
     banks_busy: Signal<Local, Bit>,
 }
 
-impl<const D: usize> Logic for SDRAMSimulator<D> {
+impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic for SDRAMSimulator<R, C, A, D> {
     #[hdl_gen]
     fn update(&mut self) {
         // Clock logic
@@ -221,7 +226,7 @@ impl<const D: usize> Logic for SDRAMSimulator<D> {
     }
 }
 
-impl<const D: usize> SDRAMSimulator<D> {
+impl<const R: usize, const C: usize, const A: usize, const D: usize> SDRAMSimulator<R, C, A, D> {
     pub fn new(timings: MemoryTimings) -> Self {
         // Calculate the number of picoseconds per clock cycle
         let boot_delay = timings.t_boot();
@@ -254,7 +259,7 @@ impl<const D: usize> SDRAMSimulator<D> {
 }
 
 #[cfg(test)]
-fn mk_sdr_sim() -> SDRAMSimulator<16> {
+fn mk_sdr_sim() -> SDRAMSimulator<5, 5, 10, 16> {
     let mut uut = SDRAMSimulator::new(MemoryTimings::fast_boot_sim(125e6));
     uut.sdram.link_connect_dest();
     uut.connect_all();
@@ -436,10 +441,10 @@ fn test_sdram_init_works() {
     let uut = mk_sdr_sim();
     let mut sim = Simulation::new();
     // Clock period at 125 MHz is 8000ps
-    sim.add_clock(4000, |x: &mut Box<SDRAMSimulator<16>>| {
+    sim.add_clock(4000, |x: &mut Box<SDRAMSimulator<5, 5, 10, 16>>| {
         x.sdram.clk.next = !x.sdram.clk.val();
     });
-    sim.add_testbench(move |mut sim: Sim<SDRAMSimulator<16>>| {
+    sim.add_testbench(move |mut sim: Sim<SDRAMSimulator<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
         let timings = MemoryTimings::fast_boot_sim(125e6);
         sdram_boot!(sim, clock, x, timings);
