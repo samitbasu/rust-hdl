@@ -33,7 +33,7 @@ pub struct SDRAMSimulator<const D: usize> {
     burst_type: DFF<Bit>,
     burst_len: DFF<Bits<3>>,
     op_mode: DFF<Bits<2>>,
-    banks: [MemoryBank<5, 5, 10, D>; 4],
+    banks: [MemoryBank<6, 4, 10, D>; 4],
     // Timings
     // Number of clocks to delay for boot initialization
     boot_delay: Constant<Bits<32>>,

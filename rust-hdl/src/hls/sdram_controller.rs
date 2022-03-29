@@ -69,7 +69,7 @@ impl<const R: usize, const C: usize> Logic for SDRAMController<R, C> {
 #[test]
 fn test_sdram_controller_synthesizes() {
     let mut uut =
-        SDRAMController::<5, 5>::new(3, MemoryTimings::fast_boot_sim(100e6), OutputBuffer::Wired);
+        SDRAMController::<6, 4>::new(3, MemoryTimings::fast_boot_sim(100e6), OutputBuffer::Wired);
     uut.dram.read_data.connect();
     uut.upstream.link_connect_dest();
     uut.connect_all();

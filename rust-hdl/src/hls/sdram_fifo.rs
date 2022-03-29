@@ -44,7 +44,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> SDRAMFIFO<R
 
 #[test]
 fn test_sdram_fifo_synthesizes() {
-    let mut uut = SDRAMFIFO::<5, 5, 12, 16>::new(3, MemoryTimings::fast_boot_sim(125e6));
+    let mut uut = SDRAMFIFO::<6, 4, 12, 16>::new(3, MemoryTimings::fast_boot_sim(125e6));
     uut.clock.connect();
     uut.bus_read.link_connect_dest();
     uut.bus_write.link_connect_dest();

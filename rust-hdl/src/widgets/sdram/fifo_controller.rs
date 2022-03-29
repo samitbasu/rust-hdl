@@ -349,7 +349,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize> Logic
 #[derive(LogicBlock)]
 struct TestSDRAMDevice {
     dram: SDRAMSimulator<16>,
-    cntrl: SDRAMFIFOController<5, 5, 12, 16>,
+    cntrl: SDRAMFIFOController<6, 4, 12, 16>,
     clock: Signal<In, Clock>,
 }
 
@@ -378,7 +378,7 @@ fn make_test_device() -> TestSDRAMDevice {
 }
 
 #[cfg(test)]
-fn make_test_controller() -> SDRAMFIFOController<5, 5, 12, 16> {
+fn make_test_controller() -> SDRAMFIFOController<6, 4, 12, 16> {
     let timings = MemoryTimings::fast_boot_sim(125e6);
     let mut uut = SDRAMFIFOController::new(3, timings);
     uut.write.connect();

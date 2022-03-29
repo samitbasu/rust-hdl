@@ -188,7 +188,7 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
 
 #[test]
 fn test_sdram_controller_tester_synthesizes() {
-    let mut uut = SDRAMControllerTester::<5, 5>::new(
+    let mut uut = SDRAMControllerTester::<6, 4>::new(
         3,
         MemoryTimings::fast_boot_sim(100e6),
         OutputBuffer::DelayOne,
