@@ -1,9 +1,7 @@
 use crate::core::prelude::*;
 #[cfg(test)]
 use crate::sim::sdr_sdram::chip::SDRAMSimulator;
-use crate::widgets::prelude::{
-    MemoryTimings, OutputBuffer, SDRAMBaseController, SynchronousFIFO, DFF,
-};
+use crate::widgets::prelude::{MemoryTimings, OutputBuffer, SDRAMBaseController, DFF, AsynchronousFIFO};
 #[cfg(test)]
 use crate::widgets::sdram::buffer::SDRAMOnChipBuffer;
 use crate::widgets::sdram::SDRAMDriver;
@@ -25,6 +23,7 @@ pub struct SDRAMFIFOController<
 > {
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
+    pub ram_clock: Signal<In, Clock>,
     // FIFO interface
     pub data_in: Signal<In, Bits<L>>,
     pub write: Signal<In, Bit>,
@@ -35,11 +34,10 @@ pub struct SDRAMFIFOController<
     pub overflow: Signal<Out, Bit>,
     pub underflow: Signal<Out, Bit>,
     core: SDRAMBaseController<R, C, L, D>,
-    fp: SynchronousFIFO<Bits<L>, 6, 7, 1>,
-    bp: SynchronousFIFO<Bits<L>, 6, 7, 1>,
+    fp: AsynchronousFIFO<Bits<L>, 6, 7, 1>,
+    bp: AsynchronousFIFO<Bits<L>, 6, 7, 1>,
     will_write: Signal<Local, Bit>,
     will_read: Signal<Local, Bit>,
-    fill_level: DFF<Bits<AP1>>,
     read_pointer: DFF<Bits<AP1>>,
     write_pointer: DFF<Bits<AP1>>,
     read_address: Signal<Local, Bits<A>>,
@@ -67,6 +65,7 @@ impl<
         Self {
             clock: Default::default(),
             sdram: Default::default(),
+            ram_clock: Default::default(),
             data_in: Default::default(),
             write: Default::default(),
             full: Default::default(),
@@ -80,7 +79,6 @@ impl<
             bp: Default::default(),
             will_write: Default::default(),
             will_read: Default::default(),
-            fill_level: Default::default(),
             read_pointer: Default::default(),
             write_pointer: Default::default(),
             read_address: Default::default(),
@@ -104,17 +102,19 @@ impl<
 {
     #[hdl_gen]
     fn update(&mut self) {
-        self.core.clock.next = self.clock.val();
+        self.core.clock.next = self.ram_clock.val();
         SDRAMDriver::<D>::link(&mut self.sdram, &mut self.core.sdram);
-        self.fill_level.clk.next = self.clock.val();
-        self.fill_level.d.next = self.fill_level.q.val();
-        self.read_pointer.clk.next = self.clock.val();
+        self.read_pointer.clk.next = self.ram_clock.val();
         self.read_pointer.d.next = self.read_pointer.q.val();
-        self.write_pointer.clk.next = self.clock.val();
+        self.write_pointer.clk.next = self.ram_clock.val();
         self.write_pointer.d.next = self.write_pointer.q.val();
-        self.fp.clock.next = self.clock.val();
-        self.bp.clock.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
+        // The FP write clock is external, but the read clock is the DRAM clock
+        self.fp.write_clock.next = self.clock.val();
+        self.fp.read_clock.next = self.ram_clock.val();
+        // The BP write clock is DRAM, the read clock is external
+        self.bp.write_clock.next = self.ram_clock.val();
+        self.bp.read_clock.next = self.clock.val();
+        self.state.clk.next = self.ram_clock.val();
         self.state.d.next = self.state.q.val();
         // Connect the write interface to the FP fifo
         self.fp.data_in.next = self.data_in.val();
@@ -190,6 +190,7 @@ impl Logic for FIFOSDRAMTest {
         SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.buffer.buf_in);
         SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.dram.sdram);
         self.fifo.clock.next = self.clock.val();
+        self.fifo.ram_clock.next = self.clock.val();
     }
 }
 

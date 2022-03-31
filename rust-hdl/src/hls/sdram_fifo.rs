@@ -14,6 +14,7 @@ pub struct SDRAMFIFO<
 > {
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
+    pub ram_clock: Signal<In, Clock>,
     pub bus_write: FIFOWriteResponder<Bits<P>>,
     pub bus_read: FIFOReadResponder<Bits<P>>,
     controller: SDRAMFIFOController<R, C, P, D, A, AP1>,
@@ -33,6 +34,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize, const A: us
         self.bus_read.almost_empty.next = self.controller.empty.val();
         self.controller.read.next = self.bus_read.read.val();
         self.controller.clock.next = self.clock.val();
+        self.controller.ram_clock.next = self.ram_clock.val();
         SDRAMDriver::<D>::link(&mut self.sdram, &mut self.controller.sdram);
     }
 }
@@ -42,6 +44,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize, const A: us
         Self {
             clock: Default::default(),
             sdram: Default::default(),
+            ram_clock: Default::default(),
             bus_write: Default::default(),
             bus_read: Default::default(),
             controller: SDRAMFIFOController::new(cas_delay, timings, buffer),
@@ -53,6 +56,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize, const A: us
 fn test_sdram_fifo_synthesizes() {
     let mut uut = SDRAMFIFO::<6, 4, 64, 16, 10, 11>::new(3, MemoryTimings::fast_boot_sim(125e6), OutputBuffer::Wired);
     uut.clock.connect();
+    uut.ram_clock.connect();
     uut.bus_read.link_connect_dest();
     uut.bus_write.link_connect_dest();
     uut.sdram.read_data.connect();

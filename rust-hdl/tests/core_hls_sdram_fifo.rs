@@ -30,6 +30,7 @@ impl Logic for HLSSDRAMFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.fifo.clock.next = self.clock.val();
+        self.fifo.ram_clock.next = self.clock.val();
         SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.sdram.sdram);
     }
 }
