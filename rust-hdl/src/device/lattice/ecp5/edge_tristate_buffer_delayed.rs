@@ -8,7 +8,7 @@ pub struct IODelays {
 }
 
 #[derive(LogicBlock, Default)]
-pub struct EdgeTristateBuffer<T: Synth> {
+pub struct EdgeTristateBufferDelayed<T: Synth> {
     pub to_pin: Signal<In, T>,
     pub from_pin: Signal<Out, T>,
     pub output_enable: Signal<In, Bit>,
@@ -20,7 +20,7 @@ pub struct EdgeTristateBuffer<T: Synth> {
     _delay: IODelays,
 }
 
-impl<T: Synth> EdgeTristateBuffer<T> {
+impl<T: Synth> EdgeTristateBufferDelayed<T> {
     pub fn new(delay: IODelays) -> Self {
         Self {
             _delay: delay,
@@ -92,7 +92,7 @@ wire [{B}:0] bb_from_pin_z;
     )
 }
 
-impl<T: Synth> Logic for EdgeTristateBuffer<T> {
+impl<T: Synth> Logic for EdgeTristateBufferDelayed<T> {
     fn update(&mut self) {
         self.dff_out.clk.next = self.clk.val();
         self.dff_in.clk.next = self.clk.val();
@@ -146,7 +146,7 @@ endmodule
 
 #[test]
 fn test_edge_buffer_synthesizes() {
-    let mut uut = TopWrap::new(EdgeTristateBuffer::<Bits<8>>::default());
+    let mut uut = TopWrap::new(EdgeTristateBufferDelayed::<Bits<8>>::default());
     uut.uut.output_enable.connect();
     uut.uut.to_pin.connect();
     uut.uut.clk.connect();
@@ -158,7 +158,7 @@ fn test_edge_buffer_synthesizes() {
 
 #[test]
 fn test_edge_buffer_synthesizes_with_delay() {
-    let mut uut = TopWrap::new(EdgeTristateBuffer::<Bits<8>>::new(IODelays {
+    let mut uut = TopWrap::new(EdgeTristateBufferDelayed::<Bits<8>>::new(IODelays {
         to_pin: 25,
         from_pin: 40,
     }));
