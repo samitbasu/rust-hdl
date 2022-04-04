@@ -23,7 +23,7 @@ pub struct FIFOReducerN<const DW: usize, const DN: usize> {
     msw_first: Constant<Bit>,
     ratio: Constant<Bits<8>>,
     offset: Constant<Bits<DW>>,
-    select: Constant<Bits<DW>>,
+    select: Constant<Bits<16>>,
 }
 
 impl<const DW: usize, const DN: usize> Logic for FIFOReducerN<DW, DN> {

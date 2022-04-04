@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl"
-version = "0.18.0"
+version = "0.18.2"
 edition = "2018"
 license = "MIT"
 description = "Write firmware for FPGAs in Rust"
@@ -23,6 +23,6 @@ rust-hdl-ok-frontpanel-sys = {version="^0.2", optional=true}
 rand = "0.8"
 
 [features]
-frontpanel = ["rust-hdl-ok-frontpanel-sys", "dff_init"]
+frontpanel = ["rust-hdl-ok-frontpanel-sys"]
 dff_init = []
 

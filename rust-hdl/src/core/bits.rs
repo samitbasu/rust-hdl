@@ -221,7 +221,6 @@ impl<const N: usize> Bits<N> {
     #[inline(always)]
     pub fn get_bits<const M: usize>(&self, index: usize) -> Bits<M> {
         assert!(index <= N);
-        assert!(index + M <= N);
         bit_cast::<M, N>(*self >> index)
     }
 
