@@ -48,9 +48,9 @@ impl MemoryTimings {
             t_wr_write_recovery_time_nanoseconds: 14.0,
             t_refresh_max_interval_nanoseconds: 16e6 / 4096.0,
             clock_speed_hz,
-            columns_per_bank: 1024,
-            rows_per_bank: 8192,
-            num_banks: 4,
+            columns_per_bank: 1024, // 10 bits
+            rows_per_bank: 8192,    // 13 bits
+            num_banks: 4,           // 2 bits - total address is thus 25 bits.
         }
     }
     pub fn fast_boot_sim(clock_speed_hz: f64) -> Self {

@@ -70,12 +70,12 @@ impl MAX31856Simulator {
             cmd: Default::default(),
             rw_flag: Default::default(),
             spi_slave: SPISlave::new(config),
-            state: DFF::new(MAX31856State::Start),
+            state: Default::default(),
             reg_read_index: Default::default(),
             reg_write_index: Default::default(),
             boot: DFF::default(),
             reg_index: Default::default(),
-            dstate: DFF::new(DAQState::Idle),
+            dstate: Default::default(),
         }
     }
 }

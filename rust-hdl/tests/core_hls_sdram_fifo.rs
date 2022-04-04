@@ -10,7 +10,7 @@ use rust_hdl::widgets::sdram::SDRAMDriver;
 
 #[derive(LogicBlock)]
 struct HLSSDRAMFIFOTest {
-    fifo: SDRAMFIFO<5, 5, 64, 16, 10, 11>,
+    fifo: SDRAMFIFO<5, 5, 64, 16, 12>,
     sdram: SDRAMSimulator<5, 5, 10, 16>,
     clock: Signal<In, Clock>,
 }

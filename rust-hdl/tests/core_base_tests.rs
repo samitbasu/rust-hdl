@@ -72,7 +72,7 @@ mod tests {
                 StateMachine {
                     clock: Signal::default(),
                     advance: Signal::default(),
-                    state: DFF::new(MyState::Init),
+                    state: Default::default(),
                 }
             }
         }

@@ -52,6 +52,7 @@ impl Logic for OpalKellyPLLTest {
 }
 
 #[test]
+#[cfg(feature = "frontpanel")]
 fn test_opalkelly_pll_synth() {
     let mut uut = OpalKellyPLLTest::default();
     uut.raw_clock.connect();

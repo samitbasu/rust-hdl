@@ -7,6 +7,7 @@ use crate::widgets::prelude::*;
 
 #[derive(Debug, Copy, Clone, LogicState, PartialEq)]
 enum State {
+    Boot,
     Idle,
     Writing,
     Reading,
@@ -97,9 +98,11 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         self.dram_address.d.next = self.dram_address.q.val();
         self.controller.data_in.next = self.entropy_funnel.data_out.val();
         self.entropy_funnel.data_in.next = self.lsfr.num.val();
-        self.lsfr.strobe.next = !self.entropy_funnel.full.val();
+        self.lsfr.strobe.next =
+            !self.entropy_funnel.full.val() & (self.state.q.val() != State::Boot);
         self.lsfr.clock.next = self.upstream.clock.val();
-        self.entropy_funnel.write.next = !self.entropy_funnel.full.val();
+        self.entropy_funnel.write.next =
+            !self.entropy_funnel.full.val() & (self.state.q.val() != State::Boot);
         self.entropy_funnel.write_clock.next = self.upstream.clock.val();
         self.entropy_funnel.read_clock.next = self.upstream.clock.val();
         self.controller.data_in.next = self.entropy_funnel.data_out.val();
@@ -114,7 +117,14 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         self.error_out.strobe_in.next = false;
         self.validation_out.strobe_in.next = false;
         self.write_out.strobe_in.next = false;
+        self.lsfr.reset.next = false;
+        self.lsfr_validate.reset.next = false;
         match self.state.q.val() {
+            State::Boot => {
+                self.lsfr.reset.next = true;
+                self.lsfr_validate.reset.next = true;
+                self.state.d.next = State::Idle;
+            }
             State::Idle => {
                 self.cmd.ready.next = true;
                 if self.cmd.strobe_out.val() {

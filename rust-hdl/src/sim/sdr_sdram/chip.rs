@@ -47,7 +47,9 @@ pub struct SDRAMSimulator<
     banks_busy: Signal<Local, Bit>,
 }
 
-impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic for SDRAMSimulator<R, C, A, D> {
+impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
+    for SDRAMSimulator<R, C, A, D>
+{
     #[hdl_gen]
     fn update(&mut self) {
         // Clock logic

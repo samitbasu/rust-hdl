@@ -50,7 +50,8 @@ impl Probe for PCFGenerator {
                             format!(
                                 "FREQUENCY PORT \"{prefix}\" {freq} MHz",
                                 prefix = prefix,
-                                freq = ((1000.0 / p.period_nanoseconds) * 10000.0).round()/10000.0
+                                freq =
+                                    ((1000.0 / p.period_nanoseconds) * 10000.0).round() / 10000.0
                             )
                         }
                         Timing::Custom(c) => c.to_string(),

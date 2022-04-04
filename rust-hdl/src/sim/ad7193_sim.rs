@@ -44,7 +44,6 @@ pub struct AD7193Simulator {
 pub struct AD7193Config {
     pub spi: SPIConfig,
     pub sample_time: Duration,
-    pub auto_init: bool,
 }
 
 impl AD7193Config {
@@ -59,7 +58,6 @@ impl AD7193Config {
                 cpol: true,
             },
             sample_time: Duration::from_micros(10100),
-            auto_init: false,
         }
     }
     pub fn sw() -> Self {
@@ -73,7 +71,6 @@ impl AD7193Config {
                 cpol: true,
             },
             sample_time: Duration::from_micros(100),
-            auto_init: false,
         }
     }
 }
@@ -86,13 +83,6 @@ impl AD7193Simulator {
         assert!(config.spi.clock_speed > 10 * config.spi.speed_hz);
         let reg_width_rom = AD7193_REG_WIDTHS.iter().map(|x| Bits::<5>::from(*x)).into();
         let reg_ram = AD7193_REG_INITS.iter().map(|x| Bits::<24>::from(*x)).into();
-        // The conversion time should really be 10 msec, but we instead tie it to the clock
-        // frequency.  Otherwise, it takes forever to simulate. - 40 nsec per period
-        let start_state = if !config.auto_init {
-            AD7193State::Init
-        } else {
-            AD7193State::Ready
-        };
         Self {
             wires: Default::default(),
             clock: Default::default(),
@@ -103,7 +93,7 @@ impl AD7193Simulator {
             reg_index: Default::default(),
             rw_flag: Default::default(),
             spi_slave: SPISlave::new(config.spi),
-            state: DFF::new(start_state),
+            state: Default::default(),
             reg_write_index: Default::default(),
             conversion_counter: Default::default(),
         }

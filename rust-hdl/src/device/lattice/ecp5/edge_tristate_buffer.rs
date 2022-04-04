@@ -13,7 +13,6 @@ pub struct EdgeTristateBuffer<T: Synth> {
     buffer: TristateBuffer<T>,
 }
 
-
 fn wrapper_once() -> String {
     format!(
         r##"
@@ -23,7 +22,8 @@ fn wrapper_once() -> String {
     OFS1P3DX obuf(.D(to_pin), .CD(0), .SP(1), .SCLK(clk), .Q(bb_to_pin));
     IFS1P3DX ibuf(.D(bb_from_pin), .CD(0), .SP(1), .SCLK(clk), .Q(from_pin));
     BB bb(.I(bb_to_pin), .O(bb_from_pin), .B(pin), .T(~output_enable));
-"##)
+"##
+    )
 }
 
 fn wrapper_multiple(count: usize) -> String {
@@ -99,7 +99,7 @@ parameter DEL_VALUE = 0;
 endmodule
 
             "##
-                .into(),
+            .into(),
         })
     }
 }

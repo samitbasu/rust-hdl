@@ -48,7 +48,7 @@ impl<const P: usize> AlchitryCuPWM<P> {
             strobe: Strobe::new(clock_freq, 60.0),
             leds: rust_hdl::bsp::alchitry_cu::pins::leds(),
             rom: ROM::new(rom),
-            counter: DFF::new(0_u8.into()),
+            counter: Default::default(),
         }
     }
 }

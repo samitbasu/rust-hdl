@@ -9,10 +9,15 @@ pub struct DFF<T: Synth> {
 
 impl<T: Synth> Default for DFF<T> {
     fn default() -> DFF<T> {
-        Self::new(T::default())
+        Self {
+            d: Signal::default(),
+            q: Signal::default(),
+            clk: Signal::default(),
+        }
     }
 }
 
+#[cfg(feature = "dff_init")]
 impl<T: Synth> DFF<T> {
     pub fn new(init: T) -> DFF<T> {
         Self {

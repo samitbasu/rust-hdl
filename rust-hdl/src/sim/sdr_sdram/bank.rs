@@ -3,6 +3,7 @@ use crate::widgets::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 pub enum BankState {
+    Boot,
     Idle,
     Active,
     Reading,
@@ -83,7 +84,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<
             read_delay_line: Default::default(),
             mem: Default::default(),
             write_reg: Default::default(),
-            state: DFF::new(BankState::Idle),
+            state: Default::default(),
             auto_precharge: Default::default(),
             active_row: Default::default(),
             burst_counter: Default::default(),
@@ -91,7 +92,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<
             delay_counter: Default::default(),
             refresh_counter: Default::default(),
             refresh_active: Default::default(),
-            t_activate: DFF::new(0xFFFF_u32.into()),
+            t_activate: Default::default(),
             t_ras: Constant::new(t_ras.into()),
             t_rc: Constant::new(t_rc.into()),
             t_rcd: Constant::new(t_rcd.into()),
@@ -155,6 +156,10 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         self.refresh_active.d.next = self.refresh_active.q.val();
         self.refresh_counter.d.next = self.refresh_counter.q.val() + self.refresh_active.q.val();
         match self.state.q.val() {
+            BankState::Boot => {
+                self.t_activate.d.next = 0xFFFF_u32.into();
+                self.state.d.next = BankState::Idle;
+            }
             BankState::Idle => {
                 self.busy.next = false;
                 if self.select.val() {

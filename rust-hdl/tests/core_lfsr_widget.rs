@@ -40,6 +40,7 @@ fn test_lfsr_operation() {
     let mut uut = LFSRSimple::default();
     uut.clock.connect();
     uut.strobe.connect();
+    uut.reset.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<LFSRSimple>| {
@@ -48,6 +49,10 @@ fn test_lfsr_operation() {
     sim.add_testbench(move |mut sim: Sim<LFSRSimple>| {
         let mut x = sim.init()?;
         let mut lf = Xorshift128State::default();
+        wait_clock_true!(sim, clock, x);
+        x.reset.next = true;
+        wait_clock_cycle!(sim, clock, x);
+        x.reset.next = false;
         wait_clock_cycles!(sim, clock, x, 10);
         for _ in 0..1000 {
             sim_assert_eq!(sim, x.num.val().index() as u32, lf.get(), x);

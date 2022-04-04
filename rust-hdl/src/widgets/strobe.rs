@@ -23,7 +23,7 @@ impl<const N: usize> Strobe<N> {
             strobe: Signal::default(),
             clock: Signal::default(),
             threshold: Constant::new(threshold.into()),
-            counter: DFF::new(0_usize.into()),
+            counter: Default::default(),
         }
     }
 }

@@ -3,6 +3,7 @@ use crate::widgets::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum SPIState {
+    Boot,
     Idle,
     SetMode,
     Activate,
@@ -95,7 +96,7 @@ impl<const N: usize> SPIMasterDynamicMode<N> {
             pointerm1: Default::default(),
             clock_state: Default::default(),
             done_flop: Default::default(),
-            msel_flop: DFF::new(config.cs_off),
+            msel_flop: Default::default(),
             mosi_flop: Default::default(),
             miso_synchronizer: Default::default(),
             continued_save: Default::default(),
@@ -151,6 +152,10 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
         self.busy.next = self.state.q.val() != SPIState::Idle;
         // The main state machine
         match self.state.q.val() {
+            SPIState::Boot => {
+                self.msel_flop.d.next = self.cs_off.val();
+                self.state.d.next = SPIState::Idle;
+            }
             SPIState::Idle => {
                 self.clock_state.d.next = self.cpol_flop.q.val();
                 if self.start_send.val() {

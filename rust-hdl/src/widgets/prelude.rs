@@ -29,6 +29,7 @@ pub use crate::widgets::ramrom::rom::ROM;
 pub use crate::widgets::ramrom::sync_rom::SyncROM;
 pub use crate::widgets::sdram::basic_controller::{OutputBuffer, SDRAMBaseController};
 pub use crate::widgets::sdram::cmd::SDRAMCommand;
+pub use crate::widgets::sdram::fifo_sdram::SDRAMFIFOController;
 pub use crate::widgets::sdram::timings::MemoryTimings;
 pub use crate::widgets::sdram::SDRAMDriver;
 pub use crate::widgets::shot::Shot;
@@ -38,6 +39,7 @@ pub use crate::widgets::spi::master_dynamic_mode::{SPIConfigDynamicMode, SPIMast
 pub use crate::widgets::spi::mux::{MuxMasters, MuxSlaves};
 pub use crate::widgets::spi::slave::SPISlave;
 pub use crate::widgets::strobe::Strobe;
+pub use crate::widgets::sync_reset::SyncReset;
 pub use crate::widgets::synchronizer::{
     BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer,
 };
@@ -45,4 +47,3 @@ pub use crate::widgets::tristate::TristateBuffer;
 pub use crate::{
     i2c_begin_read, i2c_begin_write, i2c_end_transmission, i2c_read, i2c_read_last, i2c_write,
 };
-pub use crate::widgets::sdram::fifo_sdram::SDRAMFIFOController;

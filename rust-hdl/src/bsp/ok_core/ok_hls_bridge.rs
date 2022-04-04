@@ -58,6 +58,7 @@ pub struct OpalKellyHLSBridge<const A: usize> {
     word_counter: DFF<Bits<16>>,
     read_delay: DFF<bool>,
     block_flow_control: WireIn,
+    sr: SyncReset,
 }
 
 impl<const A: usize> Logic for OpalKellyHLSBridge<A> {
@@ -71,6 +72,11 @@ impl<const A: usize> Logic for OpalKellyHLSBridge<A> {
         // Clock the two fifos
         self.pc_to_fpga_fifo.clock.next = self.ti_clk.val();
         self.fpga_to_pc_fifo.clock.next = self.ti_clk.val();
+        // Wire up the reset
+        self.sr.clock.next = self.ti_clk.val();
+        if self.sr.reset.val() {
+            self.space_counter.d.next = (1_usize << 12).into();
+        }
         // Link the FIFOs to the HLS controller
         FIFOReadController::<Bits<16>>::join(
             &mut self.controller.from_cpu,
@@ -149,10 +155,11 @@ impl<const A: usize> OpalKellyHLSBridge<A> {
             pipe_out: BTPipeOut::new(config.pipe_out),
             words_avail: WireOut::new(config.words_avail),
             space_avail: WireOut::new(config.space_avail),
-            space_counter: DFF::new((1_usize << 12).into()),
+            space_counter: Default::default(),
             word_counter: Default::default(),
             read_delay: Default::default(),
             block_flow_control: WireIn::new(config.block_flow_control),
+            sr: Default::default(),
         }
     }
 }

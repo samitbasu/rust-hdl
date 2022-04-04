@@ -186,7 +186,7 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
             left_sample: Default::default(),
             right_sample: Default::default(),
             accum: Default::default(),
-            state: DFF::new(MACFIRState::Idle),
+            state: Default::default(),
             mac_output: Default::default(),
             data_write: Default::default(),
             taps: Constant::new(taps.into()),

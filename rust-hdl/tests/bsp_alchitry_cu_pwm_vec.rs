@@ -28,7 +28,7 @@ impl Fader {
             strobe: Strobe::new(clock_frequency, 120.0),
             pwm: PulseWidthModulator::default(),
             rom: ROM::new(rom),
-            counter: DFF::new(Bits::<8>::default()),
+            counter: Default::default(),
         }
     }
 }

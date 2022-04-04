@@ -17,7 +17,7 @@ struct SDRAMSimulatedFIFOTester {
     ok_host: OpalKellyHost,
     counter: DFF<Bits<16>>,
     chip: SDRAMSimulator<5, 5, 10, 16>,
-    fifo: SDRAMFIFO<5, 5, 16, 16, 10, 11>,
+    fifo: SDRAMFIFO<5, 5, 16, 16, 10>,
     clock: Signal<In, Clock>,
     cross: AsynchronousFIFO<Bits<16>, 4, 5, 1>,
     dl: OpalKellyDownloadFIFO,

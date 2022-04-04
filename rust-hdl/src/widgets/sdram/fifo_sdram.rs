@@ -1,9 +1,7 @@
 use crate::core::prelude::*;
-#[cfg(test)]
-use crate::sim::sdr_sdram::chip::SDRAMSimulator;
-use crate::widgets::prelude::{MemoryTimings, OutputBuffer, SDRAMBaseController, DFF, AsynchronousFIFO};
-#[cfg(test)]
-use crate::widgets::sdram::buffer::SDRAMOnChipBuffer;
+use crate::widgets::prelude::{
+    AsynchronousFIFO, MemoryTimings, OutputBuffer, SDRAMBaseController, DFF,
+};
 use crate::widgets::sdram::SDRAMDriver;
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
@@ -14,12 +12,11 @@ enum State {
 
 #[derive(LogicBlock)]
 pub struct SDRAMFIFOController<
-    const R: usize,   // Number of rows in the SDRAM
-    const C: usize,   // Number of columns in the SDRAM
-    const L: usize,   // Line size (multiple of the SDRAM interface width) - rem(C, L) = 0
-    const D: usize,   // Number of bits in the SDRAM interface width
-    const A: usize,   // Number of address bits in the SDRAM (should be C + R)
-    const AP1: usize, // A + 1
+    const R: usize, // Number of rows in the SDRAM
+    const C: usize, // Number of columns in the SDRAM
+    const L: usize, // Line size (multiple of the SDRAM interface width) - rem(C, L) = 0
+    const D: usize, // Number of bits in the SDRAM interface width
+    const A: usize, // Number of address bits in the SDRAM (should be C + R + B)
 > {
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
@@ -33,35 +30,29 @@ pub struct SDRAMFIFOController<
     pub empty: Signal<Out, Bit>,
     pub overflow: Signal<Out, Bit>,
     pub underflow: Signal<Out, Bit>,
+    pub status: Signal<Out, Bits<8>>,
     core: SDRAMBaseController<R, C, L, D>,
     fp: AsynchronousFIFO<Bits<L>, 6, 7, 1>,
     bp: AsynchronousFIFO<Bits<L>, 6, 7, 1>,
     will_write: Signal<Local, Bit>,
     will_read: Signal<Local, Bit>,
-    read_pointer: DFF<Bits<AP1>>,
-    write_pointer: DFF<Bits<AP1>>,
-    read_address: Signal<Local, Bits<A>>,
-    write_address: Signal<Local, Bits<A>>,
+    read_pointer: DFF<Bits<A>>,
+    write_pointer: DFF<Bits<A>>,
     dram_is_empty: Signal<Local, Bit>,
     dram_is_full: Signal<Local, Bit>,
     state: DFF<State>,
-    line_to_word_ratio: Constant<Bits<AP1>>,
+    line_to_word_ratio: Constant<Bits<A>>,
+    fill: DFF<Bits<A>>,
+    status_reg: DFF<Bits<8>>,
 }
 
-impl<
-        const R: usize,
-        const C: usize,
-        const L: usize,
-        const D: usize,
-        const A: usize,
-        const AP1: usize,
-    > SDRAMFIFOController<R, C, L, D, A, AP1>
+impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: usize>
+    SDRAMFIFOController<R, C, L, D, A>
 {
     pub fn new(cas_delay: u32, timings: MemoryTimings, buffer: OutputBuffer) -> Self {
         assert_eq!((1 << C) % (L / D), 0);
         assert_eq!(L % D, 0);
-        assert_eq!(A + 1, AP1);
-        assert_eq!(A, C + R);
+        assert_eq!(A, C + R + 2);
         Self {
             clock: Default::default(),
             sdram: Default::default(),
@@ -74,6 +65,7 @@ impl<
             empty: Default::default(),
             overflow: Default::default(),
             underflow: Default::default(),
+            status: Default::default(),
             core: SDRAMBaseController::new(cas_delay, timings, buffer),
             fp: Default::default(),
             bp: Default::default(),
@@ -81,24 +73,18 @@ impl<
             will_read: Default::default(),
             read_pointer: Default::default(),
             write_pointer: Default::default(),
-            read_address: Default::default(),
-            write_address: Default::default(),
             dram_is_empty: Default::default(),
             dram_is_full: Default::default(),
             state: Default::default(),
             line_to_word_ratio: Constant::new((L / D).into()),
+            fill: Default::default(),
+            status_reg: Default::default(),
         }
     }
 }
 
-impl<
-        const R: usize,
-        const C: usize,
-        const L: usize,
-        const D: usize,
-        const A: usize,
-        const AP1: usize,
-    > Logic for SDRAMFIFOController<R, C, L, D, A, AP1>
+impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: usize> Logic
+    for SDRAMFIFOController<R, C, L, D, A>
 {
     #[hdl_gen]
     fn update(&mut self) {
@@ -134,34 +120,36 @@ impl<
         self.bp.write.next = self.core.data_valid.val();
         // That takes care of the outside facing part of the fifo...
         //  Now the internals.
-        self.read_address.next = self.read_pointer.q.val().get_bits::<A>(0_usize);
-        self.write_address.next = self.write_pointer.q.val().get_bits::<A>(0_usize);
         self.dram_is_empty.next = self.read_pointer.q.val() == self.write_pointer.q.val();
-        self.dram_is_full.next =
-            !self.dram_is_empty.val() & (self.read_address.val() == self.write_address.val());
+        self.dram_is_full.next = (self.write_pointer.q.val() + self.line_to_word_ratio.val())
+            == self.read_pointer.q.val();
         self.will_write.next = !self.dram_is_full.val() & !self.fp.empty.val();
         self.will_read.next = !self.dram_is_empty.val() & !self.bp.full.val();
         self.core.cmd_address.next = 0_usize.into();
         self.core.write_not_read.next = false;
         self.core.cmd_strobe.next = false;
+        self.fill.clk.next = self.ram_clock.val();
+        self.fill.d.next = self.fill.q.val();
         match self.state.q.val() {
             State::Idle => {
                 if !self.core.busy.val() {
                     if self.will_read.val() {
                         self.state.d.next = State::Busy;
-                        self.core.cmd_address.next = bit_cast::<32, A>(self.read_address.val());
+                        self.core.cmd_address.next = bit_cast::<32, A>(self.read_pointer.q.val());
                         self.core.write_not_read.next = false;
                         self.core.cmd_strobe.next = true;
                         self.read_pointer.d.next =
                             self.read_pointer.q.val() + self.line_to_word_ratio.val();
+                        self.fill.d.next = self.fill.q.val() - 1_usize;
                     } else if self.will_write.val() {
                         self.state.d.next = State::Busy;
-                        self.core.cmd_address.next = bit_cast::<32, A>(self.write_address.val());
+                        self.core.cmd_address.next = bit_cast::<32, A>(self.write_pointer.q.val());
                         self.core.write_not_read.next = true;
                         self.core.cmd_strobe.next = true;
                         self.fp.read.next = true;
                         self.write_pointer.d.next =
                             self.write_pointer.q.val() + self.line_to_word_ratio.val();
+                        self.fill.d.next = self.fill.q.val() + 1_usize;
                     }
                 }
             }
@@ -171,90 +159,39 @@ impl<
                 }
             }
         }
-    }
-}
-
-#[cfg(test)]
-#[derive(LogicBlock)]
-struct FIFOSDRAMTest {
-    dram: SDRAMSimulator<6, 4, 10, 16>,
-    buffer: SDRAMOnChipBuffer<16>,
-    fifo: SDRAMFIFOController<6, 4, 64, 16, 10, 11>,
-    clock: Signal<In, Clock>,
-}
-
-#[cfg(test)]
-impl Logic for FIFOSDRAMTest {
-    #[hdl_gen]
-    fn update(&mut self) {
-        SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.buffer.buf_in);
-        SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.dram.sdram);
-        self.fifo.clock.next = self.clock.val();
-        self.fifo.ram_clock.next = self.clock.val();
-    }
-}
-
-#[cfg(test)]
-impl FIFOSDRAMTest {
-    pub fn new(cas_latency: u32, timings: MemoryTimings, buffer: OutputBuffer) -> Self {
-        Self {
-            dram: SDRAMSimulator::new(timings.clone()),
-            buffer: Default::default(),
-            fifo: SDRAMFIFOController::new(cas_latency, timings, buffer),
-            clock: Default::default(),
+        self.status_reg.clk.next = self.clock.val();
+        self.status.next = self.status_reg.q.val();
+        self.status_reg.d.next = 0_usize.into();
+        // We have 512Mbits of memory.
+        // Each write is 128bits of data
+        // So the max fill is 4M of data
+        // To display this on an 8 bit display, we
+        // use a chunk size of 2^19.
+        //
+        //524288   1048576   1572864   2097152   2621440   3145728   3670016   4194304
+        if self.fill.q.val() > bits::<A>(838860) {
+            self.status_reg.d.next = self.status_reg.d.val() | 1_usize;
+        }
+        if self.fill.q.val() > bits::<A>(1677721) {
+            self.status_reg.d.next = self.status_reg.d.val() | 2_usize;
+        }
+        if self.fill.q.val() > bits::<A>(2516582) {
+            self.status_reg.d.next = self.status_reg.d.val() | 4_usize;
+        }
+        if self.fill.q.val() > bits::<A>(3355443) {
+            self.status_reg.d.next = self.status_reg.d.val() | 8_usize;
+        }
+        if self.fill.q.val() > bits::<A>(4190000) {
+            self.status_reg.d.next = self.status_reg.d.val() | 16_usize;
+        }
+        if self.dram_is_empty.val() {
+            self.status_reg.d.next = self.status_reg.d.val() | 32_usize;
+        }
+        if self.fp.empty.val() {
+            self.status_reg.d.next = self.status_reg.d.val() | 64_usize;
+        }
+        if self.bp.full.val() {
+            self.status_reg.d.next = self.status_reg.d.val() | 128_usize;
         }
     }
-}
-
-#[cfg(test)]
-fn make_test_fifo_controller() -> FIFOSDRAMTest {
-    let timings = MemoryTimings::fast_boot_sim(100e6);
-    let mut uut = FIFOSDRAMTest::new(3, timings, OutputBuffer::DelayOne);
-    uut.fifo.write.connect();
-    uut.fifo.data_in.connect();
-    uut.fifo.read.connect();
-    uut.clock.connect();
-    uut.connect_all();
-    uut
-}
-
-#[test]
-fn test_sdram_fifo_synthesizes() {
-    let uut = make_test_fifo_controller();
-    yosys_validate("sdram_fifo_controller", &generate_verilog(&uut)).unwrap();
-}
-
-#[test]
-fn test_sdram_works() {
-    let uut = make_test_fifo_controller();
-    let mut sim = Simulation::new();
-    sim.add_clock(5000, |x: &mut Box<FIFOSDRAMTest>| {
-        x.clock.next = !x.clock.val()
-    });
-    sim.add_testbench(move |mut sim: Sim<FIFOSDRAMTest>| {
-        let mut x = sim.init()?;
-        wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..128_u32 {
-            x = sim.watch(|x| !x.fifo.full.val(), x)?;
-            x.fifo.data_in.next = counter.into();
-            x.fifo.write.next = true;
-            wait_clock_cycle!(sim, clock, x);
-            x.fifo.write.next = false;
-        }
-        sim.done(x)
-    });
-    sim.add_testbench(move |mut sim: Sim<FIFOSDRAMTest>| {
-        let mut x = sim.init()?;
-        wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..128_u32 {
-            x = sim.watch(|x| !x.fifo.empty.val(), x)?;
-            sim_assert_eq!(sim, x.fifo.data_out.val(), counter, x);
-            x.fifo.read.next = true;
-            wait_clock_cycle!(sim, clock, x);
-            x.fifo.read.next = false;
-        }
-        sim.done(x)
-    });
-    sim.run_to_file(Box::new(uut), 100_000_000, "fifo_sdram.vcd")
-        .unwrap();
 }

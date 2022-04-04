@@ -25,8 +25,8 @@ impl<const N: usize> Shot<N> {
             clock: Signal::default(),
             fired: Default::default(),
             duration: Constant::new(clocks.into()),
-            counter: DFF::new(0_u32.into()),
-            state: DFF::new(false),
+            counter: Default::default(),
+            state: Default::default(),
         }
     }
 }

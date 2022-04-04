@@ -67,7 +67,7 @@ impl ADS868XSimulator {
             clock: Default::default(),
             reg_ram: Default::default(),
             spi_slave: SPISlave::new(spi_config),
-            state: DFF::new(ADS868XState::Ready),
+            state: Default::default(),
             conversion_counter: Default::default(),
             inbound: Default::default(),
             read_cmd: Default::default(),

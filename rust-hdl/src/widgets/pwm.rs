@@ -17,7 +17,7 @@ impl<const N: usize> Default for PulseWidthModulator<N> {
             threshold: Signal::default(),
             clock: Signal::default(),
             active: Signal::new_with_default(false),
-            counter: DFF::new(0_usize.into()),
+            counter: Default::default(),
         }
     }
 }

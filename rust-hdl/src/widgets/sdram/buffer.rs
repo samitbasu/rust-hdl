@@ -2,7 +2,7 @@ use crate::core::prelude::*;
 use crate::widgets::prelude::*;
 use crate::widgets::sdram::*;
 
-#[derive(LogicBlock, Clone)]
+#[derive(LogicBlock, Clone, Default)]
 pub struct SDRAMOnChipBuffer<const D: usize> {
     pub buf_in: SDRAMDevice<D>,
     pub buf_out: SDRAMDriver<D>,
@@ -14,23 +14,6 @@ pub struct SDRAMOnChipBuffer<const D: usize> {
     address_flop: DFF<Bits<13>>,
     write_flop: DFF<Bits<D>>,
     read_flop: DFF<Bits<D>>,
-}
-
-impl<const D: usize> Default for SDRAMOnChipBuffer<D> {
-    fn default() -> Self {
-        Self {
-            buf_in: Default::default(),
-            buf_out: Default::default(),
-            we_not_flop: DFF::new(true),
-            cas_not_flop: DFF::new(true),
-            ras_not_flop: DFF::new(true),
-            cs_not_flop: DFF::new(true),
-            bank_flop: Default::default(),
-            address_flop: Default::default(),
-            write_flop: Default::default(),
-            read_flop: Default::default(),
-        }
-    }
 }
 
 impl<const D: usize> Logic for SDRAMOnChipBuffer<D> {
