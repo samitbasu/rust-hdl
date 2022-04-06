@@ -1,6 +1,7 @@
 use crate::core::prelude::*;
+use crate::hls::fifo::SyncFIFO;
 use crate::widgets::dff::DFF;
-use crate::widgets::prelude::{DelayLine, MemoryTimings};
+use crate::widgets::prelude::{DelayLine, MemoryTimings, SynchronousFIFO};
 use crate::widgets::sdram::cmd::{SDRAMCommand, SDRAMCommandEncoder};
 use crate::widgets::sdram::{OutputBuffer, SDRAMDriver};
 
@@ -32,19 +33,30 @@ enum State {
 //  R - Row bits in the address
 //  C - Col bits in the address
 //  D - Data bus width
-//  L - Line width (multiple of D)
+//  L - Burst size (< 32)
 #[derive(LogicBlock)]
-pub struct SDRAMBaseController<const R: usize, const C: usize, const L: usize, const D: usize> {
+pub struct SDRAMBurstController<const R: usize, const C: usize, const L: u32, const D: usize> {
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
+    // We have a couple of small FIFOs that are used to stage data for the writes and reads
+    // We forward these interfaces to the user (this is the MIG pattern used in the Spartan6).
+    // So to use this controller, you write L words to the input fifo and then trigger
+    // the write command, or you trigger a read command and then consume words out of the
+    // output fifo.
+    pub data_in: Signal<In, Bits<D>>,
+    pub data_write: Signal<In, Bit>,
+    pub full: Signal<Out, Bit>,
+    // The output interface does not allow flow control.  You must hook this up to a
+    // FIFO on the consumer side to receive data or risk data loss.  It is your
+    // responsibility to ensure that you can accept L values on the output interface
+    // when you issue the READ command.
+    pub data_out: Signal<Out, Bits<D>>,
+    pub data_valid: Signal<Out, Bit>,
     // Command interface
-    pub data_in: Signal<In, Bits<L>>,
     pub write_not_read: Signal<In, Bit>,
     pub cmd_strobe: Signal<In, Bit>,
     pub cmd_address: Signal<In, Bits<32>>,
     pub busy: Signal<Out, Bit>,
-    pub data_out: Signal<Out, Bits<L>>,
-    pub data_valid: Signal<Out, Bit>,
     pub error: Signal<Out, Bit>,
     cmd: Signal<Local, SDRAMCommand>,
     encode: SDRAMCommandEncoder,
@@ -54,43 +66,37 @@ pub struct SDRAMBaseController<const R: usize, const C: usize, const L: usize, c
     t_refresh_max: Constant<Bits<16>>,
     t_rcd: Constant<Bits<16>>,
     t_wr: Constant<Bits<16>>,
-    max_transfer_size: Constant<Bits<5>>,
+    max_transfer_size: Constant<Bits<6>>,
     mode_register: Constant<Bits<13>>,
     cas_delay: Constant<Bits<3>>,
     state: DFF<State>,
-    reg_data_write: DFF<Bits<L>>,
-    reg_data_read: DFF<Bits<L>>,
+    fp: SynchronousFIFO<Bits<D>, 5, 6, L>,
     reg_address: DFF<Bits<32>>,
     reg_cmd_address: DFF<Bits<32>>,
     delay_counter: DFF<Bits<16>>,
     refresh_counter: DFF<Bits<16>>,
-    transfer_counter: DFF<Bits<5>>,
+    transfer_counter: DFF<Bits<6>>,
     read_valid: DelayLine<Bit, 8, 3>,
     addr_bank: Signal<Local, Bits<2>>,
     addr_row: Signal<Local, Bits<13>>,
     addr_col: Signal<Local, Bits<13>>,
     write_pending: DFF<Bit>,
     read_pending: DFF<Bit>,
-    read_ready: DFF<Bit>,
     refresh_needed: DFF<Bit>,
     row_bits: Constant<Bits<32>>,
     col_bits: Constant<Bits<32>>,
-    data_bits: Constant<Bits<L>>,
-    data_shift_in: Constant<Bits<L>>,
-    data_out_counter: DFF<Bits<5>>,
 }
 
-impl<const R: usize, const C: usize, const L: usize, const D: usize>
-    SDRAMBaseController<R, C, L, D>
+impl<const R: usize, const C: usize, const L: u32, const D: usize>
+    SDRAMBurstController<R, C, L, D>
 {
     pub fn new(
         cas_delay: u32,
         timings: MemoryTimings,
         buffer: OutputBuffer,
-    ) -> SDRAMBaseController<R, C, L, D> {
-        assert_eq!(L % D, 0);
-        assert!(L / D <= 16);
-        assert_eq!((1 << C) % (L / D), 0);
+    ) -> SDRAMBurstController<R, C, L, D> {
+        assert!(L < 64);
+        assert_eq!((1 << C) % L, 0);
         // mode register definitions
         // A2:A0 are the burst length, this design does not use burst transfers
         // so A2:A0 are 0
@@ -104,6 +110,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
             sdram: Default::default(),
             cmd: Default::default(),
             data_in: Default::default(),
+            data_write: Default::default(),
             write_not_read: Default::default(),
             cmd_strobe: Default::default(),
             cmd_address: Default::default(),
@@ -117,7 +124,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
             t_refresh_max: Constant::new((timings.t_refresh_max() * 9 / 10).into()),
             t_rcd: Constant::new((timings.t_rcd()).into()),
             t_wr: Constant::new((timings.t_wr()).into()),
-            max_transfer_size: Constant::new({ L / D }.into()),
+            max_transfer_size: Constant::new(L.into()),
             mode_register: Constant::new(mode_register.into()),
             /*
              * For a registered buffer, we need to add 2 cycles to the cas delay
@@ -133,8 +140,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
                 .into(),
             ),
             state: Default::default(),
-            reg_data_write: Default::default(),
-            reg_data_read: Default::default(),
+            fp: Default::default(),
             reg_address: Default::default(),
             reg_cmd_address: Default::default(),
             delay_counter: Default::default(),
@@ -147,26 +153,22 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
             write_pending: Default::default(),
             row_bits: Constant::new(R.into()),
             col_bits: Constant::new(C.into()),
-            data_bits: Constant::new(D.into()),
-            data_shift_in: Constant::new({ L - D }.into()),
             read_pending: Default::default(),
-            data_out_counter: Default::default(),
-            read_ready: Default::default(),
             encode: Default::default(),
             refresh_needed: Default::default(),
+            full: Default::default(),
         }
     }
 }
 
-impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
-    for SDRAMBaseController<R, C, L, D>
+impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
+    for SDRAMBurstController<R, C, L, D>
 {
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the internal logic
         self.state.clk.next = self.clock.val();
-        self.reg_data_write.clk.next = self.clock.val();
-        self.reg_data_read.clk.next = self.clock.val();
+        self.fp.clock.next = self.clock.val();
         self.reg_address.clk.next = self.clock.val();
         self.delay_counter.clk.next = self.clock.val();
         self.refresh_counter.clk.next = self.clock.val();
@@ -174,8 +176,6 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
         self.transfer_counter.clk.next = self.clock.val();
         self.write_pending.clk.next = self.clock.val();
         self.read_pending.clk.next = self.clock.val();
-        self.data_out_counter.clk.next = self.clock.val();
-        self.read_ready.clk.next = self.clock.val();
         self.refresh_needed.clk.next = self.clock.val();
         self.reg_cmd_address.clk.next = self.clock.val();
         self.reg_cmd_address.d.next = self.reg_cmd_address.q.val();
@@ -186,18 +186,19 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
         self.cmd.next = SDRAMCommand::NOP;
         self.sdram.address.next = 0_usize.into();
         self.sdram.bank.next = 0_usize.into();
-        self.data_out.next = self.reg_data_read.q.val();
-        self.reg_data_write.d.next = self.reg_data_write.q.val();
-        self.reg_data_read.d.next = self.reg_data_read.q.val();
+        // Connect the input FIFO to the write interface
+        self.fp.data_in.next = self.data_in.val();
+        self.fp.write.next = self.data_write.val();
+        self.full.next = self.fp.full.val();
+        // Connect the read bus directly to the DRAM
+        self.data_out.next = self.sdram.read_data.val();
+        self.data_valid.next = self.read_valid.data_out.val();
         self.reg_address.d.next = self.reg_address.q.val();
         self.write_pending.d.next = self.write_pending.q.val();
         self.read_pending.d.next = self.read_pending.q.val();
         self.refresh_needed.d.next = self.refresh_needed.q.val();
-        self.data_out_counter.d.next =
-            self.data_out_counter.q.val() + self.read_valid.data_out.val();
-        self.data_valid.next = self.read_ready.q.val();
         self.sdram.write_enable.next = false;
-        self.sdram.write_data.next = self.reg_data_write.q.val().get_bits::<D>(0_usize);
+        self.sdram.write_data.next = self.fp.data_out.val();
         self.read_valid.data_in.next = false;
         self.read_valid.delay.next = self.cas_delay.val();
         // Calculate the read and write addresses
@@ -218,6 +219,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
         self.busy.next = (self.state.q.val() != State::Idle)
             | self.write_pending.q.val()
             | self.read_pending.q.val();
+        self.fp.read.next = false;
         match self.state.q.val() {
             State::Boot => {
                 if self.delay_counter.q.val() == self.boot_delay.val() {
@@ -266,7 +268,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
                 } else if self.read_pending.q.val() {
                     self.reg_address.d.next = self.reg_cmd_address.q.val();
                     self.state.d.next = State::IssueRead;
-                } else if self.write_pending.q.val() {
+                } else if self.write_pending.q.val() & !self.fp.almost_empty.val() {
                     self.reg_address.d.next = self.reg_cmd_address.q.val();
                     self.state.d.next = State::IssueWrite;
                 }
@@ -277,7 +279,6 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
                 self.sdram.address.next = self.addr_row.val();
                 self.state.d.next = State::ReadActivate;
                 self.read_pending.d.next = false;
-                self.data_out_counter.d.next = 0_u8.into();
             }
             State::IssueWrite => {
                 self.cmd.next = SDRAMCommand::Active;
@@ -312,8 +313,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
                     self.sdram.address.next = self.addr_col.val();
                     self.cmd.next = SDRAMCommand::Write;
                     self.transfer_counter.d.next = self.transfer_counter.q.val() + 1_usize;
-                    self.reg_data_write.d.next =
-                        self.reg_data_write.q.val() >> self.data_bits.val();
+                    self.fp.read.next = true;
                     self.reg_address.d.next = self.reg_address.q.val() + 1_usize;
                 } else {
                     self.delay_counter.d.next = 0_usize.into();
@@ -355,20 +355,9 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
             self.reg_cmd_address.d.next = self.cmd_address.val();
             if self.write_not_read.val() {
                 self.write_pending.d.next = true;
-                self.reg_data_write.d.next = self.data_in.val();
             } else {
                 self.read_pending.d.next = true;
             }
-        }
-        if self.read_valid.data_out.val() {
-            self.reg_data_read.d.next = bit_cast::<L, D>(self.sdram.read_data.val())
-                << self.data_shift_in.val()
-                | (self.reg_data_read.q.val() >> self.data_bits.val());
-        }
-        self.read_ready.d.next = !self.read_ready.q.val()
-            & (self.data_out_counter.q.val() == self.max_transfer_size.val());
-        if self.read_ready.q.val() {
-            self.data_out_counter.d.next = 0_usize.into();
         }
         if self.refresh_counter.q.val() >= self.t_refresh_max.val() {
             self.refresh_needed.d.next = true;

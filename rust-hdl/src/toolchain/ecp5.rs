@@ -4,14 +4,14 @@ use crate::toolchain::map_signal_type_to_lattice_string;
 use std::collections::HashMap;
 
 #[derive(Default)]
-struct PCFGenerator {
+struct LPFGenerator {
     path: NamedPath,
     namespace: NamedPath,
-    pcf: Vec<String>,
+    lpf: Vec<String>,
     names: HashMap<usize, String>,
 }
 
-impl Probe for PCFGenerator {
+impl Probe for LPFGenerator {
     fn visit_start_scope(&mut self, name: &str, _node: &dyn Block) {
         let _top_level = self.path.to_string();
         self.path.push(name);
@@ -36,12 +36,12 @@ impl Probe for PCFGenerator {
             };
             match &pin.constraint {
                 Constraint::Location(l) => {
-                    self.pcf
+                    self.lpf
                         .push(format!("LOCATE COMP \"{}\" SITE \"{}\"", prefix, l));
                 }
                 Constraint::Kind(k) => {
                     let name = map_signal_type_to_lattice_string(k);
-                    self.pcf
+                    self.lpf
                         .push(format!("IOBUF PORT \"{}\" IO_TYPE={}", prefix, name))
                 }
                 Constraint::Timing(t) => {
@@ -58,16 +58,16 @@ impl Probe for PCFGenerator {
                         _ => unimplemented!("Unknown timing constraint for ECP5 generation"),
                     };
                     if !timing.is_empty() {
-                        self.pcf.push(timing);
+                        self.lpf.push(timing);
                     }
                 }
-                Constraint::Custom(s) => self.pcf.push(s.clone()),
+                Constraint::Custom(s) => self.lpf.push(s.clone()),
                 Constraint::Slew(k) => {
                     let tag = match k {
                         SlewType::Fast => "FAST",
                         SlewType::Normal => "SLOW",
                     };
-                    self.pcf
+                    self.lpf
                         .push(format!("IOBUF PORT \"{}\" SLEWRATE={}", prefix, tag));
                 }
             }
@@ -81,14 +81,16 @@ impl Probe for PCFGenerator {
     }
 }
 
-pub fn generate_pcf<U: Block>(uut: &U) -> String {
-    let mut pcf = PCFGenerator::default();
-    uut.accept("top", &mut pcf);
-    let mut pcf_uniq = vec![];
-    for line in pcf.pcf {
-        if !pcf_uniq.contains(&line) {
-            pcf_uniq.push(line);
+pub fn generate_lpf<U: Block>(uut: &U) -> String {
+    let mut lpf = LPFGenerator::default();
+    uut.accept("top", &mut lpf);
+    let mut lpf_uniq = vec![];
+    lpf_uniq.push("BLOCK RESETPATHS".to_string());
+    lpf_uniq.push("BLOCK ASYNCPATHS".to_string());
+    for line in lpf.lpf {
+        if !lpf_uniq.contains(&line) {
+            lpf_uniq.push(line);
         }
     }
-    pcf_uniq.join(";\n") + ";\n"
+    lpf_uniq.join(";\n") + ";\n"
 }

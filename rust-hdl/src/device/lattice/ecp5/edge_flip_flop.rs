@@ -9,7 +9,7 @@ pub struct EdgeFlipFlop<T: Synth> {
 
 fn wrapper_once() -> &'static str {
     r##"
-OFS1P3DX inst_OFS1P3DX(.SCLK(clk), .SP(1), .D(d), .Q(q), .CD(0));
+OFS1P3DX inst_OFS1P3DX(.SCLK(clk), .SP(1'b1), .D(d), .Q(q), .CD(1'b0));
     "##
 }
 

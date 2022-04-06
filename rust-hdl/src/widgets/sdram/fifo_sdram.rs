@@ -7,6 +7,8 @@ use crate::widgets::sdram::SDRAMDriver;
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
 enum State {
     Idle,
+    Read,
+    Write,
     Busy,
 }
 
@@ -31,15 +33,15 @@ pub struct SDRAMFIFOController<
     pub overflow: Signal<Out, Bit>,
     pub underflow: Signal<Out, Bit>,
     pub status: Signal<Out, Bits<8>>,
-    core: SDRAMBaseController<R, C, L, D>,
-    fp: AsynchronousFIFO<Bits<L>, 6, 7, 1>,
-    bp: AsynchronousFIFO<Bits<L>, 6, 7, 1>,
-    will_write: Signal<Local, Bit>,
-    will_read: Signal<Local, Bit>,
+    controller: SDRAMBaseController<R, C, L, D>,
+    fp: AsynchronousFIFO<Bits<L>, 2, 3, 1>,
+    bp: AsynchronousFIFO<Bits<L>, 2, 3, 1>,
+    can_write: DFF<Bit>,
+    can_read: DFF<Bit>,
     read_pointer: DFF<Bits<A>>,
     write_pointer: DFF<Bits<A>>,
-    dram_is_empty: Signal<Local, Bit>,
-    dram_is_full: Signal<Local, Bit>,
+    dram_is_empty: DFF<Bit>,
+    dram_is_full: DFF<Bit>,
     state: DFF<State>,
     line_to_word_ratio: Constant<Bits<A>>,
     fill: DFF<Bits<A>>,
@@ -66,11 +68,11 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: us
             overflow: Default::default(),
             underflow: Default::default(),
             status: Default::default(),
-            core: SDRAMBaseController::new(cas_delay, timings, buffer),
+            controller: SDRAMBaseController::new(cas_delay, timings, buffer),
             fp: Default::default(),
             bp: Default::default(),
-            will_write: Default::default(),
-            will_read: Default::default(),
+            can_write: Default::default(),
+            can_read: Default::default(),
             read_pointer: Default::default(),
             write_pointer: Default::default(),
             dram_is_empty: Default::default(),
@@ -88,12 +90,16 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: us
 {
     #[hdl_gen]
     fn update(&mut self) {
-        self.core.clock.next = self.ram_clock.val();
-        SDRAMDriver::<D>::link(&mut self.sdram, &mut self.core.sdram);
+        self.controller.clock.next = self.ram_clock.val();
+        SDRAMDriver::<D>::link(&mut self.sdram, &mut self.controller.sdram);
         self.read_pointer.clk.next = self.ram_clock.val();
         self.read_pointer.d.next = self.read_pointer.q.val();
         self.write_pointer.clk.next = self.ram_clock.val();
         self.write_pointer.d.next = self.write_pointer.q.val();
+        self.dram_is_empty.clk.next = self.ram_clock.val();
+        self.dram_is_full.clk.next = self.ram_clock.val();
+        self.can_read.clk.next = self.ram_clock.val();
+        self.can_write.clk.next = self.ram_clock.val();
         // The FP write clock is external, but the read clock is the DRAM clock
         self.fp.write_clock.next = self.clock.val();
         self.fp.read_clock.next = self.ram_clock.val();
@@ -113,48 +119,56 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: us
         self.empty.next = self.bp.empty.val();
         self.underflow.next = self.bp.underflow.val();
         // Connect the read interface of the FP fifo to the DRAM controller
-        self.core.data_in.next = self.fp.data_out.val();
+        self.controller.data_in.next = self.fp.data_out.val();
         self.fp.read.next = false;
         // Connect the write interface of the DRAM controller to the BP fifo
-        self.bp.data_in.next = self.core.data_out.val();
-        self.bp.write.next = self.core.data_valid.val();
+        self.bp.data_in.next = self.controller.data_out.val();
+        self.bp.write.next = self.controller.data_valid.val();
         // That takes care of the outside facing part of the fifo...
         //  Now the internals.
-        self.dram_is_empty.next = self.read_pointer.q.val() == self.write_pointer.q.val();
-        self.dram_is_full.next = (self.write_pointer.q.val() + self.line_to_word_ratio.val())
+        self.dram_is_empty.d.next = self.read_pointer.q.val() == self.write_pointer.q.val();
+        self.dram_is_full.d.next = (self.write_pointer.q.val() + self.line_to_word_ratio.val())
             == self.read_pointer.q.val();
-        self.will_write.next = !self.dram_is_full.val() & !self.fp.empty.val();
-        self.will_read.next = !self.dram_is_empty.val() & !self.bp.full.val();
-        self.core.cmd_address.next = 0_usize.into();
-        self.core.write_not_read.next = false;
-        self.core.cmd_strobe.next = false;
+        self.can_write.d.next = !self.dram_is_full.q.val() & !self.fp.empty.val();
+        self.can_read.d.next = !self.dram_is_empty.q.val() & !self.bp.full.val();
+        self.controller.cmd_address.next = 0_usize.into();
+        self.controller.write_not_read.next = false;
+        self.controller.cmd_strobe.next = false;
         self.fill.clk.next = self.ram_clock.val();
         self.fill.d.next = self.fill.q.val();
         match self.state.q.val() {
             State::Idle => {
-                if !self.core.busy.val() {
-                    if self.will_read.val() {
-                        self.state.d.next = State::Busy;
-                        self.core.cmd_address.next = bit_cast::<32, A>(self.read_pointer.q.val());
-                        self.core.write_not_read.next = false;
-                        self.core.cmd_strobe.next = true;
-                        self.read_pointer.d.next =
-                            self.read_pointer.q.val() + self.line_to_word_ratio.val();
-                        self.fill.d.next = self.fill.q.val() - 1_usize;
-                    } else if self.will_write.val() {
-                        self.state.d.next = State::Busy;
-                        self.core.cmd_address.next = bit_cast::<32, A>(self.write_pointer.q.val());
-                        self.core.write_not_read.next = true;
-                        self.core.cmd_strobe.next = true;
+                if !self.controller.busy.val() {
+                    if self.can_read.q.val() {
+                        self.state.d.next = State::Read;
+                        self.controller.cmd_address.next =
+                            bit_cast::<32, A>(self.read_pointer.q.val());
+                        self.controller.write_not_read.next = false;
+                        self.controller.cmd_strobe.next = true;
+                    } else if self.can_write.q.val() {
+                        self.state.d.next = State::Write;
+                        self.controller.cmd_address.next =
+                            bit_cast::<32, A>(self.write_pointer.q.val());
+                        self.controller.write_not_read.next = true;
+                        self.controller.cmd_strobe.next = true;
                         self.fp.read.next = true;
-                        self.write_pointer.d.next =
-                            self.write_pointer.q.val() + self.line_to_word_ratio.val();
-                        self.fill.d.next = self.fill.q.val() + 1_usize;
                     }
                 }
             }
+            State::Read => {
+                self.read_pointer.d.next =
+                    self.read_pointer.q.val() + self.line_to_word_ratio.val();
+                self.fill.d.next = self.fill.q.val() - 1_usize;
+                self.state.d.next = State::Busy;
+            }
+            State::Write => {
+                self.write_pointer.d.next =
+                    self.write_pointer.q.val() + self.line_to_word_ratio.val();
+                self.fill.d.next = self.fill.q.val() + 1_usize;
+                self.state.d.next = State::Busy;
+            }
             State::Busy => {
-                if !self.core.busy.val() {
+                if !self.controller.busy.val() {
                     self.state.d.next = State::Idle;
                 }
             }
@@ -184,7 +198,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: us
         if self.fill.q.val() > bits::<A>(4190000) {
             self.status_reg.d.next = self.status_reg.d.val() | 16_usize;
         }
-        if self.dram_is_empty.val() {
+        if self.dram_is_empty.q.val() {
             self.status_reg.d.next = self.status_reg.d.val() | 32_usize;
         }
         if self.fp.empty.val() {

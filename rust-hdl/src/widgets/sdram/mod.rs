@@ -1,10 +1,18 @@
 pub mod basic_controller;
 pub mod buffer;
+pub mod burst_controller;
 pub mod cmd;
 pub mod fifo_sdram;
 pub mod timings;
 
 use crate::core::prelude::*;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum OutputBuffer {
+    Wired,
+    DelayOne,
+    DelayTwo,
+}
 
 #[derive(LogicInterface, Clone, Debug, Default)]
 #[join = "SDRAMDevice"]
