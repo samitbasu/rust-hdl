@@ -4,17 +4,17 @@ use crate::widgets::prelude::*;
 use crate::widgets::sdram::SDRAMDriver;
 
 #[derive(LogicBlock)]
-pub struct SDRAMFIFO<const R: usize, const C: usize, const P: usize, const D: usize, const A: usize>
+pub struct SDRAMFIFO<const R: usize, const C: usize, const P: u32, const D: usize, const A: usize>
 {
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
     pub ram_clock: Signal<In, Clock>,
-    pub bus_write: FIFOWriteResponder<Bits<P>>,
-    pub bus_read: FIFOReadResponder<Bits<P>>,
+    pub bus_write: FIFOWriteResponder<Bits<D>>,
+    pub bus_read: FIFOReadResponder<Bits<D>>,
     controller: SDRAMFIFOController<R, C, P, D, A>,
 }
 
-impl<const R: usize, const C: usize, const P: usize, const D: usize, const A: usize> Logic
+impl<const R: usize, const C: usize, const P: u32, const D: usize, const A: usize> Logic
     for SDRAMFIFO<R, C, P, D, A>
 {
     #[hdl_gen]
@@ -33,7 +33,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize, const A: us
     }
 }
 
-impl<const R: usize, const C: usize, const P: usize, const D: usize, const A: usize>
+impl<const R: usize, const C: usize, const P: u32, const D: usize, const A: usize>
     SDRAMFIFO<R, C, P, D, A>
 {
     pub fn new(
@@ -54,7 +54,7 @@ impl<const R: usize, const C: usize, const P: usize, const D: usize, const A: us
 
 #[test]
 fn test_sdram_fifo_synthesizes() {
-    let mut uut = SDRAMFIFO::<6, 4, 64, 16, 12>::new(
+    let mut uut = SDRAMFIFO::<6, 4, 4, 16, 12>::new(
         3,
         MemoryTimings::fast_boot_sim(125e6),
         OutputBuffer::Wired,

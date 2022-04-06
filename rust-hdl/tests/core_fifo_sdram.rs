@@ -9,7 +9,7 @@ use rust_hdl::widgets::sdram::buffer::SDRAMOnChipBuffer;
 struct FIFOSDRAMTest {
     dram: SDRAMSimulator<6, 4, 10, 16>,
     buffer: SDRAMOnChipBuffer<16>,
-    fifo: SDRAMFIFOController<6, 4, 64, 16, 12>,
+    fifo: SDRAMFIFOController<6, 4, 16, 16, 12>,
     clock: Signal<In, Clock>,
 }
 
@@ -64,7 +64,7 @@ fn test_sdram_works() {
     sim.add_testbench(move |mut sim: Sim<FIFOSDRAMTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..128_u32 {
+        for counter in 0_u32..512_u32 {
             x = sim.watch(|x| !x.fifo.full.val(), x)?;
             x.fifo.data_in.next = counter.into();
             x.fifo.write.next = true;
@@ -76,7 +76,7 @@ fn test_sdram_works() {
     sim.add_testbench(move |mut sim: Sim<FIFOSDRAMTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..128_u32 {
+        for counter in 0_u32..512_u32 {
             x = sim.watch(|x| !x.fifo.empty.val(), x)?;
             sim_assert_eq!(sim, x.fifo.data_out.val(), counter, x);
             x.fifo.read.next = true;

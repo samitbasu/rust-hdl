@@ -36,7 +36,6 @@ fn make_test_device() -> TestSDRAMDevice {
     uut.cntrl.cmd_strobe.connect();
     uut.cntrl.cmd_address.connect();
     uut.cntrl.write_not_read.connect();
-    uut.cntrl.data_write.connect();
     uut.connect_all();
     uut
 }
@@ -51,7 +50,6 @@ fn make_test_controller() -> SDRAMBurstController<5, 8, 8, 16> {
     uut.clock.connect();
     uut.sdram.link_connect_dest();
     uut.write_not_read.connect();
-    uut.data_write.connect();
     uut.connect_all();
     uut
 }
@@ -90,13 +88,6 @@ fn test_unit_boots() {
 #[macro_export]
 macro_rules! sdram_basic_write {
     ($sim: ident, $uut: ident, $cntrl: ident, $addr: expr, $data: expr) => {
-        for datum in $data {
-            $uut = $sim.watch(|x| !x.$cntrl.full.val(), $uut)?;
-            $uut.$cntrl.data_in.next = (*datum).into();
-            $uut.$cntrl.data_write.next = true;
-            wait_clock_cycle!($sim, clock, $uut);
-            $uut.$cntrl.data_write.next = false;
-        }
         $uut = $sim.watch(|x| !x.$cntrl.busy.val(), $uut)?;
         $uut.$cntrl.cmd_address.next = ($addr).into();
         $uut.$cntrl.write_not_read.next = true;
@@ -106,6 +97,11 @@ macro_rules! sdram_basic_write {
         $uut.$cntrl.cmd_address.next = 0_usize.into();
         $uut.$cntrl.write_not_read.next = false;
         $uut.$cntrl.data_in.next = 0_usize.into();
+        for datum in $data {
+            $uut.$cntrl.data_in.next = (*datum).into();
+            $uut = $sim.watch(|x| x.$cntrl.data_strobe.val(), $uut)?;
+            wait_clock_cycle!($sim, clock, $uut);
+        }
     };
 }
 

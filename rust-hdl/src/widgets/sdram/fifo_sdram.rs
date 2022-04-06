@@ -1,7 +1,5 @@
 use crate::core::prelude::*;
-use crate::widgets::prelude::{
-    AsynchronousFIFO, MemoryTimings, OutputBuffer, SDRAMBaseController, DFF,
-};
+use crate::widgets::prelude::{AsynchronousFIFO, MemoryTimings, OutputBuffer, SDRAMBaseController, DFF, SDRAMBurstController, BitSynchronizer};
 use crate::widgets::sdram::SDRAMDriver;
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
@@ -16,7 +14,7 @@ enum State {
 pub struct SDRAMFIFOController<
     const R: usize, // Number of rows in the SDRAM
     const C: usize, // Number of columns in the SDRAM
-    const L: usize, // Line size (multiple of the SDRAM interface width) - rem(C, L) = 0
+    const L: u32, // Line size (multiple of the SDRAM interface width) - rem(2^C, L) = 0
     const D: usize, // Number of bits in the SDRAM interface width
     const A: usize, // Number of address bits in the SDRAM (should be C + R + B)
 > {
@@ -24,18 +22,18 @@ pub struct SDRAMFIFOController<
     pub sdram: SDRAMDriver<D>,
     pub ram_clock: Signal<In, Clock>,
     // FIFO interface
-    pub data_in: Signal<In, Bits<L>>,
+    pub data_in: Signal<In, Bits<D>>,
     pub write: Signal<In, Bit>,
     pub full: Signal<Out, Bit>,
-    pub data_out: Signal<Out, Bits<L>>,
+    pub data_out: Signal<Out, Bits<D>>,
     pub read: Signal<In, Bit>,
     pub empty: Signal<Out, Bit>,
     pub overflow: Signal<Out, Bit>,
     pub underflow: Signal<Out, Bit>,
     pub status: Signal<Out, Bits<8>>,
-    controller: SDRAMBaseController<R, C, L, D>,
-    fp: AsynchronousFIFO<Bits<L>, 2, 3, 1>,
-    bp: AsynchronousFIFO<Bits<L>, 2, 3, 1>,
+    controller: SDRAMBurstController<R, C, L, D>,
+    fp: AsynchronousFIFO<Bits<D>, 5, 6, L>,
+    bp: AsynchronousFIFO<Bits<D>, 5, 6, L>,
     can_write: DFF<Bit>,
     can_read: DFF<Bit>,
     read_pointer: DFF<Bits<A>>,
@@ -46,15 +44,17 @@ pub struct SDRAMFIFOController<
     line_to_word_ratio: Constant<Bits<A>>,
     fill: DFF<Bits<A>>,
     status_reg: DFF<Bits<8>>,
+    almost_full_synchronizer: BitSynchronizer,
+    almost_empty_synchronizer: BitSynchronizer,
 }
 
-impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: usize>
+impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usize>
     SDRAMFIFOController<R, C, L, D, A>
 {
     pub fn new(cas_delay: u32, timings: MemoryTimings, buffer: OutputBuffer) -> Self {
-        assert_eq!((1 << C) % (L / D), 0);
-        assert_eq!(L % D, 0);
+        assert_eq!((1 << C) % L, 0);
         assert_eq!(A, C + R + 2);
+        assert!(L < 32);
         Self {
             clock: Default::default(),
             sdram: Default::default(),
@@ -68,7 +68,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: us
             overflow: Default::default(),
             underflow: Default::default(),
             status: Default::default(),
-            controller: SDRAMBaseController::new(cas_delay, timings, buffer),
+            controller: SDRAMBurstController::new(cas_delay, timings, buffer),
             fp: Default::default(),
             bp: Default::default(),
             can_write: Default::default(),
@@ -78,14 +78,16 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: us
             dram_is_empty: Default::default(),
             dram_is_full: Default::default(),
             state: Default::default(),
-            line_to_word_ratio: Constant::new((L / D).into()),
+            line_to_word_ratio: Constant::new(L.into()),
             fill: Default::default(),
             status_reg: Default::default(),
+            almost_full_synchronizer: Default::default(),
+            almost_empty_synchronizer: Default::default()
         }
     }
 }
 
-impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: usize> Logic
+impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usize> Logic
     for SDRAMFIFOController<R, C, L, D, A>
 {
     #[hdl_gen]
@@ -118,9 +120,15 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: us
         self.bp.read.next = self.read.val();
         self.empty.next = self.bp.empty.val();
         self.underflow.next = self.bp.underflow.val();
+        // The almost empty/full signals in the async fifos are in the
+        // DRAM clock domain, so we need to synchronize them back
+        self.almost_empty_synchronizer.clock.next = self.clock.val();
+        self.almost_empty_synchronizer.sig_in.next = self.fp.almost_empty.val();
+        self.almost_full_synchronizer.clock.next = self.clock.val();
+        self.almost_full_synchronizer.sig_in.next = self.bp.almost_full.val();
         // Connect the read interface of the FP fifo to the DRAM controller
         self.controller.data_in.next = self.fp.data_out.val();
-        self.fp.read.next = false;
+        self.fp.read.next = self.controller.data_strobe.val();
         // Connect the write interface of the DRAM controller to the BP fifo
         self.bp.data_in.next = self.controller.data_out.val();
         self.bp.write.next = self.controller.data_valid.val();
@@ -129,8 +137,8 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: us
         self.dram_is_empty.d.next = self.read_pointer.q.val() == self.write_pointer.q.val();
         self.dram_is_full.d.next = (self.write_pointer.q.val() + self.line_to_word_ratio.val())
             == self.read_pointer.q.val();
-        self.can_write.d.next = !self.dram_is_full.q.val() & !self.fp.empty.val();
-        self.can_read.d.next = !self.dram_is_empty.q.val() & !self.bp.full.val();
+        self.can_write.d.next = !self.dram_is_full.q.val() & !self.almost_empty_synchronizer.sig_out.val();
+        self.can_read.d.next = !self.dram_is_empty.q.val() & !self.almost_full_synchronizer.sig_out.val();
         self.controller.cmd_address.next = 0_usize.into();
         self.controller.write_not_read.next = false;
         self.controller.cmd_strobe.next = false;
@@ -151,7 +159,6 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize, const A: us
                             bit_cast::<32, A>(self.write_pointer.q.val());
                         self.controller.write_not_read.next = true;
                         self.controller.cmd_strobe.next = true;
-                        self.fp.read.next = true;
                     }
                 }
             }
