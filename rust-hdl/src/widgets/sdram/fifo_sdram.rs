@@ -43,9 +43,6 @@ pub struct SDRAMFIFOController<
     state: DFF<State>,
     line_to_word_ratio: Constant<Bits<A>>,
     fill: DFF<Bits<A>>,
-    status_reg: DFF<Bits<8>>,
-    almost_full_synchronizer: BitSynchronizer,
-    almost_empty_synchronizer: BitSynchronizer,
 }
 
 impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usize>
@@ -80,9 +77,6 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
             state: Default::default(),
             line_to_word_ratio: Constant::new(L.into()),
             fill: Default::default(),
-            status_reg: Default::default(),
-            almost_full_synchronizer: Default::default(),
-            almost_empty_synchronizer: Default::default()
         }
     }
 }
@@ -122,10 +116,6 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
         self.underflow.next = self.bp.underflow.val();
         // The almost empty/full signals in the async fifos are in the
         // DRAM clock domain, so we need to synchronize them back
-        self.almost_empty_synchronizer.clock.next = self.clock.val();
-        self.almost_empty_synchronizer.sig_in.next = self.fp.almost_empty.val();
-        self.almost_full_synchronizer.clock.next = self.clock.val();
-        self.almost_full_synchronizer.sig_in.next = self.bp.almost_full.val();
         // Connect the read interface of the FP fifo to the DRAM controller
         self.controller.data_in.next = self.fp.data_out.val();
         self.fp.read.next = self.controller.data_strobe.val();
@@ -137,8 +127,8 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
         self.dram_is_empty.d.next = self.read_pointer.q.val() == self.write_pointer.q.val();
         self.dram_is_full.d.next = (self.write_pointer.q.val() + self.line_to_word_ratio.val())
             == self.read_pointer.q.val();
-        self.can_write.d.next = !self.dram_is_full.q.val() & !self.almost_empty_synchronizer.sig_out.val();
-        self.can_read.d.next = !self.dram_is_empty.q.val() & !self.almost_full_synchronizer.sig_out.val();
+        self.can_write.d.next = !self.dram_is_full.q.val() & !self.fp.almost_empty.val();
+        self.can_read.d.next = !self.dram_is_empty.q.val() & !self.bp.almost_full.val();
         self.controller.cmd_address.next = 0_usize.into();
         self.controller.write_not_read.next = false;
         self.controller.cmd_strobe.next = false;
@@ -180,9 +170,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
                 }
             }
         }
-        self.status_reg.clk.next = self.clock.val();
-        self.status.next = self.status_reg.q.val();
-        self.status_reg.d.next = 0_usize.into();
+        self.status.next = 0_usize.into();
         // We have 512Mbits of memory.
         // Each write is 128bits of data
         // So the max fill is 4M of data
@@ -191,28 +179,28 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
         //
         //524288   1048576   1572864   2097152   2621440   3145728   3670016   4194304
         if self.fill.q.val() > bits::<A>(838860) {
-            self.status_reg.d.next = self.status_reg.d.val() | 1_usize;
+            self.status.next = self.status.val() | 1_usize;
         }
         if self.fill.q.val() > bits::<A>(1677721) {
-            self.status_reg.d.next = self.status_reg.d.val() | 2_usize;
+            self.status.next = self.status.val() | 2_usize;
         }
         if self.fill.q.val() > bits::<A>(2516582) {
-            self.status_reg.d.next = self.status_reg.d.val() | 4_usize;
+            self.status.next = self.status.val() | 4_usize;
         }
         if self.fill.q.val() > bits::<A>(3355443) {
-            self.status_reg.d.next = self.status_reg.d.val() | 8_usize;
+            self.status.next = self.status.val() | 8_usize;
         }
-        if self.fill.q.val() > bits::<A>(4190000) {
-            self.status_reg.d.next = self.status_reg.d.val() | 16_usize;
+        if self.underflow.val() | self.overflow.val() {
+            self.status.next = self.status.val() | 16_usize;
         }
         if self.dram_is_empty.q.val() {
-            self.status_reg.d.next = self.status_reg.d.val() | 32_usize;
+            self.status.next = self.status.val() | 32_usize;
         }
         if self.fp.empty.val() {
-            self.status_reg.d.next = self.status_reg.d.val() | 64_usize;
+            self.status.next = self.status.val() | 64_usize;
         }
         if self.bp.full.val() {
-            self.status_reg.d.next = self.status_reg.d.val() | 128_usize;
+            self.status.next = self.status.val() | 128_usize;
         }
     }
 }

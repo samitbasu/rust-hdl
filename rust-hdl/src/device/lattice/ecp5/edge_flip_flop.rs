@@ -18,7 +18,7 @@ fn wrapper_multiple(count: usize) -> String {
         .map(|x| {
             format!(
                 "
-OFS1P3DX ofs_{x}(.SCLK(clk), .SP(1), .D(d[{x}]), .Q(q[{x}]), .CD(0));
+OFS1P3DX ofs_{x}(.SCLK(clk), .SP(1'b1), .D(d[{x}]), .Q(q[{x}]), .CD(1'b0));
 ",
                 x = x
             )

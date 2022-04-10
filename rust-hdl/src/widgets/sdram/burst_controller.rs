@@ -20,6 +20,7 @@ enum State {
     ReadActivate,
     ReadCycle,
     WriteActivate,
+    WritePrep,
     WriteCycle,
     Recovery,
     Precharge,
@@ -82,6 +83,11 @@ pub struct SDRAMBurstController<const R: usize, const C: usize, const L: u32, co
     refresh_needed: DFF<Bit>,
     row_bits: Constant<Bits<32>>,
     col_bits: Constant<Bits<32>>,
+    // These are used to decouple the timing of the controller from the
+    // outside world
+    data_in_reg: DFF<Bits<D>>,
+    data_strobe_reg: DFF<Bit>,
+    data_out_reg: DFF<Bits<D>>,
 }
 
 impl<const R: usize, const C: usize, const L: u32, const D: usize>
@@ -118,7 +124,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize>
             boot_delay: Constant::new((timings.t_boot() + 10).into()),
             t_rp: Constant::new((timings.t_rp()).into()),
             t_rfc: Constant::new((timings.t_rfc()).into()),
-            t_refresh_max: Constant::new((timings.t_refresh_max() * 8 / 10).into()),
+            t_refresh_max: Constant::new((timings.t_refresh_max() * 7 / 10).into()),
             t_rcd: Constant::new((timings.t_rcd()).into()),
             t_wr: Constant::new((timings.t_wr()).into()),
             max_transfer_size: Constant::new(L.into()),
@@ -130,9 +136,9 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize>
              */
             cas_delay: Constant::new(
                 match buffer {
-                    OutputBuffer::Wired => cas_delay,
-                    OutputBuffer::DelayOne => cas_delay + 1,
-                    OutputBuffer::DelayTwo => cas_delay + 2,
+                    OutputBuffer::Wired => cas_delay + 1,
+                    OutputBuffer::DelayOne => cas_delay + 2,
+                    OutputBuffer::DelayTwo => cas_delay + 3,
                 }
                 .into(),
             ),
@@ -149,9 +155,12 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize>
             write_pending: Default::default(),
             row_bits: Constant::new(R.into()),
             col_bits: Constant::new(C.into()),
+            data_in_reg: Default::default(),
             read_pending: Default::default(),
             encode: Default::default(),
             refresh_needed: Default::default(),
+            data_out_reg: Default::default(),
+            data_strobe_reg: Default::default(),
         }
     }
 }
@@ -173,6 +182,9 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
         self.refresh_needed.clk.next = self.clock.val();
         self.reg_cmd_address.clk.next = self.clock.val();
         self.reg_cmd_address.d.next = self.reg_cmd_address.q.val();
+        self.data_in_reg.clk.next = self.clock.val();
+        self.data_out_reg.clk.next = self.clock.val();
+        self.data_strobe_reg.clk.next = self.clock.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
@@ -180,17 +192,21 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
         self.cmd.next = SDRAMCommand::NOP;
         self.sdram.address.next = 0_usize.into();
         self.sdram.bank.next = 0_usize.into();
-        // Connect the read bus directly to the DRAM
-        self.data_out.next = self.sdram.read_data.val();
+        self.data_in_reg.d.next = self.data_in_reg.q.val();
+        self.data_out_reg.d.next = self.data_out_reg.q.val();
+        self.data_strobe_reg.d.next = self.data_strobe_reg.q.val();
+        // Insert registers to decouple the DRAM bus from the external bus
+        self.data_out.next = self.data_out_reg.q.val();
+        self.data_out_reg.d.next = self.sdram.read_data.val();
         self.data_valid.next = self.read_valid.data_out.val();
         self.reg_address.d.next = self.reg_address.q.val();
         self.write_pending.d.next = self.write_pending.q.val();
         self.read_pending.d.next = self.read_pending.q.val();
         self.refresh_needed.d.next = self.refresh_needed.q.val();
         self.sdram.write_enable.next = false;
-        // Connect the write bus directly to the DRAM also
-        self.sdram.write_data.next = self.data_in.val();
-        self.data_strobe.next = false;
+        // Connect the DRAM to the staging register to decouple timing
+        self.sdram.write_data.next = self.data_in_reg.q.val();
+        self.data_strobe.next = self.data_strobe_reg.q.val();
         self.read_valid.data_in.next = false;
         self.read_valid.delay.next = self.cas_delay.val();
         // Calculate the read and write addresses
@@ -211,6 +227,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
         self.busy.next = (self.state.q.val() != State::Idle)
             | self.write_pending.q.val()
             | self.read_pending.q.val();
+        self.data_strobe_reg.d.next = false;
         match self.state.q.val() {
             State::Boot => {
                 if self.delay_counter.q.val() == self.boot_delay.val() {
@@ -293,9 +310,15 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
             State::WriteActivate => {
                 self.sdram.write_enable.next = true;
                 if self.delay_counter.q.val() == self.t_rcd.val() {
-                    self.state.d.next = State::WriteCycle;
+                    self.state.d.next = State::WritePrep;
                     self.transfer_counter.d.next = 0_usize.into();
+                    self.data_strobe_reg.d.next = true;
                 }
+            }
+            State::WritePrep => {
+                self.state.d.next = State::WriteCycle;
+                self.data_strobe_reg.d.next = true;
+                self.sdram.write_enable.next = true;
             }
             State::WriteCycle => {
                 self.sdram.write_enable.next = true;
@@ -304,11 +327,13 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
                     self.sdram.address.next = self.addr_col.val();
                     self.cmd.next = SDRAMCommand::Write;
                     self.transfer_counter.d.next = self.transfer_counter.q.val() + 1_usize;
-                    self.data_strobe.next = true;
                     self.reg_address.d.next = self.reg_address.q.val() + 1_usize;
                 } else {
                     self.delay_counter.d.next = 0_usize.into();
                     self.state.d.next = State::Recovery;
+                }
+                if self.transfer_counter.q.val() < self.max_transfer_size.val() - 2_usize {
+                    self.data_strobe_reg.d.next = true;
                 }
             }
             State::Recovery => {
@@ -360,5 +385,6 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
         self.sdram.we_not.next = self.encode.we_not.val();
         self.encode.cmd.next = self.cmd.val();
         self.sdram.clk.next = self.clock.val();
+        self.data_in_reg.d.next = self.data_in.val();
     }
 }

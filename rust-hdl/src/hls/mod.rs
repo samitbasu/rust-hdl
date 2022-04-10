@@ -20,6 +20,7 @@ pub mod sdram_controller_tester;
 pub mod sdram_fifo;
 pub mod sim;
 pub mod spi;
+pub mod fifo_linker;
 
 pub trait HLSNamedPorts {
     fn ports(&self) -> Vec<String>;
