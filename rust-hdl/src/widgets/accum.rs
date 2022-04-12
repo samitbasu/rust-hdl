@@ -15,8 +15,8 @@ pub struct Accum<const N: usize, const M: usize, const P: usize> {
 
 impl<const N: usize, const M: usize, const P: usize> Logic for Accum<N, M, P> {
     fn update(&mut self) {
-        self.accum.clk.next = self.clock.val();
-        self.counter.clk.next = self.clock.val();
+        self.accum.clock.next = self.clock.val();
+        self.counter.clock.next = self.clock.val();
         self.strobe_out.next = false;
         self.data_out.next = self.accum.q.val();
         self.accum.d.next = self.accum.q.val();

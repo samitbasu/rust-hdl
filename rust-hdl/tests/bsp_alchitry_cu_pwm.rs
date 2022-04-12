@@ -32,7 +32,7 @@ impl<const P: usize> Logic for AlchitryCuPWM<P> {
             self.leds.next = 0xFF_u8.into();
         }
 
-        self.counter.clk.next = self.clock.val();
+        self.counter.clock.next = self.clock.val();
         self.counter.d.next = self.counter.q.val() + self.strobe.strobe.val();
     }
 }

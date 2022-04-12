@@ -38,7 +38,7 @@ impl Logic for OpalKellyPLLTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.pll.clock_in.next = self.raw_clock.val();
-        self.pll.reset.next = false;
+        self.pll.reset.next = false.into();
         self.slow_pulser.enable.next = true;
         self.med_pulser.enable.next = true;
         self.fast_pulser.enable.next = true;

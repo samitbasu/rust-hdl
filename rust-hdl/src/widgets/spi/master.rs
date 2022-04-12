@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 use crate::widgets::prelude::{BitSynchronizer, Strobe};
 
@@ -44,6 +45,7 @@ pub struct SPIWiresSlave {
 #[derive(LogicBlock)]
 pub struct SPIMaster<const N: usize> {
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub bits_outbound: Signal<In, Bits<16>>,
     pub data_outbound: Signal<In, Bits<N>>,
     pub data_inbound: Signal<Out, Bits<N>>,
@@ -75,6 +77,7 @@ impl<const N: usize> SPIMaster<N> {
         assert!(8 * config.speed_hz <= config.clock_speed);
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             bits_outbound: Default::default(),
             data_outbound: Default::default(),
             data_inbound: Default::default(),
@@ -106,18 +109,10 @@ impl<const N: usize> SPIMaster<N> {
 impl<const N: usize> Logic for SPIMaster<N> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Wire up the clocks.
-        self.register_out.clk.next = self.clock.val();
-        self.register_in.clk.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
-        self.strobe.clock.next = self.clock.val();
-        self.pointer.clk.next = self.clock.val();
-        self.clock_state.clk.next = self.clock.val();
-        self.done_flop.clk.next = self.clock.val();
-        self.msel_flop.clk.next = self.clock.val();
-        self.mosi_flop.clk.next = self.clock.val();
-        self.miso_synchronizer.clock.next = self.clock.val();
-        self.continued_save.clk.next = self.clock.val();
+        // Setup the internals
+        dff_setup!(self, clock, reset, register_out, register_in, state, pointer, clock_state,
+            done_flop, msel_flop, mosi_flop, continued_save);
+        clock_reset!(self, clock, reset, strobe, miso_synchronizer);
         // Activate the baud strobe
         self.strobe.enable.next = true;
         // Connect the MISO synchronizer to the input line
@@ -129,16 +124,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
         // Connect the output signals to the internal registers
         self.data_inbound.next = self.register_in.q.val();
         self.transfer_done.next = self.done_flop.q.val();
-        // Latch prevention
         self.done_flop.d.next = false;
-        self.register_out.d.next = self.register_out.q.val();
-        self.state.d.next = self.state.q.val();
-        self.pointer.d.next = self.pointer.q.val();
-        self.register_in.d.next = self.register_in.q.val();
-        self.msel_flop.d.next = self.msel_flop.q.val();
-        self.continued_save.d.next = self.continued_save.q.val();
-        self.mosi_flop.d.next = self.mosi_flop.q.val();
-        self.clock_state.d.next = self.clock_state.q.val();
         self.pointerm1.next = self.pointer.q.val() - 1_u32;
         self.busy.next = true;
         // The main state machine
@@ -238,13 +224,12 @@ fn test_spi_master_is_synthesizable() {
     }
 
     let mut dev = Wrap::default();
-    dev.uut.clock.connect();
+    dev.uut.clock.connect(); dev.uut.reset.connect();
     dev.uut.bits_outbound.connect();
     dev.uut.data_outbound.connect();
     dev.uut.start_send.connect();
     dev.uut.continued_transaction.connect();
     dev.uut.wires.miso.connect();
     dev.connect_all();
-    println!("{}", generate_verilog(&dev));
     yosys_validate("spi_master", &generate_verilog(&dev)).unwrap();
 }

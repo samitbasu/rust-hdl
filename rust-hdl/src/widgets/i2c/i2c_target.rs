@@ -52,11 +52,11 @@ impl Logic for I2CTarget {
         Signal::<InOut, Bit>::link(&mut self.sda, &mut self.sda_driver.bus);
         Signal::<InOut, Bit>::link(&mut self.scl, &mut self.scl_driver.bus);
         // Clock the internal structures
-        self.state.clk.next = self.clock.val();
-        self.sda_flop.clk.next = self.clock.val();
-        self.read_bit.clk.next = self.clock.val();
-        self.count.clk.next = self.clock.val();
-        self.accum.clk.next = self.clock.val();
+        self.state.clock.next = self.clock.val();
+        self.sda_flop.clock.next = self.clock.val();
+        self.read_bit.clock.next = self.clock.val();
+        self.count.clock.next = self.clock.val();
+        self.accum.clock.next = self.clock.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();
         self.sda_flop.d.next = self.sda_flop.q.val();

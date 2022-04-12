@@ -23,6 +23,7 @@ pub enum BankState {
 pub struct MemoryBank<const R: usize, const C: usize, const A: usize, const D: usize> {
     // Constraint - A = R + C
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub cas_delay: Signal<In, Bits<3>>,
     pub write_burst: Signal<In, Bit>,
     pub address: Signal<In, Bits<13>>,
@@ -69,6 +70,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<
         let t_wr = timings.t_wr() - 1;
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             cas_delay: Default::default(),
             write_burst: Default::default(),
             address: Default::default(),
@@ -113,26 +115,9 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         // Clock the internal logic
         self.mem.read_clock.next = self.clock.val();
         self.mem.write_clock.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
-        self.active_row.clk.next = self.clock.val();
-        self.burst_counter.clk.next = self.clock.val();
-        self.active_col.clk.next = self.clock.val();
-        self.delay_counter.clk.next = self.clock.val();
-        self.t_activate.clk.next = self.clock.val();
-        self.auto_precharge.clk.next = self.clock.val();
-        self.write_reg.clk.next = self.clock.val();
-        self.delay_line.clock.next = self.clock.val();
-        self.read_delay_line.clock.next = self.clock.val();
-        self.refresh_counter.clk.next = self.clock.val();
-        self.refresh_active.clk.next = self.clock.val();
-        // Add latch prevention
-        self.state.d.next = self.state.q.val();
-        self.active_row.d.next = self.active_row.q.val();
-        self.burst_counter.d.next = self.burst_counter.q.val();
-        self.active_col.d.next = self.active_col.q.val();
+        dff_setup!(self, clock, reset, refresh_counter, refresh_active, write_reg, state, auto_precharge, active_row, burst_counter, active_col, delay_counter, t_activate);
+        clock_reset!(self, clock, reset, delay_line, read_delay_line);
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
-        self.t_activate.d.next = self.t_activate.q.val();
-        self.auto_precharge.d.next = self.auto_precharge.q.val();
         self.error.next = false;
         // Model the row-column multiplexing
         self.mem.read_address.next = (bit_cast::<A, R>(self.active_row.q.val())
@@ -153,7 +138,6 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         self.read_delay_line.data_in.next = false;
         self.read_delay_line.delay.next = self.cas_delay.val() - 1_usize;
         self.read_valid.next = self.read_delay_line.data_out.val();
-        self.refresh_active.d.next = self.refresh_active.q.val();
         self.refresh_counter.d.next = self.refresh_counter.q.val() + self.refresh_active.q.val();
         match self.state.q.val() {
             BankState::Boot => {
@@ -388,6 +372,7 @@ fn mk_bank_sim() -> MemoryBank<5, 5, 10, 16> {
     uut.address.connect();
     uut.cmd.connect();
     uut.clock.connect();
+    uut.reset.connect();
     uut.cas_delay.connect();
     uut.write_burst.connect();
     uut.burst_len.connect();
@@ -406,7 +391,6 @@ fn mk_bank_sim() -> MemoryBank<5, 5, 10, 16> {
 fn test_bank_sim_synthesizes() {
     let uut = mk_bank_sim();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("sdram_bank", &vlog).unwrap();
 }
 
@@ -422,6 +406,7 @@ fn test_bank_activation_immediate_close_is_ok_with_delay() {
     sim.add_testbench(move |mut sim: Sim<MemoryBank<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
         let timing = MemoryTimings::mt48lc8m16a2(500e6);
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 30);
         x.cmd.next = SDRAMCommand::Active;
@@ -446,7 +431,7 @@ fn test_bank_activation_immediate_close_is_ok_with_delay() {
             sim_assert!(sim, x.state.q.val() != BankState::Idle, x);
         }
         wait_clock_cycle!(sim, clock, x);
-        sim_assert!(sim, x.state.q.val() == BankState::Idle, x);
+        sim_assert_eq!(sim, x.state.q.val(),  BankState::Idle, x);
         wait_clock_cycle!(sim, clock, x, 10);
         sim_assert!(sim, !x.error.val(), x);
         sim.done(x)
@@ -466,6 +451,7 @@ fn test_bank_activation_immediate_close_fails_for_timing() {
     sim.add_testbench(move |mut sim: Sim<MemoryBank<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
         let timing = MemoryTimings::mt48lc8m16a2(500e6);
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         wait_clock_cycle!(sim, clock, x);
         x.cmd.next = SDRAMCommand::Active;
@@ -505,9 +491,9 @@ fn test_bank_write() {
     ];
     sim.add_testbench(move |mut sim: Sim<MemoryBank<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
-        x = sim.watch(|x| x.clock.val().0 & (x.cmd.val() == SDRAMCommand::Read), x)?;
+        x = sim.watch(|x| x.clock.val().clk & (x.cmd.val() == SDRAMCommand::Read), x)?;
         let cas_start_time = sim.time();
-        x = sim.watch(|x| x.clock.val().0 & x.read_valid.val(), x)?;
+        x = sim.watch(|x| x.clock.val().clk & x.read_valid.val(), x)?;
         let cas_end_time = sim.time();
         sim_assert!(
             sim,
@@ -519,7 +505,7 @@ fn test_bank_write() {
     sim.add_testbench(move |mut sim: Sim<MemoryBank<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
         for _ in 0..2 {
-            x = sim.watch(|x| !x.clock.val().0 & x.read_valid.val(), x)?;
+            x = sim.watch(|x| !x.clock.val().clk & x.read_valid.val(), x)?;
             for val in &data {
                 sim_assert!(sim, x.read_data.val() == *val, x);
                 wait_clock_cycle!(sim, clock, x);
@@ -530,6 +516,7 @@ fn test_bank_write() {
     sim.add_testbench(move |mut sim: Sim<MemoryBank<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
         let timing = MemoryTimings::mt48lc8m16a2(500e6);
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 30);
         x.cmd.next = SDRAMCommand::Active;

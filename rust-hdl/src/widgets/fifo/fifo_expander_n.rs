@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -20,6 +21,7 @@ pub struct FIFOExpanderN<const DN: usize, const DW: usize> {
     // Synchronous design.  Assumes the same clock drives the
     // corresponding interfaces of the input and output fifos.
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     load_count: DFF<Bits<8>>,
     loaded: Signal<Local, Bit>,
     complete_data_available: Signal<Local, Bit>,
@@ -36,10 +38,7 @@ impl<const DN: usize, const DW: usize> Logic for FIFOExpanderN<DN, DW> {
     #[hdl_gen]
     fn update(&mut self) {
         // Clocks and latch prevention for the DFFs
-        self.load_count.clk.next = self.clock.val();
-        self.data_store.clk.next = self.clock.val();
-        self.load_count.d.next = self.load_count.q.val();
-        self.data_store.d.next = self.data_store.q.val();
+        dff_setup!(self, clock, reset, load_count, data_store);
         // Loaded if we have shifted M-1 data elements into the data store
         self.loaded.next = self.load_count.q.val() == self.ratio.val();
         // Complete data is available if we have shifted M-1 data elements into
@@ -88,6 +87,7 @@ impl<const DN: usize, const DW: usize> FIFOExpanderN<DN, DW> {
             write: Default::default(),
             full: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             load_count: Default::default(),
             loaded: Default::default(),
             complete_data_available: Default::default(),
@@ -112,7 +112,7 @@ fn fifo_expandern_is_synthesizable() {
     dev.uut.full.connect();
     dev.uut.data_in.connect();
     dev.uut.clock.connect();
+    dev.uut.reset.connect();
     dev.connect_all();
     yosys_validate("fifo_expandern", &generate_verilog(&dev)).unwrap();
-    println!("{}", generate_verilog(&dev));
 }

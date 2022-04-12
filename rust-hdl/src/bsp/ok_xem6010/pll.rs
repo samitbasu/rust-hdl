@@ -57,7 +57,7 @@ pub struct PLLFreqSynthesis {
     pub clock_out4: Signal<Out, Clock>,
     pub clock_out5: Signal<Out, Clock>,
     pub locked: Signal<Out, Bit>,
-    pub reset: Signal<In, Bit>,
+    pub reset: Signal<In, Reset>,
     _settings: Spartan6PLLSettings,
 }
 

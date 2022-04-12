@@ -1,4 +1,4 @@
-use crate::common::TS;
+use crate::common::{DFFSetupArgs, TS};
 use quote::quote;
 use std::ops::Index;
 use syn::spanned::Spanned;
@@ -39,6 +39,7 @@ fn connect_inner_statement(expr: &syn::Expr) -> Result<TS> {
         Expr::Match(x) => connect_match(x),
         Expr::ForLoop(x) => connect_for_loop(x),
         Expr::Call(x) => connect_call(x),
+        Expr::Macro(x) => connect_macro(x),
         _ => Ok(TS::new()),
     }
 }
@@ -130,5 +131,37 @@ fn connect_body(body: &syn::Expr) -> Result<TS> {
         connect_block(&b.block)
     } else {
         connect_inner_statement(body)
+    }
+}
+
+fn connect_macro(m: &syn::ExprMacro) -> Result<TS> {
+    if m.mac.path.segments.len() == 1 {
+        let macro_name = &m.mac.path.segments[0].ident;
+        if macro_name == "dff_setup" {
+            let args: DFFSetupArgs = m.mac.parse_body()?;
+            let me = &args.me;
+            let dff = &args.dffs;
+            Ok(quote! {
+                #(
+                    logic::logic_connect_fn(&mut #me.#dff.clock);
+                    logic::logic_connect_fn(&mut #me.#dff.d);
+                    logic::logic_connect_fn(&mut #me.#dff.reset);
+                )*
+            })
+        } else if macro_name == "clock_reset" {
+            let args: DFFSetupArgs = m.mac.parse_body()?;
+            let me = &args.me;
+            let dff = &args.dffs;
+            Ok(quote! {
+                #(
+                    logic::logic_connect_fn(&mut #me.#dff.clock);
+                    logic::logic_connect_fn(&mut #me.#dff.reset);
+                )*
+            })
+        } else {
+            Ok(TS::default())
+        }
+    } else {
+        Ok(TS::default())
     }
 }

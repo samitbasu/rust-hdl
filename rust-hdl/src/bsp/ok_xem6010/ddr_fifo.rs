@@ -25,7 +25,7 @@ pub struct DDRFIFO {
     pub o_clock: Signal<Out, Clock>,
     pub raw_sys_clock: Signal<In, Clock>,
     // Reset signal
-    pub reset: Signal<In, Bit>,
+    pub reset: Signal<In, Reset>,
     // Read interface
     pub read: Signal<In, Bit>,
     pub data_out: Signal<Out, Bits<32>>,
@@ -74,13 +74,13 @@ impl Logic for DDRFIFO {
         self.mig.p0_rd.clock.next = self.mig.clk_out.val();
         self.mig.p0_wr.clock.next = self.mig.clk_out.val();
         self.mig.p0_cmd.clock.next = self.mig.clk_out.val();
-        self.write_address.clk.next = self.mig.clk_out.val();
-        self.read_address.clk.next = self.mig.clk_out.val();
-        self.state.clk.next = self.mig.clk_out.val();
+        self.write_address.clock.next = self.mig.clk_out.val();
+        self.read_address.clock.next = self.mig.clk_out.val();
+        self.state.clock.next = self.mig.clk_out.val();
         self.front_porch.read_clock.next = self.mig.clk_out.val();
         self.back_porch.write_clock.next = self.mig.clk_out.val();
-        self.transfer_in_count.clk.next = self.mig.clk_out.val();
-        self.transfer_out_count.clk.next = self.mig.clk_out.val();
+        self.transfer_in_count.clock.next = self.mig.clk_out.val();
+        self.transfer_out_count.clock.next = self.mig.clk_out.val();
         // Connect the data signals from the front and back porch
         // FIFOs to the MIG FIFOs
         self.mig.p0_wr.data.next.data = self.front_porch.data_out.val();

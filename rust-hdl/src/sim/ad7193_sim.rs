@@ -38,6 +38,8 @@ pub struct AD7193Simulator {
     reg_write_index: DFF<Bits<3>>,
     // Rolling counter to emulate conversions
     conversion_counter: DFF<Bits<24>>,
+    auto_reset: AutoReset,
+    lsr: Signal<Local, Reset>,
 }
 
 #[derive(Clone, Copy)]
@@ -96,6 +98,8 @@ impl AD7193Simulator {
             state: Default::default(),
             reg_write_index: Default::default(),
             conversion_counter: Default::default(),
+            auto_reset: Default::default(),
+            lsr: Default::default()
         }
     }
 }
@@ -105,18 +109,13 @@ impl Logic for AD7193Simulator {
     fn update(&mut self) {
         // Connect the spi bus
         SPIWiresSlave::link(&mut self.wires, &mut self.spi_slave.wires);
+        self.auto_reset.clock.next = self.clock.val();
+        self.lsr.next = self.auto_reset.reset.val();
         // Clock internal components
         self.reg_ram.read_clock.next = self.clock.val();
         self.reg_ram.write_clock.next = self.clock.val();
-        self.oneshot.clock.next = self.clock.val();
-        self.spi_slave.clock.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
-        self.reg_write_index.clk.next = self.clock.val();
-        self.conversion_counter.clk.next = self.clock.val();
-        // Latch prevention
-        self.state.d.next = self.state.q.val();
-        self.reg_write_index.d.next = self.reg_write_index.q.val();
-        self.conversion_counter.d.next = self.conversion_counter.q.val();
+        clock_reset!(self, clock, lsr, oneshot, spi_slave);
+        dff_setup!(self, clock, lsr, state, reg_write_index, conversion_counter);
         // Set default values
         self.spi_slave.start_send.next = false;
         self.cmd.next = self.spi_slave.data_inbound.val().get_bits::<8>(0_usize);
@@ -226,6 +225,7 @@ fn test_ad7193_synthesizes() {
 #[derive(LogicBlock)]
 struct Test7193 {
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
     master: SPIMaster<64>,
     adc: AD7193Simulator,
 }
@@ -233,7 +233,7 @@ struct Test7193 {
 impl Logic for Test7193 {
     #[hdl_gen]
     fn update(&mut self) {
-        self.master.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, master);
         self.adc.clock.next = self.clock.val();
         SPIWiresMaster::join(&mut self.master.wires, &mut self.adc.wires);
     }
@@ -243,6 +243,7 @@ impl Default for Test7193 {
     fn default() -> Self {
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             master: SPIMaster::new(AD7193Config::sw().spi),
             adc: AD7193Simulator::new(AD7193Config::sw()),
         }
@@ -311,7 +312,7 @@ fn do_spi_txn(
 #[cfg(test)]
 fn mk_test7193() -> Test7193 {
     let mut uut = Test7193::default();
-    uut.clock.connect();
+    uut.clock.connect(); uut.reset.connect();
     uut.master.continued_transaction.connect();
     uut.master.start_send.connect();
     uut.master.data_outbound.connect();

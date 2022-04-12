@@ -35,6 +35,8 @@ pub struct SDRAMControllerTester<const R: usize, const C: usize> {
     output_pipeline: DFF<Bits<32>>,
     output_avail: DFF<Bit>,
     state: DFF<State>,
+    clock: Signal<Local, Clock>,
+    reset: Signal<Local, Reset>,
 }
 
 impl<const R: usize, const C: usize> SDRAMControllerTester<R, C> {
@@ -60,6 +62,8 @@ impl<const R: usize, const C: usize> SDRAMControllerTester<R, C> {
             output_pipeline: Default::default(),
             output_avail: Default::default(),
             state: Default::default(),
+            clock: Default::default(),
+            reset: Default::default()
         }
     }
 }
@@ -75,6 +79,11 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
     fn update(&mut self) {
         SoCBusResponder::<16, 8>::link(&mut self.upstream, &mut self.local_bridge.upstream);
         SDRAMDriver::<16>::link(&mut self.dram, &mut self.controller.sdram);
+        self.clock.next = self.upstream.clock.val();
+        self.reset.next = self.upstream.reset.val();
+        clock_reset!(self, clock, reset, controller, lsfr, lsfr_validate);
+        dff_setup!(self, clock, reset, dram_address, error_count, validation_count,
+            write_count, output_pipeline, output_avail, state);
         self.controller.clock.next = self.upstream.clock.val();
         SoCPortController::<16>::join(&mut self.local_bridge.nodes[0], &mut self.count.bus);
         SoCPortController::<16>::join(&mut self.local_bridge.nodes[1], &mut self.cmd.bus);
@@ -84,27 +93,17 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
             &mut self.validation_out.bus,
         );
         SoCPortController::<16>::join(&mut self.local_bridge.nodes[4], &mut self.write_out.bus);
-        self.state.clk.next = self.upstream.clock.val();
-        self.dram_address.clk.next = self.upstream.clock.val();
-        self.lsfr_validate.clock.next = self.upstream.clock.val();
-        self.validation_count.clk.next = self.upstream.clock.val();
-        self.validation_count.d.next = self.validation_count.q.val();
-        self.write_count.clk.next = self.upstream.clock.val();
-        self.write_count.d.next = self.write_count.q.val();
-        self.error_count.clk.next = self.upstream.clock.val();
-        self.error_count.d.next = self.error_count.q.val();
         self.cmd.ready.next = false;
-        self.state.d.next = self.state.q.val();
-        self.dram_address.d.next = self.dram_address.q.val();
         self.controller.data_in.next = self.entropy_funnel.data_out.val();
         self.entropy_funnel.data_in.next = self.lsfr.num.val();
         self.lsfr.strobe.next =
             !self.entropy_funnel.full.val() & (self.state.q.val() != State::Boot);
-        self.lsfr.clock.next = self.upstream.clock.val();
         self.entropy_funnel.write.next =
             !self.entropy_funnel.full.val() & (self.state.q.val() != State::Boot);
         self.entropy_funnel.write_clock.next = self.upstream.clock.val();
+        self.entropy_funnel.write_reset.next = self.reset.val();
         self.entropy_funnel.read_clock.next = self.upstream.clock.val();
+        self.entropy_funnel.read_reset.next = self.reset.val();
         self.controller.data_in.next = self.entropy_funnel.data_out.val();
         self.controller.cmd_address.next = self.dram_address.q.val();
         self.controller.write_not_read.next = false;
@@ -113,16 +112,14 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         self.output_funnel.data_in.next = self.controller.data_out.val();
         self.output_funnel.write.next = self.controller.data_valid.val();
         self.output_funnel.write_clock.next = self.upstream.clock.val();
+        self.output_funnel.write_reset.next = self.reset.val();
         self.output_funnel.read_clock.next = self.upstream.clock.val();
+        self.output_funnel.read_reset.next = self.reset.val();
         self.error_out.strobe_in.next = false;
         self.validation_out.strobe_in.next = false;
         self.write_out.strobe_in.next = false;
-        self.lsfr.reset.next = false;
-        self.lsfr_validate.reset.next = false;
         match self.state.q.val() {
             State::Boot => {
-                self.lsfr.reset.next = true;
-                self.lsfr_validate.reset.next = true;
                 self.state.d.next = State::Idle;
             }
             State::Idle => {
@@ -166,10 +163,6 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         }
         // Do the validation piece - we need a pipeline register
         // to meet timing.
-        self.output_avail.clk.next = self.upstream.clock.val();
-        self.output_avail.d.next = self.output_avail.q.val();
-        self.output_pipeline.clk.next = self.upstream.clock.val();
-        self.output_pipeline.d.next = self.output_pipeline.q.val();
         // Feed the output_pipeline register
         self.output_funnel.read.next = false;
         if !self.output_avail.q.val() & !self.output_funnel.empty.val() {

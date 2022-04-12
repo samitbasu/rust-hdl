@@ -369,21 +369,32 @@ impl<T> Sim<T> {
 #[macro_export]
 macro_rules! wait_clock_true {
     ($sim: ident, $($clock: ident).+, $me: expr) => {
-        $me = $sim.watch(|x| x.$($clock).+.val().0, $me)?
+        $me = $sim.watch(|x| x.$($clock).+.val().clk, $me)?
     };
+}
+
+#[macro_export]
+macro_rules! reset_sim {
+    ($sim: ident, $($clock: ident).+, $($reset: ident).+, $me: expr) => {
+        $me = $sim.watch(|x| x.$($clock).+.val().clk, $me)?;
+        $me.$($reset).+.next = true.into();
+        $me = $sim.watch(|x| !x.$($clock).+.val().clk, $me)?;
+        $me.$($reset).+.next = false.into();
+        $me = $sim.watch(|x| x.$($clock).+.val().clk, $me)?;
+    }
 }
 
 #[macro_export]
 macro_rules! wait_clock_false {
     ($sim: ident, $($clock: ident).+, $me: expr) => {
-        $me = $sim.watch(|x| !x.$($clock).+.val().0, $me)?
+        $me = $sim.watch(|x| !x.$($clock).+.val().clk, $me)?
     };
 }
 
 #[macro_export]
 macro_rules! wait_clock_cycle {
     ($sim: ident, $($clock: ident).+, $me: expr) => {
-        if $me.$($clock).+.val().0 {
+        if $me.$($clock).+.val().clk {
             wait_clock_false!($sim, $($clock).+, $me);
             wait_clock_true!($sim, $($clock).+, $me);
         } else {

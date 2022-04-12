@@ -51,7 +51,7 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Logic for FIFOReduce
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the clock
-        self.loaded.clk.next = self.clock.val();
+        self.loaded.clock.next = self.clock.val();
         // Input data is available if we are loaded or if the read interface is not empty
         self.data_available.next = self.loaded.q.val() || !self.empty.val();
         // Output space is available if the write interface is not full and we have data available

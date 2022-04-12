@@ -58,25 +58,19 @@ pub struct OpalKellyHLSBridge<const A: usize> {
     word_counter: DFF<Bits<16>>,
     read_delay: DFF<bool>,
     block_flow_control: WireIn,
-    sr: SyncReset,
+    sr: AutoReset,
+    reset: Signal<Local, Reset>,
 }
 
 impl<const A: usize> Logic for OpalKellyHLSBridge<A> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Clock the internal components
-        self.controller.clock.next = self.ti_clk.val();
-        self.read_delay.clk.next = self.ti_clk.val();
-        self.word_counter.clk.next = self.ti_clk.val();
-        self.space_counter.clk.next = self.ti_clk.val();
-        // Clock the two fifos
-        self.pc_to_fpga_fifo.clock.next = self.ti_clk.val();
-        self.fpga_to_pc_fifo.clock.next = self.ti_clk.val();
         // Wire up the reset
         self.sr.clock.next = self.ti_clk.val();
-        if self.sr.reset.val() {
-            self.space_counter.d.next = (1_usize << 12).into();
-        }
+        self.reset.next = self.sr.reset.val();
+        // Clock the internal components
+        clock_reset!(self, ti_clk, reset, controller, pc_to_fpga_fifo, fpga_to_pc_fifo);
+        dff_setup!(self, ti_clk, reset, space_counter, word_counter, read_delay);
         // Link the FIFOs to the HLS controller
         FIFOReadController::<Bits<16>>::join(
             &mut self.controller.from_cpu,
@@ -100,9 +94,6 @@ impl<const A: usize> Logic for OpalKellyHLSBridge<A> {
             | self.pipe_out.ok2.val()
             | self.words_avail.ok2.val()
             | self.space_avail.ok2.val();
-        // Latch prevention
-        self.word_counter.d.next = self.word_counter.q.val();
-        self.space_counter.d.next = self.space_counter.q.val();
         // Update the total number of words available in the FIFO
         if self.fpga_to_pc_fifo.bus_write.write.val() & !self.fpga_to_pc_fifo.bus_read.read.val() {
             self.word_counter.d.next = self.word_counter.q.val() + 1_usize;
@@ -155,11 +146,12 @@ impl<const A: usize> OpalKellyHLSBridge<A> {
             pipe_out: BTPipeOut::new(config.pipe_out),
             words_avail: WireOut::new(config.words_avail),
             space_avail: WireOut::new(config.space_avail),
-            space_counter: Default::default(),
+            space_counter: DFF::new_with_reset_val((1_usize << 12).into()),
             word_counter: Default::default(),
             read_delay: Default::default(),
             block_flow_control: WireIn::new(config.block_flow_control),
             sr: Default::default(),
+            reset: Default::default()
         }
     }
 }

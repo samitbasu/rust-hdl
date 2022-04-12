@@ -1,6 +1,7 @@
 use quote::quote;
 use syn::spanned::Spanned;
-use syn::Data;
+use syn::{Data, Expr, Token};
+use syn::parse::{Parse, ParseStream};
 
 pub(crate) type TS = proc_macro2::TokenStream;
 
@@ -129,4 +130,39 @@ pub fn fixup_ident(x: String) -> String {
     assert_ne!(y, "input");
     assert_ne!(y, "output");
     y
+}
+
+
+// The dff_setup macro uses clock, reset, dfflist arguments
+#[derive(Debug)]
+pub struct DFFSetupArgs {
+    pub me: Expr,
+    pub clock: Expr,
+    pub reset: Expr,
+    pub dffs: Vec<Expr>,
+}
+
+impl Parse for DFFSetupArgs {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let clock: Expr;
+        let reset: Expr;
+        let mut dffs = Vec::new();
+
+        let me: Expr = input.parse()?;
+        input.parse::<Token![,]>()?;
+        clock = input.parse()?;
+        input.parse::<Token![,]>()?;
+        reset = input.parse()?;
+        input.parse::<Token![,]>()?;
+        while !input.is_empty() {
+            let dff_name: Expr = input.parse()?;
+            dffs.push(dff_name);
+            if !input.is_empty() {
+                input.parse::<Token![,]>()?;
+            }
+        }
+        Ok(DFFSetupArgs {
+            me, clock, reset, dffs
+        })
+    }
 }

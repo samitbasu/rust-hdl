@@ -39,14 +39,14 @@ impl<const D: usize> Logic for SDRAMOnChipBuffer<D> {
         self.buf_in.read_data.next = self.read_flop.q.val();
         self.buf_out.write_data.next = self.write_flop.q.val();
         // Clock the flops
-        self.we_not_flop.clk.next = self.buf_in.clk.val();
-        self.cas_not_flop.clk.next = self.buf_in.clk.val();
-        self.ras_not_flop.clk.next = self.buf_in.clk.val();
-        self.cs_not_flop.clk.next = self.buf_in.clk.val();
-        self.bank_flop.clk.next = self.buf_in.clk.val();
-        self.address_flop.clk.next = self.buf_in.clk.val();
-        self.write_flop.clk.next = self.buf_in.clk.val();
-        self.read_flop.clk.next = self.buf_in.clk.val();
+        self.we_not_flop.clock.next = self.buf_in.clk.val();
+        self.cas_not_flop.clock.next = self.buf_in.clk.val();
+        self.ras_not_flop.clock.next = self.buf_in.clk.val();
+        self.cs_not_flop.clock.next = self.buf_in.clk.val();
+        self.bank_flop.clock.next = self.buf_in.clk.val();
+        self.address_flop.clock.next = self.buf_in.clk.val();
+        self.write_flop.clock.next = self.buf_in.clk.val();
+        self.read_flop.clock.next = self.buf_in.clk.val();
         // Forward the clock
         self.buf_out.clk.next = !self.buf_in.clk.val();
     }

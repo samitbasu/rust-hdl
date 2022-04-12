@@ -83,8 +83,8 @@ wire [{B}:0] bb_from_pin_z;
 
 impl<T: Synth> Logic for EdgeTristateBufferDelayed<T> {
     fn update(&mut self) {
-        self.dff_out.clk.next = self.clk.val();
-        self.dff_in.clk.next = self.clk.val();
+        self.dff_out.clock.next = self.clk.val();
+        self.dff_in.clock.next = self.clk.val();
         self.buffer.write_enable.next = self.output_enable.val();
         self.dff_in.d.next = self.buffer.read_data.val();
         self.dff_out.d.next = self.to_pin.val();
@@ -93,8 +93,8 @@ impl<T: Synth> Logic for EdgeTristateBufferDelayed<T> {
         Signal::<InOut, T>::link(&mut self.pin, &mut self.buffer.bus);
     }
     fn connect(&mut self) {
-        self.dff_out.clk.connect();
-        self.dff_in.clk.connect();
+        self.dff_out.clock.connect();
+        self.dff_in.clock.connect();
         self.buffer.write_enable.connect();
         self.dff_in.d.connect();
         self.dff_out.d.connect();

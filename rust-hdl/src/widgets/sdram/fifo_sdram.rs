@@ -1,5 +1,5 @@
 use crate::core::prelude::*;
-use crate::widgets::prelude::{AsynchronousFIFO, MemoryTimings, OutputBuffer, SDRAMBaseController, DFF, SDRAMBurstController, BitSynchronizer};
+use crate::widgets::prelude::{AsynchronousFIFO, MemoryTimings, OutputBuffer, DFF, SDRAMBurstController};
 use crate::widgets::sdram::SDRAMDriver;
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
@@ -88,21 +88,21 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
     fn update(&mut self) {
         self.controller.clock.next = self.ram_clock.val();
         SDRAMDriver::<D>::link(&mut self.sdram, &mut self.controller.sdram);
-        self.read_pointer.clk.next = self.ram_clock.val();
+        self.read_pointer.clock.next = self.ram_clock.val();
         self.read_pointer.d.next = self.read_pointer.q.val();
-        self.write_pointer.clk.next = self.ram_clock.val();
+        self.write_pointer.clock.next = self.ram_clock.val();
         self.write_pointer.d.next = self.write_pointer.q.val();
-        self.dram_is_empty.clk.next = self.ram_clock.val();
-        self.dram_is_full.clk.next = self.ram_clock.val();
-        self.can_read.clk.next = self.ram_clock.val();
-        self.can_write.clk.next = self.ram_clock.val();
+        self.dram_is_empty.clock.next = self.ram_clock.val();
+        self.dram_is_full.clock.next = self.ram_clock.val();
+        self.can_read.clock.next = self.ram_clock.val();
+        self.can_write.clock.next = self.ram_clock.val();
         // The FP write clock is external, but the read clock is the DRAM clock
         self.fp.write_clock.next = self.clock.val();
         self.fp.read_clock.next = self.ram_clock.val();
         // The BP write clock is DRAM, the read clock is external
         self.bp.write_clock.next = self.ram_clock.val();
         self.bp.read_clock.next = self.clock.val();
-        self.state.clk.next = self.ram_clock.val();
+        self.state.clock.next = self.ram_clock.val();
         self.state.d.next = self.state.q.val();
         // Connect the write interface to the FP fifo
         self.fp.data_in.next = self.data_in.val();
@@ -132,7 +132,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
         self.controller.cmd_address.next = 0_usize.into();
         self.controller.write_not_read.next = false;
         self.controller.cmd_strobe.next = false;
-        self.fill.clk.next = self.ram_clock.val();
+        self.fill.clock.next = self.ram_clock.val();
         self.fill.d.next = self.fill.q.val();
         match self.state.q.val() {
             State::Idle => {

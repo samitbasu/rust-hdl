@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::core::ast::VerilogLiteral;
 use crate::core::bits::{Bit, Bits};
-use crate::core::clock::Clock;
+use crate::core::clock::{Clock, Reset};
 use crate::core::signed::Signed;
 use crate::core::type_descriptor::{TypeDescriptor, TypeKind};
 
@@ -73,6 +73,25 @@ impl Synth for Bit {
     }
 }
 
+impl Synth for Reset {
+    const BITS: usize = 1;
+
+    fn descriptor() -> TypeDescriptor {
+        TypeDescriptor {
+            name: "reset".to_string(),
+            kind: TypeKind::Bits(1),
+        }
+    }
+
+    fn vcd(self) -> VCDValue {
+        self.rst.into()
+    }
+
+    fn verilog(self) -> VerilogLiteral {
+        self.rst.into()
+    }
+}
+
 impl Synth for Clock {
     const BITS: usize = 1;
 
@@ -84,11 +103,11 @@ impl Synth for Clock {
     }
 
     fn vcd(self) -> VCDValue {
-        self.0.into()
+        self.clk.into()
     }
 
     fn verilog(self) -> VerilogLiteral {
-        self.0.into()
+        self.clk.into()
     }
 }
 

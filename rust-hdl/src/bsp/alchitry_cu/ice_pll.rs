@@ -146,7 +146,7 @@ impl<const FIN_FREQ: u64, const FOUT_FREQ: u64> Default for ICE40PLLBlock<FIN_FR
         let freq_out_mhz = (FOUT_FREQ as f64) / (1_000_000.0);
         Self {
             clock_in: Signal::default(),
-            clock_out: Signal::new_with_default(Clock(false)),
+            clock_out: Signal::new_with_default(Clock::default()),
             locked: Signal::new_with_default(false),
             core: ICEPLL40Core::new(),
             _settings: analyze(true, freq_in_mhz, freq_out_mhz).unwrap(),

@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 
 #[derive(Clone, Debug, LogicBlock)]
@@ -6,6 +7,7 @@ pub struct Strobe<const N: usize> {
     pub enable: Signal<In, Bit>,
     pub strobe: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     threshold: Constant<Bits<N>>,
     counter: DFF<Bits<N>>,
 }
@@ -22,6 +24,7 @@ impl<const N: usize> Strobe<N> {
             enable: Signal::default(),
             strobe: Signal::default(),
             clock: Signal::default(),
+            reset: Default::default(),
             threshold: Constant::new(threshold.into()),
             counter: Default::default(),
         }
@@ -32,9 +35,7 @@ impl<const N: usize> Logic for Strobe<N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the counter clock to my clock
-        self.counter.clk.next = self.clock.val();
-        // Latch prevention
-        self.counter.d.next = self.counter.q.val();
+        dff_setup!(self, clock, reset, counter);
         if self.enable.val() {
             self.counter.d.next = self.counter.q.val() + 1_u32;
         }

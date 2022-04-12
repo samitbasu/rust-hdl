@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 
 // The read side of the circuitry for the FIFO.  Manages the read
@@ -7,6 +8,7 @@ use crate::widgets::dff::DFF;
 pub struct FIFOReadLogic<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
     // Clock
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     // FIFO facing interface
     pub read: Signal<In, Bit>,
     pub data_out: Signal<Out, D>,
@@ -37,9 +39,8 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 {
     #[hdl_gen]
     fn update(&mut self) {
+        dff_setup!(self, clock, reset, read_address, dff_underflow);
         // Connect the clocks.
-        self.read_address.clk.next = self.clock.val();
-        self.dff_underflow.clk.next = self.clock.val();
         self.ram_read_clock.next = self.clock.val();
         // Compute the is empty flag
         self.is_empty.next = (self.read_address.q.val() == self.write_address_delayed.val()).into();
@@ -88,6 +89,7 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Default
     fn default() -> Self {
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             read: Default::default(),
             data_out: Default::default(),
             empty: Default::default(),
@@ -117,6 +119,7 @@ fn fifo_read_is_synthesizable() {
     dev.uut.write_address_delayed.connect();
     dev.uut.ram_read_data.connect();
     dev.uut.clock.connect();
+    dev.uut.reset.connect();
     dev.uut.read.connect();
     dev.connect_all();
     yosys_validate("fifo_read", &generate_verilog(&dev)).unwrap();
@@ -130,6 +133,7 @@ pub struct FIFOWriteLogic<D: Synth, const N: usize, const NP1: usize, const BLOC
     pub almost_full: Signal<Out, Bit>,
     pub overflow: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub ram_write_address: Signal<Out, Bits<N>>,
     pub ram_write_clock: Signal<Out, Clock>,
     pub ram_write_data: Signal<Out, D>,
@@ -160,6 +164,7 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Default
             almost_full: Default::default(),
             overflow: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             ram_write_address: Default::default(),
             ram_write_clock: Default::default(),
             ram_write_data: Default::default(),
@@ -184,9 +189,7 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 {
     #[hdl_gen]
     fn update(&mut self) {
-        self.dff_overflow.clk.next = self.clock.val();
-        self.write_address.clk.next = self.clock.val();
-        self.dff_write_address_delay.clk.next = self.clock.val();
+        dff_setup!(self, clock, reset, dff_overflow, write_address, dff_write_address_delay);
         self.ram_write_clock.next = self.clock.val();
         // We need a 1 cycle delay on the write address
         // This ensures we do not try to read a data element on the same
@@ -244,6 +247,7 @@ fn fifo_write_is_synthesizable() {
     let mut dev: Wrapper = Default::default();
     dev.uut.read_address.connect();
     dev.uut.clock.connect();
+    dev.uut.reset.connect();
     dev.uut.data_in.connect();
     dev.uut.write.connect();
     dev.connect_all();

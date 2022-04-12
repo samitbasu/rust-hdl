@@ -36,6 +36,8 @@ pub struct ADS868XSimulator {
     address: Signal<Local, Bits<9>>,
     data_parity: Signal<Local, Bit>,
     id_parity: Signal<Local, Bit>,
+    auto_reset: AutoReset,
+    lsr: Signal<Local, Reset>,
 }
 
 impl ADS868XSimulator {
@@ -75,6 +77,8 @@ impl ADS868XSimulator {
             address: Default::default(),
             data_parity: Default::default(),
             id_parity: Default::default(),
+            auto_reset: Default::default(),
+            lsr: Default::default()
         }
     }
 }
@@ -91,16 +95,13 @@ impl Logic for ADS868XSimulator {
     fn update(&mut self) {
         // Connect the spi bus
         SPIWiresSlave::link(&mut self.wires, &mut self.spi_slave.wires);
+        self.auto_reset.clock.next = self.clock.val();
+        self.lsr.next = self.auto_reset.reset.val();
         // Clock internal components
         self.reg_ram.read_clock.next = self.clock.val();
         self.reg_ram.write_clock.next = self.clock.val();
-        self.spi_slave.clock.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
-        self.conversion_counter.clk.next = self.clock.val();
-        self.inbound.clk.next = self.clock.val();
-        // Latch prevention
-        self.state.d.next = self.state.q.val();
-        self.conversion_counter.d.next = self.conversion_counter.q.val();
+        clock_reset!(self, clock, lsr, spi_slave);
+        dff_setup!(self, clock, lsr, state, conversion_counter, inbound);
         // Set default values
         self.spi_slave.start_send.next = false;
         self.spi_slave.continued_transaction.next = false;
@@ -114,7 +115,6 @@ impl Logic for ADS868XSimulator {
         self.address.next = self.inbound.q.val().get_bits::<9>(16_usize);
         self.reg_ram.write_address.next = bit_cast::<5, 9>(self.address.val() >> 1_usize);
         self.reg_ram.read_address.next = 0_u32.into();
-        self.inbound.d.next = self.inbound.q.val();
         self.data_parity.next = self.conversion_counter.q.val().xor();
         self.id_parity.next = (self.reg_ram.read_data.val() & 0x0FF_u32).xor();
         match self.state.q.val() {
@@ -224,6 +224,7 @@ fn test_ads8689_synthesizes() {
 #[derive(LogicBlock)]
 struct Test8689 {
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
     master: SPIMaster<32>,
     adc: ADS868XSimulator,
 }
@@ -231,7 +232,7 @@ struct Test8689 {
 impl Logic for Test8689 {
     #[hdl_gen]
     fn update(&mut self) {
-        self.master.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, master);
         self.adc.clock.next = self.clock.val();
         SPIWiresMaster::join(&mut self.master.wires, &mut self.adc.wires);
     }
@@ -241,6 +242,7 @@ impl Default for Test8689 {
     fn default() -> Self {
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             master: SPIMaster::new(ADS868XSimulator::spi_sw()),
             adc: ADS868XSimulator::new(ADS868XSimulator::spi_sw()),
         }
@@ -276,6 +278,7 @@ fn do_spi_txn(
 fn mk_test8689() -> Test8689 {
     let mut uut = Test8689::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.master.continued_transaction.connect();
     uut.master.start_send.connect();
     uut.master.data_outbound.connect();
@@ -297,6 +300,7 @@ fn test_reg_writes() {
     sim.add_clock(5, |x: &mut Box<Test8689>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test8689>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         wait_clock_cycle!(sim, clock, x);
         // Write an ID to register 2...
@@ -309,7 +313,7 @@ fn test_reg_writes() {
         let result = do_spi_txn(8, 0x00, false, x, &mut sim)?;
         println!("ID Register read {:x}", result.0);
         x = result.1;
-        sim_assert!(sim, result.0.index() == 2, x);
+        sim_assert_eq!(sim, result.0.index(), 2, x);
         /*
         # Output should be 0x40 0x08
         [ 0xd0 0x10 0x40 0x08 ] % [ 0xc8 0x10 0x00 0x00 ] % { 0x00 0x00 ]
@@ -323,24 +327,26 @@ fn test_reg_writes() {
         wait_clock_cycle!(sim, clock, x);
         let result = do_spi_txn(16, 0x00, false, x, &mut sim)?;
         x = result.1;
-        sim_assert!(sim, result.0.index() == 0x40_08, x);
+        sim_assert_eq!(sim, result.0.index(), 0x40_08, x);
         for i in 0..5 {
             wait_clock_cycle!(sim, clock, x);
             let result = do_spi_txn(32, 0x00_00_00_00, false, x, &mut sim)?;
             x = result.1;
             println!("Reading is {:x}", result.0);
-            sim_assert!(
+            sim_assert_eq!(
                 sim,
-                (result.0 & 0xFFFF0000_usize) == ((i + 2) << 16) as u32,
+                (result.0 & 0xFFFF0000_usize),
+                ((i + 2) << 16) as u32,
                 x
             );
             let parity_bit = result.0 & 0x800_usize != 0_usize;
             let data: Bits<32> = (result.0 & 0xFFFF0000_usize) >> 16_usize;
-            sim_assert!(sim, data.xor() == parity_bit, x);
+            sim_assert_eq!(sim, data.xor(), parity_bit, x);
         }
         sim.done(x)
     });
-    sim.run(Box::new(uut), 1_000_000).unwrap();
+//    sim.run(Box::new(uut), 1_000_000).unwrap();
+    sim.run_to_file(Box::new(uut), 1_000_000, "ad868x.vcd").unwrap();
 }
 
 #[test]

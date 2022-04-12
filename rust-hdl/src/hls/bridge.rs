@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::hls::bus::*;
 use crate::hls::HLSNamedPorts;
 use crate::widgets::prelude::DFF;
@@ -12,6 +13,7 @@ pub struct Bridge<const D: usize, const A: usize, const N: usize> {
     pub upstream: SoCBusResponder<D, A>,
     pub nodes: [SoCPortController<D>; N],
     pub clock_out: Signal<Out, Clock>,
+    pub reset_out: Signal<Out, Reset>,
     address_latch: DFF<Bits<A>>,
     _port_names: Vec<String>,
 }
@@ -23,6 +25,7 @@ impl<const D: usize, const A: usize, const N: usize> Bridge<D, A, N> {
             upstream: Default::default(),
             nodes: array_init::array_init(|_| Default::default()),
             clock_out: Default::default(),
+            reset_out: Default::default(),
             address_latch: Default::default(),
             _port_names: names.iter().map(|x| x.to_string()).collect(),
         }
@@ -39,15 +42,16 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Bridge<D, A, N> {
     #[hdl_gen]
     fn update(&mut self) {
         self.clock_out.next = self.upstream.clock.val();
+        self.reset_out.next = self.upstream.reset.val();
         self.upstream.ready.next = false;
         self.upstream.to_controller.next = 0_usize.into();
-        self.address_latch.clk.next = self.upstream.clock.val();
-        self.address_latch.d.next = self.address_latch.q.val();
+        dff_setup!(self, clock_out, reset_out, address_latch);
         for i in 0_usize..N {
             self.nodes[i].from_controller.next = 0_usize.into();
             self.nodes[i].select.next = false;
             self.nodes[i].strobe.next = false;
             self.nodes[i].clock.next = self.upstream.clock.val();
+            self.nodes[i].reset.next = self.upstream.reset.val();
             if self.address_latch.q.val().index() == i {
                 self.nodes[i].from_controller.next = self.upstream.from_controller.val();
                 self.nodes[i].select.next = true;
@@ -72,6 +76,7 @@ fn test_bridge_is_synthesizable() {
     uut.upstream.from_controller.connect();
     uut.upstream.strobe.connect();
     uut.upstream.clock.connect();
+    uut.upstream.reset.connect();
     uut.upstream.address.connect();
     for ndx in 0..6 {
         uut.nodes[ndx].to_controller.connect();
@@ -79,6 +84,5 @@ fn test_bridge_is_synthesizable() {
     }
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("soc_bridge", &vlog).unwrap();
 }

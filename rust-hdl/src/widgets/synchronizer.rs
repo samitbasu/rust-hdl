@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 
 #[derive(LogicBlock, Default)]
@@ -6,6 +7,7 @@ pub struct BitSynchronizer {
     pub sig_in: Signal<In, Bit>,
     pub sig_out: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     dff0: DFF<Bit>,
     dff1: DFF<Bit>,
 }
@@ -13,9 +15,7 @@ pub struct BitSynchronizer {
 impl Logic for BitSynchronizer {
     #[hdl_gen]
     fn update(&mut self) {
-        self.dff0.clk.next = self.clock.val();
-        self.dff1.clk.next = self.clock.val();
-
+        dff_setup!(self, clock, reset, dff0, dff1);
         self.dff0.d.next = self.sig_in.val();
         self.dff1.d.next = self.dff0.q.val();
         self.sig_out.next = self.dff1.q.val();
@@ -27,6 +27,7 @@ fn sync_is_synthesizable() {
     top_wrap!(BitSynchronizer, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.clock.connect();
+    dev.uut.reset.connect();
     dev.uut.sig_in.connect();
     dev.connect_all();
     yosys_validate("sync", &generate_verilog(&dev)).unwrap();
@@ -44,6 +45,7 @@ pub enum SyncSenderState {
 pub struct SyncSender<T: Synth> {
     pub sig_in: Signal<In, T>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub sig_cross: Signal<Out, T>,
     pub flag_out: Signal<Out, Bit>,
     pub ack_in: Signal<In, Bit>,
@@ -57,19 +59,13 @@ pub struct SyncSender<T: Synth> {
 impl<T: Synth> Logic for SyncSender<T> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Connect the clocks
-        self.state.clk.next = self.clock.val();
-        self.sync.clock.next = self.clock.val();
-        self.hold.clk.next = self.clock.val();
-
+        dff_setup!(self, clock, reset, hold, state);
+        clock_reset!(self, clock, reset, sync);
         // By default, the hold DFF does not change
-        self.hold.d.next = self.hold.q.val();
         self.sig_cross.next = self.hold.q.val();
         self.flag_out.next = false.into();
         self.sync.sig_in.next = self.ack_in.val();
-
         // State machine
-        self.state.d.next = self.state.q.val();
         self.busy.next = true;
         match self.state.q.val() {
             SyncSenderState::Idle => {
@@ -106,6 +102,7 @@ fn sync_sender_is_synthesizable() {
     top_wrap!(SyncSender<Bits<8>>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.clock.connect();
+    dev.uut.reset.connect();
     dev.uut.sig_in.connect();
     dev.uut.ack_in.connect();
     dev.uut.send.connect();
@@ -124,6 +121,7 @@ pub enum SyncReceiverState {
 pub struct SyncReceiver<T: Synth> {
     pub sig_out: Signal<Out, T>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub sig_cross: Signal<In, T>,
     pub flag_in: Signal<In, Bit>,
     pub ack_out: Signal<Out, Bit>,
@@ -137,17 +135,11 @@ pub struct SyncReceiver<T: Synth> {
 impl<T: Synth> Logic for SyncReceiver<T> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.state.clk.next = self.clock.val();
-        self.sync.clock.next = self.clock.val();
-        self.hold.clk.next = self.clock.val();
-        self.update_delay.clk.next = self.clock.val();
-
-        self.hold.d.next = self.hold.q.val();
+        dff_setup!(self, clock, reset, hold, update_delay, state);
+        clock_reset!(self, clock, reset, sync);
         self.sig_out.next = self.hold.q.val();
         self.ack_out.next = false.into();
         self.sync.sig_in.next = self.flag_in.val();
-
-        self.state.d.next = self.state.q.val();
         self.update.next = self.update_delay.q.val();
         self.update_delay.d.next = false.into();
         match self.state.q.val() {
@@ -176,6 +168,7 @@ fn sync_receiver_is_synthesizable() {
     top_wrap!(SyncReceiver<Bits<8>>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.clock.connect();
+    dev.uut.reset.connect();
     dev.uut.sig_cross.connect();
     dev.uut.flag_in.connect();
     dev.connect_all();
@@ -187,11 +180,13 @@ fn sync_receiver_is_synthesizable() {
 pub struct VectorSynchronizer<T: Synth> {
     // The input interface...
     pub clock_in: Signal<In, Clock>,
+    pub reset_in: Signal<In, Reset>,
     pub sig_in: Signal<In, T>,
     pub busy: Signal<Out, Bit>,
     pub send: Signal<In, Bit>,
     // The output interface...
     pub clock_out: Signal<In, Clock>,
+    pub reset_out: Signal<In, Reset>,
     pub sig_out: Signal<Out, T>,
     pub update: Signal<Out, Bit>,
     // The two pieces of the synchronizer
@@ -202,9 +197,8 @@ pub struct VectorSynchronizer<T: Synth> {
 impl<T: Synth> Logic for VectorSynchronizer<T> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Clocks...
-        self.sender.clock.next = self.clock_in.val();
-        self.recv.clock.next = self.clock_out.val();
+        clock_reset!(self, clock_in, reset_in, sender);
+        clock_reset!(self, clock_out, reset_out, recv);
         // Wire the inputs..
         self.sender.sig_in.next = self.sig_in.val();
         self.busy.next = self.sender.busy.val();

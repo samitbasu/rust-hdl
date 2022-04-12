@@ -49,9 +49,9 @@ impl Logic for OKSPIMaster {
         SPIWiresMaster::link(&mut self.wires, &mut self.core.wires);
         // Feed the clocks
         self.core.clock.next = self.clock.val();
-        self.data_inbound.clk.next = self.clock.val();
-        self.output_register.clk.next = self.clock.val();
-        self.data_outbound.clk.next = self.clock.val();
+        self.data_inbound.clock.next = self.clock.val();
+        self.output_register.clock.next = self.clock.val();
+        self.data_outbound.clock.next = self.clock.val();
         self.trigger_done.clk.next = self.clock.val();
         self.trigger_start.clk.next = self.clock.val();
         // Prevent latches

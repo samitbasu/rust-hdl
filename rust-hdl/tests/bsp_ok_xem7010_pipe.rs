@@ -44,10 +44,10 @@ impl Logic for OpalKellyBTPipeOut7Test {
         // Connect the clocks
         // Read side objects
         self.fifo_out.read_clock.next = self.ok_host.ti_clk.val();
-        self.delay_read.clk.next = self.ok_host.ti_clk.val();
+        self.delay_read.clock.next = self.ok_host.ti_clk.val();
         // Write side objects
         self.fifo_out.write_clock.next = self.fast_clock.val();
-        self.counter.clk.next = self.fast_clock.val();
+        self.counter.clock.next = self.fast_clock.val();
         self.strobe.clock.next = self.fast_clock.val();
 
         // Connect the ok1 and ok2 busses

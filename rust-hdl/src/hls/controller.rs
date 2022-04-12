@@ -33,6 +33,7 @@ pub struct BaseController<const A: usize> {
     pub from_cpu: FIFOReadController<Bits<16>>, // Word-stream from the CPU
     pub to_cpu: FIFOWriteController<Bits<16>>,  // Word-stream to the CPU
     pub clock: Signal<In, Clock>,               // All in a single clock domain
+    pub reset: Signal<In, Reset>,
     state: DFF<BaseControllerState>,
     pub bus: SoCBusController<16, { A }>,
     counter: DFF<Bits<16>>,
@@ -42,18 +43,15 @@ pub struct BaseController<const A: usize> {
 impl<const A: usize> Logic for BaseController<A> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Clock the logic
-        self.state.clk.next = self.clock.val();
-        self.counter.clk.next = self.clock.val();
+        dff_setup!(self, clock, reset, state, counter);
         // Latch prevention
-        self.state.d.next = self.state.q.val();
         self.opcode.next = self.from_cpu.data.val().get_bits::<8>(8);
-        self.counter.d.next = self.counter.q.val();
         // Default values for output signals.
         self.from_cpu.read.next = false;
         self.to_cpu.data.next = 0_usize.into();
         self.to_cpu.write.next = false;
         self.bus.clock.next = self.clock.val();
+        self.bus.reset.next = self.reset.val();
         self.bus.from_controller.next = 0_usize.into();
         self.bus.strobe.next = false;
         self.bus.address.next = 0_usize.into();
@@ -168,6 +166,7 @@ impl<const A: usize> Logic for BaseController<A> {
 fn test_base_controller_is_synthesizable() {
     let mut uut = BaseController::<4>::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.from_cpu.data.connect();
     uut.from_cpu.empty.connect();
     uut.from_cpu.almost_empty.connect();

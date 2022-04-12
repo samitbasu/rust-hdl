@@ -48,9 +48,9 @@ impl<T: Synth, const N: usize> Logic for LazyFIFOFeeder<T, N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the flops
-        self.state.clk.next = self.clock.val();
-        self.sleep_counter.clk.next = self.clock.val();
-        self.index.clk.next = self.clock.val();
+        self.state.clock.next = self.clock.val();
+        self.sleep_counter.clock.next = self.clock.val();
+        self.index.clock.next = self.clock.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();
         self.sleep_counter.d.next = self.sleep_counter.q.val();
@@ -137,10 +137,10 @@ impl<T: Synth, const N: usize> Logic for LazyFIFOReader<T, N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the logic
-        self.state.clk.next = self.clock.val();
-        self.mismatch.clk.next = self.clock.val();
-        self.sleep_counter.clk.next = self.clock.val();
-        self.index.clk.next = self.clock.val();
+        self.state.clock.next = self.clock.val();
+        self.mismatch.clock.next = self.clock.val();
+        self.sleep_counter.clock.next = self.clock.val();
+        self.index.clock.next = self.clock.val();
         // Latch prevention
         self.mismatch.d.next = self.mismatch.q.val();
         self.state.d.next = self.state.q.val();

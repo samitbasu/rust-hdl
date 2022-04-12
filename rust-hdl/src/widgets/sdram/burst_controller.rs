@@ -1,7 +1,6 @@
 use crate::core::prelude::*;
-use crate::hls::fifo::SyncFIFO;
 use crate::widgets::dff::DFF;
-use crate::widgets::prelude::{DelayLine, MemoryTimings, SynchronousFIFO};
+use crate::widgets::prelude::*;
 use crate::widgets::sdram::cmd::{SDRAMCommand, SDRAMCommandEncoder};
 use crate::widgets::sdram::{OutputBuffer, SDRAMDriver};
 
@@ -171,20 +170,20 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the internal logic
-        self.state.clk.next = self.clock.val();
-        self.reg_address.clk.next = self.clock.val();
-        self.delay_counter.clk.next = self.clock.val();
-        self.refresh_counter.clk.next = self.clock.val();
+        self.state.clock.next = self.clock.val();
+        self.reg_address.clock.next = self.clock.val();
+        self.delay_counter.clock.next = self.clock.val();
+        self.refresh_counter.clock.next = self.clock.val();
         self.read_valid.clock.next = self.clock.val();
-        self.transfer_counter.clk.next = self.clock.val();
-        self.write_pending.clk.next = self.clock.val();
-        self.read_pending.clk.next = self.clock.val();
-        self.refresh_needed.clk.next = self.clock.val();
-        self.reg_cmd_address.clk.next = self.clock.val();
+        self.transfer_counter.clock.next = self.clock.val();
+        self.write_pending.clock.next = self.clock.val();
+        self.read_pending.clock.next = self.clock.val();
+        self.refresh_needed.clock.next = self.clock.val();
+        self.reg_cmd_address.clock.next = self.clock.val();
         self.reg_cmd_address.d.next = self.reg_cmd_address.q.val();
-        self.data_in_reg.clk.next = self.clock.val();
-        self.data_out_reg.clk.next = self.clock.val();
-        self.data_strobe_reg.clk.next = self.clock.val();
+        self.data_in_reg.clock.next = self.clock.val();
+        self.data_out_reg.clock.next = self.clock.val();
+        self.data_strobe_reg.clock.next = self.clock.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;

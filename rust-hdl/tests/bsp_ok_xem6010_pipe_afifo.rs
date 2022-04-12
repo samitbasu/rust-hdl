@@ -48,7 +48,7 @@ impl Logic for OpalKellyPipeAFIFOTest {
         self.fifo_in.write_clock.next = self.ok_host.ti_clk.val();
         self.fifo_out.read_clock.next = self.ok_host.ti_clk.val();
         self.fifo_out.write_clock.next = self.fast_clock.val();
-        self.delay_read.clk.next = self.ok_host.ti_clk.val();
+        self.delay_read.clock.next = self.ok_host.ti_clk.val();
 
         // Bus connections
         self.i_pipe.ok1.next = self.ok_host.ok1.val();

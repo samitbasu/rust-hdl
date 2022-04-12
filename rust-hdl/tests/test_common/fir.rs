@@ -33,7 +33,7 @@ impl Logic for OpalKellyFIRTest {
         self.i_fifo.clock.next = self.ok_host.ti_clk.val();
         self.o_fifo.clock.next = self.ok_host.ti_clk.val();
         self.fir.clock.next = self.ok_host.ti_clk.val();
-        self.delay_read.clk.next = self.ok_host.ti_clk.val();
+        self.delay_read.clock.next = self.ok_host.ti_clk.val();
         // Connect the input pipe to the input fifo
         self.i_fifo.data_in.next = signed_cast(self.i_pipe.dataout.val());
         self.i_fifo.write.next = self.i_pipe.write.val();

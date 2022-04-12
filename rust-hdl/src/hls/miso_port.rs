@@ -1,5 +1,6 @@
 // A simple, local bus for attaching stuff together on the FPGA
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::hls::bus::SoCPortResponder;
 use crate::widgets::dff::DFF;
 
@@ -11,6 +12,7 @@ pub struct MISOPort<const D: usize> {
     pub bus: SoCPortResponder<D>,
     pub port_in: Signal<In, Bits<D>>,
     pub clock_out: Signal<Out, Clock>,
+    pub reset_out: Signal<Out, Reset>,
     pub ready_in: Signal<In, Bit>,
     pub strobe_out: Signal<Out, Bit>,
     address_active: DFF<Bit>,
@@ -20,7 +22,8 @@ impl<const D: usize> Logic for MISOPort<D> {
     #[hdl_gen]
     fn update(&mut self) {
         self.clock_out.next = self.bus.clock.val();
-        self.address_active.clk.next = self.bus.clock.val();
+        self.reset_out.next = self.bus.reset.val();
+        dff_setup!(self, clock_out, reset_out, address_active);
         self.address_active.d.next = self.bus.select.val();
         self.bus.to_controller.next = 0_usize.into();
         self.bus.ready.next = false;
@@ -36,10 +39,7 @@ impl<const D: usize> Logic for MISOPort<D> {
 #[test]
 fn test_local_in_port_is_synthesizable() {
     let mut dev = MISOPort::<16>::default();
-    dev.bus.from_controller.connect();
-    dev.bus.select.connect();
-    dev.bus.clock.connect();
-    dev.bus.strobe.connect();
+    dev.bus.link_connect_dest();
     dev.port_in.connect();
     dev.ready_in.connect();
     dev.connect_all();

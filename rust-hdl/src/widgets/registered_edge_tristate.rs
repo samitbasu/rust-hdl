@@ -14,8 +14,8 @@ pub struct RegisteredEdgeTristate<const W: usize> {
 
 impl<const W: usize> Logic for RegisteredEdgeTristate<W> {
     fn update(&mut self) {
-        self.dff_out.clk.next = self.clock.val();
-        self.dff_in.clk.next = self.clock.val();
+        self.dff_out.clock.next = self.clock.val();
+        self.dff_in.clock.next = self.clock.val();
         if self.write_enable.val() {
             self.bus.next = self.dff_out.q.val();
         }
@@ -25,8 +25,8 @@ impl<const W: usize> Logic for RegisteredEdgeTristate<W> {
         self.dff_out.d.next = self.write_data.val();
     }
     fn connect(&mut self) {
-        self.dff_out.clk.connect();
-        self.dff_in.clk.connect();
+        self.dff_out.clock.connect();
+        self.dff_in.clock.connect();
         self.dff_in.d.connect();
         self.dff_out.d.connect();
         self.bus.connect();

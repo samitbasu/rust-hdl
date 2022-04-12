@@ -51,7 +51,7 @@ impl Logic for OpalKellyWireTest {
         }
         self.o_wire_1.datain.next = self.trig_counter.q.val();
         // Fan out clock
-        self.trig_counter.clk.next = self.ok_host.ti_clk.val();
+        self.trig_counter.clock.next = self.ok_host.ti_clk.val();
         self.trig.clk.next = self.ok_host.ti_clk.val();
         self.o_trig.clk.next = self.ok_host.ti_clk.val();
         // Fan out OK1

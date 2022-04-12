@@ -4,7 +4,18 @@ use crate::core::prelude::*;
 pub struct DFF<T: Synth> {
     pub d: Signal<In, T>,
     pub q: Signal<Out, T>,
-    pub clk: Signal<In, Clock>,
+    pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
+    _reset_val: T,
+}
+
+impl<T: Synth> DFF<T> {
+    pub fn new_with_reset_val(init: T) -> Self {
+        Self {
+            _reset_val: init,
+            .. Default::default()
+        }
+    }
 }
 
 impl<T: Synth> Default for DFF<T> {
@@ -12,26 +23,21 @@ impl<T: Synth> Default for DFF<T> {
         Self {
             d: Signal::default(),
             q: Signal::default(),
-            clk: Signal::default(),
-        }
-    }
-}
-
-#[cfg(feature = "dff_init")]
-impl<T: Synth> DFF<T> {
-    pub fn new(init: T) -> DFF<T> {
-        Self {
-            d: Signal::default(),
-            q: Signal::new_with_default(init), // This should be marked as a register, since we write to it on a clock edge
-            clk: Signal::default(),
+            clock: Signal::default(),
+            reset: Signal::default(),
+            _reset_val: T::default(),
         }
     }
 }
 
 impl<T: Synth> Logic for DFF<T> {
     fn update(&mut self) {
-        if self.clk.pos_edge() {
-            self.q.next = self.d.val()
+        if self.clock.pos_edge() {
+            if self.reset.val().into() {
+                self.q.next = self._reset_val;
+            } else {
+                self.q.next = self.d.val()
+            }
         }
     }
     fn connect(&mut self) {
@@ -40,12 +46,23 @@ impl<T: Synth> Logic for DFF<T> {
     fn hdl(&self) -> Verilog {
         Verilog::Custom(format!(
             "\
-initial begin
-   q = {:x};
+always @(posedge clock) begin
+   if (reset) begin
+      q <= {:x};
+   end else begin
+      q <= d;
+   end
 end
-
-always @(posedge clk) q <= d;",
-            self.q.verilog()
+      ", self._reset_val.verilog()
         ))
+    }
+}
+
+#[macro_export]
+macro_rules! dff_setup {
+    ($self: ident, $clock: ident, $reset: ident, $($dff: ident),+) => {
+        $($self.$dff.clock.next = $self.$clock.val());+;
+        $($self.$dff.reset.next = $self.$reset.val());+;
+        $($self.$dff.d.next = $self.$dff.q.val());+;
     }
 }

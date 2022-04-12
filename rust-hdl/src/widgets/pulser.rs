@@ -6,6 +6,7 @@ use std::time::Duration;
 #[derive(LogicBlock)]
 pub struct Pulser {
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub enable: Signal<In, Bit>,
     pub pulse: Signal<Out, Bit>,
     strobe: Strobe<32>,
@@ -18,6 +19,7 @@ impl Pulser {
         let shot = Shot::new(clock_rate_hz, pulse_duration);
         Self {
             clock: Signal::default(),
+            reset: Default::default(),
             enable: Signal::default(),
             pulse: Signal::new_with_default(false),
             strobe,
@@ -29,8 +31,7 @@ impl Pulser {
 impl Logic for Pulser {
     #[hdl_gen]
     fn update(&mut self) {
-        self.strobe.clock.next = self.clock.val();
-        self.shot.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, strobe, shot);
         self.strobe.enable.next = self.enable.val();
         self.shot.trigger.next = self.strobe.strobe.val();
         self.pulse.next = self.shot.active.val();

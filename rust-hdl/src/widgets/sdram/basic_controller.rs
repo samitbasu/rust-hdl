@@ -164,20 +164,20 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the internal logic
-        self.state.clk.next = self.clock.val();
-        self.reg_data_write.clk.next = self.clock.val();
-        self.reg_data_read.clk.next = self.clock.val();
-        self.reg_address.clk.next = self.clock.val();
-        self.delay_counter.clk.next = self.clock.val();
-        self.refresh_counter.clk.next = self.clock.val();
+        self.state.clock.next = self.clock.val();
+        self.reg_data_write.clock.next = self.clock.val();
+        self.reg_data_read.clock.next = self.clock.val();
+        self.reg_address.clock.next = self.clock.val();
+        self.delay_counter.clock.next = self.clock.val();
+        self.refresh_counter.clock.next = self.clock.val();
         self.read_valid.clock.next = self.clock.val();
-        self.transfer_counter.clk.next = self.clock.val();
-        self.write_pending.clk.next = self.clock.val();
-        self.read_pending.clk.next = self.clock.val();
-        self.data_out_counter.clk.next = self.clock.val();
-        self.read_ready.clk.next = self.clock.val();
-        self.refresh_needed.clk.next = self.clock.val();
-        self.reg_cmd_address.clk.next = self.clock.val();
+        self.transfer_counter.clock.next = self.clock.val();
+        self.write_pending.clock.next = self.clock.val();
+        self.read_pending.clock.next = self.clock.val();
+        self.data_out_counter.clock.next = self.clock.val();
+        self.read_ready.clock.next = self.clock.val();
+        self.refresh_needed.clock.next = self.clock.val();
+        self.reg_cmd_address.clock.next = self.clock.val();
         self.reg_cmd_address.d.next = self.reg_cmd_address.q.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();

@@ -17,6 +17,8 @@ pub struct Router<const D: usize, const A: usize, const N: usize> {
     active: DFF<Bits<8>>,
     virtual_address: DFF<Bits<A>>,
     address_strobe_delay: DFF<Bit>,
+    clock: Signal<Local, Clock>,
+    reset: Signal<Local, Reset>,
     _address_map: Vec<String>,
 }
 
@@ -60,6 +62,8 @@ impl<const D: usize, const A: usize, const N: usize> Router<D, A, N> {
             active: Default::default(),
             virtual_address: Default::default(),
             address_strobe_delay: Default::default(),
+            clock: Default::default(),
+            reset: Default::default(),
             _address_map,
         }
     }
@@ -68,13 +72,11 @@ impl<const D: usize, const A: usize, const N: usize> Router<D, A, N> {
 impl<const D: usize, const A: usize, const N: usize> Logic for Router<D, A, N> {
     #[hdl_gen]
     fn update(&mut self) {
+        self.clock.next = self.upstream.clock.val();
+        self.reset.next = self.upstream.reset.val();
         self.upstream.ready.next = false;
         self.upstream.to_controller.next = 0_usize.into();
-        self.active.clk.next = self.upstream.clock.val();
-        self.address_strobe_delay.clk.next = self.upstream.clock.val();
-        self.active.d.next = self.active.q.val();
-        self.virtual_address.clk.next = self.upstream.clock.val();
-        self.virtual_address.d.next = self.virtual_address.q.val();
+        dff_setup!(self, clock, reset, active, virtual_address, address_strobe_delay);
         // Delay the address strobe by 1 clock cycle to allow the virtual address
         // calculation to be pipelined.
         self.address_strobe_delay.d.next = self.upstream.address_strobe.val();
@@ -83,7 +85,8 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Router<D, A, N> {
             self.nodes[i].address.next = 0_usize.into();
             self.nodes[i].address_strobe.next = false;
             self.nodes[i].strobe.next = false;
-            self.nodes[i].clock.next = self.upstream.clock.val();
+            self.nodes[i].clock.next = self.clock.val();
+            self.nodes[i].reset.next = self.reset.val();
             if (self.upstream.address.val() >= self.node_start_address[i].val())
                 & (self.upstream.address.val() < self.node_end_address[i].val())
                 & self.upstream.address_strobe.val()
@@ -116,11 +119,7 @@ fn test_router_is_synthesizable() {
         Bridge::<16, 8, 6>::new(["Club", "Spades", "Diamond", "Heart", "Joker", "Instruction"]);
     let mut router =
         Router::<16, 8, 3>::new(["Sides", "Colors", "Faces"], [&bridge1, &bridge2, &bridge3]);
-    router.upstream.address.connect();
-    router.upstream.address_strobe.connect();
-    router.upstream.from_controller.connect();
-    router.upstream.strobe.connect();
-    router.upstream.clock.connect();
+    router.upstream.link_connect_dest();
     for i in 0..3 {
         router.nodes[i].ready.connect();
         router.nodes[i].to_controller.connect();

@@ -39,7 +39,7 @@ pub struct BidiMaster<T: Synth> {
 impl<T: Synth> Logic for BidiMaster<T> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.state.clk.next = self.clock.val();
+        self.state.clock.next = self.clock.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();
         self.bus_buffer.write_enable.next = false;

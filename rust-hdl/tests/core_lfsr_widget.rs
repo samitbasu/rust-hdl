@@ -50,9 +50,9 @@ fn test_lfsr_operation() {
         let mut x = sim.init()?;
         let mut lf = Xorshift128State::default();
         wait_clock_true!(sim, clock, x);
-        x.reset.next = true;
+        x.reset.next = true.into();
         wait_clock_cycle!(sim, clock, x);
-        x.reset.next = false;
+        x.reset.next = false.into();
         wait_clock_cycles!(sim, clock, x, 10);
         for _ in 0..1000 {
             sim_assert_eq!(sim, x.num.val().index() as u32, lf.get(), x);

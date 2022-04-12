@@ -40,7 +40,7 @@ pub struct I2CController {
     pub write_data_in: Signal<In, Bits<8>>,
     pub read_data_out: Signal<Out, Bits<8>>,
     pub read_valid: Signal<Out, Bit>,
-    pub reset: Signal<In, Bit>,
+    pub reset: Signal<In, Reset>,
     pub ack: Signal<Out, Bit>,
     pub nack: Signal<Out, Bit>,
     driver: I2CDriver,
@@ -84,23 +84,10 @@ impl Logic for I2CController {
     fn update(&mut self) {
         Signal::<InOut, Bit>::link(&mut self.sda, &mut self.driver.sda);
         Signal::<InOut, Bit>::link(&mut self.scl, &mut self.driver.scl);
-        self.driver.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, driver);
+        dff_setup!(self, clock, reset, counter, read_data, write_data, state, started, last_read);
         self.driver.run.next = false;
         self.driver.cmd.next = I2CDriverCmd::Noop;
-        // Clock the flops
-        self.counter.clk.next = self.clock.val();
-        self.read_data.clk.next = self.clock.val();
-        self.write_data.clk.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
-        self.started.clk.next = self.clock.val();
-        self.last_read.clk.next = self.clock.val();
-        // Latch prevention
-        self.counter.d.next = self.counter.q.val();
-        self.read_data.d.next = self.read_data.q.val();
-        self.write_data.d.next = self.write_data.q.val();
-        self.state.d.next = self.state.q.val();
-        self.started.d.next = self.started.q.val();
-        self.last_read.d.next = self.last_read.q.val();
         // Default values
         self.busy.next = (self.state.q.val() != State::Idle) | self.driver.busy.val();
         self.error.next = false;
@@ -231,13 +218,9 @@ impl Logic for I2CController {
                 self.error.next = true;
             }
         }
-        if self.reset.val() {
-            self.state.d.next = State::Idle;
-        }
         if self.driver.error.val() {
             self.state.d.next = State::Error;
         }
-        self.driver.reset.next = self.reset.val();
     }
 }
 
@@ -288,7 +271,7 @@ impl Logic for I2CControllerTest {
         Signal::<InOut, Bit>::join(&mut self.controller.scl, &mut self.target_2.scl);
         self.pullup_scl.write_data.next = true;
         self.pullup_sda.write_data.next = true;
-        self.controller.reset.next = false;
+        self.controller.reset.next = false.into();
     }
 }
 

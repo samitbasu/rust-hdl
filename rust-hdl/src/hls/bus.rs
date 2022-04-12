@@ -39,6 +39,7 @@ pub struct SoCBusController<const D: usize, const A: usize> {
     pub ready: Signal<In, Bit>,
     pub strobe: Signal<Out, Bit>,
     pub clock: Signal<Out, Clock>,
+    pub reset: Signal<Out, Reset>,
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]
@@ -51,6 +52,7 @@ pub struct SoCBusResponder<const D: usize, const A: usize> {
     pub ready: Signal<Out, Bit>,
     pub strobe: Signal<In, Bit>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]
@@ -62,6 +64,7 @@ pub struct SoCPortController<const D: usize> {
     pub ready: Signal<In, Bit>,
     pub strobe: Signal<Out, Bit>,
     pub clock: Signal<Out, Clock>,
+    pub reset: Signal<Out, Reset>,
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]
@@ -73,6 +76,7 @@ pub struct SoCPortResponder<const D: usize> {
     pub ready: Signal<Out, Bit>,
     pub strobe: Signal<In, Bit>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
 }
 
 #[derive(Clone, Debug, Default, LogicInterface)]

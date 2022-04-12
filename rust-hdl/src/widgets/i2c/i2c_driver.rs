@@ -45,7 +45,7 @@ pub struct I2CDriver {
     pub run: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
     pub error: Signal<Out, Bit>,
-    pub reset: Signal<In, Bit>,
+    pub reset: Signal<In, Reset>,
     pub read_bit: Signal<Out, Bit>,
     pub read_valid: Signal<Out, Bit>,
     state: DFF<State>,
@@ -67,16 +67,10 @@ impl Logic for I2CDriver {
     fn update(&mut self) {
         Signal::<InOut, Bit>::link(&mut self.sda, &mut self.sda_driver.bus);
         Signal::<InOut, Bit>::link(&mut self.scl, &mut self.scl_driver.bus);
-        // Clock the internal structures
-        self.state.clk.next = self.clock.val();
-        self.delay.clock.next = self.clock.val();
-        self.sda_flop.clk.next = self.clock.val();
-        self.scl_flop.clk.next = self.clock.val();
+        dff_setup!(self, clock, reset, state, sda_flop, scl_flop);
+        clock_reset!(self, clock, reset, delay);
         // Latch avoidance and default conditions
-        self.state.d.next = self.state.q.val();
         self.delay.trigger.next = false;
-        self.sda_flop.d.next = self.sda_flop.q.val();
-        self.scl_flop.d.next = self.scl_flop.q.val();
         self.sda_driver.enable.next = self.sda_flop.q.val();
         self.scl_driver.enable.next = self.scl_flop.q.val();
         self.error.next = false;
@@ -244,9 +238,6 @@ impl Logic for I2CDriver {
         }
         if self.clear_sda.val() {
             self.sda_flop.d.next = true;
-        }
-        if self.reset.val() {
-            self.state.d.next = State::Idle;
         }
         if self.run.val() & self.busy.val() {
             self.state.d.next = State::Error;

@@ -7,13 +7,14 @@ pub struct Expander<const DN: usize, const DW: usize> {
     pub bus_read: FIFOReadController<Bits<DN>>,
     pub bus_write: FIFOWriteController<Bits<DW>>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     expander: FIFOExpanderN<DN, DW>,
 }
 
 impl<const DW: usize, const DN: usize> Logic for Expander<DN, DW> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.expander.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, expander);
         // Connect the HLS read bus to the expanders native signals
         self.bus_read.read.next = self.expander.read.val();
         self.expander.empty.next = self.bus_read.empty.val();
@@ -31,6 +32,7 @@ impl<const DW: usize, const DN: usize> Expander<DN, DW> {
             bus_read: Default::default(),
             bus_write: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             expander: FIFOExpanderN::new(order),
         }
     }

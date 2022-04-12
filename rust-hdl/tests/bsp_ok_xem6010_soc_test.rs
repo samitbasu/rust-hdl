@@ -41,7 +41,7 @@ impl Logic for OpalKellySoCTest {
     #[hdl_gen]
     fn update(&mut self) {
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
-        self.read_delay.clk.next = self.ok_host.ti_clk.val();
+        self.read_delay.clock.next = self.ok_host.ti_clk.val();
         self.dut.clock.next = self.ok_host.ti_clk.val();
         self.dut.sys_clock.next = self.sys_clock.val();
         self.dut.from_cpu.data.next = self.pipe_in.dataout.val();

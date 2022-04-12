@@ -235,11 +235,11 @@ impl<D: Direction, T: Synth> Block for Signal<D, T> {
 impl Signal<In, Clock> {
     #[inline(always)]
     pub fn pos_edge(&self) -> bool {
-        self.changed && self.val.0 && !self.prev.0
+        self.changed && self.val.clk && !self.prev.clk
     }
     #[inline(always)]
     pub fn neg_edge(&self) -> bool {
-        self.changed && !self.val.0 && self.prev.0
+        self.changed && !self.val.clk && self.prev.clk
     }
 }
 

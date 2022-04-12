@@ -9,7 +9,7 @@ pub struct OpalKellyDDRBackedDownloadFIFO {
     pub mcb: MCBInterface1GDDR2,
     pub raw_sys_clock: Signal<In, Clock>,
     // You must assert reset!
-    pub reset: Signal<In, Bit>,
+    pub reset: Signal<In, Reset>,
     // FIFO In interface
     pub data_in: Signal<In, Bits<32>>,
     pub write: Signal<In, Bit>,
@@ -63,7 +63,7 @@ impl Logic for OpalKellyDDRBackedDownloadFIFO {
         self.ddr_fifo.raw_sys_clock.next = self.raw_sys_clock.val();
         self.fifo_out.clock.next = self.ti_clk.val();
         self.reducer.clock.next = self.ti_clk.val();
-        self.read_delay.clk.next = self.ti_clk.val();
+        self.read_delay.clock.next = self.ti_clk.val();
         self.ddr_fifo.write_clock.next = self.write_clock.val();
         self.ddr_fifo.read_clock.next = self.ti_clk.val();
         // Data source - counts on each strobe pulse and writes it to the input FIFO.

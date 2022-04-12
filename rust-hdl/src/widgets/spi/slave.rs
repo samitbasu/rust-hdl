@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 use crate::widgets::edge_detector::EdgeDetector;
 use crate::widgets::prelude::BitSynchronizer;
@@ -20,6 +21,7 @@ enum SPISlaveState {
 #[derive(LogicBlock)]
 pub struct SPISlave<const N: usize> {
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub wires: SPIWiresSlave,
     pub disabled: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
@@ -66,6 +68,7 @@ impl<const N: usize> SPISlave<N> {
     pub fn new(config: SPIConfig) -> Self {
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             wires: Default::default(),
             disabled: Default::default(),
             busy: Default::default(),
@@ -99,21 +102,10 @@ impl<const N: usize> SPISlave<N> {
 impl<const N: usize> Logic for SPISlave<N> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Connect the clocks
-        self.miso_flop.clk.next = self.clock.val();
-        self.done_flop.clk.next = self.clock.val();
-        self.register_out.clk.next = self.clock.val();
-        self.register_in.clk.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
-        self.pointer.clk.next = self.clock.val();
-        self.bits_saved.clk.next = self.clock.val();
-        self.continued_saved.clk.next = self.clock.val();
-        self.capture_detector.clock.next = self.clock.val();
-        self.advance_detector.clock.next = self.clock.val();
-        self.edge_detector.clock.next = self.clock.val();
-        self.mclk_synchronizer.clock.next = self.clock.val();
-        self.csel_synchronizer.clock.next = self.clock.val();
-        self.escape.clk.next = self.clock.val();
+        dff_setup!(self, clock, reset, miso_flop, done_flop, register_out, register_in,
+            state, pointer, bits_saved, continued_saved, escape);
+        clock_reset!(self, clock, reset, capture_detector, advance_detector,
+            edge_detector, mclk_synchronizer, csel_synchronizer);
         // Connect the detectors
         self.capture_detector.input_signal.next = self.mclk_synchronizer.sig_out.val();
         self.advance_detector.input_signal.next = self.mclk_synchronizer.sig_out.val();
@@ -137,14 +129,6 @@ impl<const N: usize> Logic for SPISlave<N> {
             .q
             .val()
             .get_bit(self.pointer.q.val().into());
-        // Latch prevention
-        self.register_in.d.next = self.register_in.q.val();
-        self.state.d.next = self.state.q.val();
-        self.pointer.d.next = self.pointer.q.val();
-        self.register_out.d.next = self.register_out.q.val();
-        self.bits_saved.d.next = self.bits_saved.q.val();
-        self.continued_saved.d.next = self.continued_saved.q.val();
-        self.escape.d.next = self.escape.q.val();
         match self.state.q.val() {
             SPISlaveState::Idle => {
                 if self.edge_detector.edge_signal.val() {
@@ -247,6 +231,7 @@ fn test_spi_slave_synthesizes() {
     };
     let mut uut: SPISlave<64> = SPISlave::new(config);
     uut.clock.connect();
+    uut.reset.connect();
     uut.bits.connect();
     uut.wires.link_connect_dest();
     uut.disabled.connect();
@@ -256,5 +241,4 @@ fn test_spi_slave_synthesizes() {
     uut.continued_transaction.connect();
     uut.connect_all();
     yosys_validate("spi_slave", &generate_verilog(&uut)).unwrap();
-    println!("{}", generate_verilog(&uut));
 }

@@ -88,12 +88,12 @@ fn test_vector_synchronizer() {
     });
     sim.add_testbench(move |mut sim: Sim<TestCircuit>| {
         let mut x = sim.init()?;
-        x = sim.watch(|x| x.uut.clock_in.val().0, x)?;
+        x = sim.watch(|x| x.uut.clock_in.val().clk, x)?;
         for i in 0..150 {
             x.uut.sig_in.next = (i as u32).into();
             x.uut.send.next = true;
-            x = sim.watch(|x| !x.uut.clock_in.val().0, x)?;
-            x = sim.watch(|x| x.uut.clock_in.val().0, x)?;
+            x = sim.watch(|x| !x.uut.clock_in.val().clk, x)?;
+            x = sim.watch(|x| x.uut.clock_in.val().clk, x)?;
             x.uut.send.next = false;
             x = sim.watch(|x| !x.uut.busy.val(), x)?;
         }
@@ -102,12 +102,12 @@ fn test_vector_synchronizer() {
     });
     sim.add_testbench(move |mut sim: Sim<TestCircuit>| {
         let mut x = sim.init()?;
-        x = sim.watch(|x| x.uut.clock_out.val().0, x)?;
+        x = sim.watch(|x| x.uut.clock_out.val().clk, x)?;
         for i in 0_u32..150_u32 {
             x = sim.watch(|x| x.uut.update.val(), x)?;
             sim_assert!(sim, x.uut.sig_out.val().eq(&i), x);
-            x = sim.watch(|x| !x.uut.clock_out.val().0, x)?;
-            x = sim.watch(|x| x.uut.clock_out.val().0, x)?;
+            x = sim.watch(|x| !x.uut.clock_out.val().clk, x)?;
+            x = sim.watch(|x| x.uut.clock_out.val().clk, x)?;
         }
         sim.done(x)?;
         Ok(())

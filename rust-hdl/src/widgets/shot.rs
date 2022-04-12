@@ -1,12 +1,14 @@
 use crate::core::prelude::*;
 use crate::widgets::dff::DFF;
 use std::time::Duration;
+use crate::dff_setup;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Shot<const N: usize> {
     pub trigger: Signal<In, Bit>,
     pub active: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub fired: Signal<Out, Bit>,
     duration: Constant<Bits<N>>,
     counter: DFF<Bits<N>>,
@@ -23,6 +25,7 @@ impl<const N: usize> Shot<N> {
             trigger: Signal::default(),
             active: Signal::new_with_default(false),
             clock: Signal::default(),
+            reset: Default::default(),
             fired: Default::default(),
             duration: Constant::new(clocks.into()),
             counter: Default::default(),
@@ -34,13 +37,10 @@ impl<const N: usize> Shot<N> {
 impl<const N: usize> Logic for Shot<N> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.counter.clk.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
-        self.counter.d.next = self.counter.q.val();
+        dff_setup!(self, clock, reset, counter, state);
         if self.state.q.val() {
             self.counter.d.next = self.counter.q.val() + 1_u32;
         }
-        self.state.d.next = self.state.q.val();
         self.fired.next = false;
         if self.state.q.val() && (self.counter.q.val() == self.duration.val()) {
             self.state.d.next = false;

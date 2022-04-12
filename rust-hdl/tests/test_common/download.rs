@@ -18,7 +18,7 @@ impl Logic for OpalKellyDownload32FIFOTest {
     fn update(&mut self) {
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         self.dl.clock.next = self.ok_host.ti_clk.val();
-        self.counter.clk.next = self.ok_host.ti_clk.val();
+        self.counter.clock.next = self.ok_host.ti_clk.val();
         self.dl.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.dl.ok2.val();
         self.dl.data_in.next = self.counter.q.val();
@@ -76,7 +76,7 @@ impl Logic for OpalKellyDownloadFIFOTest {
         self.dl.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.dl.ok2.val();
         self.dl.clock.next = self.ok_host.ti_clk.val();
-        self.counter.clk.next = self.ok_host.ti_clk.val();
+        self.counter.clock.next = self.ok_host.ti_clk.val();
         self.will_write.next = !self.dl.data_full.val();
         self.counter.d.next =
             self.counter.q.val() + bit_cast::<16, 1>(self.will_write.val().into());

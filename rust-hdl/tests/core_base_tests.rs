@@ -80,7 +80,7 @@ mod tests {
         impl Logic for StateMachine {
             #[hdl_gen]
             fn update(&mut self) {
-                self.state.clk.next = self.clock.val();
+                self.state.clock.next = self.clock.val();
 
                 if self.advance.val() {
                     match self.state.q.val() {
@@ -101,7 +101,7 @@ mod tests {
         uut.connect_all();
         check_all(&uut).unwrap();
         for clock in 0..10 {
-            uut.clock.next = Clock(clock % 2 == 0).into();
+            uut.clock.next = Clock::from(clock % 2 == 0).into();
             uut.advance.next = true;
             if !simulate(&mut uut, 10) {
                 panic!("Logic did not converge");

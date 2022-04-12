@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 use crate::widgets::fifo::fifo_expander_n::WordOrder;
 
@@ -15,6 +16,7 @@ pub struct FIFOReducerN<const DW: usize, const DN: usize> {
     // This is a synchronous design.  The clock is assumed
     // to be shared with both the input and output fifos.
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     load_count: DFF<Bits<8>>,
     data_available: Signal<Local, Bit>,
     will_write: Signal<Local, Bit>,
@@ -29,10 +31,7 @@ pub struct FIFOReducerN<const DW: usize, const DN: usize> {
 impl<const DW: usize, const DN: usize> Logic for FIFOReducerN<DW, DN> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.load_count.clk.next = self.clock.val();
-        self.load_count.d.next = self.load_count.q.val();
-        self.data_store.clk.next = self.clock.val();
-        self.data_store.d.next = self.data_store.q.val();
+        dff_setup!(self, clock, reset, load_count, data_store);
         // We have data if either the store has data or if data is ready
         // from the input fifo
         self.data_available.next = self.load_count.q.val().any() | !self.empty.val();
@@ -94,6 +93,7 @@ impl<const DW: usize, const DN: usize> FIFOReducerN<DW, DN> {
             write: Default::default(),
             full: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             load_count: Default::default(),
             data_available: Default::default(),
             will_write: Default::default(),
@@ -118,6 +118,7 @@ fn fifo_reducern_is_synthesizable() {
     dev.uut.full.connect();
     dev.uut.data_in.connect();
     dev.uut.clock.connect();
+    dev.uut.reset.connect();
     dev.connect_all();
     yosys_validate("fifo_reducern", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev));

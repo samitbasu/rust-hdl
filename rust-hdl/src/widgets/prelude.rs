@@ -41,7 +41,7 @@ pub use crate::widgets::spi::master_dynamic_mode::{SPIConfigDynamicMode, SPIMast
 pub use crate::widgets::spi::mux::{MuxMasters, MuxSlaves};
 pub use crate::widgets::spi::slave::SPISlave;
 pub use crate::widgets::strobe::Strobe;
-pub use crate::widgets::sync_reset::SyncReset;
+pub use crate::widgets::auto_reset::AutoReset;
 pub use crate::widgets::synchronizer::{
     BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer,
 };
@@ -49,3 +49,4 @@ pub use crate::widgets::tristate::TristateBuffer;
 pub use crate::{
     i2c_begin_read, i2c_begin_write, i2c_end_transmission, i2c_read, i2c_read_last, i2c_write,
 };
+pub use crate::dff_setup;

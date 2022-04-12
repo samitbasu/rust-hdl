@@ -23,6 +23,7 @@ enum DAQState {
     Copy1,
 }
 
+
 #[derive(LogicBlock)]
 pub struct MAX31856Simulator {
     // Slave SPI bus
@@ -48,6 +49,8 @@ pub struct MAX31856Simulator {
     boot: DFF<Bits<4>>,
     // DAQ state:
     dstate: DFF<DAQState>,
+    auto_reset: AutoReset,
+    lsr: Signal<Local, Reset>,
 }
 
 const MAX31856_REG_INITS: [u8; 16] = [
@@ -76,6 +79,8 @@ impl MAX31856Simulator {
             boot: DFF::default(),
             reg_index: Default::default(),
             dstate: Default::default(),
+            auto_reset: AutoReset::default(),
+            lsr: Default::default()
         }
     }
 }
@@ -88,23 +93,12 @@ impl Logic for MAX31856Simulator {
         // Clock the internal logic
         self.reg_ram.write_clock.next = self.clock.val();
         self.reg_ram.read_clock.next = self.clock.val();
-        self.auto_conversions_enabled.clk.next = self.clock.val();
-        self.auto_conversion_strobe.clock.next = self.clock.val();
-        self.auto_conversion_counter.clk.next = self.clock.val();
-        self.spi_slave.clock.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
-        self.reg_write_index.clk.next = self.clock.val();
-        self.reg_read_index.clk.next = self.clock.val();
-        self.boot.clk.next = self.clock.val();
-        self.dstate.clk.next = self.clock.val();
-        // Latch prevention
-        self.auto_conversions_enabled.d.next = self.auto_conversions_enabled.q.val();
-        self.auto_conversion_counter.d.next = self.auto_conversion_counter.q.val();
-        self.state.d.next = self.state.q.val();
-        self.dstate.d.next = self.dstate.q.val();
-        self.reg_write_index.d.next = self.reg_write_index.q.val();
-        self.reg_read_index.d.next = self.reg_read_index.q.val();
-        self.boot.d.next = self.boot.q.val();
+        // Setup the autoreset
+        self.auto_reset.clock.next = self.clock.val();
+        self.lsr.next = self.auto_reset.reset.val();
+        // Setup the DFF and internal widgets
+        dff_setup!(self, clock, lsr, auto_conversions_enabled, auto_conversion_counter, state, reg_read_index, reg_write_index, boot, dstate);
+        clock_reset!(self, clock, lsr, auto_conversion_strobe, spi_slave);
         // Set default values
         self.spi_slave.start_send.next = false;
         self.spi_slave.continued_transaction.next = false;
@@ -242,6 +236,7 @@ fn test_max31856_synthesizes() {
 #[derive(LogicBlock)]
 struct Test31856 {
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
     master: SPIMaster<64>,
     uut: MAX31856Simulator,
 }
@@ -249,7 +244,7 @@ struct Test31856 {
 impl Logic for Test31856 {
     #[hdl_gen]
     fn update(&mut self) {
-        self.master.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, master);
         self.uut.clock.next = self.clock.val();
         SPIWiresMaster::join(&mut self.master.wires, &mut self.uut.wires);
     }
@@ -259,6 +254,7 @@ impl Default for Test31856 {
     fn default() -> Self {
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             master: SPIMaster::new(AD7193Config::sw().spi),
             uut: MAX31856Simulator::new(AD7193Config::sw().spi),
         }
@@ -307,7 +303,7 @@ fn do_spi_txn(
     wait_clock_cycle!(sim, clock, x);
     x.master.start_send.next = false;
     x = sim.watch(
-        |x| x.clock.val().0 && x.master.transfer_done.val().into(),
+        |x| x.clock.val().clk && x.master.transfer_done.val().into(),
         x,
     )?;
     let ret = x.master.data_inbound.val();
@@ -320,6 +316,7 @@ fn do_spi_txn(
 fn mk_test31856() -> Test31856 {
     let mut uut = Test31856::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.master.continued_transaction.connect();
     uut.master.start_send.connect();
     uut.master.data_outbound.connect();
@@ -341,14 +338,16 @@ fn test_multireg_reads() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 20);
         let cmd = 1_u64 << 32_u64;
         let result = do_spi_txn(40, cmd, false, x, &mut sim)?;
         x = result.1;
-        sim_assert!(
+        sim_assert_eq!(
             sim,
-            result.0 & 0xFF_FF_FF_FF_u64 == Bits::<64>::from(0x03_FF_7F_C0_u32),
+            result.0 & 0xFF_FF_FF_FF_u64,
+            Bits::<64>::from(0x03_FF_7F_C0_u32),
             x
         );
         sim.done(x)
@@ -363,6 +362,7 @@ fn test_multireg_write() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 20);
         let cmd = 0x81_u64 << 32_u64 | 0xDEADBEEF_u64;
@@ -372,9 +372,10 @@ fn test_multireg_write() {
         let cmd = 0x1_u64 << 32_u64;
         let result = do_spi_txn(40, cmd, false, x, &mut sim)?;
         x = result.1;
-        sim_assert!(
+        sim_assert_eq!(
             sim,
-            result.0 & 0xFF_FF_FF_FF_u64 == Bits::<64>::from(0xDEADBEEF_u32),
+            result.0 & 0xFF_FF_FF_FF_u64,
+            Bits::<64>::from(0xDEADBEEF_u32),
             x
         );
         sim.done(x)
@@ -389,6 +390,7 @@ fn test_reg_reads() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 20);
         for ndx in 0..16 {
@@ -396,9 +398,10 @@ fn test_reg_reads() {
             let result = reg_read(ndx, x, &mut sim)?;
             x = result.1;
             println!("Value {} -> {:x}", ndx, result.0);
-            sim_assert!(
+            sim_assert_eq!(
                 sim,
-                result.0 == Bits::<64>::from(MAX31856_REG_INITS[ndx as usize]),
+                result.0,
+                Bits::<64>::from(MAX31856_REG_INITS[ndx as usize]),
                 x
             );
             wait_clock_true!(sim, clock, x);
@@ -417,15 +420,17 @@ fn test_reg_writes() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         // Initialize the chip...
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 20);
         for ndx in 0..16 {
             let result = reg_read(ndx, x, &mut sim)?;
             x = result.1;
-            sim_assert!(
+            sim_assert_eq!(
                 sim,
-                result.0 == Bits::<64>::from(MAX31856_REG_INITS[ndx as usize]),
+                result.0,
+                Bits::<64>::from(MAX31856_REG_INITS[ndx as usize]),
                 x
             );
             println!("Read of register {} -> {:x}", ndx, result.0);
@@ -437,10 +442,10 @@ fn test_reg_writes() {
             )?;
             let result = reg_read(ndx, x, &mut sim)?;
             x = result.1;
-            sim_assert!(
+            sim_assert_eq!(
                 sim,
-                result.0
-                    == Bits::<64>::from(Wrapping(MAX31856_REG_INITS[ndx as usize]) + Wrapping(1)),
+                result.0,
+                Bits::<64>::from(Wrapping(MAX31856_REG_INITS[ndx as usize]) + Wrapping(1)),
                 x
             );
             println!("Re-read of register {} -> {:x}", ndx, result.0);
@@ -457,17 +462,18 @@ fn test_single_conversion() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 50);
         x = reg_write(0, 0x80, x, &mut sim)?;
         x = sim.wait(200_000, x)?;
         let result = reg_read(0x0E, x, &mut sim)?;
         x = result.1;
-        sim_assert!(sim, result.0 & 0xFF_u64 == 0x40_u64, x);
+        sim_assert_eq!(sim, result.0 & 0xFF_u64, 0x40_u64, x);
         let cmd = 0xC_u64 << 24_u64;
         let result = do_spi_txn(32, cmd, false, x, &mut sim)?;
         x = result.1;
-        sim_assert!(sim, result.0 & 0xFFFFFF_u64 == 0x40_u64, x);
+        sim_assert_eq!(sim, result.0 & 0xFFFFFF_u64, 0x40_u64, x);
         sim.done(x)
     });
     sim.run(Box::new(uut), 1_000_000).unwrap();

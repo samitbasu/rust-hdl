@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::hls::bus::SoCPortResponder;
 use crate::widgets::dff::DFF;
 
@@ -14,6 +15,7 @@ pub struct MOSIPort<const D: usize> {
     pub strobe_out: Signal<Out, Bit>,
     pub ready: Signal<In, Bit>,
     pub clock_out: Signal<Out, Clock>,
+    pub reset_out: Signal<Out, Reset>,
     state: DFF<Bits<D>>,
     address_active: DFF<Bit>,
     strobe: DFF<Bit>,
@@ -23,11 +25,9 @@ impl<const D: usize> Logic for MOSIPort<D> {
     #[hdl_gen]
     fn update(&mut self) {
         self.clock_out.next = self.bus.clock.val();
-        self.state.clk.next = self.bus.clock.val();
-        self.strobe.clk.next = self.bus.clock.val();
-        self.address_active.clk.next = self.bus.clock.val();
+        self.reset_out.next = self.bus.reset.val();
+        dff_setup!(self, clock_out, reset_out, state, address_active, strobe);
         self.port_out.next = self.state.q.val();
-        self.state.d.next = self.state.q.val();
         self.address_active.d.next = self.bus.select.val();
         self.bus.ready.next = false;
         self.strobe_out.next = self.strobe.q.val();
@@ -46,13 +46,9 @@ impl<const D: usize> Logic for MOSIPort<D> {
 #[test]
 fn test_local_out_port_is_synthesizable() {
     let mut dev = MOSIPort::<16>::default();
-    dev.bus.from_controller.connect();
-    dev.bus.clock.connect();
-    dev.bus.select.connect();
-    dev.bus.strobe.connect();
+    dev.bus.link_connect_dest();
     dev.ready.connect();
     dev.connect_all();
     let vlog = generate_verilog(&dev);
-    println!("{}", vlog);
     yosys_validate("localout", &vlog).unwrap();
 }

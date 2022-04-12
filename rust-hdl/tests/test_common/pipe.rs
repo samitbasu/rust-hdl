@@ -39,7 +39,7 @@ impl Logic for OpalKellyPipeTest {
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
 
         // Clock connections
-        self.accum.clk.next = self.ok_host.ti_clk.val();
+        self.accum.clock.next = self.ok_host.ti_clk.val();
 
         // Bus connections
         self.o_wire.ok1.next = self.ok_host.ok1.val();
@@ -113,8 +113,8 @@ impl Logic for OpalKellyPipeRAMTest {
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
 
         // Clock connections
-        self.read_address.clk.next = self.ok_host.ti_clk.val();
-        self.write_address.clk.next = self.ok_host.ti_clk.val();
+        self.read_address.clock.next = self.ok_host.ti_clk.val();
+        self.write_address.clock.next = self.ok_host.ti_clk.val();
         self.ram.read_clock.next = self.ok_host.ti_clk.val();
         self.ram.write_clock.next = self.ok_host.ti_clk.val();
 
@@ -182,7 +182,7 @@ impl Logic for OpalKellyPipeFIFOTest {
 
         // Clock connections
         self.fifo.clock.next = self.ok_host.ti_clk.val();
-        self.delay_read.clk.next = self.ok_host.ti_clk.val();
+        self.delay_read.clock.next = self.ok_host.ti_clk.val();
 
         // Bus connections
         self.i_pipe.ok1.next = self.ok_host.ok1.val();

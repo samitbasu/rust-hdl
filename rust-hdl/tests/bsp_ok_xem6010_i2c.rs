@@ -66,7 +66,7 @@ impl Logic for OKI2CTest {
         self.i2c.clock.next = self.ok_host.ti_clk.val();
         self.trig_in.clk.next = self.ok_host.ti_clk.val();
         self.trig_out.clk.next = self.ok_host.ti_clk.val();
-        self.wire_out_latch.clk.next = self.ok_host.ti_clk.val();
+        self.wire_out_latch.clock.next = self.ok_host.ti_clk.val();
         // Latch prevention
         self.wire_out_latch.d.next = self.wire_out_latch.q.val();
         // Connect the OK busses

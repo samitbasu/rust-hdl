@@ -593,6 +593,7 @@ pub enum VerilogStatement {
     Loop(VerilogLoop),
     Comment(String),
     Link(Vec<VerilogLink>),
+    Macro(VerilogBlock),
 }
 
 #[doc(hidden)]

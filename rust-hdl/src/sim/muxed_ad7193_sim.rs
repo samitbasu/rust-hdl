@@ -44,6 +44,5 @@ fn test_mux_is_synthesizable() {
     uut.addr.connect();
     uut.clock.connect();
     uut.connect_all();
-    println!("{}", generate_verilog(&uut));
     yosys_validate("mux_7193", &generate_verilog(&uut)).unwrap();
 }

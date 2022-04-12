@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::hls::bus::SoCPortResponder;
 use crate::widgets::dff::DFF;
 
@@ -8,6 +9,7 @@ pub struct MISOWidePort<const W: usize, const D: usize> {
     pub port_in: Signal<In, Bits<W>>,
     pub strobe_in: Signal<In, Bit>,
     pub clock_out: Signal<Out, Clock>,
+    pub reset_out: Signal<Out, Reset>,
     accum: DFF<Bits<W>>,
     address_active: DFF<Bit>,
     offset: Constant<Bits<W>>,
@@ -27,6 +29,7 @@ impl<const W: usize, const D: usize> Default for MISOWidePort<W, D> {
             port_in: Default::default(),
             strobe_in: Default::default(),
             clock_out: Default::default(),
+            reset_out: Default::default(),
             accum: Default::default(),
             address_active: Default::default(),
             offset: Constant::new(D.into()),
@@ -42,15 +45,10 @@ impl<const W: usize, const D: usize> Logic for MISOWidePort<W, D> {
     #[hdl_gen]
     fn update(&mut self) {
         self.clock_out.next = self.bus.clock.val();
-        // Clock the internal flip flops
-        self.accum.clk.next = self.bus.clock.val();
-        self.address_active.clk.next = self.bus.clock.val();
-        self.count.clk.next = self.bus.clock.val();
-        self.ready.clk.next = self.bus.clock.val();
+        self.reset_out.next = self.bus.reset.val();
+        dff_setup!(self, clock_out, reset_out, accum, address_active, count, ready);
         // Latch prevention
-        self.accum.d.next = self.accum.q.val();
         self.address_active.d.next = self.bus.select.val();
-        self.count.d.next = self.count.q.val();
         self.bus.ready.next = false;
         // On the strobe in, load the new value into our accumulator
         if self.strobe_in.val() {
@@ -73,10 +71,7 @@ impl<const W: usize, const D: usize> Logic for MISOWidePort<W, D> {
 #[test]
 fn test_local_in_wide_port_is_synthesizable() {
     let mut dev = MISOWidePort::<64, 16>::default();
-    dev.bus.from_controller.connect();
-    dev.bus.select.connect();
-    dev.bus.strobe.connect();
-    dev.bus.clock.connect();
+    dev.bus.link_connect_dest();
     dev.port_in.connect();
     dev.strobe_in.connect();
     dev.connect_all();

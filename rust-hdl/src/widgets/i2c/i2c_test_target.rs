@@ -60,11 +60,11 @@ impl Logic for I2CTestTarget {
         self.phy.clock.next = self.clock.val();
         self.mem.read_clock.next = self.clock.val();
         self.mem.write_clock.next = self.clock.val();
-        self.ptr.clk.next = self.clock.val();
-        self.outgoing.clk.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
-        self.save.clk.next = self.clock.val();
-        self.active.clk.next = self.clock.val();
+        self.ptr.clock.next = self.clock.val();
+        self.outgoing.clock.next = self.clock.val();
+        self.state.clock.next = self.clock.val();
+        self.save.clock.next = self.clock.val();
+        self.active.clock.next = self.clock.val();
         // Latch prevention
         self.outgoing.d.next = self.outgoing.q.val();
         self.state.d.next = self.state.q.val();

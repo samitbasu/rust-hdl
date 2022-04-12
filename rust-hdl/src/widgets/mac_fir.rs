@@ -61,10 +61,10 @@ impl<const ADDR_BITS: usize> Logic
         self.left_bank.write_clock.next = self.clock.val();
         self.right_bank.read_clock.next = self.clock.val();
         self.right_bank.write_clock.next = self.clock.val();
-        self.head_ptr.clk.next = self.clock.val();
-        self.index.clk.next = self.clock.val();
-        self.accum.clk.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
+        self.head_ptr.clock.next = self.clock.val();
+        self.index.clock.next = self.clock.val();
+        self.accum.clock.next = self.clock.val();
+        self.state.clock.next = self.clock.val();
         // Connect the head pointer to the write address of the two bank memories
         self.left_bank.write_address.next = self.head_ptr.d.val();
         self.right_bank.write_address.next = self.head_ptr.d.val();

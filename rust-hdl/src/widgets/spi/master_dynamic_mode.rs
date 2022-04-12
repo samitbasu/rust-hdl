@@ -112,19 +112,19 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Wire up the clocks.
-        self.register_out.clk.next = self.clock.val();
-        self.register_in.clk.next = self.clock.val();
-        self.state.clk.next = self.clock.val();
+        self.register_out.clock.next = self.clock.val();
+        self.register_in.clock.next = self.clock.val();
+        self.state.clock.next = self.clock.val();
         self.strobe.clock.next = self.clock.val();
-        self.pointer.clk.next = self.clock.val();
-        self.clock_state.clk.next = self.clock.val();
-        self.done_flop.clk.next = self.clock.val();
-        self.msel_flop.clk.next = self.clock.val();
-        self.mosi_flop.clk.next = self.clock.val();
-        self.cpha_flop.clk.next = self.clock.val();
-        self.cpol_flop.clk.next = self.clock.val();
+        self.pointer.clock.next = self.clock.val();
+        self.clock_state.clock.next = self.clock.val();
+        self.done_flop.clock.next = self.clock.val();
+        self.msel_flop.clock.next = self.clock.val();
+        self.mosi_flop.clock.next = self.clock.val();
+        self.cpha_flop.clock.next = self.clock.val();
+        self.cpol_flop.clock.next = self.clock.val();
         self.miso_synchronizer.clock.next = self.clock.val();
-        self.continued_save.clk.next = self.clock.val();
+        self.continued_save.clock.next = self.clock.val();
         // Activate the baud strobe
         self.strobe.enable.next = true;
         // Connect the MISO synchronizer to the input line

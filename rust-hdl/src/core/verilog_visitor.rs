@@ -230,6 +230,11 @@ pub fn walk_statement<V: VerilogVisitor + ?Sized>(visitor: &mut V, s: &VerilogSt
         VerilogStatement::Link(l) => {
             visitor.visit_link(l);
         }
+        VerilogStatement::Macro(m) => {
+            for statement in m {
+                visitor.visit_statement(statement);
+            }
+        }
     }
 }
 

@@ -5,7 +5,7 @@ pub struct OutputDDR {
     pub d: Signal<In, Bits<2>>,
     pub clock: Signal<In, Clock>,
     pub q: Signal<Out, Bit>,
-    pub reset: Signal<In, Bit>,
+    pub reset: Signal<In, Reset>,
     _capture: Bits<2>,
 }
 
@@ -18,7 +18,7 @@ impl Logic for OutputDDR {
         if self.clock.neg_edge() {
             self.q.next = self._capture.get_bit(1);
         }
-        if self.reset.val() {
+        if self.reset.val().into() {
             self._capture = 0_usize.into();
             self.q.next = false;
         }

@@ -14,7 +14,7 @@ pub enum DDR7FIFOState {
 #[derive(LogicBlock, Default)]
 pub struct DDR7FIFO<const N: usize> {
     // Reset - required
-    pub reset: Signal<In, Bit>,
+    pub reset: Signal<In, Reset>,
     // System clock
     pub sys_clock_p: Signal<In, Clock>,
     pub sys_clock_n: Signal<In, Clock>,
@@ -74,9 +74,9 @@ impl<const N: usize> Logic for DDR7FIFO<N> {
         self.back_porch.write_clock.next = self.mig.clock.val();
         self.back_porch.write.next = false;
         // Clock the flops
-        self.write_address.clk.next = self.mig.clock.val();
-        self.read_address.clk.next = self.mig.clock.val();
-        self.state.clk.next = self.mig.clock.val();
+        self.write_address.clock.next = self.mig.clock.val();
+        self.read_address.clock.next = self.mig.clock.val();
+        self.state.clock.next = self.mig.clock.val();
         // Latch prevention for the flops
         self.write_address.d.next = self.write_address.q.val();
         self.read_address.d.next = self.read_address.q.val();

@@ -48,6 +48,7 @@ impl<const R: usize, const C: usize> Logic for SDRAMController<R, C> {
     fn update(&mut self) {
         SoCBusResponder::<16, 8>::link(&mut self.upstream, &mut self.local_bridge.upstream);
         SDRAMDriver::<16>::link(&mut self.dram, &mut self.controller.sdram);
+        self.controller.reset.next = self.upstream.reset.val();
         self.controller.clock.next = self.upstream.clock.val();
         SoCPortController::<16>::join(&mut self.local_bridge.nodes[0], &mut self.data_in.bus);
         SoCPortController::<16>::join(&mut self.local_bridge.nodes[1], &mut self.address.bus);

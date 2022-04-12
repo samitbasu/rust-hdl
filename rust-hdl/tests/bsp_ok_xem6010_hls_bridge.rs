@@ -53,7 +53,7 @@ impl Logic for OpalKellyHLSBridgeTest {
     fn update(&mut self) {
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         self.hls_bridge.ti_clk.next = self.ok_host.ti_clk.val();
-        self.stream_cnt.clk.next = self.ok_host.ti_clk.val();
+        self.stream_cnt.clock.next = self.ok_host.ti_clk.val();
         self.hls_bridge.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.hls_bridge.ok2.val();
         SoCBusController::<16, 8>::join(&mut self.hls_bridge.bus, &mut self.port_bridge.upstream);

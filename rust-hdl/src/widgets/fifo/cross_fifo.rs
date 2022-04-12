@@ -18,11 +18,13 @@ pub struct CrossWidenFIFO<
     pub write: Signal<In, Bit>,
     pub full: Signal<Out, Bit>,
     pub write_clock: Signal<In, Clock>,
+    pub write_reset: Signal<In, Reset>,
     // Read interface
     pub data_out: Signal<Out, Bits<DW>>,
     pub read: Signal<In, Bit>,
     pub empty: Signal<Out, Bit>,
     pub read_clock: Signal<In, Clock>,
+    pub read_reset: Signal<In, Reset>,
     // Input FIFO
     pub in_fifo: AsynchronousFIFO<Bits<DN>, NN, NNP1, 1>,
     // Output FIFO
@@ -46,10 +48,12 @@ impl<
             write: Default::default(),
             full: Default::default(),
             write_clock: Default::default(),
+            write_reset: Default::default(),
             data_out: Default::default(),
             read: Default::default(),
             empty: Default::default(),
             read_clock: Default::default(),
+            read_reset: Default::default(),
             in_fifo: Default::default(),
             out_fifo: Default::default(),
             xpand: FIFOExpanderN::new(order),
@@ -87,17 +91,18 @@ impl<
         self.in_fifo.write.next = self.write.val();
         self.full.next = self.in_fifo.full.val();
         self.in_fifo.write_clock.next = self.write_clock.val();
+        self.in_fifo.write_reset.next = self.write_reset.val();
         // Connect the read side of the input fifo to the expander
         self.xpand.data_in.next = self.in_fifo.data_out.val();
         self.xpand.empty.next = self.in_fifo.empty.val();
         self.in_fifo.read.next = self.xpand.read.val();
         self.in_fifo.read_clock.next = self.read_clock.val();
-        self.xpand.clock.next = self.read_clock.val();
+        self.in_fifo.read_reset.next = self.read_reset.val();
+        clock_reset!(self, read_clock, read_reset, xpand, out_fifo);
         // Connect the read side of the output fifo to the read interface
         self.data_out.next = self.out_fifo.data_out.val();
         self.empty.next = self.out_fifo.empty.val();
         self.out_fifo.read.next = self.read.val();
-        self.out_fifo.clock.next = self.read_clock.val();
         // Connect the write side of the output fifo to the expander
         self.out_fifo.data_in.next = self.xpand.data_out.val();
         self.xpand.full.next = self.out_fifo.full.val();
@@ -113,8 +118,10 @@ fn cross_widen_fifo_is_synthesizable() {
     dev.uut.data_in.connect();
     dev.uut.write.connect();
     dev.uut.write_clock.connect();
+    dev.uut.write_reset.connect();
     dev.uut.read.connect();
     dev.uut.read_clock.connect();
+    dev.uut.read_reset.connect();
     dev.connect_all();
     yosys_validate("cross_wide", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev))
@@ -134,11 +141,13 @@ pub struct CrossNarrowFIFO<
     pub write: Signal<In, Bit>,
     pub full: Signal<Out, Bit>,
     pub write_clock: Signal<In, Clock>,
+    pub write_reset: Signal<In, Reset>,
     // Read interface
     pub data_out: Signal<Out, Bits<DN>>,
     pub read: Signal<In, Bit>,
     pub empty: Signal<Out, Bit>,
     pub read_clock: Signal<In, Clock>,
+    pub read_reset: Signal<In, Reset>,
     // Input FIFO
     pub in_fifo: AsynchronousFIFO<Bits<DW>, WN, WNP1, 1>,
     // Output FIFO
@@ -162,10 +171,12 @@ impl<
             write: Default::default(),
             full: Default::default(),
             write_clock: Default::default(),
+            write_reset: Default::default(),
             data_out: Default::default(),
             read: Default::default(),
             empty: Default::default(),
             read_clock: Default::default(),
+            read_reset: Default::default(),
             in_fifo: Default::default(),
             out_fifo: Default::default(),
             reducer: FIFOReducerN::new(order),
@@ -189,17 +200,18 @@ impl<
         self.in_fifo.write.next = self.write.val();
         self.full.next = self.in_fifo.full.val();
         self.in_fifo.write_clock.next = self.write_clock.val();
+        self.in_fifo.write_reset.next = self.write_reset.val();
         // Connect the read side of the input fifo to the reducer
         self.reducer.data_in.next = self.in_fifo.data_out.val();
         self.reducer.empty.next = self.in_fifo.empty.val();
         self.in_fifo.read.next = self.reducer.read.val();
         self.in_fifo.read_clock.next = self.read_clock.val();
-        self.reducer.clock.next = self.read_clock.val();
+        self.in_fifo.read_reset.next = self.read_reset.val();
+        clock_reset!(self, read_clock, read_reset, reducer, out_fifo);
         // Connect the read side of the output fifo to the read interface
         self.data_out.next = self.out_fifo.data_out.val();
         self.empty.next = self.out_fifo.empty.val();
         self.out_fifo.read.next = self.read.val();
-        self.out_fifo.clock.next = self.read_clock.val();
         // Connect the write side of the output fifo to the reducer
         self.out_fifo.data_in.next = self.reducer.data_out.val();
         self.reducer.full.next = self.out_fifo.full.val();
@@ -229,11 +241,12 @@ fn cross_narrow_fifo_is_synthesizable() {
     dev.uut.data_in.connect();
     dev.uut.write.connect();
     dev.uut.write_clock.connect();
+    dev.uut.write_reset.connect();
     dev.uut.read.connect();
     dev.uut.read_clock.connect();
+    dev.uut.read_reset.connect();
     dev.connect_all();
     yosys_validate("cross_narrow", &generate_verilog(&dev)).unwrap();
-    println!("{}", generate_verilog(&dev))
 }
 
 #[macro_export]

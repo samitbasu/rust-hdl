@@ -74,7 +74,7 @@ pub struct MemoryInterfaceGenerator {
     // Raw clock from the system - cannot be intercepted
     pub raw_sys_clk: Signal<In, Clock>,
     // Reset - must be handled externally
-    pub reset: Signal<In, Bit>,
+    pub reset: Signal<In, Reset>,
     // Calibration complete
     pub calib_done: Signal<Out, Bit>,
     // Buffered 100 MHz clock
@@ -152,10 +152,10 @@ impl Logic for MemoryInterfaceGenerator {
         self.cmd_fifo.read_clock.next = self.raw_sys_clk.val();
         self.write_fifo.read_clock.next = self.raw_sys_clk.val();
         self.read_fifo.write_clock.next = self.raw_sys_clk.val();
-        self.state.clk.next = self.raw_sys_clk.val();
-        self.calib.clk.next = self.raw_sys_clk.val();
-        self.timer.clk.next = self.raw_sys_clk.val();
-        self.address.clk.next = self.raw_sys_clk.val();
+        self.state.clock.next = self.raw_sys_clk.val();
+        self.calib.clock.next = self.raw_sys_clk.val();
+        self.timer.clock.next = self.raw_sys_clk.val();
+        self.address.clock.next = self.raw_sys_clk.val();
         // Latch prevention
         self.state.d.next = self.state.q.val();
         self.calib.d.next = self.calib.q.val();
@@ -198,7 +198,7 @@ impl Logic for MemoryInterfaceGenerator {
         self.reset_out.next = false;
         match self.state.q.val() {
             State::Init => {
-                if self.reset.val() {
+                if self.reset.val().into() {
                     self.state.d.next = State::Calibrating;
                     self.timer.d.next = 100_usize.into();
                 }
@@ -290,18 +290,18 @@ impl Logic for MemoryInterfaceGenerator {
         self.mcb.link_connect_dest();
         self.write_fifo.write_clock.connect();
         self.cmd_fifo.write_clock.connect();
-        self.state.clk.connect();
+        self.state.clock.connect();
         self.cmd_fifo.read.connect();
         self.cmd_fifo.data_in.connect();
         self.read_fifo.write.connect();
         self.read_fifo.write_clock.connect();
-        self.timer.clk.connect();
+        self.timer.clock.connect();
         self.write_fifo.read_clock.connect();
         self.read_fifo.read_clock.connect();
         self.state.d.connect();
         self.write_fifo.write.connect();
         self.write_fifo.write_clock.connect();
-        self.calib.clk.connect();
+        self.calib.clock.connect();
         self.read_fifo.data_in.connect();
         self.calib.d.connect();
         self.cmd_fifo.write.connect();
@@ -312,7 +312,7 @@ impl Logic for MemoryInterfaceGenerator {
         self.write_fifo.data_in.connect();
         self.address.d.connect();
         self.cmd.connect();
-        self.address.clk.connect();
+        self.address.clock.connect();
     }
     fn hdl(&self) -> Verilog {
         Verilog::Wrapper(Wrapper {

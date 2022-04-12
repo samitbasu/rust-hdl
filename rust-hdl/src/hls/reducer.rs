@@ -7,6 +7,7 @@ pub struct Reducer<const DW: usize, const DN: usize> {
     pub bus_read: FIFOReadController<Bits<DW>>,
     pub bus_write: FIFOWriteController<Bits<DN>>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     reducer: FIFOReducerN<DW, DN>,
 }
 
@@ -14,7 +15,7 @@ impl<const DW: usize, const DN: usize> Logic for Reducer<DW, DN> {
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the clock
-        self.reducer.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, reducer);
         // Connect the HLS read bus to the native signals
         self.bus_read.read.next = self.reducer.read.val();
         self.reducer.empty.next = self.bus_read.empty.val();
@@ -32,6 +33,7 @@ impl<const DW: usize, const DN: usize> Reducer<DW, DN> {
             bus_read: Default::default(),
             bus_write: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             reducer: FIFOReducerN::new(order),
         }
     }

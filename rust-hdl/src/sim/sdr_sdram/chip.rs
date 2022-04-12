@@ -45,6 +45,8 @@ pub struct SDRAMSimulator<
     load_mode_timing: Constant<Bits<32>>,
     t_rrd: Constant<Bits<32>>,
     banks_busy: Signal<Local, Bit>,
+    auto_reset: AutoReset,
+    reset: Signal<Local, Reset>,
 }
 
 impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
@@ -54,36 +56,22 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
     fn update(&mut self) {
         // Clock logic
         self.clock.next = self.sdram.clk.val();
-        self.state.clk.next = self.clock.val();
-        self.counter.clk.next = self.clock.val();
-        self.auto_refresh_init_counter.clk.next = self.clock.val();
-        self.write_burst_mode.clk.next = self.clock.val();
-        self.cas_latency.clk.next = self.clock.val();
-        self.burst_type.clk.next = self.clock.val();
-        self.burst_len.clk.next = self.clock.val();
-        self.op_mode.clk.next = self.clock.val();
+        self.auto_reset.clock.next = self.clock.val();
+        self.reset.next = self.auto_reset.reset.val();
+        dff_setup!(self, clock, reset, state, counter, auto_refresh_init_counter, write_burst_mode, cas_latency, burst_type, burst_len, op_mode);
         // Connect the command decoder to the bus
         self.decode.we_not.next = self.sdram.we_not.val();
         self.decode.cas_not.next = self.sdram.cas_not.val();
         self.decode.ras_not.next = self.sdram.ras_not.val();
         self.decode.cs_not.next = self.sdram.cs_not.val();
         self.cmd.next = self.decode.cmd.val();
-        // Latch prevention
-        self.state.d.next = self.state.q.val();
-        self.counter.d.next = self.counter.q.val();
-        self.auto_refresh_init_counter.d.next = self.auto_refresh_init_counter.q.val();
-        self.write_burst_mode.d.next = self.write_burst_mode.q.val();
-        self.cas_latency.d.next = self.cas_latency.q.val();
-        self.burst_type.d.next = self.burst_type.q.val();
-        self.burst_len.d.next = self.burst_len.q.val();
-        self.op_mode.d.next = self.op_mode.q.val();
-        //
         self.test_error.next = false;
         self.test_ready.next = false;
         // Connect up the banks to the I/O buffer
         self.sdram.read_data.next = 0_usize.into();
         for i in 0..4 {
             self.banks[i].clock.next = self.clock.val();
+            self.banks[i].reset.next = self.reset.val();
             if self.sdram.write_enable.val() {
                 self.banks[i].write_data.next = self.sdram.write_data.val();
             } else {
@@ -255,7 +243,9 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> SDRAMSimula
             t_rrd: Constant::new(bank_bank_delay.into()),
             load_mode_timing: Constant::new((timings.load_mode_command_timing_clocks - 1).into()),
             banks_busy: Default::default(),
+            auto_reset: Default::default(),
             decode: Default::default(),
+            reset: Default::default()
         }
     }
 }
@@ -457,7 +447,7 @@ fn test_sdram_init_works() {
         wait_clock_cycle!(sim, clock, x);
         sdram_cmd!(x, SDRAMCommand::NOP);
         wait_clock_cycles!(sim, clock, x, 5);
-        sim_assert!(sim, x.state.q.val() == MasterState::Ready, x);
+        sim_assert_eq!(sim, x.state.q.val(), MasterState::Ready, x);
         // Activate row 14 on bank 2
         sdram_activate!(sim, clock, x, 2, 14);
         // Activate row 7 on bank 1
@@ -484,7 +474,7 @@ fn test_sdram_init_works() {
         sdram_precharge_one!(sim, clock, x, 1);
         wait_clock_cycles!(sim, clock, x, timings.t_rp() + 1);
         sim_assert!(sim, !x.banks_busy.val(), x);
-        sim_assert!(sim, x.state.q.val() == MasterState::Ready, x);
+        sim_assert_eq!(sim, x.state.q.val(), MasterState::Ready, x);
         sdram_activate!(sim, clock, x, 1, 7);
         wait_clock_cycles!(sim, clock, x, timings.t_rcd());
         sdram_read!(
@@ -508,10 +498,10 @@ fn test_sdram_init_works() {
         );
         wait_clock_cycles!(sim, clock, x, timings.t_rp() + 1);
         sim_assert!(sim, !x.banks_busy.val(), x);
-        sim_assert!(sim, x.state.q.val() == MasterState::Ready, x);
+        sim_assert_eq!(sim, x.state.q.val(),  MasterState::Ready, x);
         sdram_refresh!(sim, clock, x, timings);
         sim_assert!(sim, !x.banks_busy.val(), x);
-        sim_assert!(sim, x.state.q.val() == MasterState::Ready, x);
+        sim_assert_eq!(sim, x.state.q.val(), MasterState::Ready, x);
         wait_clock_cycles!(sim, clock, x, 10);
         sim.done(x)
     });

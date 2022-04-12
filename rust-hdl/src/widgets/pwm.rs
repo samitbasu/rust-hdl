@@ -25,7 +25,7 @@ impl<const N: usize> Default for PulseWidthModulator<N> {
 impl<const N: usize> Logic for PulseWidthModulator<N> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.counter.clk.next = self.clock.val();
+        self.counter.clock.next = self.clock.val();
         self.counter.d.next = self.counter.q.val() + 1_u32;
         self.active.next = self.enable.val() & (self.counter.q.val() < self.threshold.val());
     }

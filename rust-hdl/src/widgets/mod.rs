@@ -17,6 +17,6 @@ pub mod sdram;
 pub mod shot;
 pub mod spi;
 pub mod strobe;
-pub mod sync_reset;
+pub mod auto_reset;
 pub mod synchronizer;
 pub mod tristate;

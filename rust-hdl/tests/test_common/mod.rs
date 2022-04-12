@@ -68,7 +68,7 @@ impl Logic for FaderWithSyncROM {
     fn update(&mut self) {
         self.strobe.clock.next = self.clock.val();
         self.pwm.clock.next = self.clock.val();
-        self.counter.clk.next = self.clock.val();
+        self.counter.clock.next = self.clock.val();
         self.rom.clock.next = self.clock.val();
         self.rom.address.next = self.counter.q.val();
         self.counter.d.next = self.counter.q.val() + self.strobe.strobe.val();

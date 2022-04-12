@@ -93,7 +93,7 @@ impl Logic for OpalKellyXEM7010MIGTest {
         self.pipe_out.datain.next = self.back_porch.data_out.val();
         self.delay_read.d.next = self.pipe_out.read.val();
         self.back_porch.read.next = self.delay_read.q.val();
-        self.delay_read.clk.next = self.ok_host.ti_clk.val();
+        self.delay_read.clock.next = self.ok_host.ti_clk.val();
         // Connect the OK busses
         self.pipe_in.ok1.next = self.ok_host.ok1.val();
         self.pipe_out.ok1.next = self.ok_host.ok1.val();
@@ -110,9 +110,9 @@ impl Logic for OpalKellyXEM7010MIGTest {
         self.mig.command.next = 0_u32.into();
         self.mig.enable.next = false;
         self.mig.write_data_mask.next = 0_u16.into();
-        self.mig.reset.next = self.reset.dataout.val().any();
+        self.mig.reset.next = self.reset.dataout.val().any().into();
         self.state.d.next = self.state.q.val();
-        self.state.clk.next = self.mig.clock.val();
+        self.state.clock.next = self.mig.clock.val();
         // Control signals
         self.front_porch.read.next = false;
         self.mig.write_enable.next = false;

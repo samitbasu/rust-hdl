@@ -22,7 +22,7 @@ pub struct OpalKellyDownloadFIFO {
 impl Logic for OpalKellyDownloadFIFO {
     #[hdl_gen]
     fn update(&mut self) {
-        self.delay_read.clk.next = self.clock.val();
+        self.delay_read.clock.next = self.clock.val();
         self.fifo.clock.next = self.clock.val();
         self.o_pipe.ok1.next = self.ok1.val();
         self.status_wire.ok1.next = self.ok1.val();

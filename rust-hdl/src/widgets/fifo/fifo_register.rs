@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 
 // A synchronous FIFO of depth 1, backed by a pair of registers
@@ -11,6 +12,7 @@ pub struct RegisterFIFO<T: Synth> {
     pub full: Signal<Out, Bit>,
     pub empty: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     value: DFF<T>,
     filled: DFF<Bit>,
     error: DFF<Bit>,
@@ -19,14 +21,7 @@ pub struct RegisterFIFO<T: Synth> {
 impl<T: Synth> Logic for RegisterFIFO<T> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Connect the clocks
-        self.value.clk.next = self.clock.val();
-        self.filled.clk.next = self.clock.val();
-        self.error.clk.next = self.clock.val();
-        // Latch prevention
-        self.value.d.next = self.value.q.val();
-        self.filled.d.next = self.filled.q.val();
-        self.error.d.next = self.error.q.val();
+        dff_setup!(self, clock, reset, value, filled, error);
         // There are two states to consider.  The first is the
         // empty state (no internal data)
         if self.write.val() {
@@ -65,6 +60,7 @@ impl<T: Synth> Logic for RegisterFIFO<T> {
 fn test_register_fifo_is_synthesizable() {
     let mut uut = RegisterFIFO::<Bits<16>>::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.write.connect();
     uut.read.connect();
     uut.data_in.connect();
