@@ -33,7 +33,7 @@ impl Default for HostTest {
             bidi_clock: Default::default(),
             sys_clock: Default::default(),
             auto_reset: Default::default(),
-            bidi_reset: Default::default()
+            bidi_reset: Default::default(),
         }
     }
 }

@@ -5,6 +5,7 @@ use std::fs::File;
 #[derive(LogicBlock)]
 struct PWMTest {
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub pwm: PulseWidthModulator<8>,
 }
 
@@ -12,6 +13,7 @@ impl Default for PWMTest {
     fn default() -> Self {
         Self {
             clock: Signal::default(),
+            reset: Default::default(),
             pwm: PulseWidthModulator::default(),
         }
     }
@@ -20,7 +22,7 @@ impl Default for PWMTest {
 impl Logic for PWMTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.pwm.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, pwm);
         self.pwm.enable.next = true;
         self.pwm.threshold.next = 32_u32.into();
     }
@@ -30,6 +32,7 @@ impl Logic for PWMTest {
 fn test_pwm_circuit() {
     let mut uut = PWMTest::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.connect_all();
     yosys_validate("pwm", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();

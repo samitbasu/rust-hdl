@@ -102,10 +102,30 @@ impl<const N: usize> SPISlave<N> {
 impl<const N: usize> Logic for SPISlave<N> {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, miso_flop, done_flop, register_out, register_in,
-            state, pointer, bits_saved, continued_saved, escape);
-        clock_reset!(self, clock, reset, capture_detector, advance_detector,
-            edge_detector, mclk_synchronizer, csel_synchronizer);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            miso_flop,
+            done_flop,
+            register_out,
+            register_in,
+            state,
+            pointer,
+            bits_saved,
+            continued_saved,
+            escape
+        );
+        clock_reset!(
+            self,
+            clock,
+            reset,
+            capture_detector,
+            advance_detector,
+            edge_detector,
+            mclk_synchronizer,
+            csel_synchronizer
+        );
         // Connect the detectors
         self.capture_detector.input_signal.next = self.mclk_synchronizer.sig_out.val();
         self.advance_detector.input_signal.next = self.mclk_synchronizer.sig_out.val();

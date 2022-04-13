@@ -81,5 +81,5 @@ fn test_pulser() {
     uut.reset.connect();
     uut.enable.connect();
     uut.connect_all();
-    sim.run(Box::new(uut),1_000_000).unwrap();
+    sim.run(Box::new(uut), 1_000_000).unwrap();
 }

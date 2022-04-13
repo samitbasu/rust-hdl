@@ -1,7 +1,7 @@
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::hls::spi::HLSSPIMaster;
-use rust_hdl::widgets::prelude::{SPIConfig, SPIWiresMaster};
+use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]
 struct SPITest {
@@ -13,6 +13,8 @@ struct SPITest {
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
     pub spi: SPIWiresMaster,
+    auto_reset: AutoReset,
+    bidi_reset: Signal<Local, Reset>,
 }
 
 impl Logic for SPITest {
@@ -26,8 +28,9 @@ impl Logic for SPITest {
             &mut self.bidi_dev.data_from_bus,
             &mut self.host_to_pc.bus_write,
         );
-        self.host_to_pc.clock.next = self.bidi_clock.val();
-        self.pc_to_host.clock.next = self.bidi_clock.val();
+        self.auto_reset.clock.next = self.bidi_clock.val();
+        self.bidi_reset.next = self.auto_reset.reset.val();
+        clock_reset!(self, bidi_clock, bidi_reset, host_to_pc, pc_to_host);
         self.bidi_dev.clock.next = self.bidi_clock.val();
         BidiBusD::<Bits<8>>::join(&mut self.bidi_dev.bus, &mut self.host.bidi_bus);
         self.host.bidi_clock.next = self.bidi_clock.val();
@@ -56,6 +59,8 @@ impl Default for SPITest {
             bidi_clock: Default::default(),
             sys_clock: Default::default(),
             spi: Default::default(),
+            auto_reset: Default::default(),
+            bidi_reset: Default::default(),
         }
     }
 }

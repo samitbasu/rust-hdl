@@ -115,7 +115,21 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         // Clock the internal logic
         self.mem.read_clock.next = self.clock.val();
         self.mem.write_clock.next = self.clock.val();
-        dff_setup!(self, clock, reset, refresh_counter, refresh_active, write_reg, state, auto_precharge, active_row, burst_counter, active_col, delay_counter, t_activate);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            refresh_counter,
+            refresh_active,
+            write_reg,
+            state,
+            auto_precharge,
+            active_row,
+            burst_counter,
+            active_col,
+            delay_counter,
+            t_activate
+        );
         clock_reset!(self, clock, reset, delay_line, read_delay_line);
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
         self.error.next = false;
@@ -431,7 +445,7 @@ fn test_bank_activation_immediate_close_is_ok_with_delay() {
             sim_assert!(sim, x.state.q.val() != BankState::Idle, x);
         }
         wait_clock_cycle!(sim, clock, x);
-        sim_assert_eq!(sim, x.state.q.val(),  BankState::Idle, x);
+        sim_assert_eq!(sim, x.state.q.val(), BankState::Idle, x);
         wait_clock_cycle!(sim, clock, x, 10);
         sim_assert!(sim, !x.error.val(), x);
         sim.done(x)
@@ -491,7 +505,10 @@ fn test_bank_write() {
     ];
     sim.add_testbench(move |mut sim: Sim<MemoryBank<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
-        x = sim.watch(|x| x.clock.val().clk & (x.cmd.val() == SDRAMCommand::Read), x)?;
+        x = sim.watch(
+            |x| x.clock.val().clk & (x.cmd.val() == SDRAMCommand::Read),
+            x,
+        )?;
         let cas_start_time = sim.time();
         x = sim.watch(|x| x.clock.val().clk & x.read_valid.val(), x)?;
         let cas_end_time = sim.time();

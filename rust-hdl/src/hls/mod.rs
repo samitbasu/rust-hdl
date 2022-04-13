@@ -5,6 +5,7 @@ pub mod controller;
 pub mod cross_fifo;
 pub mod expander;
 pub mod fifo;
+pub mod fifo_linker;
 pub mod host;
 pub mod miso_fifo_port;
 pub mod miso_port;
@@ -20,7 +21,6 @@ pub mod sdram_controller_tester;
 pub mod sdram_fifo;
 pub mod sim;
 pub mod spi;
-pub mod fifo_linker;
 
 pub trait HLSNamedPorts {
     fn ports(&self) -> Vec<String>;

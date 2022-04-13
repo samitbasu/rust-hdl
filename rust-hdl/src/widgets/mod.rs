@@ -1,4 +1,5 @@
 pub mod accum;
+pub mod auto_reset;
 pub mod delay_line;
 pub mod dff;
 pub mod edge_detector;
@@ -17,6 +18,5 @@ pub mod sdram;
 pub mod shot;
 pub mod spi;
 pub mod strobe;
-pub mod auto_reset;
 pub mod synchronizer;
 pub mod tristate;

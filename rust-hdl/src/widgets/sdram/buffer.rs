@@ -23,8 +23,19 @@ impl<const D: usize> Logic for SDRAMOnChipBuffer<D> {
     fn update(&mut self) {
         self.clock.next = self.buf_in.clk.val();
         self.reset.next = self.buf_in.reset.val();
-        dff_setup!(self, clock, reset, we_not_flop, cas_not_flop, ras_not_flop,
-            cs_not_flop, bank_flop, address_flop, write_flop, read_flop);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            we_not_flop,
+            cas_not_flop,
+            ras_not_flop,
+            cs_not_flop,
+            bank_flop,
+            address_flop,
+            write_flop,
+            read_flop
+        );
         // Connect up the flop inputs
         self.we_not_flop.d.next = self.buf_in.we_not.val();
         self.cas_not_flop.d.next = self.buf_in.cas_not.val();

@@ -76,7 +76,14 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Router<D, A, N> {
         self.reset.next = self.upstream.reset.val();
         self.upstream.ready.next = false;
         self.upstream.to_controller.next = 0_usize.into();
-        dff_setup!(self, clock, reset, active, virtual_address, address_strobe_delay);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            active,
+            virtual_address,
+            address_strobe_delay
+        );
         // Delay the address strobe by 1 clock cycle to allow the virtual address
         // calculation to be pipelined.
         self.address_strobe_delay.d.next = self.upstream.address_strobe.val();

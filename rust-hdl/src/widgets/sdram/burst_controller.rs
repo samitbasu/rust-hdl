@@ -172,9 +172,23 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the internal logic
-        dff_setup!(self, clock, reset, state, reg_address, reg_cmd_address, delay_counter, 
-            refresh_counter, transfer_counter, write_pending, read_pending, refresh_needed, 
-            data_in_reg, data_strobe_reg, data_out_reg);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            state,
+            reg_address,
+            reg_cmd_address,
+            delay_counter,
+            refresh_counter,
+            transfer_counter,
+            write_pending,
+            read_pending,
+            refresh_needed,
+            data_in_reg,
+            data_strobe_reg,
+            data_out_reg
+        );
         clock_reset!(self, clock, reset, read_valid);
         // Latch prevention
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;

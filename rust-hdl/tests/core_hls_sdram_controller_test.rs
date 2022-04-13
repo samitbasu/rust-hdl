@@ -17,6 +17,8 @@ struct HostSDRAMControllerTest {
     chip: SDRAMSimulator<5, 5, 10, 16>,
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
+    auto_reset: AutoReset,
+    bidi_reset: Signal<Local, Reset>,
 }
 
 impl Logic for HostSDRAMControllerTest {
@@ -30,8 +32,9 @@ impl Logic for HostSDRAMControllerTest {
             &mut self.bidi_dev.data_from_bus,
             &mut self.host_to_pc.bus_write,
         );
-        self.host_to_pc.clock.next = self.bidi_clock.val();
-        self.pc_to_host.clock.next = self.bidi_clock.val();
+        self.auto_reset.clock.next = self.bidi_clock.val();
+        self.bidi_reset.next = self.auto_reset.reset.val();
+        clock_reset!(self, bidi_clock, bidi_reset, host_to_pc, pc_to_host);
         self.bidi_dev.clock.next = self.bidi_clock.val();
         BidiBusD::<Bits<8>>::join(&mut self.bidi_dev.bus, &mut self.host.bidi_bus);
         self.host.bidi_clock.next = self.bidi_clock.val();
@@ -50,11 +53,13 @@ impl Default for HostSDRAMControllerTest {
             host_to_pc: Default::default(),
             bidi_dev: Default::default(),
             host: Default::default(),
-            core: SDRAMController::new(3, timings, OutputBuffer::DelayOne),
+            core: SDRAMController::new(3, timings, OutputBuffer::DelayTwo),
             buffer: Default::default(),
             chip: SDRAMSimulator::new(timings),
             bidi_clock: Default::default(),
             sys_clock: Default::default(),
+            auto_reset: Default::default(),
+            bidi_reset: Default::default(),
         }
     }
 }

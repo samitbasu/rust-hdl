@@ -20,7 +20,7 @@ impl Default for MISOPortTest {
             port_a: Default::default(),
             port_b: Default::default(),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -150,7 +150,7 @@ impl Default for MISOWidePortTest {
             port_a: Default::default(),
             port_b: Default::default(),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -294,7 +294,7 @@ impl Default for MISOPortFIFOTest {
             bridge: Bridge::new(["port_a"]),
             port_a: Default::default(),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }

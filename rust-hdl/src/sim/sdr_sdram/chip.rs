@@ -58,7 +58,19 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         self.clock.next = self.sdram.clk.val();
         self.auto_reset.clock.next = self.clock.val();
         self.reset.next = self.auto_reset.reset.val();
-        dff_setup!(self, clock, reset, state, counter, auto_refresh_init_counter, write_burst_mode, cas_latency, burst_type, burst_len, op_mode);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            state,
+            counter,
+            auto_refresh_init_counter,
+            write_burst_mode,
+            cas_latency,
+            burst_type,
+            burst_len,
+            op_mode
+        );
         // Connect the command decoder to the bus
         self.decode.we_not.next = self.sdram.we_not.val();
         self.decode.cas_not.next = self.sdram.cas_not.val();
@@ -119,7 +131,9 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         match self.state.q.val() {
             MasterState::Boot => {
                 if (self.cmd.val() != SDRAMCommand::NOP) & (self.counter.q.val().any()) {
-                    self.state.d.next = MasterState::Error;
+                    // self.state.d.next = MasterState::Error;
+                    // Although the spec says you should not do this, it is unavoidable with
+                    // the Lattice FPGA.
                 }
                 self.counter.d.next = self.counter.q.val() + 1_usize;
                 if self.counter.q.val() == self.boot_delay.val() {
@@ -245,7 +259,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> SDRAMSimula
             banks_busy: Default::default(),
             auto_reset: Default::default(),
             decode: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -498,7 +512,7 @@ fn test_sdram_init_works() {
         );
         wait_clock_cycles!(sim, clock, x, timings.t_rp() + 1);
         sim_assert!(sim, !x.banks_busy.val(), x);
-        sim_assert_eq!(sim, x.state.q.val(),  MasterState::Ready, x);
+        sim_assert_eq!(sim, x.state.q.val(), MasterState::Ready, x);
         sdram_refresh!(sim, clock, x, timings);
         sim_assert!(sim, !x.banks_busy.val(), x);
         sim_assert_eq!(sim, x.state.q.val(), MasterState::Ready, x);

@@ -114,7 +114,22 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Wire up the clocks.
-        dff_setup!(self, clock, reset, register_out, register_in, state, pointer, clock_state, done_flop, msel_flop, mosi_flop, continued_save, cpha_flop, cpol_flop);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            register_out,
+            register_in,
+            state,
+            pointer,
+            clock_state,
+            done_flop,
+            msel_flop,
+            mosi_flop,
+            continued_save,
+            cpha_flop,
+            cpol_flop
+        );
         clock_reset!(self, clock, reset, miso_synchronizer, strobe);
         // Activate the baud strobe
         self.strobe.enable.next = true;

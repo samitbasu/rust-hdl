@@ -117,7 +117,7 @@ impl FIFOTestFixture {
                     .collect::<Vec<_>>(),
             ),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -201,7 +201,7 @@ impl FIFOTestFixtureAsync {
             clock_write: Default::default(),
             reset_write: Default::default(),
             clock_read: Default::default(),
-            reset_read: Default::default()
+            reset_read: Default::default(),
         }
     }
 }

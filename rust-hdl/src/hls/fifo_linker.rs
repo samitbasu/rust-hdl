@@ -20,7 +20,7 @@ impl<T: Synth> Logic for FIFOLink<T> {
 
 #[test]
 fn test_link_synthesizes() {
-    let mut uut : FIFOLink<Bits<8>> = Default::default();
+    let mut uut: FIFOLink<Bits<8>> = Default::default();
     uut.read.empty.connect();
     uut.read.almost_empty.connect();
     uut.read.data.connect();

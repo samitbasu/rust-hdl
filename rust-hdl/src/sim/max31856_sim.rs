@@ -23,7 +23,6 @@ enum DAQState {
     Copy1,
 }
 
-
 #[derive(LogicBlock)]
 pub struct MAX31856Simulator {
     // Slave SPI bus
@@ -80,7 +79,7 @@ impl MAX31856Simulator {
             reg_index: Default::default(),
             dstate: Default::default(),
             auto_reset: AutoReset::default(),
-            lsr: Default::default()
+            lsr: Default::default(),
         }
     }
 }
@@ -97,7 +96,18 @@ impl Logic for MAX31856Simulator {
         self.auto_reset.clock.next = self.clock.val();
         self.lsr.next = self.auto_reset.reset.val();
         // Setup the DFF and internal widgets
-        dff_setup!(self, clock, lsr, auto_conversions_enabled, auto_conversion_counter, state, reg_read_index, reg_write_index, boot, dstate);
+        dff_setup!(
+            self,
+            clock,
+            lsr,
+            auto_conversions_enabled,
+            auto_conversion_counter,
+            state,
+            reg_read_index,
+            reg_write_index,
+            boot,
+            dstate
+        );
         clock_reset!(self, clock, lsr, auto_conversion_strobe, spi_slave);
         // Set default values
         self.spi_slave.start_send.next = false;
@@ -476,6 +486,7 @@ fn test_single_conversion() {
         sim_assert_eq!(sim, result.0 & 0xFFFFFF_u64, 0x40_u64, x);
         sim.done(x)
     });
-//    sim.run(Box::new(uut), 1_000_000).unwrap();
-    sim.run_to_file(Box::new(uut), 1_000_000, "/tmp/mread.vcd").unwrap();
+    //    sim.run(Box::new(uut), 1_000_000).unwrap();
+    sim.run_to_file(Box::new(uut), 1_000_000, "/tmp/mread.vcd")
+        .unwrap();
 }

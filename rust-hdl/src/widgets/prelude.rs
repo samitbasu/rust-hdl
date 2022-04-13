@@ -6,6 +6,8 @@ pub use crate::widgets::fifo::async_fifo::AsynchronousFIFO;
 //pub use crate::widgets::bidirectional_bus::{
 //    BidiBusD, BidiBusM, BidiMaster, BidiSimulatedDevice, FifoBus, FifoBusIn,
 //};
+pub use crate::dff_setup;
+pub use crate::widgets::auto_reset::AutoReset;
 pub use crate::widgets::delay_line::DelayLine;
 pub use crate::widgets::dff::DFF;
 pub use crate::widgets::edge_detector::EdgeDetector;
@@ -41,7 +43,6 @@ pub use crate::widgets::spi::master_dynamic_mode::{SPIConfigDynamicMode, SPIMast
 pub use crate::widgets::spi::mux::{MuxMasters, MuxSlaves};
 pub use crate::widgets::spi::slave::SPISlave;
 pub use crate::widgets::strobe::Strobe;
-pub use crate::widgets::auto_reset::AutoReset;
 pub use crate::widgets::synchronizer::{
     BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer,
 };
@@ -49,4 +50,3 @@ pub use crate::widgets::tristate::TristateBuffer;
 pub use crate::{
     i2c_begin_read, i2c_begin_write, i2c_end_transmission, i2c_read, i2c_read_last, i2c_write,
 };
-pub use crate::dff_setup;

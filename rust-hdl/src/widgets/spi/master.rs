@@ -110,8 +110,20 @@ impl<const N: usize> Logic for SPIMaster<N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Setup the internals
-        dff_setup!(self, clock, reset, register_out, register_in, state, pointer, clock_state,
-            done_flop, msel_flop, mosi_flop, continued_save);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            register_out,
+            register_in,
+            state,
+            pointer,
+            clock_state,
+            done_flop,
+            msel_flop,
+            mosi_flop,
+            continued_save
+        );
         clock_reset!(self, clock, reset, strobe, miso_synchronizer);
         // Activate the baud strobe
         self.strobe.enable.next = true;
@@ -224,7 +236,8 @@ fn test_spi_master_is_synthesizable() {
     }
 
     let mut dev = Wrap::default();
-    dev.uut.clock.connect(); dev.uut.reset.connect();
+    dev.uut.clock.connect();
+    dev.uut.reset.connect();
     dev.uut.bits_outbound.connect();
     dev.uut.data_outbound.connect();
     dev.uut.start_send.connect();

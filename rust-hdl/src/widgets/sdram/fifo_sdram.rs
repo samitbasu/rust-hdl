@@ -1,6 +1,8 @@
 use crate::core::prelude::*;
 use crate::dff_setup;
-use crate::widgets::prelude::{AsynchronousFIFO, MemoryTimings, OutputBuffer, DFF, SDRAMBurstController, AutoReset};
+use crate::widgets::prelude::{
+    AsynchronousFIFO, AutoReset, MemoryTimings, OutputBuffer, SDRAMBurstController, DFF,
+};
 use crate::widgets::sdram::SDRAMDriver;
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
@@ -15,7 +17,7 @@ enum State {
 pub struct SDRAMFIFOController<
     const R: usize, // Number of rows in the SDRAM
     const C: usize, // Number of columns in the SDRAM
-    const L: u32, // Line size (multiple of the SDRAM interface width) - rem(2^C, L) = 0
+    const L: u32,   // Line size (multiple of the SDRAM interface width) - rem(2^C, L) = 0
     const D: usize, // Number of bits in the SDRAM interface width
     const A: usize, // Number of address bits in the SDRAM (should be C + R + B)
 > {
@@ -85,7 +87,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
             interface_autoreset: Default::default(),
             dram_autoreset: Default::default(),
             interface_reset: Default::default(),
-            ram_reset: Default::default()
+            ram_reset: Default::default(),
         }
     }
 }
@@ -101,8 +103,19 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
         self.ram_reset.next = self.dram_autoreset.reset.val();
         clock_reset!(self, ram_clock, ram_reset, controller);
         SDRAMDriver::<D>::link(&mut self.sdram, &mut self.controller.sdram);
-        dff_setup!(self, ram_clock, ram_reset, read_pointer, write_pointer, dram_is_empty,
-            dram_is_full, can_read, can_write, state, fill);
+        dff_setup!(
+            self,
+            ram_clock,
+            ram_reset,
+            read_pointer,
+            write_pointer,
+            dram_is_empty,
+            dram_is_full,
+            can_read,
+            can_write,
+            state,
+            fill
+        );
         // The FP write clock is external, but the read clock is the DRAM clock
         self.fp.write_clock.next = self.clock.val();
         self.fp.write_reset.next = self.interface_reset.val();

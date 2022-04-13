@@ -13,7 +13,7 @@ impl<T: Synth> DFF<T> {
     pub fn new_with_reset_val(init: T) -> Self {
         Self {
             _reset_val: init,
-            .. Default::default()
+            ..Default::default()
         }
     }
 }
@@ -53,7 +53,8 @@ always @(posedge clock) begin
       q <= d;
    end
 end
-      ", self._reset_val.verilog()
+      ",
+            self._reset_val.verilog()
         ))
     }
 }

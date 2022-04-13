@@ -52,7 +52,7 @@ impl OKTest1 {
             ok_host: OpalKellyHost::xem_6010(),
             led: pins::xem_6010_leds(),
             pulser: Pulser::new(MHZ48, 1.0, Duration::from_millis(500)),
-            auto_reset: Default::default()
+            auto_reset: Default::default(),
         }
     }
 }

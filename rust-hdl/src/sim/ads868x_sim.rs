@@ -78,7 +78,7 @@ impl ADS868XSimulator {
             data_parity: Default::default(),
             id_parity: Default::default(),
             auto_reset: Default::default(),
-            lsr: Default::default()
+            lsr: Default::default(),
         }
     }
 }
@@ -345,8 +345,9 @@ fn test_reg_writes() {
         }
         sim.done(x)
     });
-//    sim.run(Box::new(uut), 1_000_000).unwrap();
-    sim.run_to_file(Box::new(uut), 1_000_000, "ad868x.vcd").unwrap();
+    //    sim.run(Box::new(uut), 1_000_000).unwrap();
+    sim.run_to_file(Box::new(uut), 1_000_000, "ad868x.vcd")
+        .unwrap();
 }
 
 #[test]

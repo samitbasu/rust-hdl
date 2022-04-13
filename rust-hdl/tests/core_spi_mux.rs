@@ -4,6 +4,7 @@ use rust_hdl::widgets::prelude::*;
 #[derive(LogicBlock)]
 struct SPITestMultiMaster {
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
     masters: [SPIMaster<64>; 3],
     addr: Signal<In, Bits<3>>,
     mux: MuxMasters<3, 3>,
@@ -14,6 +15,7 @@ impl SPITestMultiMaster {
     pub fn new(config: SPIConfig) -> Self {
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             masters: array_init::array_init(|_| SPIMaster::new(config)),
             addr: Default::default(),
             mux: Default::default(),
@@ -26,11 +28,12 @@ impl Logic for SPITestMultiMaster {
     #[hdl_gen]
     fn update(&mut self) {
         for i in 0_usize..3 {
+            self.masters[i].reset.next = self.reset.val();
             self.masters[i].clock.next = self.clock.val();
             SPIWiresMaster::join(&mut self.masters[i].wires, &mut self.mux.from_masters[i]);
         }
         SPIWiresMaster::join(&mut self.mux.to_bus, &mut self.slave.wires);
-        self.slave.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, slave);
         self.mux.sel.next = self.addr.val();
     }
 }
@@ -48,6 +51,7 @@ fn test_spi_mux() {
     let mut uut = TopWrap::new(SPITestMultiMaster::new(config));
     uut.uut.addr.connect();
     uut.uut.clock.connect();
+    uut.uut.reset.connect();
     for i in 0..3 {
         uut.uut.masters[i].continued_transaction.connect();
         uut.uut.masters[i].start_send.connect();

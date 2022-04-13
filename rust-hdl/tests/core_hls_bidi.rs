@@ -44,7 +44,7 @@ impl Default for BusTest {
             master_from_bus_fifo: Default::default(),
             master_to_bus_fifo: Default::default(),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -53,9 +53,20 @@ impl Logic for BusTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the components
-        clock_reset!(self, clock, reset, master, dtm_feeder, dtm_reader, mtd_feeder,
-            mtd_reader, device_to_bus_fifo, device_from_bus_fifo, master_from_bus_fifo,
-            master_to_bus_fifo);
+        clock_reset!(
+            self,
+            clock,
+            reset,
+            master,
+            dtm_feeder,
+            dtm_reader,
+            mtd_feeder,
+            mtd_reader,
+            device_to_bus_fifo,
+            device_from_bus_fifo,
+            master_from_bus_fifo,
+            master_to_bus_fifo
+        );
         self.device.clock.next = self.clock.val();
         // Connect the busses
         FIFOReadController::<Bits<8>>::join(

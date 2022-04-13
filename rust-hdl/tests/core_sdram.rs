@@ -9,6 +9,7 @@ struct TestSDRAMDevice {
     buffer: SDRAMOnChipBuffer<16>,
     cntrl: SDRAMBaseController<5, 5, 64, 16>,
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for TestSDRAMDevice {
@@ -16,7 +17,7 @@ impl Logic for TestSDRAMDevice {
     fn update(&mut self) {
         SDRAMDriver::<16>::join(&mut self.cntrl.sdram, &mut self.buffer.buf_in);
         SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.dram.sdram);
-        self.cntrl.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, cntrl);
     }
 }
 
@@ -28,10 +29,12 @@ fn make_test_device() -> TestSDRAMDevice {
     let mut uut = TestSDRAMDevice {
         dram: SDRAMSimulator::new(timings),
         buffer: Default::default(),
-        cntrl: SDRAMBaseController::new(3, timings, OutputBuffer::DelayOne),
+        cntrl: SDRAMBaseController::new(3, timings, OutputBuffer::DelayTwo),
         clock: Default::default(),
+        reset: Default::default(),
     };
     uut.clock.connect();
+    uut.reset.connect();
     uut.cntrl.data_in.connect();
     uut.cntrl.cmd_strobe.connect();
     uut.cntrl.cmd_address.connect();
@@ -48,6 +51,7 @@ fn make_test_controller() -> SDRAMBaseController<5, 8, 64, 16> {
     uut.cmd_address.connect();
     uut.data_in.connect();
     uut.clock.connect();
+    uut.reset.connect();
     uut.sdram.link_connect_dest();
     uut.write_not_read.connect();
     uut.connect_all();
@@ -131,6 +135,7 @@ fn test_unit_writes() {
     let recv = test_data.clone();
     sim.add_testbench(move |mut sim: Sim<TestSDRAMDevice>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         sdram_basic_write!(sim, x, cntrl, 0_usize, 0xDEAD_BEEF_CAFE_BABE_u64);
         sdram_basic_write!(sim, x, cntrl, 4_usize, 0x1234_ABCD_5678_EFFE_u64);

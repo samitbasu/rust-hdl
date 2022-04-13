@@ -10,9 +10,10 @@ use rust_hdl::widgets::sdram::SDRAMDriver;
 
 #[derive(LogicBlock)]
 struct HLSSDRAMFIFOTest {
-    fifo: SDRAMFIFO<5, 5, 64, 16, 12>,
+    fifo: SDRAMFIFO<5, 5, 4, 16, 12>,
     sdram: SDRAMSimulator<5, 5, 10, 16>,
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
 }
 
 impl Default for HLSSDRAMFIFOTest {
@@ -22,6 +23,7 @@ impl Default for HLSSDRAMFIFOTest {
             fifo: SDRAMFIFO::new(3, timings, OutputBuffer::Wired),
             sdram: SDRAMSimulator::new(timings),
             clock: Default::default(),
+            reset: Default::default(),
         }
     }
 }
@@ -29,7 +31,7 @@ impl Default for HLSSDRAMFIFOTest {
 impl Logic for HLSSDRAMFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.fifo.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, fifo);
         self.fifo.ram_clock.next = self.clock.val();
         SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.sdram.sdram);
     }
@@ -39,6 +41,7 @@ impl Logic for HLSSDRAMFIFOTest {
 fn test_hls_sdram_fifo_synthesizes() {
     let mut uut = HLSSDRAMFIFOTest::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.fifo.bus_write.link_connect_dest();
     uut.fifo.bus_read.link_connect_dest();
     uut.connect_all();
@@ -50,6 +53,7 @@ fn test_hls_sdram_fifo_synthesizes() {
 fn test_hls_sdram_fifo_works() {
     let mut uut = HLSSDRAMFIFOTest::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.fifo.bus_write.link_connect_dest();
     uut.fifo.bus_read.link_connect_dest();
     uut.connect_all();
@@ -63,6 +67,7 @@ fn test_hls_sdram_fifo_works() {
     });
     sim.add_testbench(move |mut sim: Sim<HLSSDRAMFIFOTest>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         hls_fifo_write_lazy!(sim, clock, x, fifo.bus_write, &data);
         sim.done(x)
     });

@@ -69,7 +69,14 @@ impl<const A: usize> Logic for OpalKellyHLSBridge<A> {
         self.sr.clock.next = self.ti_clk.val();
         self.reset.next = self.sr.reset.val();
         // Clock the internal components
-        clock_reset!(self, ti_clk, reset, controller, pc_to_fpga_fifo, fpga_to_pc_fifo);
+        clock_reset!(
+            self,
+            ti_clk,
+            reset,
+            controller,
+            pc_to_fpga_fifo,
+            fpga_to_pc_fifo
+        );
         dff_setup!(self, ti_clk, reset, space_counter, word_counter, read_delay);
         // Link the FIFOs to the HLS controller
         FIFOReadController::<Bits<16>>::join(
@@ -151,7 +158,7 @@ impl<const A: usize> OpalKellyHLSBridge<A> {
             read_delay: Default::default(),
             block_flow_control: WireIn::new(config.block_flow_control),
             sr: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }

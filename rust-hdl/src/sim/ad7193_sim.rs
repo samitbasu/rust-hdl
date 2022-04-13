@@ -99,7 +99,7 @@ impl AD7193Simulator {
             reg_write_index: Default::default(),
             conversion_counter: Default::default(),
             auto_reset: Default::default(),
-            lsr: Default::default()
+            lsr: Default::default(),
         }
     }
 }
@@ -312,7 +312,8 @@ fn do_spi_txn(
 #[cfg(test)]
 fn mk_test7193() -> Test7193 {
     let mut uut = Test7193::default();
-    uut.clock.connect(); uut.reset.connect();
+    uut.clock.connect();
+    uut.reset.connect();
     uut.master.continued_transaction.connect();
     uut.master.start_send.connect();
     uut.master.data_outbound.connect();

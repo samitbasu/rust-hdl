@@ -4,6 +4,7 @@ use rust_hdl::widgets::prelude::*;
 #[derive(LogicBlock)]
 struct SPITestAsync {
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
     bus: SPIWiresMaster,
     master: SPIMaster<64>,
 }
@@ -12,7 +13,7 @@ impl Logic for SPITestAsync {
     #[hdl_gen]
     fn update(&mut self) {
         SPIWiresMaster::link(&mut self.bus, &mut self.master.wires);
-        self.master.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, master);
     }
 }
 
@@ -28,6 +29,7 @@ impl Default for SPITestAsync {
         };
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             bus: Default::default(),
             master: SPIMaster::new(config),
         }
@@ -38,6 +40,7 @@ impl Default for SPITestAsync {
 fn test_spi_txn_completes() {
     let mut uut = SPITestAsync::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.bus.link_connect_dest();
     uut.master.bits_outbound.connect();
     uut.master.continued_transaction.connect();
@@ -49,6 +52,8 @@ fn test_spi_txn_completes() {
     sim.add_clock(5, |x: &mut Box<SPITestAsync>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<SPITestAsync>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
+        wait_clock_cycles!(sim, clock, x, 4);
         wait_clock_true!(sim, clock, x);
         x.master.data_outbound.next = 0xDEADBEEF_u32.into();
         x.master.bits_outbound.next = 32_usize.into();
@@ -70,6 +75,7 @@ fn test_spi_txn_completes() {
 #[derive(LogicBlock)]
 struct SPITestPair {
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
     master: SPIMaster<64>,
     slave: SPISlave<64>,
 }
@@ -78,6 +84,7 @@ impl SPITestPair {
     pub fn new(config: SPIConfig) -> Self {
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             master: SPIMaster::new(config),
             slave: SPISlave::new(config),
         }
@@ -87,8 +94,7 @@ impl SPITestPair {
 impl Logic for SPITestPair {
     #[hdl_gen]
     fn update(&mut self) {
-        self.master.clock.next = self.clock.val();
-        self.slave.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, master, slave);
         SPIWiresMaster::join(&mut self.master.wires, &mut self.slave.wires);
     }
 }
@@ -121,6 +127,7 @@ fn test_spi_xchange_modes() {
 fn test_spi_xchange(config: SPIConfig) {
     let mut uut = SPITestPair::new(config);
     uut.clock.connect();
+    uut.reset.connect();
     uut.master.continued_transaction.connect();
     uut.master.start_send.connect();
     uut.master.data_outbound.connect();
@@ -136,6 +143,8 @@ fn test_spi_xchange(config: SPIConfig) {
     sim.add_clock(5, |x: &mut Box<SPITestPair>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<SPITestPair>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
+        wait_clock_cycles!(sim, clock, x, 4);
         for _ in 0..4 {
             wait_clock_true!(sim, clock, x);
             x.master.data_outbound.next = 0xDEADBEEF_u32.into();

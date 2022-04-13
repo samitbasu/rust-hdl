@@ -46,7 +46,16 @@ impl<const W: usize, const D: usize> Logic for MOSIWidePort<W, D> {
     fn update(&mut self) {
         self.clock_out.next = self.bus.clock.val();
         self.reset_out.next = self.bus.reset.val();
-        dff_setup!(self, clock_out, reset_out, accum, state, address_active, count, strobe);
+        dff_setup!(
+            self,
+            clock_out,
+            reset_out,
+            accum,
+            state,
+            address_active,
+            count,
+            strobe
+        );
         // Compute the select/enable flag
         self.address_active.d.next = self.bus.select.val();
         self.bus.ready.next = false;

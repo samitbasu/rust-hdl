@@ -52,7 +52,14 @@ impl Logic for OKSPIMaster {
         self.auto_reset.clock.next = self.clock.val();
         self.reset.next = self.auto_reset.reset.val();
         clock_reset!(self, clock, reset, core);
-        dff_setup!(self, clock, reset, data_outbound, output_register, data_inbound);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            data_outbound,
+            output_register,
+            data_inbound
+        );
         // Feed the clocks
         self.trigger_done.clk.next = self.clock.val();
         self.trigger_start.clk.next = self.clock.val();
@@ -115,7 +122,7 @@ impl OKSPIMaster {
             output_register: Default::default(),
             data_inbound: Default::default(),
             auto_reset: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -182,7 +189,7 @@ fn test_ok_spi_master_works() {
                 clock: Default::default(),
                 core: OKSPIMaster::new(Default::default(), spi_config),
                 slave: SPISlave::new(spi_config),
-                auto_reset: Default::default()
+                auto_reset: Default::default(),
             }
         }
     }
@@ -216,19 +223,13 @@ fn test_ok_spi_master_works() {
             x.core.pipe_in.write.next = false;
         }
         wait_clock_cycle!(sim, clock, x);
-        sim_assert_eq!(
-            sim,
-            x.core.data_outbound.q.val(),
-            0x12345678deadbeef_u64,
-            x
-        );
+        sim_assert_eq!(sim, x.core.data_outbound.q.val(), 0x12345678deadbeef_u64, x);
         x.core.bits.dataout.next = 64_u32.into();
         x.core.trigger_start.trigger.next = 1_u32.into();
         wait_clock_cycle!(sim, clock, x);
         x.core.trigger_start.trigger.next = 0_u32.into();
         x = sim.watch(|x| x.slave.transfer_done.val(), x)?;
-        sim_assert_eq!(sim, x.slave.data_inbound.val(),
-            0x12345678deadbeef_u64, x);
+        sim_assert_eq!(sim, x.slave.data_inbound.val(), 0x12345678deadbeef_u64, x);
         for sample in [0xcafe_u16, 0xbabe_u16, 0x5ea1_u16, 0x5e5e_u16] {
             x.core.pipe_out.read.next = true;
             wait_clock_cycle!(sim, clock, x);

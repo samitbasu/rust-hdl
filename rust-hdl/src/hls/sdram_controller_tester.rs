@@ -63,7 +63,7 @@ impl<const R: usize, const C: usize> SDRAMControllerTester<R, C> {
             output_avail: Default::default(),
             state: Default::default(),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -82,8 +82,18 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         self.clock.next = self.upstream.clock.val();
         self.reset.next = self.upstream.reset.val();
         clock_reset!(self, clock, reset, controller, lsfr, lsfr_validate);
-        dff_setup!(self, clock, reset, dram_address, error_count, validation_count,
-            write_count, output_pipeline, output_avail, state);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            dram_address,
+            error_count,
+            validation_count,
+            write_count,
+            output_pipeline,
+            output_avail,
+            state
+        );
         self.controller.clock.next = self.upstream.clock.val();
         SoCPortController::<16>::join(&mut self.local_bridge.nodes[0], &mut self.count.bus);
         SoCPortController::<16>::join(&mut self.local_bridge.nodes[1], &mut self.cmd.bus);

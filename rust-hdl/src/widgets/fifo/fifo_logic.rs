@@ -189,7 +189,14 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, dff_overflow, write_address, dff_write_address_delay);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            dff_overflow,
+            write_address,
+            dff_write_address_delay
+        );
         self.ram_write_clock.next = self.clock.val();
         // We need a 1 cycle delay on the write address
         // This ensures we do not try to read a data element on the same

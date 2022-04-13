@@ -1,3 +1,4 @@
+pub use crate::clock_reset;
 pub use crate::core::ast;
 pub use crate::core::ast::BlackBox;
 pub use crate::core::ast::Verilog;
@@ -43,6 +44,7 @@ pub use crate::core::verilog_gen::filter_blackbox_directives;
 pub use crate::core::verilog_gen::VerilogCodeGenerator;
 pub use crate::core::verilog_visitor::VerilogVisitor;
 pub use crate::core::yosys::*;
+pub use crate::reset_sim;
 pub use crate::sim_assert;
 pub use crate::sim_assert_eq;
 pub use crate::target_path;
@@ -53,5 +55,3 @@ pub use crate::wait_clock_cycles;
 pub use crate::wait_clock_false;
 pub use crate::wait_clock_true;
 pub use rust_hdl_macros::{hdl_gen, LogicBlock, LogicInterface, LogicState, LogicStruct};
-pub use crate::clock_reset;
-pub use crate::reset_sim;

@@ -1,7 +1,7 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 use std::time::Duration;
-use crate::dff_setup;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Shot<const N: usize> {

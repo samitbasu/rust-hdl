@@ -22,17 +22,13 @@ impl std::ops::Not for Clock {
     type Output = Clock;
 
     fn not(self) -> Self::Output {
-        Clock{
-            clk: !self.clk
-        }
+        Clock { clk: !self.clk }
     }
 }
 
 impl From<bool> for Clock {
     fn from(x: bool) -> Clock {
-        Clock {
-            clk: x
-        }
+        Clock { clk: x }
     }
 }
 
@@ -50,12 +46,9 @@ impl Into<bool> for Reset {
 
 impl From<bool> for Reset {
     fn from(x: bool) -> Reset {
-        Reset {
-            rst: x
-        }
+        Reset { rst: x }
     }
 }
-
 
 impl std::ops::Not for Reset {
     type Output = bool;
@@ -64,7 +57,6 @@ impl std::ops::Not for Reset {
         !self.rst
     }
 }
-
 
 #[macro_export]
 macro_rules! clock_reset {

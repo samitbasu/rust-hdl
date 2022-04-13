@@ -166,9 +166,24 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
 {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, state, reg_data_write, reg_data_read,
-        reg_address, reg_cmd_address, delay_counter, refresh_counter, transfer_counter,
-        write_pending, read_pending, read_ready, refresh_needed, data_out_counter);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            state,
+            reg_data_write,
+            reg_data_read,
+            reg_address,
+            reg_cmd_address,
+            delay_counter,
+            refresh_counter,
+            transfer_counter,
+            write_pending,
+            read_pending,
+            read_ready,
+            refresh_needed,
+            data_out_counter
+        );
         clock_reset!(self, clock, reset, read_valid);
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
         self.refresh_counter.d.next = self.refresh_counter.q.val() + 1_usize;

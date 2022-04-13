@@ -28,7 +28,7 @@ impl Default for ControllerTest {
             port: Default::default(),
             iport: Default::default(),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }

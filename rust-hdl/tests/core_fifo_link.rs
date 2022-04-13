@@ -1,3 +1,4 @@
+use crate::test_common::fifo_tester::{bursty_vec, LazyFIFOFeeder, LazyFIFOReader};
 use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::bus::{FIFOReadController, FIFOWriteResponder};
@@ -5,7 +6,6 @@ use rust_hdl::hls::fifo::SyncFIFO;
 use rust_hdl::hls::fifo_linker::FIFOLink;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::widgets::prelude::*;
-use crate::test_common::fifo_tester::{bursty_vec, LazyFIFOFeeder, LazyFIFOReader};
 
 mod test_common;
 
@@ -44,7 +44,7 @@ impl Default for FIFOBridgeTest {
             reader: LazyFIFOReader::new(&data1, &bursty_vec(256)),
             lnk: Default::default(),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -75,5 +75,6 @@ fn test_fifo_linker() {
         sim_assert!(sim, !x.reader.error.val(), x);
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 100_000, &vcd_path!("hls_fifo_link.vcd")).unwrap();
+    sim.run_to_file(Box::new(uut), 100_000, &vcd_path!("hls_fifo_link.vcd"))
+        .unwrap();
 }

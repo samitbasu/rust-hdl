@@ -45,7 +45,7 @@ impl Default for CrossWidenTestFixture {
             cross: CrossWiden::new(WordOrder::LeastSignificantFirst),
             reader: LazyFIFOReader::new(&data1, &bursty_vec(256)),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -120,7 +120,7 @@ impl Default for CrossNarrowTestFixture {
             cross: CrossNarrow::new(WordOrder::LeastSignificantFirst),
             reader: LazyFIFOReader::new(&data2, &bursty_vec(1024)),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }

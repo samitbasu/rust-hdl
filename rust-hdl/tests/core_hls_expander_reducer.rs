@@ -21,7 +21,16 @@ struct ReducerTestFixture {
 impl Logic for ReducerTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, feeder, wide_fifo, reducer, narrow_fifo, reader);
+        clock_reset!(
+            self,
+            clock,
+            reset,
+            feeder,
+            wide_fifo,
+            reducer,
+            narrow_fifo,
+            reader
+        );
         FIFOWriteController::<Bits<16>>::join(&mut self.feeder.bus, &mut self.wide_fifo.bus_write);
         FIFOReadController::<Bits<16>>::join(
             &mut self.reducer.bus_read,
@@ -53,7 +62,7 @@ impl Default for ReducerTestFixture {
             narrow_fifo: Default::default(),
             reader: LazyFIFOReader::new(&data2, &bursty_vec(1024)),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -116,7 +125,16 @@ struct ExpanderTestFixture {
 impl Logic for ExpanderTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, feeder, nibble_fifo, expander, word_fifo, reader);
+        clock_reset!(
+            self,
+            clock,
+            reset,
+            feeder,
+            nibble_fifo,
+            expander,
+            word_fifo,
+            reader
+        );
         FIFOWriteController::<Bits<4>>::join(&mut self.feeder.bus, &mut self.nibble_fifo.bus_write);
         FIFOReadController::<Bits<4>>::join(
             &mut self.expander.bus_read,
@@ -148,7 +166,7 @@ impl Default for ExpanderTestFixture {
             word_fifo: Default::default(),
             reader: LazyFIFOReader::new(&data1, &bursty_vec(256)),
             clock: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }

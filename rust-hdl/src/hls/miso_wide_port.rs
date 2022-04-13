@@ -46,7 +46,15 @@ impl<const W: usize, const D: usize> Logic for MISOWidePort<W, D> {
     fn update(&mut self) {
         self.clock_out.next = self.bus.clock.val();
         self.reset_out.next = self.bus.reset.val();
-        dff_setup!(self, clock_out, reset_out, accum, address_active, count, ready);
+        dff_setup!(
+            self,
+            clock_out,
+            reset_out,
+            accum,
+            address_active,
+            count,
+            ready
+        );
         // Latch prevention
         self.address_active.d.next = self.bus.select.val();
         self.bus.ready.next = false;
