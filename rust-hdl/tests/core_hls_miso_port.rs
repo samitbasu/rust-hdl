@@ -9,6 +9,7 @@ struct MISOPortTest {
     port_a: MISOPort<16>,
     port_b: MISOPort<16>,
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
 }
 
 impl Default for MISOPortTest {
@@ -19,6 +20,7 @@ impl Default for MISOPortTest {
             port_a: Default::default(),
             port_b: Default::default(),
             clock: Default::default(),
+            reset: Default::default()
         }
     }
 }
@@ -27,6 +29,7 @@ impl Logic for MISOPortTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
+        self.bus.reset.next = self.reset.val();
         SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
         SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.port_b.bus);
@@ -46,6 +49,7 @@ fn test_port_test_synthesizes() {
     uut.port_a.ready_in.connect();
     uut.port_b.ready_in.connect();
     uut.clock.connect();
+    uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("test_port", &vlog).unwrap();
@@ -64,11 +68,13 @@ fn test_port_test_works() {
     uut.port_a.ready_in.connect();
     uut.port_b.ready_in.connect();
     uut.clock.connect();
+    uut.reset.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<MISOPortTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<MISOPortTest>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 0_usize.into();
         x.bus.address_strobe.next = true;
@@ -133,6 +139,7 @@ struct MISOWidePortTest {
     port_a: MISOWidePort<64, 16>,
     port_b: MISOWidePort<64, 16>,
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
 }
 
 impl Default for MISOWidePortTest {
@@ -143,6 +150,7 @@ impl Default for MISOWidePortTest {
             port_a: Default::default(),
             port_b: Default::default(),
             clock: Default::default(),
+            reset: Default::default()
         }
     }
 }
@@ -151,6 +159,7 @@ impl Logic for MISOWidePortTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
+        self.bus.reset.next = self.reset.val();
         SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
         SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.port_b.bus);
@@ -161,6 +170,7 @@ impl Logic for MISOWidePortTest {
 fn test_wide_port_test_synthesizes() {
     let mut uut = MISOWidePortTest::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.bus.address.connect();
     uut.bus.address_strobe.connect();
     uut.bus.from_controller.connect();
@@ -178,6 +188,7 @@ fn test_wide_port_test_synthesizes() {
 fn test_wide_port_test_works() {
     let mut uut = MISOWidePortTest::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.bus.address.connect();
     uut.bus.address_strobe.connect();
     uut.bus.from_controller.connect();
@@ -193,6 +204,7 @@ fn test_wide_port_test_works() {
     });
     sim.add_testbench(move |mut sim: Sim<MISOWidePortTest>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 0_usize.into();
         x.bus.address_strobe.next = true;
@@ -272,6 +284,7 @@ struct MISOPortFIFOTest {
     bridge: Bridge<16, 2, 1>,
     port_a: MISOFIFOPort<16, 2, 3, 1>,
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
 }
 
 impl Default for MISOPortFIFOTest {
@@ -281,6 +294,7 @@ impl Default for MISOPortFIFOTest {
             bridge: Bridge::new(["port_a"]),
             port_a: Default::default(),
             clock: Default::default(),
+            reset: Default::default()
         }
     }
 }
@@ -289,6 +303,7 @@ impl Logic for MISOPortFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
+        self.bus.reset.next = self.reset.val();
         SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
     }
@@ -298,6 +313,7 @@ impl Logic for MISOPortFIFOTest {
 fn test_miso_fifo_synthesizes() {
     let mut uut = MISOPortFIFOTest::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.bus.address.connect();
     uut.bus.address_strobe.connect();
     uut.bus.from_controller.connect();
@@ -312,6 +328,7 @@ fn test_miso_fifo_synthesizes() {
 fn test_miso_fifo_works() {
     let mut uut = MISOPortFIFOTest::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.bus.address.connect();
     uut.bus.address_strobe.connect();
     uut.bus.from_controller.connect();
@@ -325,6 +342,7 @@ fn test_miso_fifo_works() {
     });
     sim.add_testbench(move |mut sim: Sim<MISOPortFIFOTest>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         hls_fifo_write_lazy!(sim, clock, x, port_a.fifo_bus, &test_data.clone());
         wait_clock_cycles!(sim, clock, x, 10);

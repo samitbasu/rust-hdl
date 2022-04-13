@@ -5,6 +5,7 @@ use rust_hdl::widgets::prelude::*;
 fn test_rising_edge_detector_works() {
     let mut uut = EdgeDetector::new(true);
     uut.clock.connect();
+    uut.reset.connect();
     uut.input_signal.connect();
     uut.connect_all();
     yosys_validate("edge_2", &generate_verilog(&uut)).unwrap();
@@ -12,6 +13,7 @@ fn test_rising_edge_detector_works() {
     sim.add_clock(5, |x: &mut Box<EdgeDetector>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<EdgeDetector>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         x.input_signal.next = true;
         wait_clock_true!(sim, clock, x);
         wait_clock_cycle!(sim, clock, x);
@@ -40,6 +42,7 @@ fn test_rising_edge_detector_works() {
 fn test_falling_edge_detector_works() {
     let mut uut = EdgeDetector::new(false);
     uut.clock.connect();
+    uut.reset.connect();
     uut.input_signal.connect();
     uut.connect_all();
     yosys_validate("edge_1", &generate_verilog(&uut)).unwrap();
@@ -47,6 +50,7 @@ fn test_falling_edge_detector_works() {
     sim.add_clock(5, |x: &mut Box<EdgeDetector>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<EdgeDetector>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         x.input_signal.next = false;
         wait_clock_true!(sim, clock, x);
         wait_clock_cycle!(sim, clock, x);

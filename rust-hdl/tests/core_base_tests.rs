@@ -33,6 +33,7 @@ mod tests {
         uut.enable.next = true;
         println!("Starting");
         uut.clock.connect();
+        uut.reset.connect();
         uut.enable.connect();
         uut.connect_all();
         check_all(&uut).unwrap();
@@ -63,6 +64,7 @@ mod tests {
         #[derive(Clone, Debug, LogicBlock)]
         struct StateMachine {
             pub clock: Signal<In, Clock>,
+            pub reset: Signal<In, Reset>,
             pub advance: Signal<In, Bit>,
             state: DFF<MyState>,
         }
@@ -71,6 +73,7 @@ mod tests {
             pub fn new() -> StateMachine {
                 StateMachine {
                     clock: Signal::default(),
+                    reset: Default::default(),
                     advance: Signal::default(),
                     state: Default::default(),
                 }
@@ -80,7 +83,7 @@ mod tests {
         impl Logic for StateMachine {
             #[hdl_gen]
             fn update(&mut self) {
-                self.state.clock.next = self.clock.val();
+                dff_setup!(self, clock, reset, state);
 
                 if self.advance.val() {
                     match self.state.q.val() {
@@ -97,6 +100,7 @@ mod tests {
         let mut uut = StateMachine::new();
         println!("Starting");
         uut.clock.connect();
+        uut.reset.connect();
         uut.advance.connect();
         uut.connect_all();
         check_all(&uut).unwrap();
@@ -118,6 +122,7 @@ mod tests {
         #[derive(Clone, Debug, LogicBlock)]
         struct StrobePair {
             pub clock: Signal<In, Clock>,
+            pub reset: Signal<In, Reset>,
             pub enable: Signal<In, Bit>,
             a_strobe: Strobe<32>,
             b_strobe: Strobe<32>,
@@ -131,6 +136,7 @@ mod tests {
                     a_strobe: Strobe::new(10_000_000, 10.0),
                     b_strobe: Strobe::new(10_000_000, 10.0),
                     clock: Signal::default(),
+                    reset: Default::default(),
                     enable: Signal::default(),
                     increment: Constant::new(32_usize.into()),
                     local: Signal::default(),
@@ -145,6 +151,8 @@ mod tests {
                 self.b_strobe.enable.connect();
                 self.a_strobe.clock.connect();
                 self.b_strobe.clock.connect();
+                self.a_strobe.reset.connect();
+                self.b_strobe.reset.connect();
                 self.local.connect();
             }
         }
@@ -155,8 +163,8 @@ mod tests {
         println!("Starting");
         uut.clock.connect();
         uut.enable.connect();
+        uut.reset.connect();
         uut.connect_all();
-        println!("{}", generate_verilog(&uut));
     }
 
     const MHZ100: u64 = 100_000_000;
@@ -219,6 +227,7 @@ mod tests {
         };
         x.x.connect();
         x.strobe.clock.connect();
+        x.strobe.reset.connect();
         x.strobe.enable.connect();
         x.connect_all();
         sim.run(Box::new(x), 400).unwrap();

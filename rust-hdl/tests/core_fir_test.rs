@@ -9,6 +9,7 @@ fn test_fir_is_synthesizable() {
     uut.uut.data_in.connect();
     uut.uut.strobe_in.connect();
     uut.uut.clock.connect();
+    uut.uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("fir_synth", &vlog).unwrap();
@@ -22,6 +23,7 @@ fn test_fir_impulse_response_is_expected() {
     uut.uut.data_in.connect();
     uut.uut.strobe_in.connect();
     uut.uut.clock.connect();
+    uut.uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("fir_sim", &vlog).unwrap();
@@ -39,6 +41,7 @@ fn test_fir_impulse_response_is_expected() {
     });
     sim.add_testbench(move |mut sim: Sim<MACFIRTest>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for val in [0_i32, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0] {
             x.data_in.next = val.into();
@@ -54,6 +57,7 @@ fn test_fir_impulse_response_is_expected() {
     x.data_in.connect();
     x.strobe_in.connect();
     x.clock.connect();
+    x.reset.connect();
     x.connect_all();
     sim.run_traced(
         Box::new(x),

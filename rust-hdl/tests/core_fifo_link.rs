@@ -17,19 +17,17 @@ struct FIFOBridgeTest {
     reader: LazyFIFOReader<Bits<8>, 12>,
     lnk: FIFOLink<Bits<8>>,
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for FIFOBridgeTest {
     #[hdl_gen]
     fn update(&mut self) {
+        clock_reset!(self, clock, reset, fp, bp, reader, feeder);
         FIFOWriteController::<Bits<8>>::join(&mut self.feeder.bus, &mut self.fp.bus_write);
         FIFOReadResponder::<Bits<8>>::join(&mut self.fp.bus_read, &mut self.lnk.read);
         FIFOWriteController::<Bits<8>>::join(&mut self.lnk.write, &mut self.bp.bus_write);
         FIFOReadResponder::<Bits<8>>::join(&mut self.bp.bus_read, &mut self.reader.bus);
-        self.fp.clock.next = self.clock.val();
-        self.bp.clock.next = self.clock.val();
-        self.feeder.clock.next = self.clock.val();
-        self.reader.clock.next = self.clock.val();
     }
 }
 
@@ -45,7 +43,8 @@ impl Default for FIFOBridgeTest {
             bp: Default::default(),
             reader: LazyFIFOReader::new(&data1, &bursty_vec(256)),
             lnk: Default::default(),
-            clock: Default::default()
+            clock: Default::default(),
+            reset: Default::default()
         }
     }
 }
@@ -54,6 +53,7 @@ impl Default for FIFOBridgeTest {
 fn test_fifo_linker() {
     let mut uut = FIFOBridgeTest::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();
@@ -63,6 +63,7 @@ fn test_fifo_linker() {
     });
     sim.add_testbench(move |mut sim: Sim<FIFOBridgeTest>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.feeder.start.next = true;
         x.reader.start.next = true;

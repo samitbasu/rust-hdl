@@ -13,6 +13,7 @@ enum FIFOFeederState {
 
 #[derive(LogicBlock)]
 pub struct LazyFIFOFeeder<T: Synth, const N: usize> {
+    pub reset: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
     pub bus: FIFOWriteController<T>,
     pub done: Signal<Out, Bit>,
@@ -30,6 +31,7 @@ impl<T: Synth, const N: usize> LazyFIFOFeeder<T, N> {
         assert!(clog2(data.len()) <= N);
         assert_eq!(data.len(), sleeps.len());
         Self {
+            reset: Default::default(),
             clock: Default::default(),
             bus: Default::default(),
             done: Default::default(),
@@ -47,14 +49,7 @@ impl<T: Synth, const N: usize> LazyFIFOFeeder<T, N> {
 impl<T: Synth, const N: usize> Logic for LazyFIFOFeeder<T, N> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Clock the flops
-        self.state.clock.next = self.clock.val();
-        self.sleep_counter.clock.next = self.clock.val();
-        self.index.clock.next = self.clock.val();
-        // Latch prevention
-        self.state.d.next = self.state.q.val();
-        self.sleep_counter.d.next = self.sleep_counter.q.val();
-        self.index.d.next = self.index.q.val();
+        dff_setup!(self, clock, reset, state, sleep_counter, index);
         // Wire the FIFO bus to our data array
         self.bus.data.next = self.data_rom.data.val();
         self.bus.write.next = false;
@@ -98,6 +93,7 @@ impl<T: Synth, const N: usize> Logic for LazyFIFOFeeder<T, N> {
 
 #[derive(LogicBlock)]
 pub struct LazyFIFOReader<T: Synth, const N: usize> {
+    pub reset: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
     pub bus: FIFOReadController<T>,
     pub done: Signal<Out, Bit>,
@@ -117,6 +113,7 @@ impl<T: Synth, const N: usize> LazyFIFOReader<T, N> {
         assert!(clog2(data.len()) <= N);
         assert_eq!(data.len(), sleeps.len());
         Self {
+            reset: Default::default(),
             clock: Default::default(),
             bus: Default::default(),
             done: Default::default(),
@@ -136,16 +133,7 @@ impl<T: Synth, const N: usize> LazyFIFOReader<T, N> {
 impl<T: Synth, const N: usize> Logic for LazyFIFOReader<T, N> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Clock the logic
-        self.state.clock.next = self.clock.val();
-        self.mismatch.clock.next = self.clock.val();
-        self.sleep_counter.clock.next = self.clock.val();
-        self.index.clock.next = self.clock.val();
-        // Latch prevention
-        self.mismatch.d.next = self.mismatch.q.val();
-        self.state.d.next = self.state.q.val();
-        self.sleep_counter.d.next = self.sleep_counter.q.val();
-        self.index.d.next = self.index.q.val();
+        dff_setup!(self, clock, reset, mismatch, state, sleep_counter, index);
         self.bus.read.next = false;
         self.done.next = false;
         // Connect the ROMS

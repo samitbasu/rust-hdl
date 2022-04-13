@@ -15,16 +15,13 @@ struct ReducerTestFixture {
     narrow_fifo: SyncFIFO<Bits<4>, 4, 5, 1>,
     reader: LazyFIFOReader<Bits<4>, 12>,
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for ReducerTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
-        self.feeder.clock.next = self.clock.val();
-        self.wide_fifo.clock.next = self.clock.val();
-        self.reducer.clock.next = self.clock.val();
-        self.narrow_fifo.clock.next = self.clock.val();
-        self.reader.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, feeder, wide_fifo, reducer, narrow_fifo, reader);
         FIFOWriteController::<Bits<16>>::join(&mut self.feeder.bus, &mut self.wide_fifo.bus_write);
         FIFOReadController::<Bits<16>>::join(
             &mut self.reducer.bus_read,
@@ -56,6 +53,7 @@ impl Default for ReducerTestFixture {
             narrow_fifo: Default::default(),
             reader: LazyFIFOReader::new(&data2, &bursty_vec(1024)),
             clock: Default::default(),
+            reset: Default::default()
         }
     }
 }
@@ -64,6 +62,7 @@ impl Default for ReducerTestFixture {
 fn test_reducer_test_fixture_synthesizes() {
     let mut uut = ReducerTestFixture::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();
@@ -75,6 +74,7 @@ fn test_reducer_test_fixture_synthesizes() {
 fn test_reducer_test_fixture_operation() {
     let mut uut = ReducerTestFixture::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();
@@ -84,6 +84,7 @@ fn test_reducer_test_fixture_operation() {
     });
     sim.add_testbench(move |mut sim: Sim<ReducerTestFixture>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.feeder.start.next = true;
         x.reader.start.next = true;
@@ -109,16 +110,13 @@ struct ExpanderTestFixture {
     word_fifo: SyncFIFO<Bits<16>, 4, 5, 1>,
     reader: LazyFIFOReader<Bits<16>, 10>,
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for ExpanderTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
-        self.feeder.clock.next = self.clock.val();
-        self.nibble_fifo.clock.next = self.clock.val();
-        self.expander.clock.next = self.clock.val();
-        self.word_fifo.clock.next = self.clock.val();
-        self.reader.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, feeder, nibble_fifo, expander, word_fifo, reader);
         FIFOWriteController::<Bits<4>>::join(&mut self.feeder.bus, &mut self.nibble_fifo.bus_write);
         FIFOReadController::<Bits<4>>::join(
             &mut self.expander.bus_read,
@@ -150,6 +148,7 @@ impl Default for ExpanderTestFixture {
             word_fifo: Default::default(),
             reader: LazyFIFOReader::new(&data1, &bursty_vec(256)),
             clock: Default::default(),
+            reset: Default::default()
         }
     }
 }
@@ -158,6 +157,7 @@ impl Default for ExpanderTestFixture {
 fn test_expander_test_fixture() {
     let mut uut = ExpanderTestFixture::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();
@@ -169,6 +169,7 @@ fn test_expander_test_fixture() {
 fn test_expander_test_fixture_operation() {
     let mut uut = ExpanderTestFixture::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();
@@ -178,6 +179,7 @@ fn test_expander_test_fixture_operation() {
     });
     sim.add_testbench(move |mut sim: Sim<ExpanderTestFixture>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.feeder.start.next = true;
         x.reader.start.next = true;

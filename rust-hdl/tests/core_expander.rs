@@ -4,6 +4,7 @@ use rust_hdl::widgets::prelude::*;
 #[derive(LogicBlock)]
 struct ExpanderTest {
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub fifo_in: SynchronousFIFO<Bits<4>, 8, 9, 1>,
     pub fifo_out: SynchronousFIFO<Bits<32>, 4, 5, 1>,
     pub xpand: FIFOExpanderN<4, 32>,
@@ -12,9 +13,7 @@ struct ExpanderTest {
 impl Logic for ExpanderTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.fifo_in.clock.next = self.clock.val();
-        self.fifo_out.clock.next = self.clock.val();
-        self.xpand.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, fifo_in, fifo_out, xpand);
         self.xpand.empty.next = self.fifo_in.empty.val();
         self.xpand.data_in.next = self.fifo_in.data_out.val();
         self.fifo_in.read.next = self.xpand.read.val();
@@ -28,6 +27,7 @@ impl ExpanderTest {
     pub fn new(word_order: WordOrder) -> Self {
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             fifo_in: Default::default(),
             fifo_out: Default::default(),
             xpand: FIFOExpanderN::new(word_order),
@@ -39,6 +39,7 @@ impl ExpanderTest {
 fn test_expander_works() {
     let mut uut = ExpanderTest::new(WordOrder::MostSignificantFirst);
     uut.clock.connect();
+    uut.reset.connect();
     uut.fifo_in.data_in.connect();
     uut.fifo_in.write.connect();
     uut.fifo_out.read.connect();
@@ -47,6 +48,7 @@ fn test_expander_works() {
     sim.add_clock(5, |x: &mut Box<ExpanderTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<ExpanderTest>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for datum in [
             0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
@@ -83,6 +85,7 @@ fn test_expander_works() {
 fn test_expander_works_with_lsw_first() {
     let mut uut = ExpanderTest::new(WordOrder::LeastSignificantFirst);
     uut.clock.connect();
+    uut.reset.connect();
     uut.fifo_in.data_in.connect();
     uut.fifo_in.write.connect();
     uut.fifo_out.read.connect();
@@ -91,6 +94,7 @@ fn test_expander_works_with_lsw_first() {
     sim.add_clock(5, |x: &mut Box<ExpanderTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<ExpanderTest>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for datum in [
             0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
@@ -128,13 +132,16 @@ declare_expanding_fifo!(Fatten, 4, 256, 32, 16);
 #[derive(LogicBlock)]
 struct FattenTest {
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub fifo: Fatten,
 }
 
 impl Logic for FattenTest {
     #[hdl_gen]
     fn update(&mut self) {
+        self.fifo.read_reset.next = self.reset.val();
         self.fifo.read_clock.next = self.clock.val();
+        self.fifo.write_reset.next = self.reset.val();
         self.fifo.write_clock.next = self.clock.val();
     }
 }
@@ -143,6 +150,7 @@ impl FattenTest {
     pub fn new(word_order: WordOrder) -> Self {
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             fifo: Fatten::new(word_order),
         }
     }
@@ -152,6 +160,7 @@ impl FattenTest {
 fn test_fatten_works() {
     let mut uut = FattenTest::new(WordOrder::MostSignificantFirst);
     uut.clock.connect();
+    uut.reset.connect();
     uut.fifo.data_in.connect();
     uut.fifo.write.connect();
     uut.fifo.read.connect();
@@ -160,6 +169,7 @@ fn test_fatten_works() {
     sim.add_clock(5, |x: &mut Box<FattenTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<FattenTest>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for datum in [
             0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
