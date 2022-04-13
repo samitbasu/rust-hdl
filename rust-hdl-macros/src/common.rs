@@ -1,7 +1,7 @@
 use quote::quote;
+use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{Data, Expr, Token};
-use syn::parse::{Parse, ParseStream};
 
 pub(crate) type TS = proc_macro2::TokenStream;
 
@@ -132,7 +132,6 @@ pub fn fixup_ident(x: String) -> String {
     y
 }
 
-
 // The dff_setup macro uses clock, reset, dfflist arguments
 #[derive(Debug)]
 pub struct DFFSetupArgs {
@@ -162,7 +161,10 @@ impl Parse for DFFSetupArgs {
             }
         }
         Ok(DFFSetupArgs {
-            me, clock, reset, dffs
+            me,
+            clock,
+            reset,
+            dffs,
         })
     }
 }

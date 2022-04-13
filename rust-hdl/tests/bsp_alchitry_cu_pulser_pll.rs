@@ -3,6 +3,7 @@ use rust_hdl::bsp::alchitry_cu::synth::generate_bitstream;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::pulser::Pulser;
 use std::time::Duration;
+use rust_hdl::widgets::prelude::AutoReset;
 
 const MHZ100: u64 = 100_000_000;
 const MHZ25: u64 = 25_000_000;
@@ -20,6 +21,7 @@ impl Logic for AlchitryCuPulserPLL {
     fn update(&mut self) {
         self.pulser.enable.next = true;
         self.pll.clock_in.next = self.clock.val();
+        self.pulser.reset.next = (!self.pll.locked.val()).into();
         self.pulser.clock.next = self.pll.clock_out.val();
         self.leds.next = 0x00_u8.into();
         if self.pulser.pulse.val() {

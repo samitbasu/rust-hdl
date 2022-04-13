@@ -36,6 +36,7 @@ pub fn snore<const P: usize>(x: u32) -> Bits<P> {
 
 #[derive(LogicBlock)]
 pub struct FaderWithSyncROM {
+    pub reset: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
     pub active: Signal<Out, Bit>,
     pub enable: Signal<In, Bit>,
@@ -52,6 +53,7 @@ impl FaderWithSyncROM {
             .map(|x| (Bits::<8>::from(x), snore(x + phase)))
             .collect::<BTreeMap<_, _>>();
         Self {
+            reset: Default::default(),
             clock: Signal::default(),
             active: Signal::new_with_default(false),
             enable: Signal::default(),
@@ -66,9 +68,7 @@ impl FaderWithSyncROM {
 impl Logic for FaderWithSyncROM {
     #[hdl_gen]
     fn update(&mut self) {
-        self.strobe.clock.next = self.clock.val();
-        self.pwm.clock.next = self.clock.val();
-        self.counter.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, strobe, pwm, counter);
         self.rom.clock.next = self.clock.val();
         self.rom.address.next = self.counter.q.val();
         self.counter.d.next = self.counter.q.val() + self.strobe.strobe.val();
