@@ -22,6 +22,7 @@ pub struct I2CTestTarget {
     // The I2C Clock line.  Must have an external pullup
     pub scl: Signal<InOut, Bit>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     phy: I2CTarget,
     mem: RAM<Bits<16>, 4>,
     ptr: DFF<Bits<4>>,
@@ -39,6 +40,7 @@ impl I2CTestTarget {
             sda: Default::default(),
             scl: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             phy: Default::default(),
             mem: Default::default(),
             ptr: Default::default(),
@@ -57,20 +59,11 @@ impl Logic for I2CTestTarget {
         Signal::<InOut, Bit>::link(&mut self.sda, &mut self.phy.sda);
         Signal::<InOut, Bit>::link(&mut self.scl, &mut self.phy.scl);
         // Clock internal logic
-        self.phy.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, phy);
         self.mem.read_clock.next = self.clock.val();
         self.mem.write_clock.next = self.clock.val();
-        self.ptr.clock.next = self.clock.val();
-        self.outgoing.clock.next = self.clock.val();
-        self.state.clock.next = self.clock.val();
-        self.save.clock.next = self.clock.val();
-        self.active.clock.next = self.clock.val();
+        dff_setup!(self, clock, reset, ptr, outgoing, save, state, active);
         // Latch prevention
-        self.outgoing.d.next = self.outgoing.q.val();
-        self.state.d.next = self.state.q.val();
-        self.ptr.d.next = self.ptr.q.val();
-        self.save.d.next = self.save.q.val();
-        self.active.d.next = self.active.q.val();
         // Wire up the RAM
         self.mem.write_data.next = bit_cast::<16, 8>(self.save.q.val()) << 8_usize
             | bit_cast::<16, 8>(self.phy.from_bus.val());
@@ -157,6 +150,7 @@ impl Logic for I2CTestTarget {
 fn test_i2c_test_target_synthesizable() {
     let mut uut = TopWrap::new(I2CTestTarget::new(0x53));
     uut.uut.clock.connect();
+    uut.uut.reset.connect();
     uut.uut.sda.connect();
     uut.uut.scl.connect();
     uut.connect_all();

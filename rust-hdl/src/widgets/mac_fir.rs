@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 use crate::widgets::ramrom::ram::RAM;
 use crate::widgets::ramrom::sync_rom::SyncROM;
@@ -19,6 +20,7 @@ pub struct MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<const ADDR_BIT
     pub data_out: Signal<Out, Signed<48>>,
     pub strobe_out: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub busy: Signal<Out, Bit>,
     coeff_memory: SyncROM<Signed<16>, ADDR_BITS>,
     left_bank: RAM<Signed<16>, ADDR_BITS>,
@@ -61,10 +63,7 @@ impl<const ADDR_BITS: usize> Logic
         self.left_bank.write_clock.next = self.clock.val();
         self.right_bank.read_clock.next = self.clock.val();
         self.right_bank.write_clock.next = self.clock.val();
-        self.head_ptr.clock.next = self.clock.val();
-        self.index.clock.next = self.clock.val();
-        self.accum.clock.next = self.clock.val();
-        self.state.clock.next = self.clock.val();
+        dff_setup!(self, clock, reset, head_ptr, index, accum, state);
         // Connect the head pointer to the write address of the two bank memories
         self.left_bank.write_address.next = self.head_ptr.d.val();
         self.right_bank.write_address.next = self.head_ptr.d.val();
@@ -104,11 +103,7 @@ impl<const ADDR_BITS: usize> Logic
             self.mac_output.next = 0_i32.into();
         }
         // Latch prevention...
-        self.head_ptr.d.next = self.head_ptr.q.val();
         self.data_write.next = self.head_ptr.q.val();
-        self.index.d.next = self.index.q.val();
-        self.accum.d.next = self.accum.q.val();
-        self.state.d.next = self.state.q.val();
         // The output is wired to the accumulator
         self.data_out.next = self.accum.q.val();
         self.strobe_out.next = false;
@@ -173,6 +168,7 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
             data_out: Default::default(),
             strobe_out: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             busy: Default::default(),
             coeff_memory: coeffs.into_iter().into(),
             left_bank: Default::default(),
@@ -202,8 +198,8 @@ fn test_fir_is_synthesizable() {
     uut.uut.data_in.connect();
     uut.uut.strobe_in.connect();
     uut.uut.clock.connect();
+    uut.uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("fir", &vlog).unwrap();
 }

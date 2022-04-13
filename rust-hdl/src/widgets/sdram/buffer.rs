@@ -14,11 +14,17 @@ pub struct SDRAMOnChipBuffer<const D: usize> {
     address_flop: DFF<Bits<13>>,
     write_flop: DFF<Bits<D>>,
     read_flop: DFF<Bits<D>>,
+    clock: Signal<Local, Clock>,
+    reset: Signal<Local, Reset>,
 }
 
 impl<const D: usize> Logic for SDRAMOnChipBuffer<D> {
     #[hdl_gen]
     fn update(&mut self) {
+        self.clock.next = self.buf_in.clk.val();
+        self.reset.next = self.buf_in.reset.val();
+        dff_setup!(self, clock, reset, we_not_flop, cas_not_flop, ras_not_flop,
+            cs_not_flop, bank_flop, address_flop, write_flop, read_flop);
         // Connect up the flop inputs
         self.we_not_flop.d.next = self.buf_in.we_not.val();
         self.cas_not_flop.d.next = self.buf_in.cas_not.val();
@@ -38,17 +44,9 @@ impl<const D: usize> Logic for SDRAMOnChipBuffer<D> {
         self.buf_out.write_enable.next = self.buf_in.write_enable.val();
         self.buf_in.read_data.next = self.read_flop.q.val();
         self.buf_out.write_data.next = self.write_flop.q.val();
-        // Clock the flops
-        self.we_not_flop.clock.next = self.buf_in.clk.val();
-        self.cas_not_flop.clock.next = self.buf_in.clk.val();
-        self.ras_not_flop.clock.next = self.buf_in.clk.val();
-        self.cs_not_flop.clock.next = self.buf_in.clk.val();
-        self.bank_flop.clock.next = self.buf_in.clk.val();
-        self.address_flop.clock.next = self.buf_in.clk.val();
-        self.write_flop.clock.next = self.buf_in.clk.val();
-        self.read_flop.clock.next = self.buf_in.clk.val();
         // Forward the clock
-        self.buf_out.clk.next = !self.buf_in.clk.val();
+        self.buf_out.clk.next = self.buf_in.clk.val(); // FIXME - clock was inverted here...
+        self.buf_out.reset.next = self.buf_in.reset.val();
     }
 }
 

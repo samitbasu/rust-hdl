@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::prelude::{TristateBuffer, DFF};
 
 #[derive(LogicBlock, Default)]
@@ -7,6 +8,7 @@ pub struct EdgeTristateBuffer<T: Synth> {
     pub from_pin: Signal<Out, T>,
     pub output_enable: Signal<In, Bit>,
     pub clk: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub pin: Signal<InOut, T>,
     dff_out: DFF<T>,
     dff_in: DFF<T>,
@@ -19,8 +21,8 @@ fn wrapper_once() -> String {
     wire bb_to_pin;
     wire bb_from_pin;
 
-    OFS1P3DX obuf(.D(to_pin), .CD(1'b0), .SP(1'b1), .SCLK(clk), .Q(bb_to_pin));
-    IFS1P3DX ibuf(.D(bb_from_pin), .CD(1'b0), .SP(1'b1), .SCLK(clk), .Q(from_pin));
+    OFS1P3DX obuf(.D(to_pin), .CD(reset), .SP(1'b1), .SCLK(clk), .Q(bb_to_pin));
+    IFS1P3DX ibuf(.D(bb_from_pin), .CD(reset), .SP(1'b1), .SCLK(clk), .Q(from_pin));
     BB bb(.I(bb_to_pin), .O(bb_from_pin), .B(pin), .T(~output_enable));
 "##
     )
@@ -31,8 +33,8 @@ fn wrapper_multiple(count: usize) -> String {
         .map(|x| {
             format!(
                 r#"
-    OFS1P3DX obuf_{x}(.D(to_pin[{x}]), .CD(1'b0), .SP(1'b1), .SCLK(clk), .Q(bb_to_pin[{x}]));
-    IFS1P3DX ibuf_{x}(.D(bb_from_pin[{x}]), .CD(1'b0), .SP(1'b1), .SCLK(clk), .Q(from_pin[{x}]));
+    OFS1P3DX obuf_{x}(.D(to_pin[{x}]), .CD(reset), .SP(1'b1), .SCLK(clk), .Q(bb_to_pin[{x}]));
+    IFS1P3DX ibuf_{x}(.D(bb_from_pin[{x}]), .CD(reset), .SP(1'b1), .SCLK(clk), .Q(from_pin[{x}]));
     BB bb_{x}(.I(bb_to_pin[{x}]), .O(bb_from_pin[{x}]), .B(pin[{x}]), .T(~output_enable));
         "#,
                 x = x
@@ -54,8 +56,7 @@ wire [{B}:0] bb_from_pin;
 
 impl<T: Synth> Logic for EdgeTristateBuffer<T> {
     fn update(&mut self) {
-        self.dff_out.clock.next = self.clk.val();
-        self.dff_in.clock.next = self.clk.val();
+        dff_setup!(self, clk, reset, dff_out, dff_in);
         self.buffer.write_enable.next = self.output_enable.val();
         self.dff_in.d.next = self.buffer.read_data.val();
         self.dff_out.d.next = self.to_pin.val();
@@ -64,6 +65,8 @@ impl<T: Synth> Logic for EdgeTristateBuffer<T> {
         Signal::<InOut, T>::link(&mut self.pin, &mut self.buffer.bus);
     }
     fn connect(&mut self) {
+        self.dff_out.reset.connect();
+        self.dff_in.reset.connect();
         self.dff_out.clock.connect();
         self.dff_in.clock.connect();
         self.buffer.write_enable.connect();
@@ -110,6 +113,7 @@ fn test_edge_buffer_synthesizes() {
     uut.uut.output_enable.connect();
     uut.uut.to_pin.connect();
     uut.uut.clk.connect();
+    uut.uut.reset.connect();
     uut.uut.pin.connect();
     uut.connect_all();
     std::fs::write("edge_tristate_buffer.v", generate_verilog(&uut)).unwrap();

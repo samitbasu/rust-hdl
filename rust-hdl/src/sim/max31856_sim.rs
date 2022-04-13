@@ -476,5 +476,6 @@ fn test_single_conversion() {
         sim_assert_eq!(sim, result.0 & 0xFFFFFF_u64, 0x40_u64, x);
         sim.done(x)
     });
-    sim.run(Box::new(uut), 1_000_000).unwrap();
+//    sim.run(Box::new(uut), 1_000_000).unwrap();
+    sim.run_to_file(Box::new(uut), 1_000_000, "/tmp/mread.vcd").unwrap();
 }

@@ -25,11 +25,13 @@ pub struct DDR7FIFO<const N: usize> {
     pub full: Signal<Out, Bit>,
     pub write: Signal<In, Bit>,
     pub write_clock: Signal<In, Clock>,
+    pub write_reset: Signal<In, Reset>,
     // The read interface
     pub data_out: Signal<Out, Bits<N>>,
     pub empty: Signal<Out, Bit>,
     pub read: Signal<In, Bit>,
     pub read_clock: Signal<In, Clock>,
+    pub read_reset: Signal<In, Reset>,
     // The mig
     mig: MemoryInterfaceGenerator7Series,
     // Front end fifo
@@ -45,6 +47,7 @@ pub struct DDR7FIFO<const N: usize> {
     // Is DDR FIFO empty
     is_empty: Signal<Local, Bit>,
     pub status: Signal<Out, Bits<8>>,
+    mig_clock: Signal<Local, Clock>,
 }
 
 impl<const N: usize> Logic for DDR7FIFO<N> {
@@ -57,30 +60,29 @@ impl<const N: usize> Logic for DDR7FIFO<N> {
         self.mig.raw_neg_clock.next = self.sys_clock_n.val();
         // Connect the write interface to the front porch
         self.front_porch.write_clock.next = self.write_clock.val();
+        self.front_porch.write_reset.next = self.write_reset.val();
         self.front_porch.data_in.next = self.data_in.val();
         self.front_porch.write.next = self.write.val();
         self.full.next = self.front_porch.full.val();
         // Connect the read interface to the back porch
         self.back_porch.read_clock.next = self.read_clock.val();
+        self.back_porch.read_reset.next = self.read_reset.val();
         self.data_out.next = self.back_porch.data_out.val();
         self.back_porch.read.next = self.read.val();
         self.empty.next = self.back_porch.empty.val();
         // Connect the front porch to the MIG
         self.mig.write_data_in.next = self.front_porch.data_out.val();
         self.front_porch.read_clock.next = self.mig.clock.val();
+        self.front_porch.read_reset.next = self.reset.val();
         self.front_porch.read.next = false;
         // Connect the back porch to the MIG
         self.back_porch.data_in.next = self.mig.read_data_out.val();
         self.back_porch.write_clock.next = self.mig.clock.val();
+        self.back_porch.write_reset.next = self.reset.val();
         self.back_porch.write.next = false;
         // Clock the flops
-        self.write_address.clock.next = self.mig.clock.val();
-        self.read_address.clock.next = self.mig.clock.val();
-        self.state.clock.next = self.mig.clock.val();
-        // Latch prevention for the flops
-        self.write_address.d.next = self.write_address.q.val();
-        self.read_address.d.next = self.read_address.q.val();
-        self.state.d.next = self.state.q.val();
+        self.mig_clock.next = self.mig.clock.val();
+        dff_setup!(self, mig_clock, reset, write_address, read_address, state);
         // Set default inputs for the mig
         self.mig.address.next = 0_u32.into();
         self.mig.enable.next = false;
@@ -152,7 +154,9 @@ fn test_ddr7_fifo_gen() {
     ddr.uut.write.connect();
     ddr.uut.read.connect();
     ddr.uut.write_clock.connect();
+    ddr.uut.write_reset.connect();
     ddr.uut.read_clock.connect();
+    ddr.uut.read_reset.connect();
     ddr.uut.reset.connect();
     ddr.connect_all();
     yosys_validate("ddr7", &generate_verilog(&ddr)).unwrap();

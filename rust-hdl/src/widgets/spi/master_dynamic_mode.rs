@@ -49,6 +49,7 @@ impl Into<SPIConfig> for SPIConfigDynamicMode {
 #[derive(LogicBlock)]
 pub struct SPIMasterDynamicMode<const N: usize> {
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub bits_outbound: Signal<In, Bits<16>>,
     pub data_outbound: Signal<In, Bits<N>>,
     pub data_inbound: Signal<Out, Bits<N>>,
@@ -80,6 +81,7 @@ impl<const N: usize> SPIMasterDynamicMode<N> {
         assert!(8 * config.speed_hz <= config.clock_speed);
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             bits_outbound: Default::default(),
             data_outbound: Default::default(),
             data_inbound: Default::default(),
@@ -112,19 +114,8 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
     #[hdl_gen]
     fn update(&mut self) {
         // Wire up the clocks.
-        self.register_out.clock.next = self.clock.val();
-        self.register_in.clock.next = self.clock.val();
-        self.state.clock.next = self.clock.val();
-        self.strobe.clock.next = self.clock.val();
-        self.pointer.clock.next = self.clock.val();
-        self.clock_state.clock.next = self.clock.val();
-        self.done_flop.clock.next = self.clock.val();
-        self.msel_flop.clock.next = self.clock.val();
-        self.mosi_flop.clock.next = self.clock.val();
-        self.cpha_flop.clock.next = self.clock.val();
-        self.cpol_flop.clock.next = self.clock.val();
-        self.miso_synchronizer.clock.next = self.clock.val();
-        self.continued_save.clock.next = self.clock.val();
+        dff_setup!(self, clock, reset, register_out, register_in, state, pointer, clock_state, done_flop, msel_flop, mosi_flop, continued_save, cpha_flop, cpol_flop);
+        clock_reset!(self, clock, reset, miso_synchronizer, strobe);
         // Activate the baud strobe
         self.strobe.enable.next = true;
         // Connect the MISO synchronizer to the input line
@@ -138,17 +129,7 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
         self.transfer_done.next = self.done_flop.q.val();
         // Latch prevention
         self.done_flop.d.next = false;
-        self.register_out.d.next = self.register_out.q.val();
-        self.state.d.next = self.state.q.val();
-        self.pointer.d.next = self.pointer.q.val();
-        self.register_in.d.next = self.register_in.q.val();
-        self.msel_flop.d.next = self.msel_flop.q.val();
-        self.continued_save.d.next = self.continued_save.q.val();
-        self.mosi_flop.d.next = self.mosi_flop.q.val();
-        self.clock_state.d.next = self.clock_state.q.val();
         self.pointerm1.next = self.pointer.q.val() - 1_u32;
-        self.cpol_flop.d.next = self.cpol_flop.q.val();
-        self.cpha_flop.d.next = self.cpha_flop.q.val();
         self.busy.next = self.state.q.val() != SPIState::Idle;
         // The main state machine
         match self.state.q.val() {
@@ -260,6 +241,7 @@ fn test_spi_master_dynamic_mode_is_synthesizable() {
 
     let mut dev = Wrap::default();
     dev.uut.clock.connect();
+    dev.uut.reset.connect();
     dev.uut.bits_outbound.connect();
     dev.uut.data_outbound.connect();
     dev.uut.start_send.connect();

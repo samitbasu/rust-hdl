@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 use crate::widgets::prelude::{DelayLine, MemoryTimings};
 use crate::widgets::sdram::cmd::{SDRAMCommand, SDRAMCommandEncoder};
@@ -36,6 +37,7 @@ enum State {
 #[derive(LogicBlock)]
 pub struct SDRAMBaseController<const R: usize, const C: usize, const L: usize, const D: usize> {
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub sdram: SDRAMDriver<D>,
     // Command interface
     pub data_in: Signal<In, Bits<L>>,
@@ -101,6 +103,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
         let mode_register = cas_delay << 4;
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             sdram: Default::default(),
             cmd: Default::default(),
             data_in: Default::default(),
@@ -163,36 +166,16 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
 {
     #[hdl_gen]
     fn update(&mut self) {
-        // Clock the internal logic
-        self.state.clock.next = self.clock.val();
-        self.reg_data_write.clock.next = self.clock.val();
-        self.reg_data_read.clock.next = self.clock.val();
-        self.reg_address.clock.next = self.clock.val();
-        self.delay_counter.clock.next = self.clock.val();
-        self.refresh_counter.clock.next = self.clock.val();
-        self.read_valid.clock.next = self.clock.val();
-        self.transfer_counter.clock.next = self.clock.val();
-        self.write_pending.clock.next = self.clock.val();
-        self.read_pending.clock.next = self.clock.val();
-        self.data_out_counter.clock.next = self.clock.val();
-        self.read_ready.clock.next = self.clock.val();
-        self.refresh_needed.clock.next = self.clock.val();
-        self.reg_cmd_address.clock.next = self.clock.val();
-        self.reg_cmd_address.d.next = self.reg_cmd_address.q.val();
-        // Latch prevention
-        self.state.d.next = self.state.q.val();
+        dff_setup!(self, clock, reset, state, reg_data_write, reg_data_read,
+        reg_address, reg_cmd_address, delay_counter, refresh_counter, transfer_counter,
+        write_pending, read_pending, read_ready, refresh_needed, data_out_counter);
+        clock_reset!(self, clock, reset, read_valid);
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
         self.refresh_counter.d.next = self.refresh_counter.q.val() + 1_usize;
         self.cmd.next = SDRAMCommand::NOP;
         self.sdram.address.next = 0_usize.into();
         self.sdram.bank.next = 0_usize.into();
         self.data_out.next = self.reg_data_read.q.val();
-        self.reg_data_write.d.next = self.reg_data_write.q.val();
-        self.reg_data_read.d.next = self.reg_data_read.q.val();
-        self.reg_address.d.next = self.reg_address.q.val();
-        self.write_pending.d.next = self.write_pending.q.val();
-        self.read_pending.d.next = self.read_pending.q.val();
-        self.refresh_needed.d.next = self.refresh_needed.q.val();
         self.data_out_counter.d.next =
             self.data_out_counter.q.val() + self.read_valid.data_out.val();
         self.data_valid.next = self.read_ready.q.val();
@@ -380,5 +363,6 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
         self.sdram.we_not.next = self.encode.we_not.val();
         self.encode.cmd.next = self.cmd.val();
         self.sdram.clk.next = self.clock.val();
+        self.sdram.reset.next = self.reset.val();
     }
 }

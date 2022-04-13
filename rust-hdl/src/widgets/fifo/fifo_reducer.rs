@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::dff_setup;
 use crate::widgets::dff::DFF;
 
 #[derive(LogicBlock)]
@@ -14,6 +15,7 @@ pub struct FIFOReducer<const DW: usize, const DN: usize, const REVERSE: bool> {
     // This is a synchronous design.  The clock is assumed
     // to be shared with both the input and output fifos.
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     loaded: DFF<Bit>,
     data_available: Signal<Local, Bit>,
     can_write: Signal<Local, Bit>,
@@ -36,6 +38,7 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Default
             write: Default::default(),
             full: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             loaded: Default::default(),
             data_available: Default::default(),
             can_write: Default::default(),
@@ -51,7 +54,7 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Logic for FIFOReduce
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the clock
-        self.loaded.clock.next = self.clock.val();
+        dff_setup!(self, clock, reset, loaded);
         // Input data is available if we are loaded or if the read interface is not empty
         self.data_available.next = self.loaded.q.val() || !self.empty.val();
         // Output space is available if the write interface is not full and we have data available
@@ -83,6 +86,7 @@ fn fifo_reducer_is_synthesizable() {
     dev.uut.full.connect();
     dev.uut.data_in.connect();
     dev.uut.clock.connect();
+    dev.uut.reset.connect();
     dev.connect_all();
     yosys_validate("fifo_reducer", &generate_verilog(&dev)).unwrap();
     println!("{}", generate_verilog(&dev));

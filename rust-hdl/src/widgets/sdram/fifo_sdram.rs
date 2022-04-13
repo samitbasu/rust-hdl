@@ -1,5 +1,6 @@
 use crate::core::prelude::*;
-use crate::widgets::prelude::{AsynchronousFIFO, MemoryTimings, OutputBuffer, DFF, SDRAMBurstController};
+use crate::dff_setup;
+use crate::widgets::prelude::{AsynchronousFIFO, MemoryTimings, OutputBuffer, DFF, SDRAMBurstController, AutoReset};
 use crate::widgets::sdram::SDRAMDriver;
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
@@ -43,6 +44,10 @@ pub struct SDRAMFIFOController<
     state: DFF<State>,
     line_to_word_ratio: Constant<Bits<A>>,
     fill: DFF<Bits<A>>,
+    interface_autoreset: AutoReset,
+    dram_autoreset: AutoReset,
+    interface_reset: Signal<Local, Reset>,
+    ram_reset: Signal<Local, Reset>,
 }
 
 impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usize>
@@ -77,6 +82,10 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
             state: Default::default(),
             line_to_word_ratio: Constant::new(L.into()),
             fill: Default::default(),
+            interface_autoreset: Default::default(),
+            dram_autoreset: Default::default(),
+            interface_reset: Default::default(),
+            ram_reset: Default::default()
         }
     }
 }
@@ -86,24 +95,24 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
 {
     #[hdl_gen]
     fn update(&mut self) {
-        self.controller.clock.next = self.ram_clock.val();
+        self.interface_autoreset.clock.next = self.clock.val();
+        self.dram_autoreset.clock.next = self.clock.val();
+        self.interface_reset.next = self.interface_autoreset.reset.val();
+        self.ram_reset.next = self.dram_autoreset.reset.val();
+        clock_reset!(self, ram_clock, ram_reset, controller);
         SDRAMDriver::<D>::link(&mut self.sdram, &mut self.controller.sdram);
-        self.read_pointer.clock.next = self.ram_clock.val();
-        self.read_pointer.d.next = self.read_pointer.q.val();
-        self.write_pointer.clock.next = self.ram_clock.val();
-        self.write_pointer.d.next = self.write_pointer.q.val();
-        self.dram_is_empty.clock.next = self.ram_clock.val();
-        self.dram_is_full.clock.next = self.ram_clock.val();
-        self.can_read.clock.next = self.ram_clock.val();
-        self.can_write.clock.next = self.ram_clock.val();
+        dff_setup!(self, ram_clock, ram_reset, read_pointer, write_pointer, dram_is_empty,
+            dram_is_full, can_read, can_write, state, fill);
         // The FP write clock is external, but the read clock is the DRAM clock
         self.fp.write_clock.next = self.clock.val();
+        self.fp.write_reset.next = self.interface_reset.val();
         self.fp.read_clock.next = self.ram_clock.val();
+        self.fp.read_reset.next = self.ram_reset.val();
         // The BP write clock is DRAM, the read clock is external
         self.bp.write_clock.next = self.ram_clock.val();
+        self.bp.write_reset.next = self.ram_reset.val();
         self.bp.read_clock.next = self.clock.val();
-        self.state.clock.next = self.ram_clock.val();
-        self.state.d.next = self.state.q.val();
+        self.bp.read_reset.next = self.interface_reset.val();
         // Connect the write interface to the FP fifo
         self.fp.data_in.next = self.data_in.val();
         self.fp.write.next = self.write.val();

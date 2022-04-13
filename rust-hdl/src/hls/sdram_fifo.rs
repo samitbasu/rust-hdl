@@ -7,6 +7,7 @@ use crate::widgets::sdram::SDRAMDriver;
 pub struct SDRAMFIFO<const R: usize, const C: usize, const P: u32, const D: usize, const A: usize>
 {
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub sdram: SDRAMDriver<D>,
     pub ram_clock: Signal<In, Clock>,
     pub bus_write: FIFOWriteResponder<Bits<D>>,
@@ -43,6 +44,7 @@ impl<const R: usize, const C: usize, const P: u32, const D: usize, const A: usiz
     ) -> SDRAMFIFO<R, C, P, D, A> {
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             sdram: Default::default(),
             ram_clock: Default::default(),
             bus_write: Default::default(),
@@ -60,6 +62,7 @@ fn test_sdram_fifo_synthesizes() {
         OutputBuffer::Wired,
     );
     uut.clock.connect();
+    uut.reset.connect();
     uut.ram_clock.connect();
     uut.bus_read.link_connect_dest();
     uut.bus_write.link_connect_dest();

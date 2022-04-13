@@ -42,6 +42,7 @@ pub struct OKTest1 {
     pub ok_host: OpalKellyHost,
     pub led: Signal<Out, Bits<8>>,
     pub pulser: Pulser,
+    pub auto_reset: AutoReset,
 }
 
 impl OKTest1 {
@@ -51,6 +52,7 @@ impl OKTest1 {
             ok_host: OpalKellyHost::xem_6010(),
             led: pins::xem_6010_leds(),
             pulser: Pulser::new(MHZ48, 1.0, Duration::from_millis(500)),
+            auto_reset: Default::default()
         }
     }
 }
@@ -59,7 +61,9 @@ impl Logic for OKTest1 {
     #[hdl_gen]
     fn update(&mut self) {
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
+        self.auto_reset.clock.next = self.ok_host.ti_clk.val();
         self.pulser.clock.next = self.ok_host.ti_clk.val();
+        self.pulser.reset.next = self.auto_reset.reset.val();
         self.pulser.enable.next = true;
         if self.pulser.pulse.val() {
             self.led.next = 0xFF_u8.into();

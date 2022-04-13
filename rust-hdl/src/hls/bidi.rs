@@ -28,6 +28,7 @@ pub struct BidiBusD<T: Synth> {
 pub struct BidiMaster<T: Synth> {
     pub bus: BidiBusM<T>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     bus_buffer: TristateBuffer<T>,
     pub data_to_bus: FIFOReadController<T>,
     pub data_from_bus: FIFOWriteController<T>,
@@ -39,9 +40,7 @@ pub struct BidiMaster<T: Synth> {
 impl<T: Synth> Logic for BidiMaster<T> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.state.clock.next = self.clock.val();
-        // Latch prevention
-        self.state.d.next = self.state.q.val();
+        dff_setup!(self, clock, reset, state);
         self.bus_buffer.write_enable.next = false;
         self.bus.sig_not_read.next = true;
         self.bus.sig_not_write.next = true;
@@ -112,6 +111,7 @@ fn test_bidi_master2_synthesizable() {
     let mut uut = BidiMaster::<Bits<8>>::default();
     uut.bus.link_connect_dest();
     uut.clock.connect();
+    uut.reset.connect();
     uut.data_to_bus.empty.connect();
     uut.data_to_bus.almost_empty.connect();
     uut.data_to_bus.data.connect();
@@ -119,7 +119,6 @@ fn test_bidi_master2_synthesizable() {
     uut.data_from_bus.almost_full.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("bidi_master2", &vlog).unwrap();
 }
 

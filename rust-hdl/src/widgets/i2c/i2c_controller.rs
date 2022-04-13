@@ -246,6 +246,7 @@ fn test_i2c_controller_synthesizes() {
 #[derive(LogicBlock)]
 struct I2CControllerTest {
     clock: Signal<In, Clock>,
+    reset: Signal<In, Reset>,
     controller: I2CController,
     target_1: I2CTestTarget,
     target_2: I2CTestTarget,
@@ -256,9 +257,7 @@ struct I2CControllerTest {
 impl Logic for I2CControllerTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.controller.clock.next = self.clock.val();
-        self.target_1.clock.next = self.clock.val();
-        self.target_2.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, controller, target_1, target_2);
         Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.controller.scl);
         Signal::<InOut, Bit>::join(&mut self.pullup_sda.bus, &mut self.controller.sda);
         Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.target_1.scl);
@@ -271,7 +270,6 @@ impl Logic for I2CControllerTest {
         Signal::<InOut, Bit>::join(&mut self.controller.scl, &mut self.target_2.scl);
         self.pullup_scl.write_data.next = true;
         self.pullup_sda.write_data.next = true;
-        self.controller.reset.next = false.into();
     }
 }
 
@@ -283,6 +281,7 @@ impl Default for I2CControllerTest {
         };
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             controller: I2CController::new(config),
             target_1: I2CTestTarget::new(0x53),
             target_2: I2CTestTarget::new(0x57),
@@ -317,6 +316,7 @@ fn test_i2c_controller_operation() {
         .collect::<Vec<_>>();
     let mut uut = I2CControllerTest::default();
     uut.clock.connect();
+    uut.reset.connect();
     uut.controller.cmd.connect();
     uut.controller.run.connect();
     uut.controller.write_data_in.connect();
@@ -339,6 +339,7 @@ fn test_i2c_controller_operation() {
     });
     sim.add_testbench(move |mut sim: Sim<I2CControllerTest>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         // Check that a write to an invalid address is NACKed.
         i2c_begin_write!(sim, clock, x, 0x54_u32);
         sim_assert!(sim, x.controller.nack.val() & !x.controller.ack.val(), x);
@@ -369,7 +370,6 @@ fn test_i2c_controller_operation() {
         }
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 60_000_000_000, "i2c_controller.vcd")
+    sim.run_to_file(Box::new(uut), 80_000_000_000, "i2c_controller.vcd")
         .unwrap()
-    //    sim.run(Box::new(uut), 40_000_000_000).unwrap()
 }

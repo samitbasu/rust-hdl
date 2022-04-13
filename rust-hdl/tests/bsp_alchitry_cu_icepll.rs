@@ -11,7 +11,5 @@ fn test_pll_synthesizable() {
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("vlog", &vlog).unwrap();
-    println!("{}", vlog);
-    println!("{}", target_path!("alchitry_cu/pll_cu"));
     rust_hdl::bsp::alchitry_cu::synth::generate_bitstream(uut, target_path!("alchitry_cu/pll_cu"));
 }

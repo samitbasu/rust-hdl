@@ -35,6 +35,7 @@ impl<const D: usize, const A: usize, const W: usize> Logic for HLSSPIMaster<D, A
     #[hdl_gen]
     fn update(&mut self) {
         self.core.clock.next = self.bridge.clock_out.val();
+        self.core.reset.next = self.bridge.reset_out.val();
         self.core.data_outbound.next = self.data_outbound.port_out.val();
         self.data_inbound.port_in.next = self.core.data_inbound.val();
         self.data_inbound.strobe_in.next = self.core.transfer_done.val();
@@ -111,6 +112,7 @@ impl<const D: usize, const A: usize, const W: usize> Logic for HLSSPIMasterDynam
     #[hdl_gen]
     fn update(&mut self) {
         self.core.clock.next = self.bridge.clock_out.val();
+        self.core.reset.next = self.bridge.reset_out.val();
         self.core.data_outbound.next = self.data_outbound.port_out.val();
         self.data_inbound.port_in.next = self.core.data_inbound.val();
         self.data_inbound.strobe_in.next = self.core.transfer_done.val();

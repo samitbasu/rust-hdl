@@ -42,10 +42,10 @@ impl Logic for Pulser {
 fn test_pulser_synthesis() {
     let mut uut = Pulser::new(1_000_000, 1.0, Duration::from_millis(100));
     uut.clock.connect();
+    uut.reset.connect();
     uut.enable.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("pulser", &vlog).unwrap();
 }
 
@@ -56,19 +56,30 @@ fn test_pulser() {
     sim.add_clock(5, |x: &mut Box<Pulser>| x.clock.next = !x.clock.val());
     sim.add_testbench(|mut sim: Sim<Pulser>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         x.enable.next = true;
         x = sim.wait(100_000, x)?;
         sim.done(x)?;
         Ok(())
     });
-    let mut uut = Pulser::new(KHZ10, 100.0, Duration::from_millis(100));
+    sim.add_testbench(|mut sim: Sim<Pulser>| {
+        let mut x = sim.init()?;
+        for _j in 0..20 {
+            x = sim.watch(|x| x.pulse.val(), x)?;
+            for _i in 0..10 {
+                wait_clock_cycle!(sim, clock, x);
+                sim_assert!(sim, x.pulse.val(), x);
+            }
+            wait_clock_cycle!(sim, clock, x);
+            sim_assert!(sim, !x.pulse.val(), x);
+        }
+        sim.done(x)?;
+        Ok(())
+    });
+    let mut uut = Pulser::new(KHZ10, 100.0, Duration::from_millis(1));
     uut.clock.connect();
+    uut.reset.connect();
     uut.enable.connect();
     uut.connect_all();
-    sim.run_traced(
-        Box::new(uut),
-        1_000_000,
-        std::fs::File::create("/tmp/pulser.vcd").unwrap(),
-    )
-    .unwrap();
+    sim.run(Box::new(uut),1_000_000).unwrap();
 }

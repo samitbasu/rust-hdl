@@ -218,9 +218,11 @@ fn test_vec_sync_synthesizable() {
     top_wrap!(VectorSynchronizer<Bits<8>>, Wrapper);
     let mut dev: Wrapper = Default::default();
     dev.uut.clock_in.connect();
+    dev.uut.reset_in.connect();
     dev.uut.sig_in.connect();
     dev.uut.send.connect();
     dev.uut.clock_out.connect();
+    dev.uut.reset_out.connect();
     dev.connect_all();
     yosys_validate("vsync", &generate_verilog(&dev)).unwrap();
 }

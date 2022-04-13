@@ -37,6 +37,7 @@ enum State {
 #[derive(LogicBlock)]
 pub struct SDRAMBurstController<const R: usize, const C: usize, const L: u32, const D: usize> {
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub sdram: SDRAMDriver<D>,
     // The input interface does not allow flow control.  You must hook this up to a
     // FIFO on the consumer side to send data or risk data loss.  It is your
@@ -109,6 +110,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize>
         let mode_register = cas_delay << 4;
         Self {
             clock: Default::default(),
+            reset: Default::default(),
             sdram: Default::default(),
             cmd: Default::default(),
             data_in: Default::default(),
@@ -170,38 +172,20 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the internal logic
-        self.state.clock.next = self.clock.val();
-        self.reg_address.clock.next = self.clock.val();
-        self.delay_counter.clock.next = self.clock.val();
-        self.refresh_counter.clock.next = self.clock.val();
-        self.read_valid.clock.next = self.clock.val();
-        self.transfer_counter.clock.next = self.clock.val();
-        self.write_pending.clock.next = self.clock.val();
-        self.read_pending.clock.next = self.clock.val();
-        self.refresh_needed.clock.next = self.clock.val();
-        self.reg_cmd_address.clock.next = self.clock.val();
-        self.reg_cmd_address.d.next = self.reg_cmd_address.q.val();
-        self.data_in_reg.clock.next = self.clock.val();
-        self.data_out_reg.clock.next = self.clock.val();
-        self.data_strobe_reg.clock.next = self.clock.val();
+        dff_setup!(self, clock, reset, state, reg_address, reg_cmd_address, delay_counter, 
+            refresh_counter, transfer_counter, write_pending, read_pending, refresh_needed, 
+            data_in_reg, data_strobe_reg, data_out_reg);
+        clock_reset!(self, clock, reset, read_valid);
         // Latch prevention
-        self.state.d.next = self.state.q.val();
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
         self.refresh_counter.d.next = self.refresh_counter.q.val() + 1_usize;
         self.cmd.next = SDRAMCommand::NOP;
         self.sdram.address.next = 0_usize.into();
         self.sdram.bank.next = 0_usize.into();
-        self.data_in_reg.d.next = self.data_in_reg.q.val();
-        self.data_out_reg.d.next = self.data_out_reg.q.val();
-        self.data_strobe_reg.d.next = self.data_strobe_reg.q.val();
         // Insert registers to decouple the DRAM bus from the external bus
         self.data_out.next = self.data_out_reg.q.val();
         self.data_out_reg.d.next = self.sdram.read_data.val();
         self.data_valid.next = self.read_valid.data_out.val();
-        self.reg_address.d.next = self.reg_address.q.val();
-        self.write_pending.d.next = self.write_pending.q.val();
-        self.read_pending.d.next = self.read_pending.q.val();
-        self.refresh_needed.d.next = self.refresh_needed.q.val();
         self.sdram.write_enable.next = false;
         // Connect the DRAM to the staging register to decouple timing
         self.sdram.write_data.next = self.data_in_reg.q.val();
@@ -384,6 +368,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
         self.sdram.we_not.next = self.encode.we_not.val();
         self.encode.cmd.next = self.cmd.val();
         self.sdram.clk.next = self.clock.val();
+        self.sdram.reset.next = self.reset.val();
         self.data_in_reg.d.next = self.data_in.val();
     }
 }

@@ -379,8 +379,8 @@ macro_rules! reset_sim {
         $me = $sim.watch(|x| x.$($clock).+.val().clk, $me)?;
         $me.$($reset).+.next = true.into();
         $me = $sim.watch(|x| !x.$($clock).+.val().clk, $me)?;
-        $me.$($reset).+.next = false.into();
         $me = $sim.watch(|x| x.$($clock).+.val().clk, $me)?;
+        $me.$($reset).+.next = false.into();
     }
 }
 
