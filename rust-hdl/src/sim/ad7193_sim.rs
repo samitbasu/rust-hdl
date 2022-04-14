@@ -335,6 +335,8 @@ fn test_reg_reads() {
     sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
+        // Wait for reset to complete
+        wait_clock_cycles!(sim, clock, x, 20);
         // Do the first read to initialize the chip
         let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, &mut sim)?;
         x = result.1;
@@ -362,6 +364,8 @@ fn test_reg_writes() {
     sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
+        // Wait for reset to complete
+        wait_clock_cycles!(sim, clock, x, 20);
         // Initialize the chip...
         let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, &mut sim)?;
         x = result.1;
@@ -394,6 +398,8 @@ fn test_single_conversion() {
     sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
+        // Wait for reset to complete
+        wait_clock_cycles!(sim, clock, x, 20);
         // Initialize the chip...
         let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, &mut sim)?;
         x = result.1;

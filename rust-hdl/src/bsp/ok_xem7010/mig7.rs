@@ -188,8 +188,7 @@ endmodule
 #[test]
 fn test_mig7_gen() {
     let mig = MemoryInterfaceGenerator7Series::default();
-    let vlog = generate_verilog_unchecked(&mig);
-    println!("{}", vlog);
+    let _vlog = generate_verilog_unchecked(&mig);
 }
 
 #[derive(LogicState, Copy, Clone, Debug, PartialEq)]

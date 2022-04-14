@@ -114,7 +114,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
             data_out: Default::default(),
             data_valid: Default::default(),
             error: Default::default(),
-            boot_delay: Constant::new((timings.t_boot() + 10).into()),
+            boot_delay: Constant::new((timings.t_boot() + 50).into()),
             t_rp: Constant::new((timings.t_rp()).into()),
             t_rfc: Constant::new((timings.t_rfc()).into()),
             t_refresh_max: Constant::new((timings.t_refresh_max() * 9 / 10).into()),

@@ -97,6 +97,7 @@ fn test_spi_works() {
     });
     sim.add_testbench(move |mut sim: Sim<SPITest>| {
         let mut x = sim.init()?;
+        wait_clock_cycles!(sim, bidi_clock, x, 20);
         wait_clock_true!(sim, bidi_clock, x);
         // Write the outgoing word
         hls_host_write!(

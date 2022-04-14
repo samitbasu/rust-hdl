@@ -40,7 +40,6 @@ fn test_tristate_buffer_works() {
     uut.right.buffer.write_enable.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     println!("Signal IDs");
     println!("Left buffer bus_wire {}", uut.left.bus_wire.id());
     println!("Right buffer bus_wire {}", uut.right.bus_wire.id());

@@ -29,7 +29,7 @@ fn test_soc_chip_works() {
         // Send a PING command
         wait_clock_true!(sim, clock, x);
         for iter in 0..10 {
-            wait_clock_cycles!(sim, clock, x, 5);
+            wait_clock_cycles!(sim, clock, x, 20);
             // A ping is 0x01XX, where XX is the code returned by the controller
             x.from_cpu.data.next = (0x0167_u16 + iter).into();
             x.from_cpu.write.next = true;
@@ -80,7 +80,7 @@ fn test_soc_chip_read_write_works() {
         // Send 10 pings
         // Send a PING command
         wait_clock_true!(sim, clock, x);
-        wait_clock_cycles!(sim, clock, x, 5);
+        wait_clock_cycles!(sim, clock, x, 20);
         x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
         // Write the 4 data elements to port 0x00
         x.from_cpu.data.next = 0x0300_u16.into();

@@ -34,7 +34,6 @@ fn test_synthesis_ram() {
     uut.ram.read_address.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("ram_2", &vlog).unwrap();
 }
 

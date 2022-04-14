@@ -31,7 +31,6 @@ fn sync_is_synthesizable() {
     dev.uut.sig_in.connect();
     dev.connect_all();
     yosys_validate("sync", &generate_verilog(&dev)).unwrap();
-    println!("{}", generate_verilog(&dev));
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
@@ -107,7 +106,6 @@ fn sync_sender_is_synthesizable() {
     dev.uut.ack_in.connect();
     dev.uut.send.connect();
     dev.connect_all();
-    println!("{}", generate_verilog(&dev));
     yosys_validate("sync_send", &generate_verilog(&dev)).unwrap();
 }
 
@@ -172,7 +170,6 @@ fn sync_receiver_is_synthesizable() {
     dev.uut.sig_cross.connect();
     dev.uut.flag_in.connect();
     dev.connect_all();
-    println!("{}", generate_verilog(&dev));
     yosys_validate("sync_recv", &generate_verilog(&dev)).unwrap();
 }
 

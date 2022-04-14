@@ -1,7 +1,7 @@
+use rust_hdl::bsp::alchitry_cu::pins::clock;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 use std::time::Duration;
-use rust_hdl::bsp::alchitry_cu::pins::clock;
 
 pub const MHZ100: u64 = 100_000_000;
 
@@ -40,7 +40,7 @@ impl Default for AlchitryCuPulser {
             clock: rust_hdl::bsp::alchitry_cu::pins::clock(),
             reset: Default::default(),
             leds: rust_hdl::bsp::alchitry_cu::pins::leds(),
-            auto_reset: Default::default()
+            auto_reset: Default::default(),
         }
     }
 }

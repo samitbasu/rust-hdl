@@ -64,7 +64,6 @@ fn test_delay_synthesizes() {
     uut.delay.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("delay_line", &vlog).unwrap();
 }
 

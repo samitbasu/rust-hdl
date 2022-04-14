@@ -162,6 +162,7 @@ fn test_spi_mux_works() {
         let spi2_start_flag = ports.iter().position(|x| x == "spi2_start_flag").unwrap();
         let mux_select = ports.iter().position(|x| x == "mux_select").unwrap();
         println!("{:?}", ports);
+        wait_clock_cycles!(sim, bidi_clock, x, 20);
         wait_clock_true!(sim, bidi_clock, x);
         // Write the outgoing word
         hls_host_write!(

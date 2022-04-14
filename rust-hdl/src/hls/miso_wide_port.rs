@@ -84,6 +84,5 @@ fn test_local_in_wide_port_is_synthesizable() {
     dev.strobe_in.connect();
     dev.connect_all();
     let vlog = generate_verilog(&dev);
-    println!("{}", vlog);
     yosys_validate("local_wide_in", &vlog).unwrap();
 }

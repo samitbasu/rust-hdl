@@ -47,7 +47,7 @@ impl<const P: usize> AlchitryCuPWM<P> {
             rom: ROM::new(rom),
             counter: Default::default(),
             auto_reset: Default::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }
@@ -57,7 +57,6 @@ fn test_pwm_synthesizes() {
     let mut uut: AlchitryCuPWM<6> = AlchitryCuPWM::new(100_000_000);
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("pwm_cu2", &vlog).unwrap();
     rust_hdl::bsp::alchitry_cu::synth::generate_bitstream(uut, target_path!("alchitry_cu/pwm_cu2"));
 }

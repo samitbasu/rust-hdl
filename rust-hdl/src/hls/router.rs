@@ -133,7 +133,5 @@ fn test_router_is_synthesizable() {
     }
     router.connect_all();
     let vlog = generate_verilog(&router);
-    //println!("{}", vlog);
-    println!("{:?}", router.ports());
     yosys_validate("router", &vlog).unwrap();
 }

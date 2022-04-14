@@ -37,6 +37,5 @@ fn test_clock_buffer() {
     uut.uut.clock_in.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("bufg", &vlog).unwrap();
 }

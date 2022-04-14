@@ -71,6 +71,7 @@ fn test_mig() {
             sim_assert_eq!(sim, x.p0_rd.data.val(), *ndx, x);
             x.p0_rd.enable.next = true;
             wait_clock_cycle!(sim, p0_rd.clock, x);
+            x.p0_rd.enable.next = false;
         }
         x.p0_rd.enable.next = false;
         sim_assert!(sim, x.p0_rd.empty.val(), x);
@@ -86,6 +87,7 @@ fn test_mig() {
             sim_assert_eq!(sim, x.p0_rd.data.val(), *ndx, x);
             x.p0_rd.enable.next = true;
             wait_clock_cycle!(sim, p0_rd.clock, x);
+            x.p0_rd.enable.next = false;
         }
         x.p0_rd.enable.next = false;
         x = sim.wait(100, x)?;

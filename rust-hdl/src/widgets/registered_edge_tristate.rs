@@ -74,6 +74,5 @@ fn test_tristate_edge_synthesizes() {
     uut.uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("tristate_reg", &vlog).unwrap()
 }

@@ -39,6 +39,5 @@ fn test_tristate_synthesizes() {
     uut.uut.write_enable.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("tristate", &vlog).unwrap()
 }

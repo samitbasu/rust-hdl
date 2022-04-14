@@ -27,6 +27,5 @@ fn signed_vals_synthesize() {
     uut.uut.x.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("vlog = {}", vlog);
     yosys_validate("signed", &vlog).unwrap()
 }

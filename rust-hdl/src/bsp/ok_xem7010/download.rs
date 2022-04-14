@@ -88,6 +88,5 @@ impl Logic for OpalKellyDDRBackedDownloadFIFO7Series {
 #[test]
 fn test_ddr_download_fifo7_gen() {
     let ddr = OpalKellyDDRBackedDownloadFIFO7Series::new(0xA0);
-    let vlog = generate_verilog_unchecked(&ddr);
-    println!("{}", vlog);
+    let _vlog = generate_verilog_unchecked(&ddr);
 }

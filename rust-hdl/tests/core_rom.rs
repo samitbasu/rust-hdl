@@ -28,7 +28,6 @@ fn test_synthesis_rom() {
     uut.rom.address.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("rom", &vlog).unwrap();
 }
 

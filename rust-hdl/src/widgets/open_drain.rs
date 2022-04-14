@@ -36,6 +36,5 @@ fn test_opendrain_synthesizes() {
     uut.uut.enable.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("open_drain", &vlog).unwrap()
 }

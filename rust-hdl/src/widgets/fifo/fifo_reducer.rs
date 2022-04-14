@@ -89,5 +89,4 @@ fn fifo_reducer_is_synthesizable() {
     dev.uut.reset.connect();
     dev.connect_all();
     yosys_validate("fifo_reducer", &generate_verilog(&dev)).unwrap();
-    println!("{}", generate_verilog(&dev));
 }

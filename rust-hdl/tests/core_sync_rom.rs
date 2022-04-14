@@ -30,6 +30,5 @@ fn test_synthesis_sync_rom() {
     uut.rom.clock.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("srom", &vlog).unwrap();
 }

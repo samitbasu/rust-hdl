@@ -90,7 +90,6 @@ fn component_fifo_is_synthesizable() {
     dev.uut.data_in.connect();
     dev.connect_all();
     yosys_validate("fifo", &generate_verilog(&dev)).unwrap();
-    println!("{}", generate_verilog(&dev));
 }
 
 #[test]

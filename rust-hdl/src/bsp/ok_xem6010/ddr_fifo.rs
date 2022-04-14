@@ -194,6 +194,5 @@ impl Logic for DDRFIFO {
 #[test]
 fn test_ddr_fifo_gen() {
     let ddr = DDRFIFO::default();
-    let vlog = generate_verilog_unchecked(&ddr);
-    println!("{}", vlog);
+    let _vlog = generate_verilog_unchecked(&ddr);
 }

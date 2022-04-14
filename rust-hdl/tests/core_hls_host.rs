@@ -98,6 +98,8 @@ fn test_ping_works() {
     });
     sim.add_testbench(move |mut sim: Sim<HostTest>| {
         let mut x = sim.init()?;
+        // Wait for reset to complete
+        wait_clock_cycles!(sim, bidi_clock, x, 20);
         for iter in 0..10 {
             wait_clock_cycles!(sim, bidi_clock, x, 5);
             // Send a ping command with ID of 0x67, followed by a NOOP
@@ -134,6 +136,7 @@ fn test_write_command_works() {
     });
     sim.add_testbench(move |mut sim: Sim<HostTest>| {
         let mut x = sim.init()?;
+        wait_clock_cycles!(sim, bidi_clock, x, 20); // Wait for reset
         for iter in 0..10 {
             wait_clock_cycles!(sim, bidi_clock, x, 5);
             // Write a sequence of bytes to the end point
@@ -175,6 +178,7 @@ fn test_read_command_works() {
     });
     sim.add_testbench(move |mut sim: Sim<HostTest>| {
         let mut x = sim.init()?;
+        wait_clock_cycles!(sim, bidi_clock, x, 20); // Wait for reset
         wait_clock_true!(sim, bidi_clock, x);
         for iter in 0..10 {
             wait_clock_cycles!(sim, bidi_clock, x, 5);
@@ -224,7 +228,8 @@ fn test_stream_command_works() {
     });
     sim.add_testbench(move |mut sim: Sim<HostTest>| {
         let mut x = sim.init()?;
-        // Send a PING command
+        wait_clock_cycles!(sim, bidi_clock, x, 20); // Wait for reset
+                                                    // Send a PING command
         wait_clock_true!(sim, bidi_clock, x);
         wait_clock_cycles!(sim, bidi_clock, x, 5);
         // A stream command looks like 0x05XX, where XX is the address to stream from
@@ -246,6 +251,7 @@ fn test_stream_command_works() {
     sim.add_testbench(move |mut sim: Sim<HostTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, sys_clock, x);
+        wait_clock_cycles!(sim, sys_clock, x, 20);
         let o_data = (0..100).map(|x| 0xBAB0_u16 + x).collect::<Vec<_>>();
         hls_fifo_write_lazy!(sim, sys_clock, x, fport.fifo_bus, &o_data);
         sim.done(x)

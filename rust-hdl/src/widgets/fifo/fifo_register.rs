@@ -66,6 +66,5 @@ fn test_register_fifo_is_synthesizable() {
     uut.data_in.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("fifo_reg", &vlog).unwrap();
 }

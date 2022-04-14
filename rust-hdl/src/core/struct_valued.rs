@@ -80,5 +80,5 @@ impl Default for TestBlock {
 fn test_test_block_synthesizes() {
     let mut uut = TopWrap::new(TestBlock::default());
     uut.connect_all();
-    println!("Vlog {}", generate_verilog(&uut));
+    yosys_validate("test_block", &generate_verilog(&uut)).unwrap();
 }

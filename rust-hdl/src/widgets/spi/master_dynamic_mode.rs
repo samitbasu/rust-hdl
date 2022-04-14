@@ -263,6 +263,5 @@ fn test_spi_master_dynamic_mode_is_synthesizable() {
     dev.uut.continued_transaction.connect();
     dev.uut.wires.miso.connect();
     dev.connect_all();
-    println!("{}", generate_verilog(&dev));
     yosys_validate("spi_master_dyn_mode", &generate_verilog(&dev)).unwrap();
 }

@@ -95,7 +95,7 @@ impl<const P: usize> AlchitryCuPWMVec<P> {
             local: Signal::default(),
             faders,
             reset: Default::default(),
-            auto_reset: Default::default()
+            auto_reset: Default::default(),
         }
     }
 }

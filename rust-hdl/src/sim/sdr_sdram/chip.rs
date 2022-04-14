@@ -276,7 +276,6 @@ fn mk_sdr_sim() -> SDRAMSimulator<5, 5, 10, 16> {
 fn test_sdram_sim_synthesizes() {
     let uut = mk_sdr_sim();
     let vlog = generate_verilog(&uut);
-    println!("{}", vlog);
     yosys_validate("sdram", &vlog).unwrap();
 }
 
@@ -422,8 +421,9 @@ macro_rules! sdram_boot {
         wait_clock_true!($sim, $clock, $uut);
         // Wait for 100 microseconds
         // 100 microseconds = 100 * 1_000_000
+        // Pad by 100 nanoseconds
         $uut = $sim.wait(
-            ($timings.initial_delay_in_nanoseconds * 1000.0) as u64,
+            (($timings.initial_delay_in_nanoseconds + 600.0) * 1000.0) as u64,
             $uut,
         )?;
         wait_clock_true!($sim, $clock, $uut);

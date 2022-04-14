@@ -63,7 +63,7 @@ fn test_sdram_works() {
     });
     sim.add_testbench(move |mut sim: Sim<FIFOSDRAMTest>| {
         let mut x = sim.init()?;
-        wait_clock_cycles!(sim, clock, x, 10);
+        wait_clock_cycles!(sim, clock, x, 20);
         wait_clock_true!(sim, clock, x);
         for counter in 0_u32..512_u32 {
             x = sim.watch(|x| !x.fifo.full.val(), x)?;
@@ -76,7 +76,7 @@ fn test_sdram_works() {
     });
     sim.add_testbench(move |mut sim: Sim<FIFOSDRAMTest>| {
         let mut x = sim.init()?;
-        wait_clock_cycles!(sim, clock, x, 10);
+        wait_clock_cycles!(sim, clock, x, 20);
         wait_clock_true!(sim, clock, x);
         for counter in 0_u32..512_u32 {
             x = sim.watch(|x| !x.fifo.empty.val(), x)?;

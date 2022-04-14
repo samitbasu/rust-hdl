@@ -209,7 +209,7 @@ fn test_ok_spi_master_works() {
     sim.add_clock(5, |x: &mut Box<TopOK>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<TopOK>| {
         let mut x = sim.init()?;
-        wait_clock_cycle!(sim, clock, x, 10);
+        wait_clock_cycle!(sim, clock, x, 20);
         wait_clock_true!(sim, clock, x);
         x.slave.data_outbound.next = 0xcafebabe5ea15e5e_u64.into();
         x.slave.bits.next = 64_u32.into();

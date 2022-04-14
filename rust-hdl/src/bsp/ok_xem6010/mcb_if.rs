@@ -127,7 +127,6 @@ fn test_dram_if_ucf() {
         mcb_dram: MCBInterface1GDDR2::xem_6010(),
     };
     let ucf = crate::toolchain::ise::generate_ucf(&uut);
-    println!("{}", ucf);
     assert!(ucf.contains("mcb_dram$zio LOC=Y2"));
     assert!(ucf.contains("mcb_dram$rzq LOC=K7"));
     assert!(ucf.contains("mcb_dram$address<0> LOC=H2;"));

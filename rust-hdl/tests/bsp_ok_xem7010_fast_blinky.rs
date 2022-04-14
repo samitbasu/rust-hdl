@@ -30,7 +30,7 @@ impl OpalKellyFastBlinky {
             clk_100mhz: Default::default(),
             reset_100mhz: Default::default(),
             clock_div: Default::default(),
-            ar: Default::default()
+            ar: Default::default(),
         }
     }
 }

@@ -53,7 +53,7 @@ impl<const P: usize> AlchitryCuPWMVecSyncROM<P> {
             local: Signal::default(),
             faders,
             pll: ICE40PLLBlock::default(),
-            reset: Default::default()
+            reset: Default::default(),
         }
     }
 }

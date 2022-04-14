@@ -44,6 +44,5 @@ fn test_local_in_port_is_synthesizable() {
     dev.ready_in.connect();
     dev.connect_all();
     let vlog = generate_verilog(&dev);
-    println!("{}", vlog);
     yosys_validate("localin", &vlog).unwrap();
 }

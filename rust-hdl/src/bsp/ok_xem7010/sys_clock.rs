@@ -174,6 +174,5 @@ fn test_synth() {
     uut.uut.clock_n.connect();
     uut.uut.clock_p.connect();
     uut.connect_all();
-    println!("vlog: {}", generate_verilog(&uut));
     yosys_validate("ok_sys_clock7", &generate_verilog(&uut)).unwrap();
 }

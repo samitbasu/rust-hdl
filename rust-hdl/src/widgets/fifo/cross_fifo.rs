@@ -124,7 +124,6 @@ fn cross_widen_fifo_is_synthesizable() {
     dev.uut.read_reset.connect();
     dev.connect_all();
     yosys_validate("cross_wide", &generate_verilog(&dev)).unwrap();
-    println!("{}", generate_verilog(&dev))
 }
 
 #[derive(LogicBlock)]

@@ -92,6 +92,5 @@ impl Logic for OpalKellyDDRBackedDownloadFIFO {
 #[test]
 fn test_ddr_download_fifo_gen() {
     let ddr = OpalKellyDDRBackedDownloadFIFO::new(0xA0);
-    let vlog = generate_verilog_unchecked(&ddr);
-    println!("{}", vlog);
+    let _vlog = generate_verilog_unchecked(&ddr);
 }

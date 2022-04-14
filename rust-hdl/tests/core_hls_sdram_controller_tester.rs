@@ -95,6 +95,7 @@ fn test_sdram_controller_tester() {
     });
     sim.add_testbench(move |mut sim: Sim<HostSDRAMControllerFixture>| {
         let mut x = sim.init()?;
+        wait_clock_cycles!(sim, bidi_clock, x, 20);
         wait_clock_true!(sim, bidi_clock, x);
         hls_host_ping!(sim, bidi_clock, x, pc_to_host, 0x67);
         let reply = hls_host_get_word!(sim, bidi_clock, x, host_to_pc);
