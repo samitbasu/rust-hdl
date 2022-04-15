@@ -28,6 +28,7 @@ pub struct MAX31856Simulator {
     // Slave SPI bus
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     // RAM that stores the memory contents
     reg_ram: RAM<Bits<8>, 4>,
     // Used to handle auto conversions
@@ -48,8 +49,6 @@ pub struct MAX31856Simulator {
     boot: DFF<Bits<4>>,
     // DAQ state:
     dstate: DFF<DAQState>,
-    auto_reset: AutoReset,
-    lsr: Signal<Local, Reset>,
 }
 
 const MAX31856_REG_INITS: [u8; 16] = [
@@ -78,8 +77,7 @@ impl MAX31856Simulator {
             boot: DFF::default(),
             reg_index: Default::default(),
             dstate: Default::default(),
-            auto_reset: AutoReset::default(),
-            lsr: Default::default(),
+            reset: Default::default(),
         }
     }
 }
@@ -92,14 +90,11 @@ impl Logic for MAX31856Simulator {
         // Clock the internal logic
         self.reg_ram.write_clock.next = self.clock.val();
         self.reg_ram.read_clock.next = self.clock.val();
-        // Setup the autoreset
-        self.auto_reset.clock.next = self.clock.val();
-        self.lsr.next = self.auto_reset.reset.val();
         // Setup the DFF and internal widgets
         dff_setup!(
             self,
             clock,
-            lsr,
+            reset,
             auto_conversions_enabled,
             auto_conversion_counter,
             state,
@@ -108,7 +103,7 @@ impl Logic for MAX31856Simulator {
             boot,
             dstate
         );
-        clock_reset!(self, clock, lsr, auto_conversion_strobe, spi_slave);
+        clock_reset!(self, clock, reset, auto_conversion_strobe, spi_slave);
         // Set default values
         self.spi_slave.start_send.next = false;
         self.spi_slave.continued_transaction.next = false;
@@ -239,6 +234,7 @@ fn test_max31856_synthesizes() {
     });
     uut.wires.link_connect_dest();
     uut.clock.connect();
+    uut.reset.connect();
     uut.connect_all();
     yosys_validate("max31856", &generate_verilog(&uut)).unwrap();
 }
@@ -254,8 +250,7 @@ struct Test31856 {
 impl Logic for Test31856 {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, master);
-        self.uut.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, master, uut);
         SPIWiresMaster::join(&mut self.master.wires, &mut self.uut.wires);
     }
 }

@@ -21,6 +21,7 @@ pub struct AD7193Simulator {
     // Slave SPI bus
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     // ROM that stores register widths
     reg_width_rom: ROM<Bits<5>, 3>,
     // RAM that stores register contents
@@ -38,8 +39,6 @@ pub struct AD7193Simulator {
     reg_write_index: DFF<Bits<3>>,
     // Rolling counter to emulate conversions
     conversion_counter: DFF<Bits<24>>,
-    auto_reset: AutoReset,
-    lsr: Signal<Local, Reset>,
 }
 
 #[derive(Clone, Copy)]
@@ -88,6 +87,7 @@ impl AD7193Simulator {
         Self {
             wires: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             reg_width_rom,
             reg_ram,
             oneshot: Shot::new(config.spi.clock_speed, config.sample_time),
@@ -98,8 +98,6 @@ impl AD7193Simulator {
             state: Default::default(),
             reg_write_index: Default::default(),
             conversion_counter: Default::default(),
-            auto_reset: Default::default(),
-            lsr: Default::default(),
         }
     }
 }
@@ -109,13 +107,11 @@ impl Logic for AD7193Simulator {
     fn update(&mut self) {
         // Connect the spi bus
         SPIWiresSlave::link(&mut self.wires, &mut self.spi_slave.wires);
-        self.auto_reset.clock.next = self.clock.val();
-        self.lsr.next = self.auto_reset.reset.val();
         // Clock internal components
         self.reg_ram.read_clock.next = self.clock.val();
         self.reg_ram.write_clock.next = self.clock.val();
-        clock_reset!(self, clock, lsr, oneshot, spi_slave);
-        dff_setup!(self, clock, lsr, state, reg_write_index, conversion_counter);
+        clock_reset!(self, clock, reset, oneshot, spi_slave);
+        dff_setup!(self, clock, reset, state, reg_write_index, conversion_counter);
         // Set default values
         self.spi_slave.start_send.next = false;
         self.cmd.next = self.spi_slave.data_inbound.val().get_bits::<8>(0_usize);
@@ -218,6 +214,7 @@ fn test_ad7193_synthesizes() {
     let mut uut = AD7193Simulator::new(AD7193Config::sw());
     uut.wires.link_connect_dest();
     uut.clock.connect();
+    uut.reset.connect();
     uut.connect_all();
     yosys_validate("ad7193", &generate_verilog(&uut)).unwrap();
 }
@@ -233,8 +230,7 @@ struct Test7193 {
 impl Logic for Test7193 {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, master);
-        self.adc.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, master, adc);
         SPIWiresMaster::join(&mut self.master.wires, &mut self.adc.wires);
     }
 }
@@ -398,6 +394,7 @@ fn test_single_conversion() {
     sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Initialize the chip...

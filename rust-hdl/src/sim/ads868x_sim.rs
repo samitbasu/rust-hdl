@@ -20,6 +20,7 @@ enum ADS868XState {
 pub struct ADS868XSimulator {
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     // RAM to store register values
     reg_ram: RAM<Bits<16>, 5>,
     // SPI slave device
@@ -36,8 +37,6 @@ pub struct ADS868XSimulator {
     address: Signal<Local, Bits<9>>,
     data_parity: Signal<Local, Bit>,
     id_parity: Signal<Local, Bit>,
-    auto_reset: AutoReset,
-    lsr: Signal<Local, Reset>,
 }
 
 impl ADS868XSimulator {
@@ -67,6 +66,7 @@ impl ADS868XSimulator {
         Self {
             wires: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             reg_ram: Default::default(),
             spi_slave: SPISlave::new(spi_config),
             state: Default::default(),
@@ -77,8 +77,6 @@ impl ADS868XSimulator {
             address: Default::default(),
             data_parity: Default::default(),
             id_parity: Default::default(),
-            auto_reset: Default::default(),
-            lsr: Default::default(),
         }
     }
 }
@@ -95,13 +93,11 @@ impl Logic for ADS868XSimulator {
     fn update(&mut self) {
         // Connect the spi bus
         SPIWiresSlave::link(&mut self.wires, &mut self.spi_slave.wires);
-        self.auto_reset.clock.next = self.clock.val();
-        self.lsr.next = self.auto_reset.reset.val();
         // Clock internal components
         self.reg_ram.read_clock.next = self.clock.val();
         self.reg_ram.write_clock.next = self.clock.val();
-        clock_reset!(self, clock, lsr, spi_slave);
-        dff_setup!(self, clock, lsr, state, conversion_counter, inbound);
+        clock_reset!(self, clock, reset, spi_slave);
+        dff_setup!(self, clock, reset, state, conversion_counter, inbound);
         // Set default values
         self.spi_slave.start_send.next = false;
         self.spi_slave.continued_transaction.next = false;
@@ -119,7 +115,9 @@ impl Logic for ADS868XSimulator {
         self.id_parity.next = (self.reg_ram.read_data.val() & 0x0FF_u32).xor();
         match self.state.q.val() {
             ADS868XState::Ready => {
-                self.state.d.next = ADS868XState::Nop;
+                if !self.spi_slave.busy.val() {
+                    self.state.d.next = ADS868XState::Nop;
+                }
             }
             ADS868XState::Waiting => {
                 if self.spi_slave.transfer_done.val() {
@@ -217,6 +215,7 @@ fn test_ads8689_synthesizes() {
     let mut uut = ADS868XSimulator::new(ADS868XSimulator::spi_sw());
     uut.wires.link_connect_dest();
     uut.clock.connect();
+    uut.reset.connect();
     uut.connect_all();
     yosys_validate("ads8689", &generate_verilog(&uut)).unwrap();
 }
@@ -232,8 +231,7 @@ struct Test8689 {
 impl Logic for Test8689 {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, master);
-        self.adc.clock.next = self.clock.val();
+        clock_reset!(self, clock, reset, master, adc);
         SPIWiresMaster::join(&mut self.master.wires, &mut self.adc.wires);
     }
 }
@@ -301,6 +299,7 @@ fn test_reg_writes() {
     sim.add_testbench(move |mut sim: Sim<Test8689>| {
         let mut x = sim.init()?;
         reset_sim!(sim, clock, reset, x);
+        wait_clock_cycles!(sim, clock, x, 50);
         wait_clock_true!(sim, clock, x);
         wait_clock_cycle!(sim, clock, x);
         // Write an ID to register 2...

@@ -10,6 +10,7 @@ pub struct MuxedADS868XSimulators<const N: usize> {
     pub addr: Signal<In, Bits<3>>,
     pub mux: MuxSlaves<N, 3>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     adcs: [ADS868XSimulator; N],
 }
 
@@ -21,6 +22,7 @@ impl<const N: usize> MuxedADS868XSimulators<N> {
             mux: Default::default(),
             addr: Default::default(),
             clock: Default::default(),
+            reset: Default::default(),
             adcs: array_init::array_init(|_| ADS868XSimulator::new(config)),
         }
     }
@@ -32,6 +34,7 @@ impl<const N: usize> Logic for MuxedADS868XSimulators<N> {
         SPIWiresSlave::link(&mut self.wires, &mut self.mux.from_master);
         for i in 0_usize..N {
             self.adcs[i].clock.next = self.clock.val();
+            self.adcs[i].reset.next = self.reset.val();
             SPIWiresMaster::join(&mut self.mux.to_slaves[i], &mut self.adcs[i].wires);
         }
         self.mux.sel.next = self.addr.val();
@@ -45,6 +48,7 @@ fn test_mux_is_synthesizable() {
     uut.wires.link_connect_dest();
     uut.addr.connect();
     uut.clock.connect();
+    uut.reset.connect();
     uut.connect_all();
     yosys_validate("mux_8689", &generate_verilog(&uut)).unwrap();
 }

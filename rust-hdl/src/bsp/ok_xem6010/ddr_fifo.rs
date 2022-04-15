@@ -59,6 +59,8 @@ pub struct DDRFIFO {
     transfer_out_count: DFF<Bits<7>>,
     // Status byte
     pub status: Signal<Out, Bits<8>>,
+    mig_clock: Signal<Local, Clock>,
+    mig_reset: Signal<Local, Reset>,
 }
 
 impl Logic for DDRFIFO {
@@ -68,19 +70,19 @@ impl Logic for DDRFIFO {
         MCBInterface1GDDR2::link(&mut self.mcb, &mut self.mig.mcb);
         // Forward the raw clock
         self.mig.raw_sys_clk.next = self.raw_sys_clock.val();
+        self.mig_clock.next = self.mig.clk_out.val();
+        self.mig_reset.next = self.mig.reset_out.val();
         // Update the output clock with the generated (buffered) clock
         self.o_clock.next = self.mig.clk_out.val();
         // Connect the flops and the interfaces to that buffered clock
         self.mig.p0_rd.clock.next = self.mig.clk_out.val();
         self.mig.p0_wr.clock.next = self.mig.clk_out.val();
         self.mig.p0_cmd.clock.next = self.mig.clk_out.val();
-        self.write_address.clock.next = self.mig.clk_out.val();
-        self.read_address.clock.next = self.mig.clk_out.val();
-        self.state.clock.next = self.mig.clk_out.val();
         self.front_porch.read_clock.next = self.mig.clk_out.val();
+        self.front_porch.read_reset.next = self.mig.reset_out.val();
         self.back_porch.write_clock.next = self.mig.clk_out.val();
-        self.transfer_in_count.clock.next = self.mig.clk_out.val();
-        self.transfer_out_count.clock.next = self.mig.clk_out.val();
+        self.back_porch.write_reset.next = self.mig.reset_out.val();
+        dff_setup!(self, mig_clock, mig_reset, write_address, read_address, state, transfer_in_count, transfer_out_count);
         // Connect the data signals from the front and back porch
         // FIFOs to the MIG FIFOs
         self.mig.p0_wr.data.next.data = self.front_porch.data_out.val();
@@ -93,6 +95,7 @@ impl Logic for DDRFIFO {
         self.almost_full.next = self.front_porch.almost_full.val();
         self.full.next = self.front_porch.full.val();
         self.front_porch.write_clock.next = self.write_clock.val();
+        self.front_porch.write_reset.next = self.mig_reset.val();
         // Connect the back porch fifo to our published
         // interface
         self.data_out.next = self.back_porch.data_out.val();
@@ -100,8 +103,7 @@ impl Logic for DDRFIFO {
         self.almost_empty.next = self.back_porch.almost_empty.val();
         self.empty.next = self.back_porch.empty.val();
         self.back_porch.read_clock.next = self.read_clock.val();
-        // State management...
-        self.state.d.next = self.state.q.val();
+        self.back_porch.read_reset.next = self.reset.val();
         // By default, do nothing.
         self.mig.p0_cmd.cmd.next.instruction = MIGInstruction::Refresh;
         self.mig.p0_cmd.cmd.next.byte_address = 0_usize.into();
@@ -111,8 +113,6 @@ impl Logic for DDRFIFO {
         // read address.  NOTE! There should be some protection for the DDR FIFO
         // filling up.  TODO - Add DDR overrun protection.
         self.have_data.next = self.write_address.q.val() != self.read_address.q.val();
-        self.write_address.d.next = self.write_address.q.val();
-        self.read_address.d.next = self.read_address.q.val();
         // Decide when we will transfer in
         self.will_transfer_in.next = self.transfer_in_count.q.val().any()
             & !self.mig.p0_wr.full.val()
@@ -131,7 +131,7 @@ impl Logic for DDRFIFO {
         self.back_porch.write.next = self.will_transfer_out.val();
         match self.state.q.val() {
             DDRFIFOState::Booting => {
-                if self.mig.calib_done.val() & !self.reset.val() {
+                if self.mig.calib_done.val() {
                     self.state.d.next = DDRFIFOState::Busy;
                 }
             }

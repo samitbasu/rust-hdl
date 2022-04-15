@@ -80,7 +80,7 @@ pub struct MemoryInterfaceGenerator {
     // Buffered 100 MHz clock
     pub clk_out: Signal<Out, Clock>,
     // Delayed reset
-    pub reset_out: Signal<Out, Bit>,
+    pub reset_out: Signal<Out, Reset>,
     // P0 command port
     pub p0_cmd: CommandPort,
     // P0 write port
@@ -203,7 +203,7 @@ impl Logic for MemoryInterfaceGenerator {
         self.cmd_fifo.read.next = false;
         self.write_fifo.read.next = false;
         self.read_fifo.write.next = false;
-        self.reset_out.next = false;
+        self.reset_out.next = false.into();
         match self.state.q.val() {
             State::Init => {
                 self.state.d.next = State::Calibrating;
@@ -213,7 +213,7 @@ impl Logic for MemoryInterfaceGenerator {
                 if (self.timer.q.val() == 0_usize) & !self.reset.val() {
                     self.calib.d.next = true;
                     self.state.d.next = State::Idle;
-                    self.reset_out.next = true;
+                    self.reset_out.next = true.into();
                 }
             }
             State::Idle => {
