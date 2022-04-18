@@ -34,23 +34,23 @@ impl From<bool> for Clock {
 
 #[repr(transparent)]
 #[derive(Clone, Copy, Default, PartialEq, Eq, Hash, Debug)]
-pub struct Reset {
+pub struct ResetN {
     pub rst: bool,
 }
 
-impl Into<bool> for Reset {
+impl Into<bool> for ResetN {
     fn into(self) -> bool {
         self.rst
     }
 }
 
-impl From<bool> for Reset {
-    fn from(x: bool) -> Reset {
-        Reset { rst: x }
+impl From<bool> for ResetN {
+    fn from(x: bool) -> ResetN {
+        ResetN { rst: x }
     }
 }
 
-impl std::ops::Not for Reset {
+impl std::ops::Not for ResetN {
     type Output = bool;
 
     fn not(self) -> Self::Output {

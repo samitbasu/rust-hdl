@@ -49,7 +49,7 @@ impl Into<SPIConfig> for SPIConfigDynamicMode {
 #[derive(LogicBlock)]
 pub struct SPIMasterDynamicMode<const N: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub bits_outbound: Signal<In, Bits<16>>,
     pub data_outbound: Signal<In, Bits<N>>,
     pub data_inbound: Signal<Out, Bits<N>>,

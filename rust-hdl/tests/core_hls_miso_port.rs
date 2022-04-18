@@ -9,7 +9,7 @@ struct MISOPortTest {
     port_a: MISOPort<16>,
     port_b: MISOPort<16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
 }
 
 impl Default for MISOPortTest {
@@ -139,7 +139,7 @@ struct MISOWidePortTest {
     port_a: MISOWidePort<64, 16>,
     port_b: MISOWidePort<64, 16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
 }
 
 impl Default for MISOWidePortTest {
@@ -284,7 +284,7 @@ struct MISOPortFIFOTest {
     bridge: Bridge<16, 2, 1>,
     port_a: MISOFIFOPort<16, 2, 3, 1>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
 }
 
 impl Default for MISOPortFIFOTest {

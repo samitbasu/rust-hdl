@@ -28,7 +28,7 @@ pub struct MAX31856Simulator {
     // Slave SPI bus
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     // RAM that stores the memory contents
     reg_ram: RAM<Bits<8>, 4>,
     // Used to handle auto conversions
@@ -242,7 +242,7 @@ fn test_max31856_synthesizes() {
 #[derive(LogicBlock)]
 struct Test31856 {
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
     master: SPIMaster<64>,
     uut: MAX31856Simulator,
 }

@@ -21,7 +21,7 @@ pub struct AD7193Simulator {
     // Slave SPI bus
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     // ROM that stores register widths
     reg_width_rom: ROM<Bits<5>, 3>,
     // RAM that stores register contents
@@ -111,7 +111,14 @@ impl Logic for AD7193Simulator {
         self.reg_ram.read_clock.next = self.clock.val();
         self.reg_ram.write_clock.next = self.clock.val();
         clock_reset!(self, clock, reset, oneshot, spi_slave);
-        dff_setup!(self, clock, reset, state, reg_write_index, conversion_counter);
+        dff_setup!(
+            self,
+            clock,
+            reset,
+            state,
+            reg_write_index,
+            conversion_counter
+        );
         // Set default values
         self.spi_slave.start_send.next = false;
         self.cmd.next = self.spi_slave.data_inbound.val().get_bits::<8>(0_usize);
@@ -222,7 +229,7 @@ fn test_ad7193_synthesizes() {
 #[derive(LogicBlock)]
 struct Test7193 {
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
     master: SPIMaster<64>,
     adc: AD7193Simulator,
 }
@@ -331,6 +338,7 @@ fn test_reg_reads() {
     sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Do the first read to initialize the chip
@@ -360,6 +368,7 @@ fn test_reg_writes() {
     sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Initialize the chip...

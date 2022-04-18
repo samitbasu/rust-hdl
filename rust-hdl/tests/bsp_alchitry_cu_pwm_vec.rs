@@ -7,7 +7,7 @@ use test_common::snore;
 
 #[derive(LogicBlock)]
 pub struct Fader {
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub clock: Signal<In, Clock>,
     pub active: Signal<Out, Bit>,
     pub enable: Signal<In, Bit>,
@@ -55,7 +55,7 @@ pub struct AlchitryCuPWMVec<const P: usize> {
     leds: Signal<Out, Bits<8>>,
     local: Signal<Local, Bits<8>>,
     faders: [Fader; 8],
-    reset: Signal<Local, Reset>,
+    reset: Signal<Local, ResetN>,
     auto_reset: AutoReset,
 }
 

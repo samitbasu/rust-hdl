@@ -45,7 +45,7 @@ pub struct I2CDriver {
     pub run: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
     pub error: Signal<Out, Bit>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub read_bit: Signal<Out, Bit>,
     pub read_valid: Signal<Out, Bit>,
     state: DFF<State>,

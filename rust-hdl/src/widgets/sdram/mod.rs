@@ -18,7 +18,7 @@ pub enum OutputBuffer {
 #[join = "SDRAMDevice"]
 pub struct SDRAMDriver<const D: usize> {
     pub clk: Signal<Out, Clock>,
-    pub reset: Signal<Out, Reset>,
+    pub reset: Signal<Out, ResetN>,
     pub we_not: Signal<Out, Bit>,
     pub cas_not: Signal<Out, Bit>,
     pub ras_not: Signal<Out, Bit>,
@@ -34,7 +34,7 @@ pub struct SDRAMDriver<const D: usize> {
 #[join = "SDRAMDriver"]
 pub struct SDRAMDevice<const D: usize> {
     pub clk: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub we_not: Signal<In, Bit>,
     pub cas_not: Signal<In, Bit>,
     pub ras_not: Signal<In, Bit>,

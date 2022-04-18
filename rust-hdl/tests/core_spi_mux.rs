@@ -4,7 +4,7 @@ use rust_hdl::widgets::prelude::*;
 #[derive(LogicBlock)]
 struct SPITestMultiMaster {
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
     masters: [SPIMaster<64>; 3],
     addr: Signal<In, Bits<3>>,
     mux: MuxMasters<3, 3>,

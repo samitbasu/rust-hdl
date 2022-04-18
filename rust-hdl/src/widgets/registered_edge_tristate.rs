@@ -8,7 +8,7 @@ pub struct RegisteredEdgeTristate<const W: usize> {
     pub write_data: Signal<In, Bits<W>>,
     pub read_data: Signal<Out, Bits<W>>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     dff_out: DFF<Bits<W>>,
     dff_in: DFF<Bits<W>>,
 }

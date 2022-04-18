@@ -7,7 +7,7 @@ pub struct Strobe<const N: usize> {
     pub enable: Signal<In, Bit>,
     pub strobe: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     threshold: Constant<Bits<N>>,
     counter: DFF<Bits<N>>,
 }

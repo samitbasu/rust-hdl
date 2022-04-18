@@ -9,7 +9,7 @@ pub struct OpalKellyDDRBackedDownloadFIFO {
     pub mcb: MCBInterface1GDDR2,
     pub raw_sys_clock: Signal<In, Clock>,
     // You must assert reset!
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     // FIFO In interface
     pub data_in: Signal<In, Bits<32>>,
     pub write: Signal<In, Bit>,

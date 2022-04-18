@@ -5,7 +5,7 @@ pub struct DFF<T: Synth> {
     pub d: Signal<In, T>,
     pub q: Signal<Out, T>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     _reset_val: T,
 }
 
@@ -32,8 +32,8 @@ impl<T: Synth> Default for DFF<T> {
 
 impl<T: Synth> Logic for DFF<T> {
     fn update(&mut self) {
-        if self.clock.pos_edge() {
-            if self.reset.val().into() {
+        if self.clock.pos_edge() | self.reset.neg_edge() {
+            if !self.reset.val() {
                 self.q.next = self._reset_val;
             } else {
                 self.q.next = self.d.val()
@@ -46,8 +46,8 @@ impl<T: Synth> Logic for DFF<T> {
     fn hdl(&self) -> Verilog {
         Verilog::Custom(format!(
             "\
-always @(posedge clock) begin
-   if (reset) begin
+always @(posedge clock or negedge reset) begin
+   if (~reset) begin
       q <= {:x};
    end else begin
       q <= d;

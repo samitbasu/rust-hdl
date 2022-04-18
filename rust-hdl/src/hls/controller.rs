@@ -33,7 +33,7 @@ pub struct BaseController<const A: usize> {
     pub from_cpu: FIFOReadController<Bits<16>>, // Word-stream from the CPU
     pub to_cpu: FIFOWriteController<Bits<16>>,  // Word-stream to the CPU
     pub clock: Signal<In, Clock>,               // All in a single clock domain
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     state: DFF<BaseControllerState>,
     pub bus: SoCBusController<16, { A }>,
     counter: DFF<Bits<16>>,

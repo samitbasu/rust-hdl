@@ -31,9 +31,9 @@ fn test_mig() {
     });
     sim.add_testbench(move |mut sim: Sim<MemoryInterfaceGenerator>| {
         let mut x = sim.init()?;
-        x.reset.next = true.into();
-        x = sim.wait(20, x)?;
         x.reset.next = false.into();
+        x = sim.wait(20, x)?;
+        x.reset.next = true.into();
         x = sim.watch(|x| x.calib_done.val(), x)?;
         wait_clock_true!(sim, p0_cmd.clock, x);
         // Feed in a set of values

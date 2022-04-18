@@ -5,7 +5,7 @@ use crate::core::ast::{VerilogLink, VerilogLinkDetails, VerilogLiteral};
 use crate::core::atom::{Atom, AtomKind};
 use crate::core::bits::Bit;
 use crate::core::block::Block;
-use crate::core::clock::Clock;
+use crate::core::clock::{Clock, ResetN};
 use crate::core::constraint::{Constraint, PinConstraint, SignalType};
 use crate::core::direction::{Direction, In, Local, Out};
 use crate::core::logic::{Logic, LogicJoin, LogicLink};
@@ -240,6 +240,17 @@ impl Signal<In, Clock> {
     #[inline(always)]
     pub fn neg_edge(&self) -> bool {
         self.changed && !self.val.clk && self.prev.clk
+    }
+}
+
+impl Signal<In, ResetN> {
+    #[inline(always)]
+    pub fn pos_edge(&self) -> bool {
+        self.changed && self.val.rst && !self.prev.rst
+    }
+    #[inline(always)]
+    pub fn neg_edge(&self) -> bool {
+        self.changed && !self.val.rst && self.prev.rst
     }
 }
 

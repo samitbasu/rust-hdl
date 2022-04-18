@@ -18,7 +18,7 @@ pub struct Router<const D: usize, const A: usize, const N: usize> {
     virtual_address: DFF<Bits<A>>,
     address_strobe_delay: DFF<Bit>,
     clock: Signal<Local, Clock>,
-    reset: Signal<Local, Reset>,
+    reset: Signal<Local, ResetN>,
     _address_map: Vec<String>,
 }
 

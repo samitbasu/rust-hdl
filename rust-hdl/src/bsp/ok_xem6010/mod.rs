@@ -82,6 +82,6 @@ fn test_ok_host_synthesizable() {
     uut.hi.sig_aa.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    let ucf = crate::toolchain::ise::generate_ucf(&uut);
+    let _ucf = crate::toolchain::ise::generate_ucf(&uut);
     yosys_validate("vlog", &vlog).unwrap();
 }

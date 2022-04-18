@@ -12,7 +12,7 @@ struct SPITest {
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
     auto_reset: AutoReset,
-    bidi_reset: Signal<Local, Reset>,
+    bidi_reset: Signal<Local, ResetN>,
     pub spi: SPIWiresMaster,
 }
 
@@ -34,6 +34,7 @@ impl Logic for SPITest {
         BidiBusD::<Bits<8>>::join(&mut self.bidi_dev.bus, &mut self.host.bidi_bus);
         self.host.bidi_clock.next = self.bidi_clock.val();
         self.host.sys_clock.next = self.sys_clock.val();
+        self.host.reset.next = self.auto_reset.reset.val();
         SoCBusController::<16, 8>::join(&mut self.host.bus, &mut self.core.upstream);
         SPIWiresMaster::link(&mut self.spi, &mut self.core.spi);
     }

@@ -13,7 +13,7 @@ enum FIFOFeederState {
 
 #[derive(LogicBlock)]
 pub struct LazyFIFOFeeder<T: Synth, const N: usize> {
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub clock: Signal<In, Clock>,
     pub bus: FIFOWriteController<T>,
     pub done: Signal<Out, Bit>,
@@ -93,7 +93,7 @@ impl<T: Synth, const N: usize> Logic for LazyFIFOFeeder<T, N> {
 
 #[derive(LogicBlock)]
 pub struct LazyFIFOReader<T: Synth, const N: usize> {
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub clock: Signal<In, Clock>,
     pub bus: FIFOReadController<T>,
     pub done: Signal<Out, Bit>,

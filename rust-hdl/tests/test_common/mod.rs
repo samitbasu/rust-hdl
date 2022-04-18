@@ -36,7 +36,7 @@ pub fn snore<const P: usize>(x: u32) -> Bits<P> {
 
 #[derive(LogicBlock)]
 pub struct FaderWithSyncROM {
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub clock: Signal<In, Clock>,
     pub active: Signal<Out, Bit>,
     pub enable: Signal<In, Bit>,

@@ -37,7 +37,7 @@ enum State {
 #[derive(LogicBlock)]
 pub struct SDRAMBaseController<const R: usize, const C: usize, const L: usize, const D: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub sdram: SDRAMDriver<D>,
     // Command interface
     pub data_in: Signal<In, Bits<L>>,

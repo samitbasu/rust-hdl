@@ -14,7 +14,7 @@ pub enum DDR7FIFOState {
 #[derive(LogicBlock, Default)]
 pub struct DDR7FIFO<const N: usize> {
     // Reset - required
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     // System clock
     pub sys_clock_p: Signal<In, Clock>,
     pub sys_clock_n: Signal<In, Clock>,
@@ -25,13 +25,13 @@ pub struct DDR7FIFO<const N: usize> {
     pub full: Signal<Out, Bit>,
     pub write: Signal<In, Bit>,
     pub write_clock: Signal<In, Clock>,
-    pub write_reset: Signal<In, Reset>,
+    pub write_reset: Signal<In, ResetN>,
     // The read interface
     pub data_out: Signal<Out, Bits<N>>,
     pub empty: Signal<Out, Bit>,
     pub read: Signal<In, Bit>,
     pub read_clock: Signal<In, Clock>,
-    pub read_reset: Signal<In, Reset>,
+    pub read_reset: Signal<In, ResetN>,
     // The mig
     mig: MemoryInterfaceGenerator7Series,
     // Front end fifo

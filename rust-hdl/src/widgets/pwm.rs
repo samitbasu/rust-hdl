@@ -6,7 +6,7 @@ pub struct PulseWidthModulator<const N: usize> {
     pub enable: Signal<In, Bit>,
     pub threshold: Signal<In, Bits<N>>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub active: Signal<Out, Bit>,
     counter: DFF<Bits<N>>,
 }

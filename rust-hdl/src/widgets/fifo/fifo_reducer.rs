@@ -15,7 +15,7 @@ pub struct FIFOReducer<const DW: usize, const DN: usize, const REVERSE: bool> {
     // This is a synchronous design.  The clock is assumed
     // to be shared with both the input and output fifos.
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     loaded: DFF<Bit>,
     data_available: Signal<Local, Bit>,
     can_write: Signal<Local, Bit>,

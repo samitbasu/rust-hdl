@@ -37,7 +37,7 @@ enum State {
 #[derive(LogicBlock)]
 pub struct SDRAMBurstController<const R: usize, const C: usize, const L: u32, const D: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub sdram: SDRAMDriver<D>,
     // The input interface does not allow flow control.  You must hook this up to a
     // FIFO on the consumer side to send data or risk data loss.  It is your

@@ -8,7 +8,7 @@ pub struct EdgeTristateBuffer<T: Synth> {
     pub from_pin: Signal<Out, T>,
     pub output_enable: Signal<In, Bit>,
     pub clk: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub pin: Signal<InOut, T>,
     dff_out: DFF<T>,
     dff_in: DFF<T>,

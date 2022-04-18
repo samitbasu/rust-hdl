@@ -8,7 +8,7 @@ use crate::widgets::dff::DFF;
 pub struct FIFOReadLogic<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
     // Clock
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     // FIFO facing interface
     pub read: Signal<In, Bit>,
     pub data_out: Signal<Out, D>,
@@ -133,7 +133,7 @@ pub struct FIFOWriteLogic<D: Synth, const N: usize, const NP1: usize, const BLOC
     pub almost_full: Signal<Out, Bit>,
     pub overflow: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub ram_write_address: Signal<Out, Bits<N>>,
     pub ram_write_clock: Signal<Out, Clock>,
     pub ram_write_data: Signal<Out, D>,

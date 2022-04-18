@@ -13,7 +13,7 @@ pub struct AlchitryCuPWM<const P: usize> {
     rom: ROM<Bits<P>, 8>,
     counter: DFF<Bits<8>>,
     auto_reset: AutoReset,
-    reset: Signal<Local, Reset>,
+    reset: Signal<Local, ResetN>,
 }
 
 impl<const P: usize> Logic for AlchitryCuPWM<P> {

@@ -31,6 +31,7 @@ pub struct OKSPIMaster {
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, ResetN>,
     pipe_in: PipeIn,
     pipe_out: PipeOut,
     bits: WireIn,
@@ -40,8 +41,6 @@ pub struct OKSPIMaster {
     data_outbound: DFF<Bits<64>>,
     output_register: DFF<Bits<16>>,
     data_inbound: DFF<Bits<64>>,
-    auto_reset: AutoReset,
-    reset: Signal<Local, Reset>,
 }
 
 impl Logic for OKSPIMaster {
@@ -49,8 +48,6 @@ impl Logic for OKSPIMaster {
     fn update(&mut self) {
         // Link the wires
         SPIWiresMaster::link(&mut self.wires, &mut self.core.wires);
-        self.auto_reset.clock.next = self.clock.val();
-        self.reset.next = self.auto_reset.reset.val();
         clock_reset!(self, clock, reset, core);
         dff_setup!(
             self,
@@ -121,7 +118,6 @@ impl OKSPIMaster {
             data_outbound: Default::default(),
             output_register: Default::default(),
             data_inbound: Default::default(),
-            auto_reset: Default::default(),
             reset: Default::default(),
         }
     }
@@ -141,6 +137,7 @@ fn test_ok_spi_master_synthesizes() {
     uut.uut.wires.link_connect_dest();
     uut.uut.ok1.connect();
     uut.uut.clock.connect();
+    uut.uut.reset.connect();
     uut.connect_all();
     yosys_validate("ok_spi_synth", &generate_verilog(&uut)).unwrap();
 }
@@ -153,21 +150,18 @@ fn test_ok_spi_master_works() {
         ok1: Signal<In, Bits<31>>,
         ok2: Signal<Out, Bits<17>>,
         clock: Signal<In, Clock>,
+        reset: Signal<In, ResetN>,
         core: OKSPIMaster,
         slave: SPISlave<64>,
-        auto_reset: AutoReset,
     }
 
     impl Logic for TopOK {
         #[hdl_gen]
         fn update(&mut self) {
             SPIWiresMaster::link(&mut self.wires, &mut self.core.wires);
-            self.auto_reset.clock.next = self.clock.val();
-            self.slave.reset.next = self.auto_reset.reset.val();
             self.core.ok1.next = self.ok1.val();
             self.ok2.next = self.core.ok2.val();
-            self.core.clock.next = self.clock.val();
-            self.slave.clock.next = self.clock.val();
+            clock_reset!(self, clock, reset, core, slave);
             SPIWiresMaster::join(&mut self.wires, &mut self.slave.wires);
         }
     }
@@ -187,9 +181,9 @@ fn test_ok_spi_master_works() {
                 ok1: Default::default(),
                 ok2: Default::default(),
                 clock: Default::default(),
+                reset: Default::default(),
                 core: OKSPIMaster::new(Default::default(), spi_config),
                 slave: SPISlave::new(spi_config),
-                auto_reset: Default::default(),
             }
         }
     }
@@ -198,6 +192,7 @@ fn test_ok_spi_master_works() {
     uut.wires.link_connect_dest();
     uut.ok1.connect();
     uut.clock.connect();
+    uut.reset.connect();
     uut.slave.data_outbound.connect();
     uut.slave.bits.connect();
     uut.slave.start_send.connect();
@@ -209,6 +204,7 @@ fn test_ok_spi_master_works() {
     sim.add_clock(5, |x: &mut Box<TopOK>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<TopOK>| {
         let mut x = sim.init()?;
+        reset_sim!(sim, clock, reset, x);
         wait_clock_cycle!(sim, clock, x, 20);
         wait_clock_true!(sim, clock, x);
         x.slave.data_outbound.next = 0xcafebabe5ea15e5e_u64.into();

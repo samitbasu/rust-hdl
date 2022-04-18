@@ -7,7 +7,7 @@ pub struct Expander<const DN: usize, const DW: usize> {
     pub bus_read: FIFOReadController<Bits<DN>>,
     pub bus_write: FIFOWriteController<Bits<DW>>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     expander: FIFOExpanderN<DN, DW>,
 }
 

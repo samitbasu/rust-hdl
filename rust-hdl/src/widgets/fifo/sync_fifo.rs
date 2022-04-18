@@ -13,7 +13,7 @@ macro_rules! declare_sync_fifo {
 #[derive(LogicBlock, Default)]
 pub struct SynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     // Read interface
     pub read: Signal<In, Bit>,
     pub data_out: Signal<Out, D>,

@@ -9,7 +9,7 @@ struct TestSDRAMDevice {
     buffer: SDRAMOnChipBuffer<16>,
     cntrl: SDRAMBurstController<5, 5, 4, 16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
 }
 
 impl Logic for TestSDRAMDevice {
@@ -81,8 +81,8 @@ fn test_unit_boots() {
     });
     sim.add_testbench(move |mut sim: Sim<TestSDRAMDevice>| {
         let mut x = sim.init()?;
-        x = sim.wait(10_000_000, x)?;
         reset_sim!(sim, clock, reset, x);
+        x = sim.wait(10_000_000, x)?;
         sim_assert!(sim, !x.dram.test_error.val(), x);
         sim.done(x)
     });

@@ -12,7 +12,7 @@ pub struct MISOPort<const D: usize> {
     pub bus: SoCPortResponder<D>,
     pub port_in: Signal<In, Bits<D>>,
     pub clock_out: Signal<Out, Clock>,
-    pub reset_out: Signal<Out, Reset>,
+    pub reset_out: Signal<Out, ResetN>,
     pub ready_in: Signal<In, Bit>,
     pub strobe_out: Signal<Out, Bit>,
     address_active: DFF<Bit>,

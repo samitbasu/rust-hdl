@@ -15,7 +15,7 @@ pub use crate::core::check_connected::check_connected;
 pub use crate::core::check_error::check_all;
 pub use crate::core::clock::freq_hz_to_period_femto;
 pub use crate::core::clock::Clock;
-pub use crate::core::clock::Reset;
+pub use crate::core::clock::ResetN;
 pub use crate::core::clock::NANOS_PER_FEMTO;
 pub use crate::core::constant::Constant;
 pub use crate::core::constraint::Timing::*;

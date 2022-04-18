@@ -8,7 +8,7 @@ pub struct Shot<const N: usize> {
     pub trigger: Signal<In, Bit>,
     pub active: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub fired: Signal<Out, Bit>,
     duration: Constant<Bits<N>>,
     counter: DFF<Bits<N>>,

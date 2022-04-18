@@ -13,7 +13,7 @@ struct HLSSDRAMFIFOTest {
     fifo: SDRAMFIFO<5, 5, 4, 16, 12>,
     sdram: SDRAMSimulator<5, 5, 10, 16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
 }
 
 impl Default for HLSSDRAMFIFOTest {

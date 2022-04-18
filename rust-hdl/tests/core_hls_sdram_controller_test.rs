@@ -18,7 +18,7 @@ struct HostSDRAMControllerTest {
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
     auto_reset: AutoReset,
-    bidi_reset: Signal<Local, Reset>,
+    bidi_reset: Signal<Local, ResetN>,
 }
 
 impl Logic for HostSDRAMControllerTest {
@@ -39,6 +39,7 @@ impl Logic for HostSDRAMControllerTest {
         BidiBusD::<Bits<8>>::join(&mut self.bidi_dev.bus, &mut self.host.bidi_bus);
         self.host.bidi_clock.next = self.bidi_clock.val();
         self.host.sys_clock.next = self.sys_clock.val();
+        self.host.reset.next = self.auto_reset.reset.val();
         SoCBusController::<16, 8>::join(&mut self.host.bus, &mut self.core.upstream);
         SDRAMDriver::<16>::join(&mut self.core.dram, &mut self.buffer.buf_in);
         SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.chip.sdram);

@@ -21,7 +21,7 @@ pub struct FIFOExpanderN<const DN: usize, const DW: usize> {
     // Synchronous design.  Assumes the same clock drives the
     // corresponding interfaces of the input and output fifos.
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     load_count: DFF<Bits<8>>,
     loaded: Signal<Local, Bit>,
     complete_data_available: Signal<Local, Bit>,

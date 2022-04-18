@@ -7,7 +7,7 @@ pub struct EdgeDetector {
     pub input_signal: Signal<In, Bit>,
     pub edge_signal: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     prev: DFF<Bit>,
     current: DFF<Bit>,
     is_rising: Constant<Bit>,

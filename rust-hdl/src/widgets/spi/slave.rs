@@ -22,7 +22,7 @@ enum SPISlaveState {
 #[derive(LogicBlock)]
 pub struct SPISlave<const N: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub wires: SPIWiresSlave,
     pub disabled: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
@@ -97,7 +97,7 @@ impl<const N: usize> SPISlave<N> {
             clocks_per_baud: Constant::new((2 * config.clock_speed / config.speed_hz).into()),
             cpha: Constant::new(config.cpha),
             cs_off: Constant::new(config.cs_off),
-            boot_delay: Default::default()
+            boot_delay: Default::default(),
         }
     }
 }
@@ -190,8 +190,10 @@ impl<const N: usize> Logic for SPISlave<N> {
                     self.state.d.next = SPISlaveState::Settle;
                 }
                 // Hangup condition.  CSEL should remain low for the entire transaction.
-                if self.cpha.val() & !self.continued_saved.q.val() &
-                    (self.csel_synchronizer.sig_out.val() == self.cs_off.val()) {
+                if self.cpha.val()
+                    & !self.continued_saved.q.val()
+                    & (self.csel_synchronizer.sig_out.val() == self.cs_off.val())
+                {
                     self.state.d.next = SPISlaveState::Idle;
                 }
             }

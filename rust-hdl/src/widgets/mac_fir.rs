@@ -20,7 +20,7 @@ pub struct MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<const ADDR_BIT
     pub data_out: Signal<Out, Signed<48>>,
     pub strobe_out: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub busy: Signal<Out, Bit>,
     coeff_memory: SyncROM<Signed<16>, ADDR_BITS>,
     left_bank: RAM<Signed<16>, ADDR_BITS>,

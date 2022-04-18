@@ -36,7 +36,7 @@ pub struct SDRAMControllerTester<const R: usize, const C: usize> {
     output_avail: DFF<Bit>,
     state: DFF<State>,
     clock: Signal<Local, Clock>,
-    reset: Signal<Local, Reset>,
+    reset: Signal<Local, ResetN>,
 }
 
 impl<const R: usize, const C: usize> SDRAMControllerTester<R, C> {

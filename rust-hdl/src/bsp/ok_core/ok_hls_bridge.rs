@@ -59,7 +59,7 @@ pub struct OpalKellyHLSBridge<const A: usize> {
     read_delay: DFF<bool>,
     block_flow_control: WireIn,
     sr: AutoReset,
-    reset: Signal<Local, Reset>,
+    reset: Signal<Local, ResetN>,
 }
 
 impl<const A: usize> Logic for OpalKellyHLSBridge<A> {

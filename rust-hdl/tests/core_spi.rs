@@ -4,7 +4,7 @@ use rust_hdl::widgets::prelude::*;
 #[derive(LogicBlock)]
 struct SPITestAsync {
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
     bus: SPIWiresMaster,
     master: SPIMaster<64>,
 }
@@ -75,7 +75,7 @@ fn test_spi_txn_completes() {
 #[derive(LogicBlock)]
 struct SPITestPair {
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
     master: SPIMaster<64>,
     slave: SPISlave<64>,
 }
@@ -95,6 +95,7 @@ impl Logic for SPITestPair {
     #[hdl_gen]
     fn update(&mut self) {
         clock_reset!(self, clock, reset, master, slave);
+        self.reset.next = true.into();
         SPIWiresMaster::join(&mut self.master.wires, &mut self.slave.wires);
     }
 }
@@ -153,7 +154,7 @@ fn test_spi_xchange(config: SPIConfig) {
             wait_clock_cycle!(sim, clock, x);
             x.master.start_send.next = false;
             x = sim.watch(|x| x.master.transfer_done.val().into(), x)?;
-            sim_assert!(sim, x.master.data_inbound.val() == 0xCAFEBABE_u32, x);
+            sim_assert_eq!(sim, x.master.data_inbound.val(), 0xCAFEBABE_u32, x);
             wait_clock_cycle!(sim, clock, x);
         }
         sim.done(x)
@@ -167,8 +168,8 @@ fn test_spi_xchange(config: SPIConfig) {
             x.slave.start_send.next = true;
             wait_clock_cycle!(sim, clock, x);
             x = sim.watch(|x| x.slave.transfer_done.val().into(), x)?;
-            sim_assert!(sim, x.slave.data_inbound.val() == 0xDEADBEEF_u32, x);
-            sim_assert!(sim, x.slave.bits.val() == 32_u32, x);
+            sim_assert_eq!(sim, x.slave.data_inbound.val(), 0xDEADBEEF_u32, x);
+            sim_assert_eq!(sim, x.slave.bits.val(), 32_u32, x);
         }
         sim.done(x)
     });

@@ -15,8 +15,7 @@ fn test_rising_edge_detector_works() {
         let mut x = sim.init()?;
         reset_sim!(sim, clock, reset, x);
         x.input_signal.next = true;
-        wait_clock_true!(sim, clock, x);
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycles!(sim, clock, x, 8);
         sim_assert!(sim, !x.edge_signal.val(), x);
         x.input_signal.next = false;
         wait_clock_cycle!(sim, clock, x);

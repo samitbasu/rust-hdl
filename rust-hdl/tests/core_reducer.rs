@@ -3,7 +3,7 @@ use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]
 struct ReducerTest {
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub clock: Signal<In, Clock>,
     pub fifo_in: SynchronousFIFO<Bits<32>, 4, 5, 1>,
     pub fifo_out: SynchronousFIFO<Bits<4>, 8, 9, 1>,
@@ -122,7 +122,7 @@ declare_narrowing_fifo!(Slim, 32, 16, 4, 256);
 #[derive(LogicBlock)]
 struct SlimTest {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub fifo: Slim,
 }
 

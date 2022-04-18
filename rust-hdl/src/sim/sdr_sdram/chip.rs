@@ -46,7 +46,7 @@ pub struct SDRAMSimulator<
     t_rrd: Constant<Bits<32>>,
     banks_busy: Signal<Local, Bit>,
     auto_reset: AutoReset,
-    reset: Signal<Local, Reset>,
+    reset: Signal<Local, ResetN>,
 }
 
 impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
@@ -455,6 +455,7 @@ fn test_sdram_init_works() {
     sim.add_testbench(move |mut sim: Sim<SDRAMSimulator<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
         let timings = MemoryTimings::fast_boot_sim(125e6);
+        wait_clock_cycles!(sim, clock, x, 16);
         sdram_boot!(sim, clock, x, timings);
         sdram_cmd!(x, SDRAMCommand::LoadModeRegister);
         x.sdram.address.next = 0b000_0_00_011_0_011_u32.into();

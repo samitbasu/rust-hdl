@@ -13,10 +13,10 @@ pub struct CrossWiden<
 > {
     pub narrow_bus: FIFOWriteResponder<Bits<DN>>,
     pub narrow_clock: Signal<In, Clock>,
-    pub narrow_reset: Signal<In, Reset>,
+    pub narrow_reset: Signal<In, ResetN>,
     pub wide_bus: FIFOReadResponder<Bits<DW>>,
     pub wide_clock: Signal<In, Clock>,
-    pub wide_reset: Signal<In, Reset>,
+    pub wide_reset: Signal<In, ResetN>,
     widen: CrossWidenFIFO<DN, NN, NNP1, DW, WN, WNP1>,
 }
 
@@ -96,10 +96,10 @@ pub struct CrossNarrow<
 > {
     pub wide_bus: FIFOWriteResponder<Bits<DW>>,
     pub wide_clock: Signal<In, Clock>,
-    pub wide_reset: Signal<In, Reset>,
+    pub wide_reset: Signal<In, ResetN>,
     pub narrow_bus: FIFOReadResponder<Bits<DN>>,
     pub narrow_clock: Signal<In, Clock>,
-    pub narrow_reset: Signal<In, Reset>,
+    pub narrow_reset: Signal<In, ResetN>,
     narrow: CrossNarrowFIFO<DW, WN, WNP1, DN, NN, NNP1>,
 }
 

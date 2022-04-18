@@ -12,7 +12,7 @@ pub struct RegisterFIFO<T: Synth> {
     pub full: Signal<Out, Bit>,
     pub empty: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     value: DFF<T>,
     filled: DFF<Bit>,
     error: DFF<Bit>,

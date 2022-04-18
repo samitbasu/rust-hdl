@@ -40,7 +40,7 @@ pub struct I2CController {
     pub write_data_in: Signal<In, Bits<8>>,
     pub read_data_out: Signal<Out, Bits<8>>,
     pub read_valid: Signal<Out, Bit>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub ack: Signal<Out, Bit>,
     pub nack: Signal<Out, Bit>,
     driver: I2CDriver,
@@ -246,7 +246,7 @@ fn test_i2c_controller_synthesizes() {
 #[derive(LogicBlock)]
 struct I2CControllerTest {
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
     controller: I2CController,
     target_1: I2CTestTarget,
     target_2: I2CTestTarget,

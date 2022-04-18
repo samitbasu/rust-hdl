@@ -4,7 +4,7 @@ use rust_hdl::widgets::prelude::*;
 #[derive(LogicBlock)]
 struct ExpanderTest {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub fifo_in: SynchronousFIFO<Bits<4>, 8, 9, 1>,
     pub fifo_out: SynchronousFIFO<Bits<32>, 4, 5, 1>,
     pub xpand: FIFOExpanderN<4, 32>,
@@ -132,7 +132,7 @@ declare_expanding_fifo!(Fatten, 4, 256, 32, 16);
 #[derive(LogicBlock)]
 struct FattenTest {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub fifo: Fatten,
 }
 

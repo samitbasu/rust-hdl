@@ -7,7 +7,7 @@ pub struct SyncFIFO<T: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE
     pub bus_write: FIFOWriteResponder<T>,
     pub bus_read: FIFOReadResponder<T>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     fifo: SynchronousFIFO<T, N, NP1, BLOCK_SIZE>,
 }
 
@@ -34,10 +34,10 @@ impl<T: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 pub struct AsyncFIFO<T: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
     pub bus_write: FIFOWriteResponder<T>,
     pub write_clock: Signal<In, Clock>,
-    pub write_reset: Signal<In, Reset>,
+    pub write_reset: Signal<In, ResetN>,
     pub bus_read: FIFOReadResponder<T>,
     pub read_clock: Signal<In, Clock>,
-    pub read_reset: Signal<In, Reset>,
+    pub read_reset: Signal<In, ResetN>,
     fifo: AsynchronousFIFO<T, N, NP1, BLOCK_SIZE>,
 }
 

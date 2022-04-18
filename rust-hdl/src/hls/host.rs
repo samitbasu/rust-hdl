@@ -18,8 +18,7 @@ pub struct Host<const A: usize> {
     pub bus: SoCBusController<16, A>,
     pub sys_clock: Signal<In, Clock>,
     pub bidi_clock: Signal<In, Clock>,
-    bidi_reset: AutoReset,
-    sys_reset: AutoReset,
+    pub reset: Signal<In, ResetN>,
 }
 
 impl<const A: usize> Host<A> {
@@ -36,26 +35,25 @@ impl<const A: usize> Logic for Host<A> {
     #[hdl_gen]
     fn update(&mut self) {
         BidiBusM::<Bits<8>>::link(&mut self.bidi_bus, &mut self.bidi_master.bus);
-        self.sys_reset.clock.next = self.sys_clock.val();
-        self.bidi_reset.clock.next = self.bidi_clock.val();
+        clock_reset!(self, bidi_clock, reset, bidi_master);
         self.bidi_master.clock.next = self.bidi_clock.val();
-        self.bidi_master.reset.next = self.bidi_reset.reset.val();
+        self.bidi_master.reset.next = self.reset.val();
         FIFOWriteController::<Bits<8>>::join(
             &mut self.bidi_master.data_from_bus,
             &mut self.bus_to_controller.narrow_bus,
         );
         self.bus_to_controller.narrow_clock.next = self.bidi_clock.val();
-        self.bus_to_controller.narrow_reset.next = self.bidi_reset.reset.val();
+        self.bus_to_controller.narrow_reset.next = self.reset.val();
         self.bus_to_controller.wide_clock.next = self.sys_clock.val();
-        self.bus_to_controller.wide_reset.next = self.sys_reset.reset.val();
+        self.bus_to_controller.wide_reset.next = self.reset.val();
         FIFOReadController::<Bits<8>>::join(
             &mut self.bidi_master.data_to_bus,
             &mut self.controller_to_bus.narrow_bus,
         );
         self.controller_to_bus.narrow_clock.next = self.bidi_clock.val();
-        self.controller_to_bus.narrow_reset.next = self.bidi_reset.reset.val();
+        self.controller_to_bus.narrow_reset.next = self.reset.val();
         self.controller_to_bus.wide_clock.next = self.sys_clock.val();
-        self.controller_to_bus.wide_reset.next = self.sys_reset.reset.val();
+        self.controller_to_bus.wide_reset.next = self.reset.val();
         FIFOReadController::<Bits<16>>::join(
             &mut self.controller.from_cpu,
             &mut self.bus_to_controller.wide_bus,
@@ -64,8 +62,7 @@ impl<const A: usize> Logic for Host<A> {
             &mut self.controller.to_cpu,
             &mut self.controller_to_bus.wide_bus,
         );
-        self.controller.clock.next = self.sys_clock.val();
-        self.controller.reset.next = self.sys_reset.reset.val();
+        clock_reset!(self, sys_clock, reset, controller);
         SoCBusController::<16, A>::link(&mut self.bus, &mut self.controller.bus);
     }
 }
@@ -78,6 +75,7 @@ fn test_host_synthesizes() {
     uut.bidi_bus.link_connect_dest();
     uut.bus.ready.connect();
     uut.bus.to_controller.connect();
+    uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("host", &vlog).unwrap();

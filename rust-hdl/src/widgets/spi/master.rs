@@ -45,7 +45,7 @@ pub struct SPIWiresSlave {
 #[derive(LogicBlock)]
 pub struct SPIMaster<const N: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub bits_outbound: Signal<In, Bits<16>>,
     pub data_outbound: Signal<In, Bits<N>>,
     pub data_inbound: Signal<Out, Bits<N>>,

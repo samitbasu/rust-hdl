@@ -23,7 +23,7 @@ pub enum BankState {
 pub struct MemoryBank<const R: usize, const C: usize, const A: usize, const D: usize> {
     // Constraint - A = R + C
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     pub cas_delay: Signal<In, Bits<3>>,
     pub write_burst: Signal<In, Bit>,
     pub address: Signal<In, Bits<13>>,

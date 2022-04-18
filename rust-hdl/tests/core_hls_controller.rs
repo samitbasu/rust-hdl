@@ -13,7 +13,7 @@ struct ControllerTest {
     port: MOSIPort<16>,
     iport: MISOPort<16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
+    reset: Signal<In, ResetN>,
 }
 
 impl Default for ControllerTest {

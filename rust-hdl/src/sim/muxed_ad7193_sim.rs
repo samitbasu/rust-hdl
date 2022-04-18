@@ -10,7 +10,7 @@ pub struct MuxedAD7193Simulators {
     pub addr: Signal<In, Bits<3>>,
     pub mux: MuxSlaves<8, 3>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     adcs: [AD7193Simulator; 8],
 }
 

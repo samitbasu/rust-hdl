@@ -22,7 +22,7 @@ pub struct I2CTestTarget {
     // The I2C Clock line.  Must have an external pullup
     pub scl: Signal<InOut, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     phy: I2CTarget,
     mem: RAM<Bits<16>, 4>,
     ptr: DFF<Bits<4>>,

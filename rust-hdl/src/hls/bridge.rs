@@ -3,6 +3,7 @@ use crate::dff_setup;
 use crate::hls::bus::*;
 use crate::hls::HLSNamedPorts;
 use crate::widgets::prelude::DFF;
+use crate::widgets::reset_sync::ResetSynchronizer;
 
 // A simple bus bridge.  It connects to the master on the one side, and
 // then exposes a number of device ports on the other side.  Data is
@@ -13,7 +14,7 @@ pub struct Bridge<const D: usize, const A: usize, const N: usize> {
     pub upstream: SoCBusResponder<D, A>,
     pub nodes: [SoCPortController<D>; N],
     pub clock_out: Signal<Out, Clock>,
-    pub reset_out: Signal<Out, Reset>,
+    pub reset_out: Signal<Out, ResetN>,
     address_latch: DFF<Bits<A>>,
     _port_names: Vec<String>,
 }

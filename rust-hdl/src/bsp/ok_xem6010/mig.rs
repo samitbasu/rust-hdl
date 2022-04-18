@@ -74,13 +74,13 @@ pub struct MemoryInterfaceGenerator {
     // Raw clock from the system - cannot be intercepted
     pub raw_sys_clk: Signal<In, Clock>,
     // Reset - must be handled externally
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     // Calibration complete
     pub calib_done: Signal<Out, Bit>,
     // Buffered 100 MHz clock
     pub clk_out: Signal<Out, Clock>,
     // Delayed reset
-    pub reset_out: Signal<Out, Reset>,
+    pub reset_out: Signal<Out, ResetN>,
     // P0 command port
     pub p0_cmd: CommandPort,
     // P0 write port
@@ -203,17 +203,17 @@ impl Logic for MemoryInterfaceGenerator {
         self.cmd_fifo.read.next = false;
         self.write_fifo.read.next = false;
         self.read_fifo.write.next = false;
-        self.reset_out.next = false.into();
+        self.reset_out.next = true.into();
         match self.state.q.val() {
             State::Init => {
                 self.state.d.next = State::Calibrating;
                 self.timer.d.next = 100_usize.into();
             }
             State::Calibrating => {
-                if (self.timer.q.val() == 0_usize) & !self.reset.val() {
+                if self.timer.q.val() == 0_usize {
                     self.calib.d.next = true;
                     self.state.d.next = State::Idle;
-                    self.reset_out.next = true.into();
+                    self.reset_out.next = false.into();
                 }
             }
             State::Idle => {

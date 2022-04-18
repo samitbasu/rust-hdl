@@ -10,7 +10,7 @@ pub struct OpalKellyDDRBackedDownloadFIFO7Series {
     pub sys_clock_p: Signal<In, Clock>,
     pub sys_clock_n: Signal<In, Clock>,
     // You must assert reset!
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, ResetN>,
     // FIFO In interface
     pub data_in: Signal<In, Bits<32>>,
     pub write: Signal<In, Bit>,

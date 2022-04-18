@@ -9,7 +9,7 @@ pub const MHZ100: u64 = 100_000_000;
 pub struct AlchitryCuPulser {
     pulser: Pulser,
     clock: Signal<In, Clock>,
-    reset: Signal<Local, Reset>,
+    reset: Signal<Local, ResetN>,
     leds: Signal<Out, Bits<8>>,
     auto_reset: AutoReset,
 }

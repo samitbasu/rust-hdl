@@ -14,7 +14,7 @@ pub struct AlchitryCuPWMVecSyncROM<const P: usize> {
     local: Signal<Local, Bits<8>>,
     faders: [FaderWithSyncROM; 8],
     pll: ICE40PLLBlock<MHZ100, MHZ25>,
-    reset: Signal<Local, Reset>,
+    reset: Signal<Local, ResetN>,
 }
 
 impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
