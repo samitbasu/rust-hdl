@@ -69,6 +69,7 @@ fn test_port_test_works() {
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
         reset_sim!(sim, clock, reset, x);
+        wait_clock_cycles!(sim, clock, x, 10);
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 1_usize.into();
         x.bus.from_controller.next = 0xDEAD_u16.into();
@@ -95,14 +96,14 @@ fn test_port_test_works() {
         let mut x = sim.init()?;
         x.port_a.ready.next = true;
         x = sim.watch(|x| x.port_a.strobe_out.val(), x)?;
-        sim_assert!(sim, x.port_a.port_out.val() == 0xBEEF_u16, x);
+        sim_assert_eq!(sim, x.port_a.port_out.val(), 0xBEEF_u16, x);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
         x.port_b.ready.next = true;
         x = sim.watch(|x| x.port_b.strobe_out.val(), x)?;
-        sim_assert!(sim, x.port_b.port_out.val() == 0xDEAD_u16, x);
+        sim_assert_eq!(sim, x.port_b.port_out.val(), 0xDEAD_u16, x);
         sim.done(x)
     });
     sim.run_traced(
@@ -131,6 +132,7 @@ fn test_port_pipeline() {
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
         reset_sim!(sim, clock, reset, x);
+        wait_clock_cycles!(sim, clock, x, 10);
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 1_usize.into();
         x.bus.address_strobe.next = true;
@@ -148,6 +150,7 @@ fn test_port_pipeline() {
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
+        wait_clock_cycles!(sim, clock, x, 10);
         x.port_b.ready.next = true;
         for val in [0xDEAD_u16, 0xBEEF, 0xBABE, 0xCAFE] {
             x = sim.watch(|x| x.port_b.strobe_out.val(), x)?;

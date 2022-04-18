@@ -343,6 +343,7 @@ fn test_miso_fifo_works() {
     sim.add_testbench(move |mut sim: Sim<MISOPortFIFOTest>| {
         let mut x = sim.init()?;
         reset_sim!(sim, clock, reset, x);
+        wait_clock_cycles!(sim, clock, x, 10);
         wait_clock_true!(sim, clock, x);
         hls_fifo_write_lazy!(sim, clock, x, port_a.fifo_bus, &test_data.clone());
         wait_clock_cycles!(sim, clock, x, 10);
@@ -351,14 +352,14 @@ fn test_miso_fifo_works() {
     sim.add_testbench(move |mut sim: Sim<MISOPortFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        wait_clock_cycles!(sim, clock, x, 10);
+        wait_clock_cycles!(sim, clock, x, 20);
         x.bus.address.next = 0_u8.into();
         x.bus.address_strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.bus.address_strobe.next = false;
         for val in test_data.clone() {
             x = sim.watch(|x| x.bus.ready.val(), x)?;
-            sim_assert!(sim, x.bus.to_controller.val() == val, x);
+            sim_assert_eq!(sim, x.bus.to_controller.val(), val, x);
             x.bus.strobe.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.bus.strobe.next = false;
