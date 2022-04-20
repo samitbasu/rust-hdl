@@ -243,6 +243,12 @@ fn hdl_match(m: &syn::ExprMatch) -> Result<TS> {
         condition.push(hdl_pattern(&arm.pat)?);
         blocks.push(hdl_body(&arm.body)?);
     }
+    if condition.len() == 0 || !condition.last().unwrap().eq("default") {
+        return Err(syn::Error::new(
+            m.span(),
+            "HDL synthesis requires all matches _end_ in a default pattern to ensure proper reset behavior"
+        ))
+    }
     Ok(quote!({
        {
           let mut cases = vec![];

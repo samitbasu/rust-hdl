@@ -70,6 +70,7 @@ pub fn hdl_gen(_attr: TokenStream, item: TokenStream) -> TokenStream {
     match hdl_gen_process(parse) {
         Err(e) => e.to_compile_error().into(),
         Ok(hdl_code) => TokenStream::from(quote! {
+        #[allow(unreachable_patterns)]
             #orig
 
         #[allow(dead_code)]
