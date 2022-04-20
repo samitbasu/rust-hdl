@@ -8,7 +8,7 @@ use array_init::array_init;
 #[derive(LogicBlock)]
 pub struct DelayLine<D: Synth, const N: usize, const W: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub data_in: Signal<In, D>,
     pub data_out: Signal<Out, D>,
     pub delay: Signal<In, Bits<W>>,

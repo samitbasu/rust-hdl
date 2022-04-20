@@ -6,7 +6,7 @@ use std::time::Duration;
 #[derive(LogicBlock)]
 pub struct Pulser {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub enable: Signal<In, Bit>,
     pub pulse: Signal<Out, Bit>,
     strobe: Strobe<32>,

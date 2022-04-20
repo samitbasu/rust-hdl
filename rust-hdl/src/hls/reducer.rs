@@ -7,7 +7,7 @@ pub struct Reducer<const DW: usize, const DN: usize> {
     pub bus_read: FIFOReadController<Bits<DW>>,
     pub bus_write: FIFOWriteController<Bits<DN>>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     reducer: FIFOReducerN<DW, DN>,
 }
 

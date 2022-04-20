@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::core::ast::VerilogLiteral;
 use crate::core::bits::{Bit, Bits};
-use crate::core::clock::{Clock, ResetN};
+use crate::core::clock::{Clock, Reset};
 use crate::core::signed::Signed;
 use crate::core::type_descriptor::{TypeDescriptor, TypeKind};
 
@@ -73,7 +73,7 @@ impl Synth for Bit {
     }
 }
 
-impl Synth for ResetN {
+impl Synth for Reset {
     const BITS: usize = 1;
 
     fn descriptor() -> TypeDescriptor {

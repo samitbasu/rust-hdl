@@ -188,7 +188,7 @@ fn test_nested_router_function() {
     });
     sim.add_testbench(move |mut sim: Sim<RouterNest>| {
         let mut x = sim.init()?;
-        x.upstream.reset.next = true.into();
+        x.upstream.reset.next = false.into();
         let test_one = x
             .ports()
             .iter()

@@ -18,13 +18,13 @@ pub struct CrossWidenFIFO<
     pub write: Signal<In, Bit>,
     pub full: Signal<Out, Bit>,
     pub write_clock: Signal<In, Clock>,
-    pub write_reset: Signal<In, ResetN>,
+    pub write_reset: Signal<In, Reset>,
     // Read interface
     pub data_out: Signal<Out, Bits<DW>>,
     pub read: Signal<In, Bit>,
     pub empty: Signal<Out, Bit>,
     pub read_clock: Signal<In, Clock>,
-    pub read_reset: Signal<In, ResetN>,
+    pub read_reset: Signal<In, Reset>,
     // Input FIFO
     pub in_fifo: AsynchronousFIFO<Bits<DN>, NN, NNP1, 1>,
     // Output FIFO
@@ -140,13 +140,13 @@ pub struct CrossNarrowFIFO<
     pub write: Signal<In, Bit>,
     pub full: Signal<Out, Bit>,
     pub write_clock: Signal<In, Clock>,
-    pub write_reset: Signal<In, ResetN>,
+    pub write_reset: Signal<In, Reset>,
     // Read interface
     pub data_out: Signal<Out, Bits<DN>>,
     pub read: Signal<In, Bit>,
     pub empty: Signal<Out, Bit>,
     pub read_clock: Signal<In, Clock>,
-    pub read_reset: Signal<In, ResetN>,
+    pub read_reset: Signal<In, Reset>,
     // Input FIFO
     pub in_fifo: AsynchronousFIFO<Bits<DW>, WN, WNP1, 1>,
     // Output FIFO

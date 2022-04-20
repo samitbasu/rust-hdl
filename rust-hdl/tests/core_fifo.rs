@@ -4,9 +4,9 @@ use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 struct SyncVecTest {
-    pub reset1: Signal<In, ResetN>,
+    pub reset1: Signal<In, Reset>,
     pub clock1: Signal<In, Clock>,
-    pub reset2: Signal<In, ResetN>,
+    pub reset2: Signal<In, Reset>,
     pub clock2: Signal<In, Clock>,
     pub sender: SyncSender<Bits<8>>,
     pub recv: SyncReceiver<Bits<8>>,
@@ -132,7 +132,7 @@ fn test_vector_synchronizer() {
 
 #[derive(LogicBlock, Default)]
 struct SynchronousFIFOTest {
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
     pub fifo: SynchronousFIFO<Bits<16>, 4, 5, 4>,
 }
@@ -191,7 +191,7 @@ declare_sync_fifo!(BigFIFO, Bits<8>, 1024, 256);
 
 #[derive(LogicBlock, Default)]
 struct BigFIFOTest {
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
     pub fifo: BigFIFO,
 }
@@ -398,9 +398,9 @@ fn test_fifo_works_synchronous_fifo() {
 #[derive(LogicBlock, Default)]
 struct AsynchronousFIFOTest {
     pub read_clock: Signal<In, Clock>,
-    pub read_reset: Signal<In, ResetN>,
+    pub read_reset: Signal<In, Reset>,
     pub write_clock: Signal<In, Clock>,
-    pub write_reset: Signal<In, ResetN>,
+    pub write_reset: Signal<In, Reset>,
     pub fifo: AsynchronousFIFO<Bits<16>, 4, 5, 4>,
 }
 
@@ -489,9 +489,9 @@ fn test_fifo_works_asynchronous_fifo() {
 
 #[derive(LogicBlock, Default)]
 struct AsyncBigFIFOTest {
-    pub read_reset: Signal<In, ResetN>,
+    pub read_reset: Signal<In, Reset>,
     pub read_clock: Signal<In, Clock>,
-    pub write_reset: Signal<In, ResetN>,
+    pub write_reset: Signal<In, Reset>,
     pub write_clock: Signal<In, Clock>,
     pub fifo: AsynchronousFIFO<Bits<16>, 10, 11, 256>,
 }
@@ -551,7 +551,7 @@ fn test_almost_empty_is_accurate_in_large_async_fifo() {
 #[derive(LogicBlock, Default)]
 struct ReducerFIFOTest {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub wide_fifo: SynchronousFIFO<Bits<16>, 4, 5, 4>,
     pub narrow_fifo: SynchronousFIFO<Bits<8>, 4, 5, 4>,
     pub reducer: FIFOReducer<16, 8, false>,

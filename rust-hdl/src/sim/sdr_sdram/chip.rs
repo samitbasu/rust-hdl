@@ -46,7 +46,7 @@ pub struct SDRAMSimulator<
     t_rrd: Constant<Bits<32>>,
     banks_busy: Signal<Local, Bit>,
     auto_reset: AutoReset,
-    reset: Signal<Local, ResetN>,
+    reset: Signal<Local, Reset>,
 }
 
 impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
@@ -220,6 +220,9 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
             }
             MasterState::Ready => {
                 self.test_ready.next = true;
+            }
+            _ => {
+                self.state.d.next = MasterState::Boot;
             }
         }
         // Any banks that are in error mean the chip is in error.

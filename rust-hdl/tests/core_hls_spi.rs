@@ -14,7 +14,7 @@ struct SPITest {
     pub sys_clock: Signal<In, Clock>,
     pub spi: SPIWiresMaster,
     auto_reset: AutoReset,
-    bidi_reset: Signal<Local, ResetN>,
+    bidi_reset: Signal<Local, Reset>,
 }
 
 impl Logic for SPITest {

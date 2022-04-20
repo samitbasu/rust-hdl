@@ -5,7 +5,7 @@ pub struct OutputDDR {
     pub d: Signal<In, Bits<2>>,
     pub clock: Signal<In, Clock>,
     pub q: Signal<Out, Bit>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     _capture: Bits<2>,
 }
 

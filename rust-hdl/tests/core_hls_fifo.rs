@@ -10,7 +10,7 @@ mod test_common;
 struct HLSFIFOTest {
     fifo: AsyncFIFO<Bits<8>, 3, 4, 1>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for HLSFIFOTest {
@@ -88,7 +88,7 @@ struct FIFOTestFixture {
     fifo: SyncFIFO<Bits<8>, 4, 5, 1>,
     reader: LazyFIFOReader<Bits<8>, 10>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for FIFOTestFixture {
@@ -163,9 +163,9 @@ struct FIFOTestFixtureAsync {
     fifo: AsyncFIFO<Bits<8>, 4, 5, 1>,
     reader: LazyFIFOReader<Bits<8>, 10>,
     clock_write: Signal<In, Clock>,
-    reset_write: Signal<In, ResetN>,
+    reset_write: Signal<In, Reset>,
     clock_read: Signal<In, Clock>,
-    reset_read: Signal<In, ResetN>,
+    reset_read: Signal<In, Reset>,
 }
 
 impl Logic for FIFOTestFixtureAsync {

@@ -23,7 +23,7 @@ pub enum BankState {
 pub struct MemoryBank<const R: usize, const C: usize, const A: usize, const D: usize> {
     // Constraint - A = R + C
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub cas_delay: Signal<In, Bits<3>>,
     pub write_burst: Signal<In, Bit>,
     pub address: Signal<In, Bits<13>>,
@@ -371,6 +371,9 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                         self.state.d.next = BankState::Error;
                     }
                 }
+            }
+            _ => {
+                self.state.d.next = BankState::Boot;
             }
         }
         if self.refresh_counter.q.val() >= self.t_refresh_max.val() {

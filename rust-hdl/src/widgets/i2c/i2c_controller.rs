@@ -40,7 +40,7 @@ pub struct I2CController {
     pub write_data_in: Signal<In, Bits<8>>,
     pub read_data_out: Signal<Out, Bits<8>>,
     pub read_valid: Signal<Out, Bit>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub ack: Signal<Out, Bit>,
     pub nack: Signal<Out, Bit>,
     driver: I2CDriver,
@@ -149,6 +149,7 @@ impl Logic for I2CController {
                             self.last_read.d.next = true;
                         }
                         I2CControllerCmd::Noop => {}
+                        _ => {}
                     }
                     if self.driver.busy.val() {
                         self.state.d.next = State::Error;
@@ -217,6 +218,9 @@ impl Logic for I2CController {
             State::Error => {
                 self.error.next = true;
             }
+            _ => {
+                self.state.d.next = State::Idle;
+            }
         }
         if self.driver.error.val() {
             self.state.d.next = State::Error;
@@ -246,7 +250,7 @@ fn test_i2c_controller_synthesizes() {
 #[derive(LogicBlock)]
 struct I2CControllerTest {
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
     controller: I2CController,
     target_1: I2CTestTarget,
     target_2: I2CTestTarget,

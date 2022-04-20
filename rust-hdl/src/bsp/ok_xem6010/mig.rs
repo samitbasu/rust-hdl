@@ -74,13 +74,13 @@ pub struct MemoryInterfaceGenerator {
     // Raw clock from the system - cannot be intercepted
     pub raw_sys_clk: Signal<In, Clock>,
     // Reset - must be handled externally
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     // Calibration complete
     pub calib_done: Signal<Out, Bit>,
     // Buffered 100 MHz clock
     pub clk_out: Signal<Out, Clock>,
     // Delayed reset
-    pub reset_out: Signal<Out, ResetN>,
+    pub reset_out: Signal<Out, Reset>,
     // P0 command port
     pub p0_cmd: CommandPort,
     // P0 write port

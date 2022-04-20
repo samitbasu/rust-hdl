@@ -37,7 +37,7 @@ enum State {
 #[derive(LogicBlock)]
 pub struct SDRAMBaseController<const R: usize, const C: usize, const L: usize, const D: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub sdram: SDRAMDriver<D>,
     // Command interface
     pub data_in: Signal<In, Bits<L>>,
@@ -346,6 +346,9 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
                 }
             }
             State::Error => {}
+            _ => {
+                self.state.d.next = State::Boot;
+            }
         }
         self.error.next = self.state.q.val() == State::Error;
         // Handle the input command latching

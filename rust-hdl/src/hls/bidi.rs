@@ -28,7 +28,7 @@ pub struct BidiBusD<T: Synth> {
 pub struct BidiMaster<T: Synth> {
     pub bus: BidiBusM<T>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     bus_buffer: TristateBuffer<T>,
     pub data_to_bus: FIFOReadController<T>,
     pub data_from_bus: FIFOWriteController<T>,
@@ -90,6 +90,9 @@ impl<T: Synth> Logic for BidiMaster<T> {
                 self.state.d.next = BidiState::Receiving;
             }
             BidiState::Release => {
+                self.state.d.next = BidiState::Idle;
+            }
+            _ => {
                 self.state.d.next = BidiState::Idle;
             }
         }

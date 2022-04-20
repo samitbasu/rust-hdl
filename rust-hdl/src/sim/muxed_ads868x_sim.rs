@@ -10,7 +10,7 @@ pub struct MuxedADS868XSimulators<const N: usize> {
     pub addr: Signal<In, Bits<3>>,
     pub mux: MuxSlaves<N, 3>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     adcs: [ADS868XSimulator; N],
 }
 

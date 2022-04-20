@@ -160,6 +160,9 @@ impl Logic for OpalKellyXEM7010MIGTest {
                     self.cmd_done.trigger.next = 2_usize.into();
                 }
             }
+            _ => {
+                self.state.d.next = MIGState::Idle;
+            }
         }
     }
 }

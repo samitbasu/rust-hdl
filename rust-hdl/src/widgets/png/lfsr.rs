@@ -9,7 +9,7 @@ pub struct LFSRSimple {
     pub clock: Signal<In, Clock>,
     pub strobe: Signal<In, Bit>,
     pub num: Signal<Out, Bits<32>>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     x: DFF<Bits<32>>,
     y: DFF<Bits<32>>,
     z: DFF<Bits<32>>,

@@ -5,7 +5,7 @@ use rust_hdl::widgets::prelude::*;
 #[derive(LogicBlock, Default)]
 struct RegFIFOTest {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub in_fifo: SynchronousFIFO<Bits<16>, 4, 5, 1>,
     pub reg_fifo: RegisterFIFO<Bits<16>>,
     pub out_fifo: SynchronousFIFO<Bits<16>, 4, 5, 1>,

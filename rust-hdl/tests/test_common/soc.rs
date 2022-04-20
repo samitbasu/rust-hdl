@@ -22,9 +22,9 @@ pub struct SoCTestChip {
     miso_port: MISOPort<16>,
     data_fifo: SynchronousFIFO<Bits<16>, 8, 9, 1>,
     auto_reset: AutoReset,
-    reset: Signal<Local, ResetN>,
+    reset: Signal<Local, Reset>,
     auto_reset_sys: AutoReset,
-    reset_sys: Signal<Local, ResetN>,
+    reset_sys: Signal<Local, Reset>,
 }
 
 impl Default for SoCTestChip {

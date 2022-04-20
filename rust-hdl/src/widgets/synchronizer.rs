@@ -7,7 +7,7 @@ pub struct BitSynchronizer {
     pub sig_in: Signal<In, Bit>,
     pub sig_out: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     dff0: DFF<Bit>,
     dff1: DFF<Bit>,
 }
@@ -44,7 +44,7 @@ pub enum SyncSenderState {
 pub struct SyncSender<T: Synth> {
     pub sig_in: Signal<In, T>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub sig_cross: Signal<Out, T>,
     pub flag_out: Signal<Out, Bit>,
     pub ack_in: Signal<In, Bit>,
@@ -92,6 +92,9 @@ impl<T: Synth> Logic for SyncSender<T> {
                     self.state.d.next = SyncSenderState::Idle.into();
                 }
             }
+            _ => {
+                self.state.d.next = SyncSenderState::Idle;
+            }
         }
     }
 }
@@ -119,7 +122,7 @@ pub enum SyncReceiverState {
 pub struct SyncReceiver<T: Synth> {
     pub sig_out: Signal<Out, T>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub sig_cross: Signal<In, T>,
     pub flag_in: Signal<In, Bit>,
     pub ack_out: Signal<Out, Bit>,
@@ -157,6 +160,9 @@ impl<T: Synth> Logic for SyncReceiver<T> {
                     self.ack_out.next = true;
                 }
             }
+            _ => {
+                self.state.d.next = SyncReceiverState::WaitSteady;
+            }
         }
     }
 }
@@ -177,13 +183,13 @@ fn sync_receiver_is_synthesizable() {
 pub struct VectorSynchronizer<T: Synth> {
     // The input interface...
     pub clock_in: Signal<In, Clock>,
-    pub reset_in: Signal<In, ResetN>,
+    pub reset_in: Signal<In, Reset>,
     pub sig_in: Signal<In, T>,
     pub busy: Signal<Out, Bit>,
     pub send: Signal<In, Bit>,
     // The output interface...
     pub clock_out: Signal<In, Clock>,
-    pub reset_out: Signal<In, ResetN>,
+    pub reset_out: Signal<In, Reset>,
     pub sig_out: Signal<Out, T>,
     pub update: Signal<Out, Bit>,
     // The two pieces of the synchronizer

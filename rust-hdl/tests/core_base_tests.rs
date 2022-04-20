@@ -38,7 +38,7 @@ mod tests {
         uut.connect_all();
         check_all(&uut).unwrap();
         let mut strobe_count = 0;
-        uut.reset.next = true.into();
+        uut.reset.next = false.into();
         for clock in 0..10_000_000 {
             uut.clock.next = (clock % 2 == 0).into();
             if !simulate(&mut uut, 10) {
@@ -65,7 +65,7 @@ mod tests {
         #[derive(Clone, Debug, LogicBlock)]
         struct StateMachine {
             pub clock: Signal<In, Clock>,
-            pub reset: Signal<In, ResetN>,
+            pub reset: Signal<In, Reset>,
             pub advance: Signal<In, Bit>,
             state: DFF<MyState>,
         }
@@ -93,6 +93,7 @@ mod tests {
                         MyState::Running => self.state.d.next = MyState::Paused,
                         MyState::Paused => self.state.d.next = MyState::Stopped,
                         MyState::Stopped => self.state.d.next = MyState::Init,
+                        _ => self.state.d.next = MyState::Init,
                     }
                 }
             }
@@ -123,7 +124,7 @@ mod tests {
         #[derive(Clone, Debug, LogicBlock)]
         struct StrobePair {
             pub clock: Signal<In, Clock>,
-            pub reset: Signal<In, ResetN>,
+            pub reset: Signal<In, Reset>,
             pub enable: Signal<In, Bit>,
             a_strobe: Strobe<32>,
             b_strobe: Strobe<32>,

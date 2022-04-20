@@ -19,7 +19,7 @@ struct BusTest {
     master_from_bus_fifo: SyncFIFO<Bits<8>, 4, 5, 1>,
     master_to_bus_fifo: SyncFIFO<Bits<8>, 4, 5, 1>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
 }
 
 impl Default for BusTest {

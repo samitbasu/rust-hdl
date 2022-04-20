@@ -18,7 +18,7 @@ struct HostSDRAMControllerTest {
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
     auto_reset: AutoReset,
-    bidi_reset: Signal<Local, ResetN>,
+    bidi_reset: Signal<Local, Reset>,
 }
 
 impl Logic for HostSDRAMControllerTest {

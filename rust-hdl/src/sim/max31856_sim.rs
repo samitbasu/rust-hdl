@@ -28,7 +28,7 @@ pub struct MAX31856Simulator {
     // Slave SPI bus
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     // RAM that stores the memory contents
     reg_ram: RAM<Bits<8>, 4>,
     // Used to handle auto conversions
@@ -184,6 +184,9 @@ impl Logic for MAX31856Simulator {
                     self.state.d.next = MAX31856State::WriteCmd;
                 }
             }
+            _ => {
+                self.state.d.next = MAX31856State::Start;
+            }
         }
         // Warning! There is a contention between writes from the SPI bus and
         // writes from the DAQ...  A more sophisticated model would segment
@@ -218,6 +221,9 @@ impl Logic for MAX31856Simulator {
                 self.reg_ram.write_enable.next = true;
                 self.dstate.d.next = DAQState::Idle;
             }
+            _ => {
+                self.dstate.d.next = DAQState::Idle;
+            }
         }
     }
 }
@@ -242,7 +248,7 @@ fn test_max31856_synthesizes() {
 #[derive(LogicBlock)]
 struct Test31856 {
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
     master: SPIMaster<64>,
     uut: MAX31856Simulator,
 }

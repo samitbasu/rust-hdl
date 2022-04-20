@@ -17,7 +17,7 @@ struct FIFOBridgeTest {
     reader: LazyFIFOReader<Bits<8>, 12>,
     lnk: FIFOLink<Bits<8>>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for FIFOBridgeTest {

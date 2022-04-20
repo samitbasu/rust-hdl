@@ -15,7 +15,7 @@ pub struct SDRAMOnChipBuffer<const D: usize> {
     write_flop: DFF<Bits<D>>,
     read_flop: DFF<Bits<D>>,
     clock: Signal<Local, Clock>,
-    reset: Signal<Local, ResetN>,
+    reset: Signal<Local, Reset>,
 }
 
 impl<const D: usize> Logic for SDRAMOnChipBuffer<D> {

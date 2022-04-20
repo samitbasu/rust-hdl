@@ -13,7 +13,7 @@ struct CrossWidenTestFixture {
     cross: CrossWiden<4, 5, 6, 16, 3, 4>,
     reader: LazyFIFOReader<Bits<16>, 10>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for CrossWidenTestFixture {
@@ -88,7 +88,7 @@ struct CrossNarrowTestFixture {
     cross: CrossNarrow<16, 3, 4, 4, 5, 6>,
     reader: LazyFIFOReader<Bits<4>, 12>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for CrossNarrowTestFixture {

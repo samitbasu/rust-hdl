@@ -31,7 +31,7 @@ pub struct OKSPIMaster {
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pipe_in: PipeIn,
     pipe_out: PipeOut,
     bits: WireIn,
@@ -150,7 +150,7 @@ fn test_ok_spi_master_works() {
         ok1: Signal<In, Bits<31>>,
         ok2: Signal<Out, Bits<17>>,
         clock: Signal<In, Clock>,
-        reset: Signal<In, ResetN>,
+        reset: Signal<In, Reset>,
         core: OKSPIMaster,
         slave: SPISlave<64>,
     }

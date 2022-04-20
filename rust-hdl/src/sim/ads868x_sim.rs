@@ -20,7 +20,7 @@ enum ADS868XState {
 pub struct ADS868XSimulator {
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     // RAM to store register values
     reg_ram: RAM<Bits<16>, 5>,
     // SPI slave device
@@ -206,6 +206,9 @@ impl Logic for ADS868XSimulator {
                 self.state.d.next = ADS868XState::Waiting;
                 self.conversion_counter.d.next = self.conversion_counter.q.val() + 1_u32;
             }
+            _ => {
+                self.state.d.next = ADS868XState::Ready;
+            }
         }
     }
 }
@@ -223,7 +226,7 @@ fn test_ads8689_synthesizes() {
 #[derive(LogicBlock)]
 struct Test8689 {
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
     master: SPIMaster<32>,
     adc: ADS868XSimulator,
 }

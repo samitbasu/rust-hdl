@@ -5,7 +5,7 @@ use rust_hdl::hls::prelude::*;
 struct RouterTest {
     router: Router<16, 8, 6>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 struct DummyBridge(pub usize);
@@ -170,7 +170,7 @@ struct RouterTestSetup {
     router: Router<16, 8, 3>,
     dev_a: [RouterTestDevice; 3],
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Default for RouterTestSetup {

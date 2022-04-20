@@ -24,7 +24,7 @@ pub struct I2CTarget {
     pub sda: Signal<InOut, Bit>,
     pub scl: Signal<InOut, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub from_bus: Signal<Out, Bits<8>>,
     pub bus_write: Signal<Out, Bit>,
     pub active: Signal<In, Bit>,
@@ -188,6 +188,9 @@ impl Logic for I2CTarget {
                     self.state.d.next = State::Idle;
                     self.stop.next = true;
                 }
+            }
+            _ => {
+                self.state.d.next = State::Idle;
             }
         }
         if self.set_sda.val() {

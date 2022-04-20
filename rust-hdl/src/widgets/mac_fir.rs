@@ -20,7 +20,7 @@ pub struct MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<const ADDR_BIT
     pub data_out: Signal<Out, Signed<48>>,
     pub strobe_out: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub busy: Signal<Out, Bit>,
     coeff_memory: SyncROM<Signed<16>, ADDR_BITS>,
     left_bank: RAM<Signed<16>, ADDR_BITS>,
@@ -139,6 +139,9 @@ impl<const ADDR_BITS: usize> Logic
                 // Reset the counter
                 self.index.d.next = 0_usize.into();
                 self.accum.d.next = 0_i32.into();
+            }
+            _ => {
+                self.state.d.next = MACFIRState::Idle;
             }
         }
         self.data_write.next = self.head_ptr.q.val();

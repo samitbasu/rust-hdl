@@ -7,8 +7,8 @@ pub struct EdgeTristateBufferDelayed<T: Synth> {
     pub to_pin: Signal<In, T>,
     pub from_pin: Signal<Out, T>,
     pub output_enable: Signal<In, Bit>,
-    pub clk: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
     pub pin: Signal<InOut, T>,
     dff_out: DFF<T>,
     dff_in: DFF<T>,
@@ -22,7 +22,7 @@ impl<T: Synth> EdgeTristateBufferDelayed<T> {
             to_pin: Default::default(),
             from_pin: Default::default(),
             output_enable: Default::default(),
-            clk: Default::default(),
+            clock: Default::default(),
             reset: Default::default(),
             pin: Default::default(),
             dff_out: Default::default(),
@@ -40,8 +40,8 @@ fn wrapper_once(delay: u8) -> String {
     wire bb_from_pin_a;
     wire bb_from_pin_z;
 
-    OFS1P3DX obuf(.D(to_pin), .CD(reset), .SP(1'b1), .SCLK(clk), .Q(bb_to_pin));
-    IFS1P3DX ibuf(.D(bb_from_pin_z), .CD(reset), .SP(1'b1), .SCLK(clk), .Q(from_pin));
+    OFS1P3DX obuf(.D(to_pin), .CD(reset), .SP(1'b1), .SCLK(clock), .Q(bb_to_pin));
+    IFS1P3DX ibuf(.D(bb_from_pin_z), .CD(reset), .SP(1'b1), .SCLK(clock), .Q(from_pin));
     BB bb(.I(bb_to_pin), .O(bb_from_pin_a), .B(pin), .T(~output_enable));
 
     defparam dg.DEL_VALUE = {delay_from_pin};
@@ -57,8 +57,8 @@ fn wrapper_multiple(count: usize, delay: u8) -> String {
         .map(|x| {
             format!(
                 r#"
-    OFS1P3DX obuf_{x}(.D(to_pin[{x}]), .CD(reset), .SP(1'b1), .SCLK(clk), .Q(bb_to_pin[{x}]));
-    IFS1P3DX ibuf_{x}(.D(bb_from_pin_z[{x}]), .CD(reset), .SP(1'b1), .SCLK(clk), .Q(from_pin[{x}]));
+    OFS1P3DX obuf_{x}(.D(to_pin[{x}]), .CD(reset), .SP(1'b1), .SCLK(clock), .Q(bb_to_pin[{x}]));
+    IFS1P3DX ibuf_{x}(.D(bb_from_pin_z[{x}]), .CD(reset), .SP(1'b1), .SCLK(clock), .Q(from_pin[{x}]));
     BB bb_{x}(.I(bb_to_pin[{x}]), .O(bb_from_pin_a[{x}]), .B(pin[{x}]), .T(~output_enable));
 
     defparam dg_from_pin_{x}.DEL_VALUE = {delay_from_pin};
@@ -86,7 +86,7 @@ wire [{B}:0] bb_from_pin_z;
 
 impl<T: Synth> Logic for EdgeTristateBufferDelayed<T> {
     fn update(&mut self) {
-        dff_setup!(self, clk, reset, dff_out, dff_in);
+        dff_setup!(self, clock, reset, dff_out, dff_in);
         self.buffer.write_enable.next = self.output_enable.val();
         self.dff_in.d.next = self.buffer.read_data.val();
         self.dff_out.d.next = self.to_pin.val();
@@ -142,7 +142,7 @@ fn test_edge_buffer_synthesizes() {
     let mut uut = TopWrap::new(EdgeTristateBufferDelayed::<Bits<8>>::new(10));
     uut.uut.output_enable.connect();
     uut.uut.to_pin.connect();
-    uut.uut.clk.connect();
+    uut.uut.clock.connect();
     uut.uut.reset.connect();
     uut.uut.pin.connect();
     uut.connect_all();

@@ -3,6 +3,7 @@ use crate::dff_setup;
 use crate::widgets::prelude::{
     AsynchronousFIFO, MemoryTimings, OutputBuffer, SDRAMBurstController, DFF,
 };
+use crate::widgets::reset_sync::ResetSynchronizer;
 use crate::widgets::sdram::SDRAMDriver;
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
@@ -21,7 +22,7 @@ pub struct SDRAMFIFOController<
     const D: usize, // Number of bits in the SDRAM interface width
     const A: usize, // Number of address bits in the SDRAM (should be C + R + B)
 > {
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
     pub sdram: SDRAMDriver<D>,
     pub ram_clock: Signal<In, Clock>,
@@ -47,6 +48,10 @@ pub struct SDRAMFIFOController<
     state: DFF<State>,
     line_to_word_ratio: Constant<Bits<A>>,
     fill: DFF<Bits<A>>,
+    reset_interface: Signal<Local, Reset>,
+    reset_dram: Signal<Local, Reset>,
+    sync_reset_interface: ResetSynchronizer,
+    sync_reset_dram: ResetSynchronizer,
 }
 
 impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usize>
@@ -82,6 +87,10 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
             state: Default::default(),
             line_to_word_ratio: Constant::new(L.into()),
             fill: Default::default(),
+            reset_interface: Default::default(),
+            reset_dram: Default::default(),
+            sync_reset_interface: Default::default(),
+            sync_reset_dram: Default::default(),
         }
     }
 }
@@ -91,12 +100,18 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
 {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, ram_clock, reset, controller);
+        self.sync_reset_interface.clock.next = self.clock.val();
+        self.sync_reset_interface.reset_in.next = self.reset.val();
+        self.sync_reset_dram.clock.next = self.ram_clock.val();
+        self.sync_reset_dram.reset_in.next = self.reset.val();
+        self.reset_interface.next = self.sync_reset_interface.reset_out.val();
+        self.reset_dram.next = self.sync_reset_dram.reset_out.val();
+        clock_reset!(self, ram_clock, reset_dram, controller);
         SDRAMDriver::<D>::link(&mut self.sdram, &mut self.controller.sdram);
         dff_setup!(
             self,
             ram_clock,
-            reset,
+            reset_dram,
             read_pointer,
             write_pointer,
             dram_is_empty,
@@ -108,14 +123,14 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
         );
         // The FP write clock is external, but the read clock is the DRAM clock
         self.fp.write_clock.next = self.clock.val();
-        self.fp.write_reset.next = self.reset.val();
+        self.fp.write_reset.next = self.reset_interface.val();
         self.fp.read_clock.next = self.ram_clock.val();
-        self.fp.read_reset.next = self.reset.val();
+        self.fp.read_reset.next = self.reset_dram.val();
         // The BP write clock is DRAM, the read clock is external
         self.bp.write_clock.next = self.ram_clock.val();
-        self.bp.write_reset.next = self.reset.val();
+        self.bp.write_reset.next = self.reset_dram.val();
         self.bp.read_clock.next = self.clock.val();
-        self.bp.read_reset.next = self.reset.val();
+        self.bp.read_reset.next = self.reset_interface.val();
         // Connect the write interface to the FP fifo
         self.fp.data_in.next = self.data_in.val();
         self.fp.write.next = self.write.val();
@@ -180,6 +195,9 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
                 if !self.controller.busy.val() {
                     self.state.d.next = State::Idle;
                 }
+            }
+            _ => {
+                self.state.d.next = State::Idle;
             }
         }
         self.status.next = 0_usize.into();

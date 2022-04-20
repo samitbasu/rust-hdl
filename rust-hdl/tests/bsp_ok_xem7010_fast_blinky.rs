@@ -14,7 +14,7 @@ pub struct OpalKellyFastBlinky {
     pub clock_p: Signal<In, Clock>,
     pub clock_n: Signal<In, Clock>,
     pub clk_100mhz: Signal<Local, Clock>,
-    reset_100mhz: Signal<Local, ResetN>,
+    reset_100mhz: Signal<Local, Reset>,
     pub clock_div: OpalKellySystemClock7,
     ar: AutoReset,
 }

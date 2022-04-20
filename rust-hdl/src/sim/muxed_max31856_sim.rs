@@ -10,7 +10,7 @@ pub struct MuxedMAX31856Simulators {
     pub mux: MuxSlaves<8, 3>,
     pub addr: Signal<In, Bits<3>>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     adcs: Vec<MAX31856Simulator>,
 }
 

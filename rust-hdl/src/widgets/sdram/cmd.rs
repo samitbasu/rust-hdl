@@ -66,6 +66,7 @@ impl Logic for SDRAMCommandEncoder {
                 self.cas_not.next = true;
                 self.we_not.next = true;
             }
+            _ => {}
         }
     }
 }

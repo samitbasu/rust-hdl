@@ -19,7 +19,7 @@ pub struct AsynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BL
     pub almost_empty: Signal<Out, Bit>,
     pub underflow: Signal<Out, Bit>,
     pub read_clock: Signal<In, Clock>,
-    pub read_reset: Signal<In, ResetN>,
+    pub read_reset: Signal<In, Reset>,
     pub read_fill: Signal<Out, Bits<NP1>>,
     // Write interface
     pub write: Signal<In, Bit>,
@@ -28,7 +28,7 @@ pub struct AsynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BL
     pub almost_full: Signal<Out, Bit>,
     pub overflow: Signal<Out, Bit>,
     pub write_clock: Signal<In, Clock>,
-    pub write_reset: Signal<In, ResetN>,
+    pub write_reset: Signal<In, Reset>,
     pub write_fill: Signal<Out, Bits<NP1>>,
     // Internal RAM
     ram: RAM<D, N>,

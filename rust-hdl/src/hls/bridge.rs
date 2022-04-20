@@ -16,7 +16,7 @@ pub struct Bridge<const D: usize, const A: usize, const N: usize> {
     pub upstream: SoCBusResponder<D, A>,
     pub nodes: [SoCPortController<D>; N],
     pub clock_out: Signal<Out, Clock>,
-    pub reset_out: Signal<Out, ResetN>,
+    pub reset_out: Signal<Out, Reset>,
     address_latch: DFF<Bits<A>>,
     reset_sync: ResetSynchronizer,
     _port_names: Vec<String>,

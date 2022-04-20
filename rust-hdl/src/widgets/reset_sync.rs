@@ -3,21 +3,22 @@ use crate::widgets::dff::DFF;
 
 #[derive(Clone, Debug, LogicBlock, Default)]
 pub struct ResetSynchronizer {
-    pub reset_in: Signal<In, ResetN>,
+    pub reset_in: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
-    pub reset_out: Signal<Out, ResetN>,
+    pub reset_out: Signal<Out, Reset>,
     dff0: DFF<Bit>,
     dff1: DFF<Bit>,
 }
 
 // From http://www.sunburst-design.com/papers/CummingsSNUG2003Boston_Resets.pdf
+// Adapted for a positive reset.
 impl Logic for ResetSynchronizer {
     #[hdl_gen]
     fn update(&mut self) {
         clock_reset!(self, clock, reset_in, dff0, dff1);
         self.dff0.d.next = true;
         self.dff1.d.next = self.dff0.q.val();
-        self.reset_out.next = self.dff1.q.val().into();
+        self.reset_out.next = (!self.dff1.q.val()).into();
     }
 }
 

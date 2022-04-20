@@ -22,7 +22,7 @@ pub struct MemoryInterfaceGenerator7Series {
     pub ready: Signal<Out, Bit>,
     pub write_fifo_not_full: Signal<Out, Bit>,
     pub calib_done: Signal<Out, Bit>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub clock: Signal<Out, Clock>,
     pub reset_out: Signal<Out, Bit>,
 }

@@ -25,7 +25,7 @@ pub struct DDRFIFO {
     pub o_clock: Signal<Out, Clock>,
     pub raw_sys_clock: Signal<In, Clock>,
     // Reset signal
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     // Read interface
     pub read: Signal<In, Bit>,
     pub data_out: Signal<Out, Bits<32>>,
@@ -60,7 +60,7 @@ pub struct DDRFIFO {
     // Status byte
     pub status: Signal<Out, Bits<8>>,
     mig_clock: Signal<Local, Clock>,
-    mig_reset: Signal<Local, ResetN>,
+    mig_reset: Signal<Local, Reset>,
 }
 
 impl Logic for DDRFIFO {
@@ -186,6 +186,9 @@ impl Logic for DDRFIFO {
                 if !self.mig.p0_cmd.full.val() {
                     self.state.d.next = DDRFIFOState::Idle;
                 }
+            }
+            _ => {
+                self.state.d.next = DDRFIFOState::Booting;
             }
         }
         // Wire up the reset

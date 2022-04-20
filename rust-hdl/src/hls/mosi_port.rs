@@ -15,7 +15,7 @@ pub struct MOSIPort<const D: usize> {
     pub strobe_out: Signal<Out, Bit>,
     pub ready: Signal<In, Bit>,
     pub clock_out: Signal<Out, Clock>,
-    pub reset_out: Signal<Out, ResetN>,
+    pub reset_out: Signal<Out, Reset>,
     state: DFF<Bits<D>>,
     address_active: DFF<Bit>,
     strobe: DFF<Bit>,

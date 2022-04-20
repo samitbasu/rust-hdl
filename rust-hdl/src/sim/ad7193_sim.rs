@@ -21,7 +21,7 @@ pub struct AD7193Simulator {
     // Slave SPI bus
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     // ROM that stores register widths
     reg_width_rom: ROM<Bits<5>, 3>,
     // RAM that stores register contents
@@ -208,6 +208,9 @@ impl Logic for AD7193Simulator {
                 self.spi_slave.data_outbound.next = 0_u64.into();
                 self.state.d.next = AD7193State::Ready;
             }
+            _ => {
+                self.state.d.next = AD7193State::Init;
+            }
         }
         if self.spi_slave.transfer_done.val() & self.spi_slave.data_inbound.val().all() {
             println!("Reset encountered");
@@ -229,7 +232,7 @@ fn test_ad7193_synthesizes() {
 #[derive(LogicBlock)]
 struct Test7193 {
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
     master: SPIMaster<64>,
     adc: AD7193Simulator,
 }

@@ -22,7 +22,7 @@ pub struct I2CTestTarget {
     // The I2C Clock line.  Must have an external pullup
     pub scl: Signal<InOut, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     phy: I2CTarget,
     mem: RAM<Bits<16>, 4>,
     ptr: DFF<Bits<4>>,
@@ -137,6 +137,9 @@ impl Logic for I2CTestTarget {
                 if self.phy.nack.val() {
                     self.state.d.next = State::Idle;
                 }
+            }
+            _ => {
+                self.state.d.next = State::Idle;
             }
         }
         if self.phy.stop.val() {

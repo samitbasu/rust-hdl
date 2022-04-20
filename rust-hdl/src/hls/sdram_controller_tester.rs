@@ -7,7 +7,6 @@ use crate::widgets::prelude::*;
 
 #[derive(Debug, Copy, Clone, LogicState, PartialEq)]
 enum State {
-    Boot,
     Idle,
     Writing,
     Reading,
@@ -36,7 +35,7 @@ pub struct SDRAMControllerTester<const R: usize, const C: usize> {
     output_avail: DFF<Bit>,
     state: DFF<State>,
     clock: Signal<Local, Clock>,
-    reset: Signal<Local, ResetN>,
+    reset: Signal<Local, Reset>,
 }
 
 impl<const R: usize, const C: usize> SDRAMControllerTester<R, C> {
@@ -106,10 +105,8 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         self.cmd.ready.next = false;
         self.controller.data_in.next = self.entropy_funnel.data_out.val();
         self.entropy_funnel.data_in.next = self.lsfr.num.val();
-        self.lsfr.strobe.next =
-            !self.entropy_funnel.full.val() & (self.state.q.val() != State::Boot);
-        self.entropy_funnel.write.next =
-            !self.entropy_funnel.full.val() & (self.state.q.val() != State::Boot);
+        self.lsfr.strobe.next = !self.entropy_funnel.full.val();
+        self.entropy_funnel.write.next = !self.entropy_funnel.full.val();
         self.entropy_funnel.write_clock.next = self.upstream.clock.val();
         self.entropy_funnel.write_reset.next = self.reset.val();
         self.entropy_funnel.read_clock.next = self.upstream.clock.val();
@@ -129,9 +126,6 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         self.validation_out.strobe_in.next = false;
         self.write_out.strobe_in.next = false;
         match self.state.q.val() {
-            State::Boot => {
-                self.state.d.next = State::Idle;
-            }
             State::Idle => {
                 self.cmd.ready.next = true;
                 if self.cmd.strobe_out.val() {
@@ -169,6 +163,9 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
                     self.controller.cmd_strobe.next = true;
                     self.dram_address.d.next = self.dram_address.q.val() + 4_usize;
                 }
+            }
+            _ => {
+                self.state.d.next = State::Idle;
             }
         }
         // Do the validation piece - we need a pipeline register

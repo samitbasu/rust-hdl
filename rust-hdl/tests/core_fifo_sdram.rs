@@ -11,7 +11,7 @@ struct FIFOSDRAMTest {
     buffer: SDRAMOnChipBuffer<16>,
     fifo: SDRAMFIFOController<6, 4, 16, 16, 12>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 #[cfg(test)]

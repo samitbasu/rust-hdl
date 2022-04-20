@@ -13,7 +13,7 @@ struct HLSSDRAMFIFOTest {
     fifo: SDRAMFIFO<5, 5, 4, 16, 12>,
     sdram: SDRAMSimulator<5, 5, 10, 16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Default for HLSSDRAMFIFOTest {
@@ -68,11 +68,13 @@ fn test_hls_sdram_fifo_works() {
     sim.add_testbench(move |mut sim: Sim<HLSSDRAMFIFOTest>| {
         let mut x = sim.init()?;
         reset_sim!(sim, clock, reset, x);
+        wait_clock_cycles!(sim, clock, x, 20);
         hls_fifo_write_lazy!(sim, clock, x, fifo.bus_write, &data);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<HLSSDRAMFIFOTest>| {
         let mut x = sim.init()?;
+        wait_clock_cycles!(sim, clock, x, 20);
         hls_fifo_read_lazy!(sim, clock, x, fifo.bus_read, &data2);
         sim.done(x)
     });

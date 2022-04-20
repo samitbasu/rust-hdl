@@ -22,7 +22,7 @@ enum SPISlaveState {
 #[derive(LogicBlock)]
 pub struct SPISlave<const N: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub wires: SPIWiresSlave,
     pub disabled: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
@@ -165,6 +165,7 @@ impl<const N: usize> Logic for SPISlave<N> {
                     self.register_in.d.next = 0_u32.into();
                     self.state.d.next = SPISlaveState::Waiting;
                     self.pointer.d.next = 0_u16.into();
+                    self.escape.d.next = 0_u16.into();
                 } else if self.start_send.val() {
                     self.register_out.d.next = self.data_outbound.val();
                     self.bits_saved.d.next = self.bits.val();
@@ -195,6 +196,12 @@ impl<const N: usize> Logic for SPISlave<N> {
                     & (self.csel_synchronizer.sig_out.val() == self.cs_off.val())
                 {
                     self.state.d.next = SPISlaveState::Idle;
+                }
+                if !self.cpha.val() & (self.csel_synchronizer.sig_out.val() == self.cs_off.val()) {
+                    self.escape.d.next = self.escape.q.val() + 1_usize;
+                    if self.escape.q.val().all() {
+                        self.state.d.next = SPISlaveState::Idle;
+                    }
                 }
             }
             SPISlaveState::Settle => {
@@ -251,6 +258,9 @@ impl<const N: usize> Logic for SPISlave<N> {
                     self.state.d.next = SPISlaveState::Idle;
                     self.register_out.d.next = 0_u32.into();
                 }
+            }
+            _ => {
+                self.state.d.next = SPISlaveState::Boot;
             }
         }
     }

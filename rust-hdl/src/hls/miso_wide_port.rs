@@ -9,7 +9,7 @@ pub struct MISOWidePort<const W: usize, const D: usize> {
     pub port_in: Signal<In, Bits<W>>,
     pub strobe_in: Signal<In, Bit>,
     pub clock_out: Signal<Out, Clock>,
-    pub reset_out: Signal<Out, ResetN>,
+    pub reset_out: Signal<Out, Reset>,
     accum: DFF<Bits<W>>,
     address_active: DFF<Bit>,
     offset: Constant<Bits<W>>,

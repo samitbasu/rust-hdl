@@ -4,12 +4,13 @@ use crate::core::prelude::*;
 pub struct EdgeFlipFlop<T: Synth> {
     pub d: Signal<In, T>,
     pub q: Signal<Out, T>,
-    pub clk: Signal<In, Clock>,
+    pub clock: Signal<In, Clock>,
+    pub reset: Signal<In, Reset>,
 }
 
 fn wrapper_once() -> &'static str {
     r##"
-OFS1P3DX inst_OFS1P3DX(.SCLK(clk), .SP(1'b1), .D(d), .Q(q), .CD(1'b0));
+OFS1P3DX inst_OFS1P3DX(.SCLK(clock), .SP(1'b1), .D(d), .Q(q), .CD(reset));
     "##
 }
 
@@ -18,7 +19,7 @@ fn wrapper_multiple(count: usize) -> String {
         .map(|x| {
             format!(
                 "
-OFS1P3DX ofs_{x}(.SCLK(clk), .SP(1'b1), .D(d[{x}]), .Q(q[{x}]), .CD(1'b0));
+OFS1P3DX ofs_{x}(.SCLK(clock), .SP(1'b1), .D(d[{x}]), .Q(q[{x}]), .CD(reset));
 ",
                 x = x
             )
@@ -29,8 +30,12 @@ OFS1P3DX ofs_{x}(.SCLK(clk), .SP(1'b1), .D(d[{x}]), .Q(q[{x}]), .CD(1'b0));
 
 impl<T: Synth> Logic for EdgeFlipFlop<T> {
     fn update(&mut self) {
-        if self.clk.pos_edge() {
-            self.q.next = self.d.val()
+        if self.clock.pos_edge() | self.reset.pos_edge() {
+            if self.reset.val().into() {
+                self.q.next = T::default();
+            } else {
+                self.q.next = self.d.val()
+            }
         }
     }
     fn connect(&mut self) {
@@ -57,7 +62,8 @@ endmodule
 fn test_eflop_synthesizes() {
     let mut uut = TopWrap::new(EdgeFlipFlop::<Bits<8>>::default());
     uut.uut.d.connect();
-    uut.uut.clk.connect();
+    uut.uut.clock.connect();
+    uut.uut.reset.connect();
     uut.connect_all();
     yosys_validate("eflop", &generate_verilog(&uut)).unwrap();
 }

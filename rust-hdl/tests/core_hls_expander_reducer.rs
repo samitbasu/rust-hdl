@@ -15,7 +15,7 @@ struct ReducerTestFixture {
     narrow_fifo: SyncFIFO<Bits<4>, 4, 5, 1>,
     reader: LazyFIFOReader<Bits<4>, 12>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for ReducerTestFixture {
@@ -119,7 +119,7 @@ struct ExpanderTestFixture {
     word_fifo: SyncFIFO<Bits<16>, 4, 5, 1>,
     reader: LazyFIFOReader<Bits<16>, 10>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for ExpanderTestFixture {

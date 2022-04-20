@@ -45,7 +45,7 @@ pub struct I2CDriver {
     pub run: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
     pub error: Signal<Out, Bit>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub read_bit: Signal<Out, Bit>,
     pub read_valid: Signal<Out, Bit>,
     state: DFF<State>,
@@ -138,6 +138,7 @@ impl Logic for I2CDriver {
                             self.state.d.next = State::Restart
                         }
                         I2CDriverCmd::Noop => {}
+                        _ => {}
                     }
                 }
             }
@@ -225,6 +226,9 @@ impl Logic for I2CDriver {
                         self.state.d.next = State::Idle;
                     }
                 }
+            }
+            _ => {
+                self.state.d.next = State::Idle;
             }
         }
         if self.set_scl.val() {

@@ -12,7 +12,7 @@ struct SPIMuxSlavesTest {
     core: HLSSPIMaster<16, 8, 64>,
     mux: HLSSPIMuxSlaves<16, 8, 2>,
     auto_reset: AutoReset,
-    bidi_reset: Signal<Local, ResetN>,
+    bidi_reset: Signal<Local, Reset>,
     pub bidi_clock: Signal<In, Clock>,
     pub sys_clock: Signal<In, Clock>,
 }

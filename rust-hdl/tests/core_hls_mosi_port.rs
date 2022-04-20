@@ -8,7 +8,7 @@ struct MOSIPortTest {
     port_a: MOSIPort<16>,
     port_b: MOSIPort<16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Default for MOSIPortTest {
@@ -174,7 +174,7 @@ struct MOSIWidePortTest {
     port_a: MOSIWidePort<64, 16>,
     port_b: MOSIWidePort<64, 16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Default for MOSIWidePortTest {
@@ -298,7 +298,7 @@ struct MOSIPortFIFOTest {
     bridge: Bridge<16, 2, 1>,
     port_a: MOSIFIFOPort<16, 4, 5, 1>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Default for MOSIPortFIFOTest {

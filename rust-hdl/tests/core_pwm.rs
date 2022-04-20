@@ -5,7 +5,7 @@ use std::fs::File;
 #[derive(LogicBlock)]
 struct PWMTest {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, ResetN>,
+    pub reset: Signal<In, Reset>,
     pub pwm: PulseWidthModulator<8>,
 }
 

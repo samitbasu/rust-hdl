@@ -7,7 +7,7 @@ use crate::widgets::dff::DFF;
 pub struct MOSIWidePort<const W: usize, const D: usize> {
     pub bus: SoCPortResponder<D>,
     pub clock_out: Signal<Out, Clock>,
-    pub reset_out: Signal<Out, ResetN>,
+    pub reset_out: Signal<Out, Reset>,
     pub port_out: Signal<Out, Bits<W>>,
     pub strobe_out: Signal<Out, Bit>,
     accum: DFF<Bits<W>>,

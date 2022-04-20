@@ -9,7 +9,7 @@ struct TestSDRAMDevice {
     buffer: SDRAMOnChipBuffer<16>,
     cntrl: SDRAMBaseController<5, 5, 64, 16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, ResetN>,
+    reset: Signal<In, Reset>,
 }
 
 impl Logic for TestSDRAMDevice {
