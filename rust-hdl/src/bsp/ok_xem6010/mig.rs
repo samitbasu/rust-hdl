@@ -203,7 +203,7 @@ impl Logic for MemoryInterfaceGenerator {
         self.cmd_fifo.read.next = false;
         self.write_fifo.read.next = false;
         self.read_fifo.write.next = false;
-        self.reset_out.next = true.into();
+        self.reset_out.next = NO_RESET;
         match self.state.q.val() {
             State::Init => {
                 self.state.d.next = State::Calibrating;
@@ -213,7 +213,7 @@ impl Logic for MemoryInterfaceGenerator {
                 if self.timer.q.val() == 0_usize {
                     self.calib.d.next = true;
                     self.state.d.next = State::Idle;
-                    self.reset_out.next = false.into();
+                    self.reset_out.next = RESET;
                 }
             }
             State::Idle => {

@@ -64,7 +64,7 @@ impl<const W: usize, const D: usize> Logic for MOSIWidePort<W, D> {
         if self.address_active.q.val() {
             self.bus.ready.next = true;
             if self.bus.strobe.val() {
-                self.accum.d.next = self.accum.q.val() << self.offset.val()
+                self.accum.d.next = (self.accum.q.val() << self.offset.val())
                     | bit_cast::<W, D>(self.bus.from_controller.val());
                 self.count.d.next = self.count.q.val() + 1_usize;
                 if self.count.q.val() == self.modulo.val() {

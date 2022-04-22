@@ -21,7 +21,11 @@ impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
     #[hdl_gen]
     fn update(&mut self) {
         self.pll.clock_in.next = self.clock.val();
-        self.reset.next = (!self.pll.locked.val()).into();
+        if !self.pll.locked.val() {
+            self.reset.next = RESET;
+        } else {
+            self.reset.next = NO_RESET;
+        }
         for i in 0_usize..8_usize {
             self.faders[i].reset.next = self.reset.val();
             self.faders[i].clock.next = self.pll.clock_out.val();

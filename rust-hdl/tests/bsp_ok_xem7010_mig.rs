@@ -110,7 +110,11 @@ impl Logic for OpalKellyXEM7010MIGTest {
         self.mig.command.next = 0_u32.into();
         self.mig.enable.next = false;
         self.mig.write_data_mask.next = 0_u16.into();
-        self.mig.reset.next = self.reset.dataout.val().any().into();
+        if self.reset.dataout.val().any() {
+            self.mig.reset.next = RESET;
+        } else {
+            self.mig.reset.next = NO_RESET;
+        }
         self.state.d.next = self.state.q.val();
         self.state.clock.next = self.mig.clock.val();
         // Control signals

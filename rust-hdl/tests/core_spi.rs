@@ -95,7 +95,7 @@ impl Logic for SPITestPair {
     #[hdl_gen]
     fn update(&mut self) {
         clock_reset!(self, clock, reset, master, slave);
-        self.reset.next = false.into();
+        self.reset.next = NO_RESET;
         SPIWiresMaster::join(&mut self.master.wires, &mut self.slave.wires);
     }
 }

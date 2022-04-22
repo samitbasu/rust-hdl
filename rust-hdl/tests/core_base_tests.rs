@@ -38,7 +38,7 @@ mod tests {
         uut.connect_all();
         check_all(&uut).unwrap();
         let mut strobe_count = 0;
-        uut.reset.next = false.into();
+        uut.reset.next = NO_RESET;
         for clock in 0..10_000_000 {
             uut.clock.next = (clock % 2 == 0).into();
             if !simulate(&mut uut, 10) {

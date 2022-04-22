@@ -17,6 +17,7 @@ pub use crate::core::clock::freq_hz_to_period_femto;
 pub use crate::core::clock::Clock;
 pub use crate::core::clock::Reset;
 pub use crate::core::clock::NANOS_PER_FEMTO;
+pub use crate::core::clock::{NO_RESET, RESET};
 pub use crate::core::constant::Constant;
 pub use crate::core::constraint::Timing::*;
 pub use crate::core::constraint::*;

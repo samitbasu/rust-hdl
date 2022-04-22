@@ -43,7 +43,11 @@ impl Logic for OpalKellyDownloadDDRFIFOStressTest {
     fn update(&mut self) {
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         MCBInterface1GDDR2::link(&mut self.mcb, &mut self.download.mcb);
-        self.download.reset.next = self.reset.dataout.val().any().into();
+        if self.reset.dataout.val().any() {
+            self.download.reset.next = RESET;
+        } else {
+            self.download.reset.next = NO_RESET;
+        }
         self.download.raw_sys_clock.next = self.raw_sys_clock.val();
         self.download.ti_clk.next = self.ok_host.ti_clk.val();
         self.count_in.clock.next = self.ok_host.ti_clk.val();

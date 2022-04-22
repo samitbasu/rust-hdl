@@ -21,7 +21,11 @@ impl Logic for AlchitryCuPulserPLL {
     fn update(&mut self) {
         self.pulser.enable.next = true;
         self.pll.clock_in.next = self.clock.val();
-        self.pulser.reset.next = (!self.pll.locked.val()).into();
+        if self.pll.locked.val() {
+            self.pulser.reset.next = NO_RESET;
+        } else {
+            self.pulser.reset.next = RESET;
+        }
         self.pulser.clock.next = self.pll.clock_out.val();
         self.leds.next = 0x00_u8.into();
         if self.pulser.pulse.val() {

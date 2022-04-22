@@ -55,7 +55,7 @@ impl<const DN: usize, const DW: usize> Logic for FIFOExpanderN<DN, DW> {
                     | bit_cast::<DW, DN>(self.data_in.val());
             } else {
                 self.data_store.d.next = (self.data_store.q.val() >> self.offset.val())
-                    | bit_cast::<DW, DN>(self.data_in.val()) << self.placement.val();
+                    | (bit_cast::<DW, DN>(self.data_in.val()) << self.placement.val());
             }
             self.load_count.d.next = self.load_count.q.val() + 1_u32;
         }
@@ -64,7 +64,7 @@ impl<const DN: usize, const DW: usize> Logic for FIFOExpanderN<DN, DW> {
             self.data_out.next = bit_cast::<DW, DN>(self.data_in.val())
                 | (self.data_store.q.val() << self.offset.val());
         } else {
-            self.data_out.next = bit_cast::<DW, DN>(self.data_in.val()) << self.placement.val()
+            self.data_out.next = (bit_cast::<DW, DN>(self.data_in.val()) << self.placement.val())
                 | (self.data_store.q.val() >> self.offset.val());
         }
         self.write.next = self.will_write.val();

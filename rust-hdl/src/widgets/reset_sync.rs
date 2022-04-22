@@ -18,7 +18,11 @@ impl Logic for ResetSynchronizer {
         clock_reset!(self, clock, reset_in, dff0, dff1);
         self.dff0.d.next = true;
         self.dff1.d.next = self.dff0.q.val();
-        self.reset_out.next = (!self.dff1.q.val()).into();
+        if self.dff1.q.val() {
+            self.reset_out.next = NO_RESET;
+        } else {
+            self.reset_out.next = RESET;
+        }
     }
 }
 

@@ -12,12 +12,12 @@ impl Logic for AutoReset {
     #[hdl_gen]
     fn update(&mut self) {
         self.dff.clock.next = self.clock.val();
-        self.dff.reset.next = false.into();
+        self.dff.reset.next = NO_RESET;
         self.dff.d.next = self.dff.q.val();
-        self.reset.next = false.into();
+        self.reset.next = NO_RESET;
         if !self.dff.q.val().all() {
             self.dff.d.next = self.dff.q.val() + 1_usize;
-            self.reset.next = true.into();
+            self.reset.next = RESET;
         }
     }
 }

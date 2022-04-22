@@ -32,8 +32,9 @@ impl<T: Synth> Default for DFF<T> {
 
 impl<T: Synth> Logic for DFF<T> {
     fn update(&mut self) {
-        if self.clock.pos_edge() | self.reset.pos_edge() {
-            if self.reset.val().into() {
+        let reset_edge = (self.reset.pos_edge() & RESET.rst) | (self.reset.neg_edge() & !RESET.rst);
+        if self.clock.pos_edge() | reset_edge {
+            if self.reset.val() == RESET {
                 self.q.next = self._reset_val;
             } else {
                 self.q.next = self.d.val()
@@ -44,16 +45,20 @@ impl<T: Synth> Logic for DFF<T> {
         self.q.connect();
     }
     fn hdl(&self) -> Verilog {
+        let edge_text = if RESET.rst { "posedge" } else { "negedge" };
+        let reset_sense = if RESET.rst { "" } else { "!" };
         Verilog::Custom(format!(
             "\
-always @(posedge clock or posedge reset) begin
-   if (reset) begin
+always @(posedge clock or {} reset) begin
+   if ({}reset) begin
       q <= {:x};
    end else begin
       q <= d;
    end
 end
       ",
+            edge_text,
+            reset_sense,
             self._reset_val.verilog()
         ))
     }

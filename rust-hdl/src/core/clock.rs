@@ -38,17 +38,22 @@ pub struct Reset {
     pub rst: bool,
 }
 
+pub const NO_RESET: Reset = Reset { rst: false };
+pub const RESET: Reset = Reset { rst: true };
+
 impl Into<bool> for Reset {
     fn into(self) -> bool {
         self.rst
     }
 }
 
+/*
 impl From<bool> for Reset {
     fn from(x: bool) -> Reset {
         Reset { rst: x }
     }
 }
+*/
 
 impl std::ops::Not for Reset {
     type Output = bool;
