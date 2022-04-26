@@ -56,25 +56,29 @@ impl<D: Synth, const N: usize> Logic for RAM<D, N> {
     }
 
     fn hdl(&self) -> Verilog {
-        let init = self
-            ._sim
-            .iter()
-            .map(|x| {
-                format!(
-                    "mem[{}] = {}",
-                    x.0.verilog().to_string(),
-                    x.1.verilog().to_string()
-                )
-            })
-            .collect::<Vec<_>>()
-            .join(";\n");
+        let init = if self._sim.len() != 0 {
+            format!(
+                "initial begin\n{};\nend\n",
+                self._sim
+                    .iter()
+                    .map(|x| {
+                        format!(
+                            "mem[{}] = {}",
+                            x.0.verilog().to_string(),
+                            x.1.verilog().to_string()
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(";\n")
+            )
+        } else {
+            "".into()
+        };
         Verilog::Custom(format!(
             "\
 reg[{D}:0] mem[{Acount}:0];
 
-initial begin
-{init};
-end
+{init}
 
 always @(posedge read_clock) begin
    read_data <= mem[read_address];
