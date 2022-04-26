@@ -50,7 +50,10 @@ impl Logic for SPIMuxTest {
         SoCBusController::<16, 8>::join(&mut self.route.nodes[2], &mut self.mux.upstream);
         SPIWiresMaster::join(&mut self.core_1.spi, &mut self.mux.from_masters[0]);
         SPIWiresMaster::join(&mut self.core_2.spi, &mut self.mux.from_masters[1]);
-        SPIWiresMaster::link(&mut self.spi, &mut self.mux.to_bus);
+        //SPIWiresMaster::link(&mut self.spi, &mut self.mux.to_bus);
+        self.spi.mosi.next = self.mux.to_bus.mosi.val();
+        self.spi.msel.next = self.mux.to_bus.msel.val();
+        self.spi.mclk.next = self.mux.to_bus.mclk.val();
         self.mux.to_bus.miso.next = !self.mux.to_bus.mosi.val(); // Echo...
     }
 }
@@ -182,7 +185,7 @@ fn test_spi_mux_works() {
         hls_host_issue_read!(sim, bidi_clock, x, pc_to_host, spi1_data_inbound, 4);
         let ret = hls_host_get_words!(sim, bidi_clock, x, host_to_pc, 4);
         wait_clock_cycle!(sim, bidi_clock, x, 10);
-        sim_assert!(sim, ret == [0x0, 0x0, !0xDEAD_u16, !0xBEEF_u16], x);
+        sim_assert_eq!(sim, ret, [0x0, 0x0, !0xDEAD_u16, !0xBEEF_u16], x);
         // Switch to the second controller
         hls_host_write!(sim, bidi_clock, x, pc_to_host, mux_select, [1_u16]);
         // Write the outgoing word, this time to the second SPI controller
@@ -201,7 +204,7 @@ fn test_spi_mux_works() {
         // Read back the results
         hls_host_issue_read!(sim, bidi_clock, x, pc_to_host, spi2_data_inbound, 4);
         let ret = hls_host_get_words!(sim, bidi_clock, x, host_to_pc, 4);
-        sim_assert!(sim, ret == [0x0, 0x0, !0xCAFE_u16, !0xBABE_u16], x);
+        sim_assert_eq!(sim, ret, [0x0, 0x0, !0xCAFE_u16, !0xBABE_u16], x);
         wait_clock_cycle!(sim, bidi_clock, x, 100);
         sim.done(x)
     });

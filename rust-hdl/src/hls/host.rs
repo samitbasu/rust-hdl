@@ -87,5 +87,6 @@ fn test_host_synthesizes() {
     uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
+    std::fs::write("host.v", &vlog).unwrap();
     yosys_validate("host", &vlog).unwrap();
 }

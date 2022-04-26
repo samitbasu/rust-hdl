@@ -90,51 +90,16 @@ impl ToString for VerilogCodeGenerator {
     }
 }
 
+pub fn verilog_link_extraction(code: &VerilogBlock) -> Vec<VerilogLink> {
+    let mut gen = VerilogCodeGenerator::new();
+    gen.visit_block(code);
+    gen.links
+}
+
 pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
     let mut gen = VerilogCodeGenerator::new();
     gen.visit_block(code);
-
-    // add forward links to the code
-    let links = gen
-        .links
-        .iter()
-        .map(|x| {
-            match x {
-                VerilogLink::Forward(x) => {
-                    format!(
-                        "always @(*) {}${} = {}${};",
-                        x.other_name.replace("[", "$").replace("]", ""),
-                        x.my_name,
-                        x.owner_name.replace("[", "$").replace("]", ""),
-                        x.my_name
-                    )
-                }
-                VerilogLink::Backward(x) => {
-                    format!(
-                        "always @(*) {}${} = {}${};",
-                        x.owner_name.replace("[", "$").replace("]", ""),
-                        x.my_name,
-                        x.other_name.replace("[", "$").replace("]", ""),
-                        x.my_name
-                    )
-                }
-                VerilogLink::Bidirectional(x) => {
-                    if x.my_name.is_empty() {
-                        format!("assign {} = {};", x.owner_name, x.other_name)
-                    } else {
-                        format!(
-                            "assign {}${} = {}${};",
-                            x.owner_name, x.my_name, x.other_name, x.my_name
-                        )
-                    }
-                }
-            }
-            .to_string()
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    format!("always @(*) {}\n{}", gen.to_string(), links)
+    format!("always @(*) {}\n", gen.to_string())
 }
 
 impl VerilogVisitor for VerilogCodeGenerator {
