@@ -250,6 +250,22 @@ impl ModuleDefines {
         io.pop();
         io.add(");\n");
     }
+    fn module_argument_is_passed_through_to_submodule(
+        &self,
+        module_details: &ModuleDetails,
+        module_arg_name: &str,
+    ) -> bool {
+        for child in &module_details.sub_modules {
+            let entry = self.details.get(&child.kind).unwrap();
+            for child_arg in &entry.atoms {
+                let arg_name = format!("{}${}", child.name, child_arg.name);
+                if self.get_linked_argument_name(module_details, &arg_name) == module_arg_name {
+                    return true;
+                }
+            }
+        }
+        false
+    }
     fn get_linked_argument_name(&self, module_details: &ModuleDetails, arg_name: &str) -> String {
         for link in &module_details.links {
             let equiv = get_link_equivalence(link);
@@ -349,7 +365,19 @@ impl ModuleDefines {
         io.push();
         if !args.is_empty() {
             io.add("\n// Module arguments");
-            args.iter().for_each(|x| io.add(decl(x)));
+            args.iter().for_each(|x| {
+                if !self.module_argument_is_passed_through_to_submodule(module_details, &x.name)
+                    || x.kind != AtomKind::OutputParameter
+                {
+                    io.add(decl(x))
+                } else {
+                    // For some synthesis engines, you cannot pass a module argument
+                    // to a child module if it is of reg type
+                    let mut x = (*x).clone();
+                    x.kind = AtomKind::OutputPassthrough;
+                    io.add(decl(&x))
+                }
+            });
         }
         let submodules = &module_details.sub_modules;
         if !consts.is_empty() {
