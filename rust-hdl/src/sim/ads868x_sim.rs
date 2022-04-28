@@ -196,12 +196,22 @@ impl Logic for ADS868XSimulator {
             }
             ADS868XState::Nop => {
                 self.spi_slave.bits.next = 32_usize.into();
+                // TODO - make this more accurate based on how
+                // the output register is programmed.
+                /*  self.spi_slave.data_outbound.next =
+                (bit_cast::<32, 16>(self.conversion_counter.q.val()) << 16_u32)
+                    | bit_cast::<32, 16>(self.reg_ram.read_data.val() & 0x0FF_u32) << 12_u32
+                    | bit_cast::<32, 1>(self.data_parity.val().into()) << 11_u32
+                    | bit_cast::<32, 1>((self.data_parity.val() ^ self.id_parity.val()).into())
+                    << 10_u32;
+                    */
                 self.spi_slave.data_outbound.next =
                     (bit_cast::<32, 16>(self.conversion_counter.q.val()) << 16_u32)
-                        | bit_cast::<32, 16>(self.reg_ram.read_data.val() & 0x0FF_u32) << 12_u32
-                        | bit_cast::<32, 1>(self.data_parity.val().into()) << 11_u32
-                        | bit_cast::<32, 1>((self.data_parity.val() ^ self.id_parity.val()).into())
-                            << 10_u32;
+                        | (bit_cast::<32, 16>(self.reg_ram.read_data.val() & 0x0FF_u32) << 12_u32)
+                        | (bit_cast::<32, 1>(self.data_parity.val().into()) << 8_u32)
+                        | (bit_cast::<32, 1>(
+                            (self.data_parity.val() ^ self.id_parity.val()).into(),
+                        ) << 9_u32);
                 self.spi_slave.start_send.next = true;
                 self.state.d.next = ADS868XState::Waiting;
                 self.conversion_counter.d.next = self.conversion_counter.q.val() + 1_u32;
