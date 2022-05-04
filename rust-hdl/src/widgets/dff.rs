@@ -1,3 +1,4 @@
+use crate::core::logic::TimingMode;
 use crate::core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock)]
@@ -31,6 +32,9 @@ impl<T: Synth> Default for DFF<T> {
 }
 
 impl<T: Synth> Logic for DFF<T> {
+    fn timing_mode(&self) -> TimingMode {
+        TimingMode::DFF
+    }
     fn update(&mut self) {
         let reset_edge = (self.reset.pos_edge() & RESET.rst) | (self.reset.neg_edge() & !RESET.rst);
         if self.clock.pos_edge() | reset_edge {

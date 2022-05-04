@@ -1,4 +1,5 @@
 use rand::Rng;
+use rust_hdl::core::check_timing::check_timing;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::widgets::prelude::AutoReset;
@@ -85,6 +86,7 @@ fn test_host_test_synthesizes() {
     let uut = make_host_test();
     let vlog = generate_verilog(&uut);
     yosys_validate("host", &vlog).unwrap();
+    check_timing(&make_host_test())
 }
 
 #[test]
