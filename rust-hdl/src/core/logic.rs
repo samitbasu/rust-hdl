@@ -1,11 +1,5 @@
 use crate::core::ast::{Verilog, VerilogLink};
-
-#[derive(Debug, Clone, Copy)]
-pub enum TimingMode {
-    Normal,
-    DFF,
-    Constant,
-}
+use crate::core::timing::TimingInfo;
 
 pub trait Logic {
     fn update(&mut self);
@@ -13,7 +7,9 @@ pub trait Logic {
     fn hdl(&self) -> Verilog {
         Verilog::Empty
     }
-    fn timing_mode(&self) -> TimingMode {TimingMode::Normal}
+    fn timing(&self) -> Vec<TimingInfo> {
+        vec![]
+    }
 }
 
 pub fn logic_connect_fn<L: Logic>(x: &mut L) {

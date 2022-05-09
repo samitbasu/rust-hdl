@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::core::timing::TimingInfo;
 use crate::widgets::ramrom::rom::make_btree_from_iterable;
 use std::collections::BTreeMap;
 
@@ -94,5 +95,28 @@ end
             Acount = (1 << N) - 1,
             init = init
         ))
+    }
+
+    fn timing(&self) -> Vec<TimingInfo> {
+        vec![
+            TimingInfo {
+                name: "ram_read".into(),
+                clock: "read_clock".into(),
+                inputs: vec!["read_address".into()],
+                outputs: vec!["read_data".into()],
+                reset: None,
+            },
+            TimingInfo {
+                name: "ram_write".into(),
+                clock: "write_clock".into(),
+                inputs: vec![
+                    "write_address".into(),
+                    "write_data".into(),
+                    "write_enable".into(),
+                ],
+                outputs: vec![],
+                reset: None,
+            },
+        ]
     }
 }
