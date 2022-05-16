@@ -1,10 +1,14 @@
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::pins::{xem_6010_base_clock, xem_6010_leds};
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::pll::{PLLFreqSynthesis, Spartan6PLLSettings};
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 pub struct OpalKellyPLLTest {
     pll: PLLFreqSynthesis,
@@ -15,6 +19,7 @@ pub struct OpalKellyPLLTest {
     raw_clock: Signal<In, Clock>,
 }
 
+#[cfg(feature = "frontpanel")]
 impl Default for OpalKellyPLLTest {
     fn default() -> Self {
         let settings = Spartan6PLLSettings {
@@ -34,6 +39,7 @@ impl Default for OpalKellyPLLTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyPLLTest {
     #[hdl_gen]
     fn update(&mut self) {

@@ -1,12 +1,16 @@
 mod test_common;
 
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::mcb_if::MCBInterface1GDDR2;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFOStressTest {
     mcb: MCBInterface1GDDR2,
@@ -21,6 +25,7 @@ struct OpalKellyDownloadDDRFIFOStressTest {
     enable: WireIn,
 }
 
+#[cfg(feature = "frontpanel")]
 impl Default for OpalKellyDownloadDDRFIFOStressTest {
     fn default() -> Self {
         Self {
@@ -38,6 +43,7 @@ impl Default for OpalKellyDownloadDDRFIFOStressTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyDownloadDDRFIFOStressTest {
     #[hdl_gen]
     fn update(&mut self) {

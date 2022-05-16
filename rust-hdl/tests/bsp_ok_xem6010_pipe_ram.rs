@@ -1,4 +1,5 @@
 use rust_hdl::bsp::ok_core::prelude::OpalKellyBSP;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 

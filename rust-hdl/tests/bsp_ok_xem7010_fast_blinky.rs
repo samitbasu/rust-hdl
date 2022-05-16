@@ -3,10 +3,13 @@ use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 mod test_common;
 
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::sys_clock::OpalKellySystemClock7;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::XEM7010;
 use std::time::Duration;
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 pub struct OpalKellyFastBlinky {
     pub led: Signal<Out, Bits<8>>,
@@ -19,6 +22,7 @@ pub struct OpalKellyFastBlinky {
     ar: AutoReset,
 }
 
+#[cfg(feature = "frontpanel")]
 impl OpalKellyFastBlinky {
     pub fn new<B: OpalKellyBSP>() -> Self {
         let clk = B::clocks();
@@ -35,6 +39,7 @@ impl OpalKellyFastBlinky {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyFastBlinky {
     #[hdl_gen]
     fn update(&mut self) {
@@ -53,6 +58,7 @@ impl Logic for OpalKellyFastBlinky {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_fast_blinky_is_synthesizable() {
     let mut uut = OpalKellyFastBlinky::new::<XEM7010>();

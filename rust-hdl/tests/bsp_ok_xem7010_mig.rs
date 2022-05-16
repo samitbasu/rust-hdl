@@ -1,6 +1,9 @@
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::mcb_if::MCBInterface4GDDR3;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::mig7::MemoryInterfaceGenerator7Series;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
@@ -21,6 +24,7 @@ pub enum MIGState {
     WaitRead,
 }
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM7010MIGTest {
     pub hi: OpalKellyHostInterface,
@@ -45,6 +49,7 @@ pub struct OpalKellyXEM7010MIGTest {
     state: DFF<MIGState>,
 }
 
+#[cfg(feature = "frontpanel")]
 impl Default for OpalKellyXEM7010MIGTest {
     fn default() -> Self {
         Self {
@@ -68,6 +73,7 @@ impl Default for OpalKellyXEM7010MIGTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyXEM7010MIGTest {
     #[hdl_gen]
     fn update(&mut self) {

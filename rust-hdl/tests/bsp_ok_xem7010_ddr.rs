@@ -5,15 +5,20 @@ mod test_common;
 use test_common::tools::*;
 
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::ddr_fifo7::DDR7FIFO;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::mcb_if::MCBInterface4GDDR3;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::pins::xem_7010_leds;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 #[cfg(feature = "frontpanel")]
 use rust_hdl_ok_frontpanel_sys::OkError;
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 struct OpalKellyDDR7Test {
     mcb: MCBInterface4GDDR3,
@@ -29,6 +34,7 @@ struct OpalKellyDDR7Test {
     leds: Signal<Out, Bits<8>>,
 }
 
+#[cfg(feature = "frontpanel")]
 impl Default for OpalKellyDDR7Test {
     fn default() -> Self {
         Self {
@@ -47,6 +53,7 @@ impl Default for OpalKellyDDR7Test {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyDDR7Test {
     #[hdl_gen]
     fn update(&mut self) {

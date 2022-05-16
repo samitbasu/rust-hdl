@@ -1,6 +1,8 @@
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::mig::{MIGInstruction, MemoryInterfaceGenerator};
 use rust_hdl::core::prelude::*;
 
+#[cfg(feature = "frontpanel")]
 #[test]
 fn test_mig() {
     let mut uut = MemoryInterfaceGenerator::default();

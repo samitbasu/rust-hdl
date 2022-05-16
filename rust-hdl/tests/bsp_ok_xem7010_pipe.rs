@@ -3,8 +3,11 @@ use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 mod test_common;
 
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::pins::{xem_7010_leds, xem_7010_neg_clock, xem_7010_pos_clock};
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::sys_clock::OpalKellySystemClock7;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::XEM7010;
 #[cfg(feature = "frontpanel")]
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
@@ -13,6 +16,7 @@ use test_common::tools::*;
 
 declare_async_fifo!(OKTestAFIFO2, Bits<16>, 1024, 256);
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 pub struct OpalKellyBTPipeOut7Test {
     pub hi: OpalKellyHostInterface,
@@ -30,6 +34,7 @@ pub struct OpalKellyBTPipeOut7Test {
     pub led: Signal<Out, Bits<8>>,
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyBTPipeOut7Test {
     #[hdl_gen]
     fn update(&mut self) {
@@ -86,6 +91,7 @@ impl Logic for OpalKellyBTPipeOut7Test {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl OpalKellyBTPipeOut7Test {
     pub fn new() -> Self {
         Self {

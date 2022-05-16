@@ -8,6 +8,7 @@ use rust_hdl::bsp::ok_core::ok_hls_bridge::{
     stream_read, write_data_to_address, OKHLSBridgeAddressConfig, OpalKellyHLSBridge,
 };
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;

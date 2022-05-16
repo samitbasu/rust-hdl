@@ -1,5 +1,7 @@
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
@@ -10,6 +12,7 @@ mod test_common;
 
 declare_async_fifo!(OKTestAFIFO, Bits<16>, 256, 1);
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 pub struct OpalKellyPipeAFIFOTest {
     pub hi: OpalKellyHostInterface,
@@ -22,6 +25,7 @@ pub struct OpalKellyPipeAFIFOTest {
     pub fast_clock: Signal<In, Clock>,
 }
 
+#[cfg(feature = "frontpanel")]
 impl OpalKellyPipeAFIFOTest {
     fn new<B: OpalKellyBSP>() -> Self {
         Self {
@@ -37,6 +41,7 @@ impl OpalKellyPipeAFIFOTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyPipeAFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {

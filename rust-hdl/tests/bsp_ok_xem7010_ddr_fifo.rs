@@ -4,12 +4,16 @@ mod test_common;
 use test_common::ddr::*;
 
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::download::OpalKellyDDRBackedDownloadFIFO7Series;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::mcb_if::MCBInterface4GDDR3;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFO7SeriesStressTest {
     mcb: MCBInterface4GDDR3,
@@ -25,6 +29,7 @@ struct OpalKellyDownloadDDRFIFO7SeriesStressTest {
     enable: WireIn,
 }
 
+#[cfg(feature = "frontpanel")]
 impl Default for OpalKellyDownloadDDRFIFO7SeriesStressTest {
     fn default() -> Self {
         Self {
@@ -43,6 +48,7 @@ impl Default for OpalKellyDownloadDDRFIFO7SeriesStressTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyDownloadDDRFIFO7SeriesStressTest {
     #[hdl_gen]
     fn update(&mut self) {

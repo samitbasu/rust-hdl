@@ -1,9 +1,11 @@
 use rust_hdl::bsp::ok_core::ok_hi::OpalKellyHostInterface;
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 pub struct OpalKellyTristateBuffer {
     pub bus_pin: Signal<InOut, Bit>,
@@ -14,6 +16,7 @@ pub struct OpalKellyTristateBuffer {
     pub readout: WireOut,
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyTristateBuffer {
     #[hdl_gen]
     fn update(&mut self) {
@@ -28,6 +31,7 @@ impl Logic for OpalKellyTristateBuffer {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Default for OpalKellyTristateBuffer {
     fn default() -> Self {
         let mut x = Signal::default();

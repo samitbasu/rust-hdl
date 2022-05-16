@@ -4,7 +4,9 @@ use rust_hdl::bsp::ok_core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 mod test_common;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 #[cfg(feature = "frontpanel")]
 use test_common::soc::SoCTestChip;

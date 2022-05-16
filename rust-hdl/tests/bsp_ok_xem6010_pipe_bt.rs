@@ -1,5 +1,7 @@
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::pins::{xem_6010_base_clock, xem_6010_leds};
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
@@ -13,6 +15,7 @@ use test_common::tools::ok_test_prelude;
 
 declare_async_fifo!(OKTestAFIFO2, Bits<16>, 1024, 256);
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 pub struct OpalKellyBTPipeOutTest {
     pub hi: OpalKellyHostInterface,
@@ -27,6 +30,7 @@ pub struct OpalKellyBTPipeOutTest {
     pub led: Signal<Out, Bits<8>>,
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyBTPipeOutTest {
     #[hdl_gen]
     fn update(&mut self) {
@@ -78,6 +82,7 @@ impl Logic for OpalKellyBTPipeOutTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl OpalKellyBTPipeOutTest {
     pub fn new() -> Self {
         Self {

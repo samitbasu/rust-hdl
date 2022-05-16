@@ -1,6 +1,9 @@
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::mcb_if::MCBInterface1GDDR2;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::mig::{MIGInstruction, MemoryInterfaceGenerator};
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
@@ -12,6 +15,7 @@ use {
 
 mod test_common;
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010MIGTest {
     pub hi: OpalKellyHostInterface,
@@ -28,6 +32,7 @@ pub struct OpalKellyXEM6010MIGTest {
     pub read_delay: DFF<Bit>,
 }
 
+#[cfg(feature = "frontpanel")]
 impl Default for OpalKellyXEM6010MIGTest {
     fn default() -> Self {
         let raw_clock = xem_6010_base_clock();
@@ -48,6 +53,7 @@ impl Default for OpalKellyXEM6010MIGTest {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for OpalKellyXEM6010MIGTest {
     #[hdl_gen]
     fn update(&mut self) {

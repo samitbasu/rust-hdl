@@ -1,9 +1,11 @@
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
 mod test_common;
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::pins::xem_6010_base_clock;
 use rust_hdl::hls::sdram_fifo::SDRAMFIFO;
 use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
@@ -11,6 +13,7 @@ use rust_hdl::widgets::sdram::SDRAMDriver;
 #[cfg(feature = "frontpanel")]
 use test_common::download::*;
 
+#[cfg(feature = "frontpanel")]
 #[derive(LogicBlock)]
 struct SDRAMSimulatedFIFOTester {
     pub hi: OpalKellyHostInterface,
@@ -26,6 +29,7 @@ struct SDRAMSimulatedFIFOTester {
     will_cross: Signal<Local, Bit>,
 }
 
+#[cfg(feature = "frontpanel")]
 impl SDRAMSimulatedFIFOTester {
     pub fn new<B: OpalKellyBSP>() -> Self {
         let timing = MemoryTimings::fast_boot_sim(100e6);
@@ -45,6 +49,7 @@ impl SDRAMSimulatedFIFOTester {
     }
 }
 
+#[cfg(feature = "frontpanel")]
 impl Logic for SDRAMSimulatedFIFOTester {
     #[hdl_gen]
     fn update(&mut self) {

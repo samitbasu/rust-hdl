@@ -1,6 +1,7 @@
 #[cfg(feature = "frontpanel")]
 use crate::test_common::tools::ok_test_prelude;
 use rust_hdl::bsp::ok_core::prelude::*;
+#[cfg(feature = "frontpanel")]
 use rust_hdl::bsp::ok_xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::i2c::i2c_controller::{I2CController, I2CControllerCmd};
