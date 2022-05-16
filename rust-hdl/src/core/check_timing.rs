@@ -1,7 +1,6 @@
 use crate::core::ast::{
-    Verilog, VerilogBlock, VerilogBlockOrConditional, VerilogCase, VerilogConditional,
-    VerilogExpression, VerilogIndexAssignment, VerilogLink, VerilogLinkDetails, VerilogLiteral,
-    VerilogLoop, VerilogMatch, VerilogOp, VerilogOpUnary, VerilogStatement,
+    Verilog, VerilogConditional,
+    VerilogExpression, VerilogLink, VerilogLinkDetails, VerilogMatch
 };
 use crate::core::atom::Atom;
 use crate::core::block::Block;
@@ -15,7 +14,6 @@ use petgraph::unionfind::UnionFind;
 use petgraph::visit::NodeIndexable;
 use std::collections::HashMap;
 use std::fmt::Write;
-use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub enum SignalNodeKind {

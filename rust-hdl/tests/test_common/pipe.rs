@@ -25,7 +25,7 @@ impl OpalKellyPipeTest {
         Self {
             hi: B::hi(),
             ok_host: B::ok_host(),
-            accum: DFF::new(0_u16.into()),
+            accum: Default::default(),
             o_wire: WireOut::new(0x20),
             i_pipe: PipeIn::new(0x80),
         }

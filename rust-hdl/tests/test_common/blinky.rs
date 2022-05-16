@@ -29,6 +29,7 @@ impl Logic for OpalKellyBlinky {
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         self.pulser.clock.next = self.ok_host.ti_clk.val();
         self.pulser.enable.next = true;
+        self.pulser.reset.next = NO_RESET;
         if self.pulser.pulse.val() {
             self.led.next = 0xFF_u8.into();
         } else {

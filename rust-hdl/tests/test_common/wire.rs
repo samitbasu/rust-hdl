@@ -23,7 +23,7 @@ impl OpalKellyWireTest {
     pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),
-            trig_counter: DFF::new(0_u16.into()),
+            trig_counter: DFF::default(),
             led: B::leds(),
             wire_0: WireIn::new(0),
             wire_1: WireIn::new(1),

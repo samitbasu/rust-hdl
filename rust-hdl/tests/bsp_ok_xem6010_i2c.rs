@@ -86,7 +86,7 @@ impl Logic for OKI2CTest {
         // Wire in contains the address or data byte to write
         self.i2c.write_data_in.next = self.wire_in.dataout.val().get_bits::<8>(0_usize);
         // Use the remaining triggers to determine the command
-        self.i2c.reset.next = false;
+        self.i2c.reset.next = NO_RESET;
         self.i2c.cmd.next = I2CControllerCmd::Noop;
         match self.wire_in.dataout.val().get_bits::<3>(8_usize).index() {
             0 => self.i2c.cmd.next = I2CControllerCmd::BeginWrite,
@@ -95,7 +95,7 @@ impl Logic for OKI2CTest {
             3 => self.i2c.cmd.next = I2CControllerCmd::Read,
             4 => self.i2c.cmd.next = I2CControllerCmd::EndTransmission,
             5 => self.i2c.cmd.next = I2CControllerCmd::ReadLast,
-            _ => self.i2c.reset.next = true,
+            _ => self.i2c.reset.next = RESET,
         }
         self.i2c.run.next = self.trig_in.trigger.val().any();
         if self.i2c.read_valid.val() {

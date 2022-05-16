@@ -351,7 +351,7 @@ fn test_reg_writes() {
                 ((i + 2) << 16) as u32,
                 x
             );
-            let parity_bit = result.0 & 0x800_usize != 0_usize;
+            let parity_bit = result.0 & 0x100_usize != 0_usize;
             let data: Bits<32> = (result.0 & 0xFFFF0000_usize) >> 16_usize;
             sim_assert_eq!(sim, data.xor(), parity_bit, x);
         }

@@ -14,13 +14,13 @@ pub struct ISEOptions {
     pub assets: Vec<String>,
 }
 
-const ISE_PATH: &str = "/opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64/";
-const FP_PATH: &str = "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM6010-LX45";
+//const ISE_PATH: &str = "/opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64/";
+//const FP_PATH: &str = "/opt/FrontPanel-Ubuntu16.04LTS-x64-5.2.0/FrontPanelHDL/XEM6010-LX45";
 
 impl Default for ISEOptions {
     fn default() -> Self {
         Self {
-            ise_path: ISE_PATH.to_string(),
+            ise_path: env!("ISE_PATH", "Path to lin64 in 14.7/ISE_DS/ISE/bin/xtclsh").to_string(),
             add_mig: true,
             assets: [
                 "okLibrary.v",
@@ -36,7 +36,8 @@ impl Default for ISEOptions {
                 "okBTPipeOut.ngc",
             ]
             .iter()
-            .map(|x| format!("{}/{}", FP_PATH, x))
+            .map(|x| format!("{}/{}",
+                             env!("FP_PATH", "Path to FrontPanelHDL/XEM6010-LX45"), x))
             .collect(),
         }
     }

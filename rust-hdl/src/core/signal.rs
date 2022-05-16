@@ -150,12 +150,14 @@ impl<D: Direction, T: Synth> Signal<D, T> {
     }
 
     pub fn add_location(&mut self, index: usize, location: &str) {
+        assert!(index < T::BITS);
         self.constraints.push(PinConstraint {
             index,
             constraint: Constraint::Location(location.to_owned()),
         });
     }
     pub fn add_signal_type(&mut self, index: usize, signal: SignalType) {
+        assert!(index < T::BITS);
         self.constraints.push(PinConstraint {
             index,
             constraint: Constraint::Kind(signal),
