@@ -183,6 +183,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
                     self.clock_state.d.next = self.cpol.val() ^ self.cpha.val();
                 } else {
                     self.mosi_flop.d.next = self.mosi_off.val(); // Set the mosi signal to be "off"
+                    self.clock_state.d.next = self.cpol.val();
                     self.state.d.next = SPIState::Finish; // No data, go back to idle
                 }
             }

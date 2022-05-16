@@ -204,6 +204,7 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
                     self.clock_state.d.next = self.cpol_flop.q.val() ^ self.cpha_flop.q.val();
                 } else {
                     self.mosi_flop.d.next = self.mosi_off.val(); // Set the mosi signal to be "off"
+                    self.clock_state.d.next = self.cpol_flop.q.val();
                     self.state.d.next = SPIState::Finish; // No data, go back to idle
                 }
             }
