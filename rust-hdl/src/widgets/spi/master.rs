@@ -12,6 +12,7 @@ enum SPIState {
     MActive,
     SampleMISO,
     MIdle,
+    Finish,
 }
 
 #[derive(Copy, Clone)]
@@ -182,8 +183,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
                     self.clock_state.d.next = self.cpol.val() ^ self.cpha.val();
                 } else {
                     self.mosi_flop.d.next = self.mosi_off.val(); // Set the mosi signal to be "off"
-                    self.state.d.next = SPIState::Idle; // No data, go back to idle
-                    self.done_flop.d.next = true; // signal the transfer is complete
+                    self.state.d.next = SPIState::Finish; // No data, go back to idle
                 }
             }
             SPIState::MActive => {
@@ -202,6 +202,12 @@ impl<const N: usize> Logic for SPIMaster<N> {
             SPIState::MIdle => {
                 if self.strobe.strobe.val() {
                     self.state.d.next = SPIState::LoadBit;
+                }
+            }
+            SPIState::Finish => {
+                if self.strobe.strobe.val() {
+                    self.state.d.next = SPIState::Idle;
+                    self.done_flop.d.next = true;
                 }
             }
             _ => {
