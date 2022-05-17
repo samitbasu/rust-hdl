@@ -2,11 +2,10 @@ mod test_common;
 
 use rust_hdl_ok_core::core::prelude::*;
 
-use rust_hdl_ok_core::xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
+use rust_hdl_ok_core::xem6010::XEM6010;
 
 use test_common::fir::*;
-
 
 #[test]
 fn test_opalkelly_xem_6010_fir() {

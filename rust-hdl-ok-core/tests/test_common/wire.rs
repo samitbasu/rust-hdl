@@ -1,7 +1,7 @@
 use crate::test_common::tools::ok_test_prelude;
-use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use std::time::Duration;
 
@@ -64,6 +64,7 @@ impl Logic for OpalKellyWireTest {
         // Wire or in OK2
         self.ok_host.ok2.next =
             self.o_wire.ok2.val() | self.o_wire_1.ok2.val() | self.o_trig.ok2.val();
+        self.trig_counter.reset.next = NO_RESET;
     }
 }
 

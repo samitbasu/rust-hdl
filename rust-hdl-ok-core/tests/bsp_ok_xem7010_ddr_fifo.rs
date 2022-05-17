@@ -1,6 +1,5 @@
 mod test_common;
 
-
 use test_common::ddr::*;
 
 use rust_hdl_ok_core::core::prelude::*;
@@ -9,10 +8,9 @@ use rust_hdl_ok_core::xem7010::download::OpalKellyDDRBackedDownloadFIFO7Series;
 
 use rust_hdl_ok_core::xem7010::mcb_if::MCBInterface4GDDR3;
 
-use rust_hdl_ok_core::xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-
+use rust_hdl_ok_core::xem7010::XEM7010;
 
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFO7SeriesStressTest {
@@ -28,7 +26,6 @@ struct OpalKellyDownloadDDRFIFO7SeriesStressTest {
     reset: WireIn,
     enable: WireIn,
 }
-
 
 impl Default for OpalKellyDownloadDDRFIFO7SeriesStressTest {
     fn default() -> Self {
@@ -47,7 +44,6 @@ impl Default for OpalKellyDownloadDDRFIFO7SeriesStressTest {
         }
     }
 }
-
 
 impl Logic for OpalKellyDownloadDDRFIFO7SeriesStressTest {
     #[hdl_gen]
@@ -78,7 +74,6 @@ impl Logic for OpalKellyDownloadDDRFIFO7SeriesStressTest {
         self.strobe.enable.next = self.enable.dataout.val().any();
     }
 }
-
 
 #[test]
 fn test_opalkelly_xem_7010_ddr_stress_synth() {

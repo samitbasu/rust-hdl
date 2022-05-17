@@ -336,6 +336,8 @@ impl Logic for MemoryInterfaceGenerator {
     fn hdl(&self) -> Verilog {
         Verilog::Wrapper(Wrapper {
             code: r##"
+assign mcb$chip_select_neg=1'b0;
+
 // assign mcb$dram_reset_not=1'b1;
 // Unfortunately, the generated MIG for Spartan6 is not particularly
 // useful for us, since it assumes the raw clock is running at memory

@@ -1,6 +1,5 @@
 mod test_common;
 
-
 use crate::test_common::tools::ok_test_prelude;
 
 use rust_hdl_ok_core::core::ok_hls_bridge::{
@@ -9,13 +8,12 @@ use rust_hdl_ok_core::core::ok_hls_bridge::{
 };
 use rust_hdl_ok_core::core::prelude::*;
 
-use rust_hdl_ok_core::xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::xem6010::XEM6010;
 
 use rust_hdl_ok_frontpanel_sys::OkError;
-
 
 #[derive(LogicBlock)]
 struct OpalKellyHLSBridgeTest {
@@ -29,7 +27,6 @@ struct OpalKellyHLSBridgeTest {
     data_fifo: SynchronousFIFO<Bits<16>, 8, 9, 1>,
     stream_cnt: DFF<Bits<16>>,
 }
-
 
 impl Default for OpalKellyHLSBridgeTest {
     fn default() -> Self {
@@ -47,7 +44,6 @@ impl Default for OpalKellyHLSBridgeTest {
         }
     }
 }
-
 
 impl Logic for OpalKellyHLSBridgeTest {
     #[hdl_gen]
@@ -75,28 +71,25 @@ impl Logic for OpalKellyHLSBridgeTest {
         self.stream_port.ready_in.next = true;
         self.stream_port.port_in.next = self.stream_cnt.q.val();
         self.stream_cnt.d.next = self.stream_cnt.q.val() + self.stream_port.strobe_out.val();
+        self.data_fifo.reset.next = NO_RESET;
+        self.stream_cnt.reset.next = NO_RESET;
     }
 }
-
 
 #[test]
 fn test_ok_hls_bridge_test_synthesizes() {
     let mut uut = OpalKellyHLSBridgeTest::default();
-    uut.hi.link_connect_dest();
     uut.connect_all();
     yosys_validate("ok_hls_bridge_test", &generate_verilog(&uut)).unwrap();
 }
 
-
 #[test]
 fn test_ok_hls_bridge_test_synth() {
     let mut uut = OpalKellyHLSBridgeTest::default();
-    uut.hi.link_connect_dest();
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/hls_bridge"));
     test_ok_hls_runtime(target_path!("xem_6010/hls_bridge/top.bit")).unwrap();
 }
-
 
 fn test_ok_hls_runtime(bit_name: &str) -> Result<(), OkError> {
     use std::time::Instant;

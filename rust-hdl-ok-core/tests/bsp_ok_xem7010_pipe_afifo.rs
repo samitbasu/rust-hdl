@@ -1,8 +1,7 @@
-use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 mod test_common;
-
 
 use rust_hdl_ok_core::xem7010::sys_clock::OpalKellySystemClock7;
 
@@ -11,7 +10,6 @@ use rust_hdl_ok_core::xem7010::XEM7010;
 use test_common::pipe::*;
 
 declare_async_fifo!(OKTestAFIFO, Bits<16>, 256, 1);
-
 
 #[derive(LogicBlock)]
 pub struct OpalKellyPipeAFIFOTest {
@@ -27,7 +25,6 @@ pub struct OpalKellyPipeAFIFOTest {
     pub clock_p: Signal<In, Clock>,
     pub clock_n: Signal<In, Clock>,
 }
-
 
 impl OpalKellyPipeAFIFOTest {
     fn new<B: OpalKellyBSP>() -> Self {
@@ -47,7 +44,6 @@ impl OpalKellyPipeAFIFOTest {
         }
     }
 }
-
 
 impl Logic for OpalKellyPipeAFIFOTest {
     #[hdl_gen]
@@ -85,7 +81,6 @@ impl Logic for OpalKellyPipeAFIFOTest {
         self.fifo_out.write.next = !self.fifo_in.empty.val() && !self.fifo_out.full.val();
     }
 }
-
 
 #[test]
 fn test_opalkelly_xem_7010_synth_pipe_afifo() {

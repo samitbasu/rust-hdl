@@ -2,13 +2,11 @@ use rust_hdl::core::prelude::*;
 
 mod test_common;
 
-
 use test_common::spi::*;
 
 use rust_hdl_ok_core::core::prelude::*;
 
 use rust_hdl_ok_core::xem7010::*;
-
 
 #[test]
 fn test_opalkelly_xem_7010_synth_spi() {

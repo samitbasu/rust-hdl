@@ -174,7 +174,6 @@ fn test_ok_hls_bridge_synthesizes() {
     yosys_validate("ok_hls_bridge", &generate_verilog(&uut)).unwrap()
 }
 
-
 pub fn mk_u8(dat: &[u16]) -> Vec<u8> {
     let mut ret = vec![0_u8; dat.len() * 2];
     for (ndx, el) in dat.iter().enumerate() {
@@ -183,7 +182,6 @@ pub fn mk_u8(dat: &[u16]) -> Vec<u8> {
     }
     ret
 }
-
 
 pub fn write_bridge_bytes(
     hnd: &OkHandle,
@@ -212,7 +210,6 @@ pub fn write_bridge_bytes(
     // Send the message
     hnd.write_to_pipe_in(config.pipe_in as i32, data)
 }
-
 
 fn read_bridge_bytes(
     hnd: &OkHandle,
@@ -243,7 +240,6 @@ fn read_bridge_bytes(
     Ok(data)
 }
 
-
 pub fn write_data_to_address(
     hnd: &OkHandle,
     config: &OKHLSBridgeAddressConfig,
@@ -259,7 +255,6 @@ pub fn write_data_to_address(
     write_bridge_bytes(hnd, config, &mk_u8(&msg))
 }
 
-
 pub fn read_data_from_address(
     hnd: &OkHandle,
     config: &OKHLSBridgeAddressConfig,
@@ -273,7 +268,6 @@ pub fn read_data_from_address(
     Ok(make_u16_buffer(&data))
 }
 
-
 pub fn send_bridge_ping(
     hnd: &OkHandle,
     config: &OKHLSBridgeAddressConfig,
@@ -282,7 +276,6 @@ pub fn send_bridge_ping(
     write_bridge_bytes(hnd, config, &mk_u8(&[0x0100 | (id as u16)]))
 }
 
-
 pub fn receive_bridge_ping(
     hnd: &OkHandle,
     config: &OKHLSBridgeAddressConfig,
@@ -290,7 +283,6 @@ pub fn receive_bridge_ping(
     let data = read_bridge_bytes(hnd, config, 2)?;
     Ok(make_u16_buffer(&data)[0])
 }
-
 
 pub fn ping_bridge(
     hnd: &OkHandle,
@@ -308,7 +300,6 @@ pub fn ping_bridge(
     }
 }
 
-
 pub fn enable_streaming(
     hnd: &OkHandle,
     config: &OKHLSBridgeAddressConfig,
@@ -321,7 +312,6 @@ pub fn enable_streaming(
     write_bridge_bytes(hnd, config, &mk_u8(&[0x500 | (address as u16)]))
 }
 
-
 pub fn disable_streaming(hnd: &OkHandle, config: &OKHLSBridgeAddressConfig) -> Result<(), OkError> {
     write_bridge_bytes(hnd, config, &mk_u8(&[0xFFFF]))?;
     if hnd.get_wire_in(config.block_flow_control as i32)? & 1 != 0 {
@@ -330,7 +320,6 @@ pub fn disable_streaming(hnd: &OkHandle, config: &OKHLSBridgeAddressConfig) -> R
     }
     Ok(())
 }
-
 
 pub fn stream_read(
     hnd: &OkHandle,
@@ -341,7 +330,6 @@ pub fn stream_read(
     hnd.read_from_block_pipe_out(config.pipe_out as i32, 1024, &mut data)?;
     Ok(make_u16_buffer(&data))
 }
-
 
 pub fn drain_stream(
     hnd: &OkHandle,

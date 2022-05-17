@@ -1,18 +1,16 @@
-
-use rust_hdl_ok_core::xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::xem6010::XEM6010;
 
 mod test_common;
 use rust_hdl_ok_core::core::prelude::*;
 
-use rust_hdl_ok_core::xem6010::pins::xem_6010_base_clock;
 use rust_hdl::hls::sdram_fifo::SDRAMFIFO;
 use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
 use rust_hdl::widgets::sdram::SDRAMDriver;
+use rust_hdl_ok_core::xem6010::pins::xem_6010_base_clock;
 
 use test_common::download::*;
-
 
 #[derive(LogicBlock)]
 struct SDRAMSimulatedFIFOTester {
@@ -28,7 +26,6 @@ struct SDRAMSimulatedFIFOTester {
     will_read: Signal<Local, Bit>,
     will_cross: Signal<Local, Bit>,
 }
-
 
 impl SDRAMSimulatedFIFOTester {
     pub fn new<B: OpalKellyBSP>() -> Self {
@@ -48,7 +45,6 @@ impl SDRAMSimulatedFIFOTester {
         }
     }
 }
-
 
 impl Logic for SDRAMSimulatedFIFOTester {
     #[hdl_gen]
@@ -84,12 +80,9 @@ impl Logic for SDRAMSimulatedFIFOTester {
     }
 }
 
-
 #[test]
 fn test_opalkelly_xem_6010_sdram_simulated_fifo_download() {
     let mut uut = SDRAMSimulatedFIFOTester::new::<XEM6010>();
-    uut.hi.link_connect_dest();
-    uut.clock.connect();
     uut.connect_all();
     rust_hdl_ok_core::xem6010::synth::synth_obj(uut, target_path!("xem_6010/sdram_fifo_sim"));
     test_opalkelly_download_runtime(target_path!("xem_6010/sdram_fifo_sim/top.bit")).unwrap()

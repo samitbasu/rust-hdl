@@ -86,6 +86,9 @@ impl Logic for OpalKellyDDRBackedDownloadFIFO {
         self.o_pipe.datain.next = self.fifo_out.data_out.val();
         self.o_pipe.ok1.next = self.ok1.val();
         self.ok2.next = self.o_pipe.ok2.val();
+        self.read_delay.reset.next = NO_RESET;
+        self.reducer.reset.next = NO_RESET;
+        self.fifo_out.reset.next = NO_RESET;
     }
 }
 

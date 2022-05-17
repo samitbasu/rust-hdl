@@ -1,11 +1,9 @@
-
-use rust_hdl_ok_core::xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
+use rust_hdl_ok_core::xem6010::XEM6010;
 
 use test_common::mux_spi::*;
 
 mod test_common;
-
 
 #[test]
 fn test_opalkelly_xem_6010_mux_spi() {

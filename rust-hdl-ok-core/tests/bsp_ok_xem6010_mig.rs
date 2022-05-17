@@ -4,9 +4,9 @@ use rust_hdl_ok_core::xem6010::mcb_if::MCBInterface1GDDR2;
 
 use rust_hdl_ok_core::xem6010::mig::{MIGInstruction, MemoryInterfaceGenerator};
 
-use rust_hdl_ok_core::xem6010::pins::xem_6010_base_clock;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::xem6010::pins::xem_6010_base_clock;
 
 use {
     rust_hdl_ok_frontpanel_sys::OkError, std::thread::sleep, std::time::Duration,
@@ -14,7 +14,6 @@ use {
 };
 
 mod test_common;
-
 
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM6010MIGTest {
@@ -31,7 +30,6 @@ pub struct OpalKellyXEM6010MIGTest {
     pub cmd_done: TriggerOut,
     pub read_delay: DFF<Bit>,
 }
-
 
 impl Default for OpalKellyXEM6010MIGTest {
     fn default() -> Self {
@@ -52,7 +50,6 @@ impl Default for OpalKellyXEM6010MIGTest {
         }
     }
 }
-
 
 impl Logic for OpalKellyXEM6010MIGTest {
     #[hdl_gen]
@@ -111,21 +108,17 @@ impl Logic for OpalKellyXEM6010MIGTest {
         self.address.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next =
             self.pipe_in.ok2.val() | self.pipe_out.ok2.val() | self.cmd_done.ok2.val();
+        self.read_delay.reset.next = NO_RESET;
     }
 }
-
 
 #[test]
 fn test_opalkelly_xem_6010_mig() {
     let mut uut = OpalKellyXEM6010MIGTest::default();
-    uut.hi.link_connect_dest();
-    uut.mcb.link_connect_dest();
-    uut.raw_clock.connect();
     uut.connect_all();
     rust_hdl_ok_core::xem6010::synth::synth_obj(uut, target_path!("xem_6010/mig"));
     test_opalkelly_xem_6010_mig_runtime().unwrap();
 }
-
 
 #[cfg(test)]
 fn test_opalkelly_xem_6010_mig_runtime() -> Result<(), OkError> {

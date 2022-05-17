@@ -1,14 +1,12 @@
-use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 mod test_common;
-
 
 use rust_hdl_ok_core::xem7010::sys_clock::OpalKellySystemClock7;
 
 use rust_hdl_ok_core::xem7010::XEM7010;
 use std::time::Duration;
-
 
 #[derive(LogicBlock)]
 pub struct OpalKellyFastBlinky {
@@ -21,7 +19,6 @@ pub struct OpalKellyFastBlinky {
     pub clock_div: OpalKellySystemClock7,
     ar: AutoReset,
 }
-
 
 impl OpalKellyFastBlinky {
     pub fn new<B: OpalKellyBSP>() -> Self {
@@ -38,7 +35,6 @@ impl OpalKellyFastBlinky {
         }
     }
 }
-
 
 impl Logic for OpalKellyFastBlinky {
     #[hdl_gen]
@@ -58,7 +54,6 @@ impl Logic for OpalKellyFastBlinky {
     }
 }
 
-
 #[test]
 fn test_fast_blinky_is_synthesizable() {
     let mut uut = OpalKellyFastBlinky::new::<XEM7010>();
@@ -67,7 +62,6 @@ fn test_fast_blinky_is_synthesizable() {
     uut.connect_all();
     yosys_validate("fast_blinky_7010", &generate_verilog(&uut)).unwrap();
 }
-
 
 #[test]
 fn test_opalkelly_xem_7010_synth_fast_blinky() {

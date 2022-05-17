@@ -4,10 +4,9 @@ use rust_hdl_ok_core::xem6010::pins::{xem_6010_base_clock, xem_6010_leds};
 
 use rust_hdl_ok_core::xem6010::pll::{PLLFreqSynthesis, Spartan6PLLSettings};
 
-use rust_hdl_ok_core::xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-
+use rust_hdl_ok_core::xem6010::XEM6010;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyPLLTest {
@@ -18,7 +17,6 @@ pub struct OpalKellyPLLTest {
     led: Signal<Out, Bits<8>>,
     raw_clock: Signal<In, Clock>,
 }
-
 
 impl Default for OpalKellyPLLTest {
     fn default() -> Self {
@@ -39,7 +37,6 @@ impl Default for OpalKellyPLLTest {
     }
 }
 
-
 impl Logic for OpalKellyPLLTest {
     #[hdl_gen]
     fn update(&mut self) {
@@ -54,6 +51,9 @@ impl Logic for OpalKellyPLLTest {
         self.led.next = bit_cast::<8, 1>(self.slow_pulser.pulse.val().into())
             | (bit_cast::<8, 1>(self.fast_pulser.pulse.val().into()) << 5_usize)
             | (bit_cast::<8, 1>(self.med_pulser.pulse.val().into()) << 7_usize);
+        self.med_pulser.reset.next = NO_RESET;
+        self.slow_pulser.reset.next = NO_RESET;
+        self.fast_pulser.reset.next = NO_RESET;
     }
 }
 
@@ -61,7 +61,6 @@ impl Logic for OpalKellyPLLTest {
 
 fn test_opalkelly_pll_synth() {
     let mut uut = OpalKellyPLLTest::default();
-    uut.raw_clock.connect();
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/pll_test"))
 }

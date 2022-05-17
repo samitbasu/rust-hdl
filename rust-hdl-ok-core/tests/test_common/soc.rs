@@ -93,7 +93,6 @@ impl Logic for SoCTestChip {
     }
 }
 
-
 pub fn mk_u8(dat: &[u16]) -> Vec<u8> {
     let mut ret = vec![0_u8; dat.len() * 2];
     for (ndx, el) in dat.iter().enumerate() {
@@ -103,18 +102,15 @@ pub fn mk_u8(dat: &[u16]) -> Vec<u8> {
     ret
 }
 
-
 fn send_ping(hnd: &OkHandle, id: u8) -> Result<(), OkError> {
     hnd.write_to_pipe_in(0x80, &mk_u8(&[0x0100 | (id as u16)]))
 }
-
 
 fn read_ping(hnd: &OkHandle) -> Result<u16, OkError> {
     let mut data = [0x0_u8; 2];
     hnd.read_from_pipe_out(0xA0, &mut data)?;
     Ok(make_u16_buffer(&data)[0])
 }
-
 
 fn write_array(hnd: &OkHandle, address: u8, data: &[u16]) -> Result<(), OkError> {
     let mut msg = vec![0_u16; data.len() + 2];
@@ -127,7 +123,6 @@ fn write_array(hnd: &OkHandle, address: u8, data: &[u16]) -> Result<(), OkError>
     hnd.write_to_pipe_in(0x80, &mk_u8(&msg))
 }
 
-
 fn read_array(hnd: &OkHandle, address: u8, len: usize) -> Result<Vec<u16>, OkError> {
     let mut msg = vec![0_u16; 2];
     msg[0] = 0x0200 | (address as u16);
@@ -137,7 +132,6 @@ fn read_array(hnd: &OkHandle, address: u8, len: usize) -> Result<Vec<u16>, OkErr
     hnd.read_from_pipe_out(0xA0, &mut data)?;
     Ok(make_u16_buffer(&data))
 }
-
 
 pub fn test_opalkelly_soc_hello(bit_name: &str) -> Result<(), OkError> {
     let hnd = ok_test_prelude(bit_name)?;

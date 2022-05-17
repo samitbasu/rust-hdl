@@ -12,12 +12,11 @@ use rust_hdl_ok_core::xem7010::mcb_if::MCBInterface4GDDR3;
 
 use rust_hdl_ok_core::xem7010::pins::xem_7010_leds;
 
-use rust_hdl_ok_core::xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::xem7010::XEM7010;
 
 use rust_hdl_ok_frontpanel_sys::OkError;
-
 
 #[derive(LogicBlock)]
 struct OpalKellyDDR7Test {
@@ -33,7 +32,6 @@ struct OpalKellyDDR7Test {
     delay_read: DFF<Bit>,
     leds: Signal<Out, Bits<8>>,
 }
-
 
 impl Default for OpalKellyDDR7Test {
     fn default() -> Self {
@@ -52,7 +50,6 @@ impl Default for OpalKellyDDR7Test {
         }
     }
 }
-
 
 impl Logic for OpalKellyDDR7Test {
     #[hdl_gen]
@@ -87,7 +84,6 @@ impl Logic for OpalKellyDDR7Test {
     }
 }
 
-
 #[test]
 fn test_synthesis_of_xem7010_ddr() {
     let mut uut = OpalKellyDDR7Test::default();
@@ -99,7 +95,6 @@ fn test_synthesis_of_xem7010_ddr() {
     XEM7010::synth(uut, target_path!("xem_7010/ddr"));
     test_opalkelly_xem_7010_ddr_runtime().unwrap()
 }
-
 
 #[cfg(test)]
 fn test_opalkelly_xem_7010_ddr_runtime() -> Result<(), OkError> {

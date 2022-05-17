@@ -1,8 +1,8 @@
 // Build a SoC and connect it to an OK host
 
-use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 mod test_common;
 
 use rust_hdl_ok_core::xem6010::pins::xem_6010_base_clock;
@@ -10,7 +10,6 @@ use rust_hdl_ok_core::xem6010::pins::xem_6010_base_clock;
 use rust_hdl_ok_core::xem6010::XEM6010;
 
 use test_common::soc::SoCTestChip;
-
 
 #[derive(LogicBlock)]
 struct OpalKellySoCTest {
@@ -22,7 +21,6 @@ struct OpalKellySoCTest {
     dut: SoCTestChip,
     read_delay: DFF<Bit>,
 }
-
 
 impl Default for OpalKellySoCTest {
     fn default() -> Self {
@@ -37,7 +35,6 @@ impl Default for OpalKellySoCTest {
         }
     }
 }
-
 
 impl Logic for OpalKellySoCTest {
     #[hdl_gen]
@@ -54,9 +51,9 @@ impl Logic for OpalKellySoCTest {
         self.pipe_in.ok1.next = self.ok_host.ok1.val();
         self.pipe_out.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.pipe_in.ok2.val() | self.pipe_out.ok2.val();
+        self.read_delay.reset.next = NO_RESET;
     }
 }
-
 
 #[test]
 fn test_opalkelly_xem_6010_soc() {
@@ -66,7 +63,6 @@ fn test_opalkelly_xem_6010_soc() {
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/soc_hello"));
 }
-
 
 #[test]
 fn test_opalkelly_xem_6010_soc_ping() {

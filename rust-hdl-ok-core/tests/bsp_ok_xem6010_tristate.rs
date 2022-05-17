@@ -1,10 +1,9 @@
 use rust_hdl_ok_core::core::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok_core::core::prelude::*;
 
-use rust_hdl_ok_core::xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-
+use rust_hdl_ok_core::xem6010::XEM6010;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyTristateBuffer {
@@ -15,7 +14,6 @@ pub struct OpalKellyTristateBuffer {
     pub control: WireIn,
     pub readout: WireOut,
 }
-
 
 impl Logic for OpalKellyTristateBuffer {
     #[hdl_gen]
@@ -30,7 +28,6 @@ impl Logic for OpalKellyTristateBuffer {
         self.readout.datain.next = bit_cast::<16, 1>(self.buffer.read_data.val().into());
     }
 }
-
 
 impl Default for OpalKellyTristateBuffer {
     fn default() -> Self {
@@ -47,7 +44,6 @@ impl Default for OpalKellyTristateBuffer {
         }
     }
 }
-
 
 #[test]
 fn test_opalkelly_xem_6010_synth_tribuffer() {

@@ -40,6 +40,8 @@ impl Logic for OpalKellyDownloadFIFO {
             | (bit_cast::<16, 1>(self.fifo.almost_empty.val().into()) << 2_u32)
             | (bit_cast::<16, 1>(self.fifo.empty.val().into()) << 1_u32)
             | (bit_cast::<16, 1>(self.fifo.underflow.val().into()) << 0_u32);
+        self.fifo.reset.next = NO_RESET;
+        self.delay_read.reset.next = NO_RESET;
     }
 }
 
@@ -103,6 +105,8 @@ impl Logic for OpalKellyDownload32FIFO {
         self.upstage.data_in.next = self.data_in.val();
         self.upstage.write.next = self.write.val();
         self.full.next = self.upstage.full.val();
+        self.upstage.reset.next = NO_RESET;
+        self.redux.reset.next = NO_RESET;
     }
 }
 

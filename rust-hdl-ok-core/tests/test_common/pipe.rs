@@ -1,9 +1,9 @@
 use std::num::Wrapping;
 
 use crate::test_common::tools::ok_test_prelude;
-use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
 
 declare_sync_fifo!(OKTestFIFO, Bits<16>, 256, 1);
@@ -52,6 +52,8 @@ impl Logic for OpalKellyPipeTest {
             self.accum.d.next = self.accum.q.val() + self.i_pipe.dataout.val();
         }
         self.o_wire.datain.next = self.accum.q.val();
+
+        self.accum.reset.next = NO_RESET;
     }
 }
 
@@ -133,6 +135,9 @@ impl Logic for OpalKellyPipeRAMTest {
         // Advance the address counters
         self.write_address.d.next = self.write_address.q.val() + self.i_pipe.write.val();
         self.read_address.d.next = self.read_address.q.val() + self.o_pipe.read.val();
+
+        self.read_address.reset.next = NO_RESET;
+        self.write_address.reset.next = NO_RESET;
     }
 }
 
@@ -195,6 +200,9 @@ impl Logic for OpalKellyPipeFIFOTest {
         self.o_pipe.datain.next = self.fifo.data_out.val();
         self.fifo.write.next = self.i_pipe.write.val();
         self.fifo.data_in.next = self.i_pipe.dataout.val();
+
+        self.delay_read.reset.next = NO_RESET;
+        self.fifo.reset.next = NO_RESET;
     }
 }
 

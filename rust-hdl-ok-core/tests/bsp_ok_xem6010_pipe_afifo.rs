@@ -2,16 +2,15 @@ use rust_hdl_ok_core::core::prelude::*;
 
 use rust_hdl_ok_core::xem6010::pins::xem_6010_base_clock;
 
-use rust_hdl_ok_core::xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::xem6010::XEM6010;
 
 use test_common::pipe::*;
 
 mod test_common;
 
 declare_async_fifo!(OKTestAFIFO, Bits<16>, 256, 1);
-
 
 #[derive(LogicBlock)]
 pub struct OpalKellyPipeAFIFOTest {
@@ -24,7 +23,6 @@ pub struct OpalKellyPipeAFIFOTest {
     pub delay_read: DFF<Bit>,
     pub fast_clock: Signal<In, Clock>,
 }
-
 
 impl OpalKellyPipeAFIFOTest {
     fn new<B: OpalKellyBSP>() -> Self {
@@ -40,7 +38,6 @@ impl OpalKellyPipeAFIFOTest {
         }
     }
 }
-
 
 impl Logic for OpalKellyPipeAFIFOTest {
     #[hdl_gen]
@@ -73,15 +70,17 @@ impl Logic for OpalKellyPipeAFIFOTest {
         self.fifo_in.read.next = !self.fifo_in.empty.val() & !self.fifo_out.full.val();
         self.fifo_out.data_in.next = self.fifo_in.data_out.val() << 1_u32;
         self.fifo_out.write.next = !self.fifo_in.empty.val() && !self.fifo_out.full.val();
+        self.fifo_in.write_reset.next = NO_RESET;
+        self.fifo_out.write_reset.next = NO_RESET;
+        self.fifo_in.read_reset.next = NO_RESET;
+        self.fifo_out.read_reset.next = NO_RESET;
+        self.delay_read.reset.next = NO_RESET;
     }
 }
-
 
 #[test]
 fn test_opalkelly_xem_6010_synth_pipe_afifo() {
     let mut uut = OpalKellyPipeAFIFOTest::new::<XEM6010>();
-    uut.hi.link_connect_dest();
-    uut.fast_clock.connect();
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/pipe_afifo"));
     test_opalkelly_pipe_afifo_runtime(target_path!("xem_6010/pipe_afifo/top.bit")).unwrap()

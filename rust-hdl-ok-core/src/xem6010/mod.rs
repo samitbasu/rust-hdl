@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use super::core::prelude::*;
+use pins::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-use pins::*;
 
 pub mod ddr_fifo;
 pub mod mcb_if;

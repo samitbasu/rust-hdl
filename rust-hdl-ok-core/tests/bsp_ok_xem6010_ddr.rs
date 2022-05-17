@@ -6,10 +6,9 @@ use rust_hdl_ok_core::xem6010::mcb_if::MCBInterface1GDDR2;
 
 use rust_hdl_ok_core::xem6010::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
 
-use rust_hdl_ok_core::xem6010::pins::xem_6010_base_clock;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-
+use rust_hdl_ok_core::xem6010::pins::xem_6010_base_clock;
 
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFOStressTest {
@@ -24,7 +23,6 @@ struct OpalKellyDownloadDDRFIFOStressTest {
     reset: WireIn,
     enable: WireIn,
 }
-
 
 impl Default for OpalKellyDownloadDDRFIFOStressTest {
     fn default() -> Self {
@@ -42,7 +40,6 @@ impl Default for OpalKellyDownloadDDRFIFOStressTest {
         }
     }
 }
-
 
 impl Logic for OpalKellyDownloadDDRFIFOStressTest {
     #[hdl_gen]
@@ -70,9 +67,10 @@ impl Logic for OpalKellyDownloadDDRFIFOStressTest {
         self.enable.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.download.ok2.val();
         self.strobe.enable.next = self.enable.dataout.val().any();
+        self.strobe.reset.next = NO_RESET;
+        self.count_in.reset.next = NO_RESET;
     }
 }
-
 
 #[test]
 fn test_opalkelly_xem_6010_synth_ddr_stress() {

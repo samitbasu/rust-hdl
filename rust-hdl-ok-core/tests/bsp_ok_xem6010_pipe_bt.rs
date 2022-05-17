@@ -2,19 +2,17 @@ use rust_hdl_ok_core::core::prelude::*;
 
 use rust_hdl_ok_core::xem6010::pins::{xem_6010_base_clock, xem_6010_leds};
 
-use rust_hdl_ok_core::xem6010::XEM6010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::xem6010::XEM6010;
 
 use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
 
 mod test_common;
 
-
 use test_common::tools::ok_test_prelude;
 
 declare_async_fifo!(OKTestAFIFO2, Bits<16>, 1024, 256);
-
 
 #[derive(LogicBlock)]
 pub struct OpalKellyBTPipeOutTest {
@@ -29,7 +27,6 @@ pub struct OpalKellyBTPipeOutTest {
     pub can_run: Signal<Local, Bit>,
     pub led: Signal<Out, Bits<8>>,
 }
-
 
 impl Logic for OpalKellyBTPipeOutTest {
     #[hdl_gen]
@@ -79,9 +76,13 @@ impl Logic for OpalKellyBTPipeOutTest {
             | (bit_cast::<8, 1>(self.fifo_out.almost_full.val().into()) << 3_usize)
             | (bit_cast::<8, 1>(self.fifo_out.overflow.val().into()) << 4_usize)
             | (bit_cast::<8, 1>(self.fifo_out.underflow.val().into()) << 5_usize));
+        self.strobe.reset.next = NO_RESET;
+        self.fifo_out.read_reset.next = NO_RESET;
+        self.fifo_out.write_reset.next = NO_RESET;
+        self.counter.reset.next = NO_RESET;
+        self.delay_read.reset.next = NO_RESET;
     }
 }
-
 
 impl OpalKellyBTPipeOutTest {
     pub fn new() -> Self {
@@ -100,17 +101,13 @@ impl OpalKellyBTPipeOutTest {
     }
 }
 
-
 #[test]
 fn test_opalkelly_xem_6010_synth_btpipe() {
     let mut uut = OpalKellyBTPipeOutTest::new();
-    uut.hi.link_connect_dest();
-    uut.fast_clock.connect();
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/btpipe"));
     test_opalkelly_xem_6010_btpipe_runtime().unwrap();
 }
-
 
 #[cfg(test)]
 fn test_opalkelly_xem_6010_btpipe_runtime() -> Result<(), OkError> {

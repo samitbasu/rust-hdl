@@ -4,9 +4,9 @@ use rust_hdl_ok_core::xem7010::mcb_if::MCBInterface4GDDR3;
 
 use rust_hdl_ok_core::xem7010::mig7::MemoryInterfaceGenerator7Series;
 
-use rust_hdl_ok_core::xem7010::XEM7010;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::xem7010::XEM7010;
 
 use {rust_hdl_ok_frontpanel_sys::OkError, test_common::tools::*};
 
@@ -23,7 +23,6 @@ pub enum MIGState {
     Read,
     WaitRead,
 }
-
 
 #[derive(LogicBlock)]
 pub struct OpalKellyXEM7010MIGTest {
@@ -49,7 +48,6 @@ pub struct OpalKellyXEM7010MIGTest {
     state: DFF<MIGState>,
 }
 
-
 impl Default for OpalKellyXEM7010MIGTest {
     fn default() -> Self {
         Self {
@@ -72,7 +70,6 @@ impl Default for OpalKellyXEM7010MIGTest {
         }
     }
 }
-
 
 impl Logic for OpalKellyXEM7010MIGTest {
     #[hdl_gen]
@@ -177,7 +174,6 @@ impl Logic for OpalKellyXEM7010MIGTest {
     }
 }
 
-
 #[test]
 fn test_opalkelly_xem_7010_mig() {
     let mut uut = OpalKellyXEM7010MIGTest::default();
@@ -190,7 +186,6 @@ fn test_opalkelly_xem_7010_mig() {
     XEM7010::synth(uut, target_path!("xem_7010/mig"));
     test_opalkelly_xem_7010_mig_runtime().unwrap();
 }
-
 
 #[cfg(test)]
 fn test_opalkelly_xem_7010_mig_runtime() -> Result<(), OkError> {

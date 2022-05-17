@@ -1,6 +1,6 @@
-use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 use std::time::Duration;
 
 #[derive(LogicBlock)]
@@ -12,7 +12,6 @@ pub struct OpalKellyBlinky {
 }
 
 impl OpalKellyBlinky {
-
     pub fn new<B: OpalKellyBSP>() -> Self {
         Self {
             hi: B::hi(),

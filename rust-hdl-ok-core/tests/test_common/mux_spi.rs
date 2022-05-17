@@ -1,8 +1,8 @@
 use crate::test_common::tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
-use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl::core::prelude::*;
 use rust_hdl::sim::prelude::*;
 use rust_hdl::widgets::prelude::SPIWiresMaster;
+use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::OkError;
 use std::thread::sleep;
 use std::time::Duration;
