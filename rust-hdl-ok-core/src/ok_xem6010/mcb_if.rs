@@ -1,4 +1,4 @@
-use crate::core::prelude::*;
+use rust_hdl::core::prelude::*;
 
 #[derive(Clone, LogicInterface, Default)]
 pub struct MCBInterface1GDDR2 {
@@ -126,7 +126,7 @@ fn test_dram_if_ucf() {
     let uut = DRAMIFTest5 {
         mcb_dram: MCBInterface1GDDR2::xem_6010(),
     };
-    let ucf = crate::toolchain::ise::generate_ucf(&uut);
+    let ucf = rust_hdl::toolchain::ise::generate_ucf(&uut);
     assert!(ucf.contains("mcb_dram$zio LOC=Y2"));
     assert!(ucf.contains("mcb_dram$rzq LOC=K7"));
     assert!(ucf.contains("mcb_dram$address<0> LOC=H2;"));

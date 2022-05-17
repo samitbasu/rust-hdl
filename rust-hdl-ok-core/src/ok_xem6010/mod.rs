@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use super::ok_core::prelude::*;
-use crate::core::prelude::*;
-use crate::widgets::prelude::*;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 use pins::*;
 
 pub mod ddr_fifo;
@@ -78,6 +78,6 @@ fn test_ok_host_synthesizable() {
     let mut uut = OKTest1::new();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    let _ucf = crate::toolchain::ise::generate_ucf(&uut);
+    let _ucf = rust_hdl::toolchain::ise::generate_ucf(&uut);
     yosys_validate("vlog", &vlog).unwrap();
 }

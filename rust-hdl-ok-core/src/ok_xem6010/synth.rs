@@ -3,9 +3,9 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-use crate::bsp::ok_core::prelude::find_ok_bus_collisions;
-use crate::core::prelude::*;
-use crate::toolchain::ise::generate_ucf;
+use crate::ok_core::prelude::find_ok_bus_collisions;
+use rust_hdl::core::prelude::*;
+use rust_hdl::toolchain::ise::generate_ucf;
 
 #[derive(Clone, Debug)]
 pub struct ISEOptions {
@@ -273,7 +273,7 @@ GENERATE
 pub fn synth_obj<U: Block>(uut: U, dir: &str) {
     let vlog = generate_verilog(&uut);
     find_ok_bus_collisions(&vlog);
-    let _ucf = crate::toolchain::ise::generate_ucf(&uut);
+    let _ucf = rust_hdl::toolchain::ise::generate_ucf(&uut);
     yosys_validate(dir, &vlog).unwrap();
     generate_bitstream_xem_6010(uut, dir, Default::default());
 }

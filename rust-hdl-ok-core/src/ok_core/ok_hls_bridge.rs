@@ -1,14 +1,12 @@
-use crate::bsp::ok_core::ok_pipe::{BTPipeIn, BTPipeOut};
-use crate::bsp::ok_core::ok_wire::{WireIn, WireOut};
-use crate::core::prelude::*;
-use crate::hls::prelude::*;
-use crate::widgets::prelude::*;
-#[cfg(feature = "frontpanel")]
+use crate::ok_core::ok_pipe::{BTPipeIn, BTPipeOut};
+use crate::ok_core::ok_wire::{WireIn, WireOut};
+use rust_hdl::core::prelude::*;
+use rust_hdl::hls::prelude::*;
+use rust_hdl::widgets::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{
     make_u16_buffer, ok_ErrorCode_ok_DataAlignmentError, ok_ErrorCode_ok_InvalidParameter,
     ok_ErrorCode_ok_Timeout, OkError, OkHandle,
 };
-#[cfg(feature = "frontpanel")]
 use std::time::Duration;
 
 #[derive(Copy, Clone, Debug)]

@@ -1,4 +1,4 @@
-use crate::core::prelude::*;
+use rust_hdl::core::prelude::*;
 
 #[derive(Clone, Debug, LogicInterface)]
 pub struct OpalKellyHostInterface {

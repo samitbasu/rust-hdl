@@ -1,5 +1,5 @@
-use crate::bsp::ok_core::prelude::*;
-use crate::core::prelude::*;
+use crate::ok_core::prelude::*;
+use rust_hdl::core::prelude::*;
 
 pub mod ddr_fifo7;
 pub mod download;

@@ -1,8 +1,8 @@
 use super::mcb_if::MCBInterface1GDDR2;
 use super::mig::MemoryInterfaceGenerator;
-use crate::bsp::ok_xem6010::mig::MIGInstruction;
-use crate::core::prelude::*;
-use crate::widgets::prelude::*;
+use crate::ok_xem6010::mig::MIGInstruction;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicState, Debug, Copy, Clone, PartialEq)]
 pub enum DDRFIFOState {

@@ -1,4 +1,4 @@
-use crate::core::prelude::*;
+use rust_hdl::core::prelude::*;
 
 use super::OpalKellyHost;
 use super::OpalKellyHostInterface;

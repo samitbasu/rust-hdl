@@ -1,6 +1,6 @@
 use super::mcb_if::MCBInterface1GDDR2;
-use crate::core::prelude::*;
-use crate::widgets::prelude::*;
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::*;
 use std::collections::BTreeMap;
 
 #[derive(LogicState, Copy, Clone, Debug, PartialEq)]
