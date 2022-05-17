@@ -58,10 +58,6 @@ type DelayLineTest = DelayLine<Bits<8>, 8, 3>;
 #[test]
 fn test_delay_synthesizes() {
     let mut uut = DelayLineTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.data_in.connect();
-    uut.delay.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("delay_line", &vlog).unwrap();
@@ -70,10 +66,6 @@ fn test_delay_synthesizes() {
 #[test]
 fn test_delay_operation() {
     let mut uut = DelayLineTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.data_in.connect();
-    uut.delay.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<DelayLineTest>| {

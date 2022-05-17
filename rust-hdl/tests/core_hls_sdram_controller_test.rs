@@ -68,8 +68,6 @@ impl Default for HostSDRAMControllerTest {
 #[cfg(test)]
 fn make_sdram_test() -> HostSDRAMControllerTest {
     let mut uut = HostSDRAMControllerTest::default();
-    uut.sys_clock.connect();
-    uut.bidi_clock.connect();
     uut.pc_to_host.bus_write.data.connect();
     uut.pc_to_host.bus_write.write.connect();
     uut.host_to_pc.bus_read.read.connect();

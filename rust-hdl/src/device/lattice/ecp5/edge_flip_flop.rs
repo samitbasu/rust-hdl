@@ -60,10 +60,7 @@ endmodule
 
 #[test]
 fn test_eflop_synthesizes() {
-    let mut uut = TopWrap::new(EdgeFlipFlop::<Bits<8>>::default());
-    uut.uut.d.connect();
-    uut.uut.clock.connect();
-    uut.uut.reset.connect();
+    let mut uut = EdgeFlipFlop::<Bits<8>>::default();
     uut.connect_all();
     yosys_validate("eflop", &generate_verilog(&uut)).unwrap();
 }

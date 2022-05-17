@@ -41,9 +41,6 @@ impl Logic for Pulser {
 #[test]
 fn test_pulser_synthesis() {
     let mut uut = Pulser::new(1_000_000, 1.0, Duration::from_millis(100));
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.enable.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("pulser", &vlog).unwrap();
@@ -77,9 +74,6 @@ fn test_pulser() {
         Ok(())
     });
     let mut uut = Pulser::new(KHZ10, 100.0, Duration::from_millis(1));
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.enable.connect();
     uut.connect_all();
     sim.run(Box::new(uut), 1_000_000).unwrap();
 }

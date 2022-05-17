@@ -66,13 +66,6 @@ impl<T: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 #[test]
 fn test_hsl_fifo_synthesizes() {
     let mut uut = AsyncFIFO::<Bits<8>, 6, 7, 1>::default();
-    uut.write_clock.connect();
-    uut.write_reset.connect();
-    uut.bus_write.write.connect();
-    uut.bus_write.data.connect();
-    uut.read_clock.connect();
-    uut.read_reset.connect();
-    uut.bus_read.read.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("hsl_fifo", &vlog).unwrap();
@@ -81,11 +74,6 @@ fn test_hsl_fifo_synthesizes() {
 #[test]
 fn test_hsl_sync_fifo_synthesizes() {
     let mut uut = SyncFIFO::<Bits<8>, 6, 7, 1>::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.bus_write.write.connect();
-    uut.bus_write.data.connect();
-    uut.bus_read.read.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("hsl_sync_fifo", &vlog).unwrap();

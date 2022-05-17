@@ -40,8 +40,6 @@ impl Logic for HLSSDRAMFIFOTest {
 #[test]
 fn test_hls_sdram_fifo_synthesizes() {
     let mut uut = HLSSDRAMFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo.bus_write.link_connect_dest();
     uut.fifo.bus_read.link_connect_dest();
     uut.connect_all();
@@ -52,8 +50,6 @@ fn test_hls_sdram_fifo_synthesizes() {
 #[test]
 fn test_hls_sdram_fifo_works() {
     let mut uut = HLSSDRAMFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo.bus_write.link_connect_dest();
     uut.fifo.bus_read.link_connect_dest();
     uut.connect_all();

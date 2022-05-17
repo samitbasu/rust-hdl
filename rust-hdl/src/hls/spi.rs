@@ -212,13 +212,7 @@ impl<const D: usize, const A: usize, const N: usize> Default for HLSSPIMuxSlaves
 
 #[test]
 fn test_hls_spi_mux_slaves_is_synthesizable() {
-    let mut uut = TopWrap::new(HLSSPIMuxSlaves::<8, 16, 4>::default());
-    uut.uut.upstream.link_connect_dest();
-    for i in 0..4 {
-        uut.uut.to_slaves[i].link_connect_source();
-        uut.uut.to_slaves[i].miso.connect();
-    }
-    uut.uut.from_bus.link_connect_dest();
+    let mut uut = HLSSPIMuxSlaves::<8, 16, 4>::default();
     uut.connect_all();
     yosys_validate("hls_spi_mux_slaves", &generate_verilog(&uut)).unwrap()
 }
@@ -269,13 +263,7 @@ impl<const D: usize, const A: usize, const N: usize> Default for HLSSPIMuxMaster
 
 #[test]
 fn test_hls_spi_mux_is_synthesizable() {
-    let mut uut = TopWrap::new(HLSSPIMuxMasters::<8, 16, 4>::default());
-    uut.uut.upstream.link_connect_dest();
-    for i in 0..4 {
-        uut.uut.from_masters[i].link_connect_dest();
-    }
-    uut.uut.to_bus.link_connect_source();
-    uut.uut.to_bus.miso.connect();
+    let mut uut = HLSSPIMuxMasters::<8, 16, 4>::default();
     uut.connect_all();
     yosys_validate("hls_spi_mux", &generate_verilog(&uut)).unwrap()
 }

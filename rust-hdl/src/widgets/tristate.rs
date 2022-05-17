@@ -34,9 +34,7 @@ always @(*) read_data = bus;",
 
 #[test]
 fn test_tristate_synthesizes() {
-    let mut uut = TopWrap::new(TristateBuffer::<Bits<8>>::default());
-    uut.uut.write_data.connect();
-    uut.uut.write_enable.connect();
+    let mut uut = TristateBuffer::<Bits<8>>::default();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("tristate", &vlog).unwrap()

@@ -91,10 +91,6 @@ fn test_write_modules_nested_ports() {
     }
 
     let mut uut = UUT::default();
-    uut.clock.connect();
-    uut.bus.cmd.read.connect();
-    uut.bus.data.read.connect();
-    uut.select.connect();
     uut.connect_all();
     check_all(&uut).unwrap();
     let mut defines = ModuleDefines::default();

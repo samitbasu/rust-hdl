@@ -73,8 +73,7 @@ endmodule
 
 #[test]
 fn test_iodelay_synthesizes() {
-    let mut uut = TopWrap::new(IODelay::<Bits<8>>::new(25));
-    uut.uut.a.connect();
+    let mut uut = IODelay::<Bits<8>>::new(25);
     uut.connect_all();
     yosys_validate("iodelay", &generate_verilog(&uut)).unwrap();
 }

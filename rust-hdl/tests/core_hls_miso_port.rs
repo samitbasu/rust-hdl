@@ -39,17 +39,10 @@ impl Logic for MISOPortTest {
 #[test]
 fn test_port_test_synthesizes() {
     let mut uut = MISOPortTest::default();
-    uut.bus.clock.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.strobe.connect();
     uut.port_a.port_in.connect();
     uut.port_b.port_in.connect();
     uut.port_a.ready_in.connect();
     uut.port_b.ready_in.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("test_port", &vlog).unwrap();
@@ -58,17 +51,10 @@ fn test_port_test_synthesizes() {
 #[test]
 fn test_port_test_works() {
     let mut uut = MISOPortTest::default();
-    uut.bus.clock.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.strobe.connect();
     uut.port_a.port_in.connect();
     uut.port_b.port_in.connect();
     uut.port_a.ready_in.connect();
     uut.port_b.ready_in.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<MISOPortTest>| x.clock.next = !x.clock.val());
@@ -169,12 +155,6 @@ impl Logic for MISOWidePortTest {
 #[test]
 fn test_wide_port_test_synthesizes() {
     let mut uut = MISOWidePortTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.strobe.connect();
     uut.port_a.port_in.connect();
     uut.port_b.port_in.connect();
     uut.port_a.strobe_in.connect();
@@ -187,12 +167,6 @@ fn test_wide_port_test_synthesizes() {
 #[test]
 fn test_wide_port_test_works() {
     let mut uut = MISOWidePortTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.strobe.connect();
     uut.port_a.port_in.connect();
     uut.port_b.port_in.connect();
     uut.port_a.strobe_in.connect();
@@ -327,12 +301,6 @@ fn test_miso_fifo_synthesizes() {
 #[test]
 fn test_miso_fifo_works() {
     let mut uut = MISOPortFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.strobe.connect();
     uut.port_a.fifo_bus.link_connect_dest();
     uut.connect_all();
     let mut sim = Simulation::new();

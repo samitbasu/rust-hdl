@@ -40,9 +40,6 @@ impl Logic for EdgeDetector {
 #[test]
 fn test_edge_detector_synthesizes() {
     let mut uut = EdgeDetector::new(false);
-    uut.input_signal.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     yosys_validate("edge", &generate_verilog(&uut)).unwrap();
 }

@@ -44,10 +44,7 @@ endmodule
 
 #[test]
 fn test_oddr_synthesizes() {
-    let mut uut = TopWrap::new(OutputDDR::default());
-    uut.uut.d.connect();
-    uut.uut.reset.connect();
-    uut.uut.clock.connect();
+    let mut uut = OutputDDR::default();
     uut.connect_all();
     yosys_validate("oddr", &generate_verilog(&uut)).unwrap();
 }

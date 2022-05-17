@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::core::timing::TimingInfo;
 
 #[derive(Clone, Debug, LogicBlock, Default)]
 pub struct EdgeDFF<T: Synth> {
@@ -37,5 +38,14 @@ end
 always @(posedge clk) q <= d;",
             self.q.verilog()
         ))
+    }
+    fn timing(&self) -> Vec<TimingInfo> {
+        vec![TimingInfo {
+            name: "edge_ff".to_string(),
+            clock: "clk".to_string(),
+            inputs: vec!["d".into()],
+            outputs: vec!["q".into()],
+            reset: None,
+        }]
     }
 }

@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::core::timing::TimingInfo;
 use crate::widgets::ramrom::rom::make_btree_from_iterable;
 use std::collections::BTreeMap;
 
@@ -66,5 +67,14 @@ end",
             Acount = (1 << N) - 1,
             init = init
         ))
+    }
+    fn timing(&self) -> Vec<TimingInfo> {
+        vec![TimingInfo {
+            name: "sync_rom".to_string(),
+            clock: "clock".to_string(),
+            inputs: vec!["address".to_string()],
+            outputs: vec!["data".to_string()],
+            reset: None,
+        }]
     }
 }

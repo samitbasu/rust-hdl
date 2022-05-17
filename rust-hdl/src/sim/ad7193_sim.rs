@@ -222,9 +222,6 @@ impl Logic for AD7193Simulator {
 #[test]
 fn test_ad7193_synthesizes() {
     let mut uut = AD7193Simulator::new(AD7193Config::sw());
-    uut.wires.link_connect_dest();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     yosys_validate("ad7193", &generate_verilog(&uut)).unwrap();
 }

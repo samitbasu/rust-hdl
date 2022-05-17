@@ -48,21 +48,18 @@ fn test_spi_mux() {
         cpha: true,
         cpol: true,
     };
-    let mut uut = TopWrap::new(SPITestMultiMaster::new(config));
-    uut.uut.addr.connect();
-    uut.uut.clock.connect();
-    uut.uut.reset.connect();
+    let mut uut = SPITestMultiMaster::new(config);
     for i in 0..3 {
-        uut.uut.masters[i].continued_transaction.connect();
-        uut.uut.masters[i].start_send.connect();
-        uut.uut.masters[i].data_outbound.connect();
-        uut.uut.masters[i].bits_outbound.connect();
+        uut.masters[i].continued_transaction.connect();
+        uut.masters[i].start_send.connect();
+        uut.masters[i].data_outbound.connect();
+        uut.masters[i].bits_outbound.connect();
     }
-    uut.uut.slave.data_outbound.connect();
-    uut.uut.slave.start_send.connect();
-    uut.uut.slave.continued_transaction.connect();
-    uut.uut.slave.disabled.connect();
-    uut.uut.slave.bits.connect();
+    uut.slave.data_outbound.connect();
+    uut.slave.start_send.connect();
+    uut.slave.continued_transaction.connect();
+    uut.slave.disabled.connect();
+    uut.slave.bits.connect();
     uut.connect_all();
     yosys_validate("spi_mux_multi_master", &generate_verilog(&uut)).unwrap();
 }

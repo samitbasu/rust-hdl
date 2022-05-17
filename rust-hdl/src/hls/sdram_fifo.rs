@@ -60,12 +60,6 @@ fn test_sdram_fifo_synthesizes() {
         MemoryTimings::fast_boot_sim(125e6),
         OutputBuffer::Wired,
     );
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.ram_clock.connect();
-    uut.bus_read.link_connect_dest();
-    uut.bus_write.link_connect_dest();
-    uut.sdram.read_data.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     std::fs::write("sdram_fifo_hls.v", &vlog).unwrap();

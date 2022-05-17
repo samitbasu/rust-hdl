@@ -79,12 +79,6 @@ impl<const A: usize> Logic for Host<A> {
 #[test]
 fn test_host_synthesizes() {
     let mut uut = Host::<8>::default();
-    uut.sys_clock.connect();
-    uut.bidi_clock.connect();
-    uut.bidi_bus.link_connect_dest();
-    uut.bus.ready.connect();
-    uut.bus.to_controller.connect();
-    uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     std::fs::write("host.v", &vlog).unwrap();

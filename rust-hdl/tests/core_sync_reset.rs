@@ -4,7 +4,6 @@ use rust_hdl::widgets::prelude::*;
 #[test]
 fn test_sync_reset() {
     let mut uut = AutoReset::default();
-    uut.clock.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5000, |x: &mut Box<AutoReset>| x.clock.next = !x.clock.val());

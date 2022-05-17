@@ -44,11 +44,11 @@ fn test_rom_works() {
         sim.done(x)?;
         Ok(())
     });
-    let mut uut = ROMTest::new();
-    uut.rom.address.connect();
-    uut.connect_all();
+    let mut dut = ROMTest::new();
+    dut.rom.address.connect();
+    dut.connect_all();
     sim.run_traced(
-        Box::new(uut),
+        Box::new(dut),
         100,
         File::create(vcd_path!("ROM.vcd")).unwrap(),
     )

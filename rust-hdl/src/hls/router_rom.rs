@@ -130,11 +130,6 @@ fn test_router_rom_is_synthesizable() {
         Bridge::<16, 8, 6>::new(["Club", "Spades", "Diamond", "Heart", "Joker", "Instruction"]);
     let mut router =
         RouterROM::<16, 8, 3>::new(["Sides", "Colors", "Faces"], [&bridge1, &bridge2, &bridge3]);
-    router.upstream.link_connect_dest();
-    for i in 0..3 {
-        router.nodes[i].ready.connect();
-        router.nodes[i].to_controller.connect();
-    }
     router.connect_all();
     let vlog = generate_verilog(&router);
     yosys_validate("router_rom", &vlog).unwrap();

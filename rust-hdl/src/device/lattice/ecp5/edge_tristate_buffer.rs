@@ -102,12 +102,7 @@ endmodule
 
 #[test]
 fn test_edge_buffer_synthesizes() {
-    let mut uut = TopWrap::new(EdgeTristateBuffer::<Bits<8>>::default());
-    uut.uut.output_enable.connect();
-    uut.uut.to_pin.connect();
-    uut.uut.clock.connect();
-    uut.uut.reset.connect();
-    uut.uut.pin.connect();
+    let mut uut = EdgeTristateBuffer::<Bits<8>>::default();
     uut.connect_all();
     std::fs::write("edge_tristate_buffer.v", generate_verilog(&uut)).unwrap();
     yosys_validate("edge_tristate_buffer", &generate_verilog(&uut)).unwrap();

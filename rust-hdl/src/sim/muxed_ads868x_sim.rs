@@ -45,10 +45,6 @@ impl<const N: usize> Logic for MuxedADS868XSimulators<N> {
 fn test_mux_is_synthesizable() {
     let mut uut: MuxedADS868XSimulators<8> =
         MuxedADS868XSimulators::new(ADS868XSimulator::spi_hw());
-    uut.wires.link_connect_dest();
-    uut.addr.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     yosys_validate("mux_8689", &generate_verilog(&uut)).unwrap();
 }

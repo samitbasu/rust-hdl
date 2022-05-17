@@ -38,8 +38,6 @@ impl ReducerTest {
 #[test]
 fn test_reducer_works() {
     let mut uut = ReducerTest::new(WordOrder::MostSignificantFirst);
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo_in.data_in.connect();
     uut.fifo_in.write.connect();
     uut.fifo_out.read.connect();
@@ -79,8 +77,6 @@ fn test_reducer_works() {
 #[test]
 fn test_reducer_works_least_sig_word_first() {
     let mut uut = ReducerTest::new(WordOrder::LeastSignificantFirst);
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo_in.data_in.connect();
     uut.fifo_in.write.connect();
     uut.fifo_out.read.connect();
@@ -149,8 +145,6 @@ impl SlimTest {
 #[test]
 fn test_slim_works() {
     let mut uut = SlimTest::new(WordOrder::MostSignificantFirst);
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo.data_in.connect();
     uut.fifo.write.connect();
     uut.fifo.read.connect();

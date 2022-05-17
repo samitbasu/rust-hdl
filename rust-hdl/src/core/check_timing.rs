@@ -1,11 +1,11 @@
 use crate::core::ast::{
-    Verilog, VerilogConditional,
-    VerilogExpression, VerilogLink, VerilogLinkDetails, VerilogMatch
+    Verilog, VerilogConditional, VerilogExpression, VerilogLink, VerilogLinkDetails, VerilogMatch,
 };
-use crate::core::atom::Atom;
+use crate::core::atom::{Atom, AtomKind};
 use crate::core::block::Block;
 use crate::core::named_path::NamedPath;
 use crate::core::probe::Probe;
+use crate::core::type_descriptor::TypeKind;
 use crate::core::verilog_visitor::VerilogVisitor;
 use petgraph::algo::{connected_components, is_cyclic_directed};
 use petgraph::dot::Dot;
@@ -23,6 +23,17 @@ pub enum SignalNodeKind {
     Sink,
 }
 
+#[derive(Clone, Debug, Copy, PartialEq)]
+pub enum SignalEdgeKind {
+    Assign,
+    Input,
+    Clock,
+    Reset,
+    Output,
+    Extern,
+    Constant,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SignalNode {
     pub name: String,
@@ -31,7 +42,7 @@ pub struct SignalNode {
 
 #[derive(Clone, Debug, Default)]
 pub struct SignalGraph {
-    pub graph: Graph<SignalNode, (), Directed>,
+    pub graph: Graph<SignalNode, SignalEdgeKind, Directed>,
 }
 
 impl SignalGraph {
@@ -45,10 +56,10 @@ impl SignalGraph {
             None => self.graph.add_node(node.clone()),
         };
     }
-    fn add_signal_edge(&mut self, from: &SignalNode, to: NodeIndex) {
+    fn add_signal_edge(&mut self, from: &SignalNode, to: NodeIndex, kind: SignalEdgeKind) {
         let from_index = self.add_signal_node(from);
         if !self.graph.contains_edge(from_index, to) {
-            self.graph.add_edge(from_index, to, ());
+            self.graph.add_edge(from_index, to, kind);
         }
     }
 }
@@ -117,16 +128,17 @@ impl TimingChecker {
             _ => {}
         }
     }
-    fn add_write(&mut self, write_name: &str, kind: SignalNodeKind) {
+    fn add_write(&mut self, write_name: &str, kind: SignalNodeKind, edge: SignalEdgeKind) {
         assert!(!write_name.is_empty());
         let write_node = SignalNode {
             name: write_name.into(),
             kind,
         };
-        let write_node = self.graph.add_signal_node(&write_node);
+        let write_id = self.graph.add_signal_node(&write_node);
         for scope in &self.read_names {
             for read in scope {
-                self.graph.add_signal_edge(read, write_node);
+                println!("Adding edge from {:?} -> {:?}", read, write_node);
+                self.graph.add_signal_edge(read, write_id, edge);
             }
         }
     }
@@ -171,7 +183,7 @@ impl VerilogVisitor for TimingChecker {
         self.mode = ExpressionMode::Read;
         self.visit_expression(r);
         let write_name = self.write_name.clone();
-        self.add_write(&write_name, SignalNodeKind::Normal);
+        self.add_write(&write_name, SignalNodeKind::Normal, SignalEdgeKind::Assign);
         self.pop_read_scope();
     }
     fn visit_slice_assignment(
@@ -189,7 +201,7 @@ impl VerilogVisitor for TimingChecker {
         self.visit_expression(offset);
         self.visit_expression(replacement);
         let write_name = self.write_name.clone();
-        self.add_write(&write_name, SignalNodeKind::Normal);
+        self.add_write(&write_name, SignalNodeKind::Normal, SignalEdgeKind::Assign);
         self.pop_read_scope();
     }
     fn visit_signal(&mut self, c: &str) {
@@ -206,21 +218,21 @@ impl VerilogVisitor for TimingChecker {
                     self.push_read_scope();
                     let (w, r) = self.link_fixup(x);
                     self.add_read(&r, SignalNodeKind::Normal);
-                    self.add_write(&w, SignalNodeKind::Normal);
+                    self.add_write(&w, SignalNodeKind::Normal, SignalEdgeKind::Assign);
                     self.pop_read_scope();
                 }
                 VerilogLink::Backward(x) => {
                     self.push_read_scope();
                     let (r, w) = self.link_fixup(x);
                     self.add_read(&r, SignalNodeKind::Normal);
-                    self.add_write(&w, SignalNodeKind::Normal);
+                    self.add_write(&w, SignalNodeKind::Normal, SignalEdgeKind::Assign);
                     self.pop_read_scope();
                 }
                 VerilogLink::Bidirectional(x) => {
                     let (w, r) = self.link_fixup(x);
                     self.push_read_scope();
                     self.add_read(&r, SignalNodeKind::Bidirectional);
-                    self.add_write(&w, SignalNodeKind::Bidirectional);
+                    self.add_write(&w, SignalNodeKind::Bidirectional, SignalEdgeKind::Assign);
                     self.pop_read_scope();
                 }
             }
@@ -249,6 +261,7 @@ impl Probe for TimingChecker {
                 self.add_write(
                     &format!("{}${}", self.path.to_string(), output),
                     SignalNodeKind::Normal,
+                    SignalEdgeKind::Output,
                 );
             }
             self.pop_read_scope();
@@ -259,13 +272,30 @@ impl Probe for TimingChecker {
                     &format!("{}${}", self.path.to_string(), input),
                     SignalNodeKind::Normal,
                 );
-                self.add_write(&write_name, SignalNodeKind::Sink);
+                self.add_write(&write_name, SignalNodeKind::Sink, SignalEdgeKind::Input);
+                self.pop_read_scope();
+            }
+            self.push_read_scope();
+            self.add_read(
+                &format!("{}${}", self.path.to_string(), info.clock),
+                SignalNodeKind::Normal,
+            );
+            self.add_write(&write_name, SignalNodeKind::Sink, SignalEdgeKind::Clock);
+            self.pop_read_scope();
+            if let Some(reset) = &info.reset {
+                self.push_read_scope();
+                self.add_read(
+                    &format!("{}${}", self.path.to_string(), reset),
+                    SignalNodeKind::Normal,
+                );
+                self.add_write(&write_name, SignalNodeKind::Sink, SignalEdgeKind::Reset);
                 self.pop_read_scope();
             }
         }
         self.clear_scope();
     }
     fn visit_start_namespace(&mut self, name: &str, _node: &dyn Block) {
+        println!("Start Namespace {}", name);
         self.namespace.push(name);
     }
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
@@ -277,6 +307,75 @@ impl Probe for TimingChecker {
         } else {
             format!("{}${}", namespace, name)
         };
+        // Add an async source for all input parameters at the top scope
+        let is_top_scope = self.path.to_string().eq("top");
+        let global_signal_name = format!("{}${}", self.path.to_string(), name);
+        match signal.kind() {
+            AtomKind::InputParameter | AtomKind::InOutParameter => {
+                if is_top_scope {
+                    let my_id = self.graph.add_signal_node(&SignalNode {
+                        name: global_signal_name.clone(),
+                        kind: SignalNodeKind::Normal,
+                    });
+                    self.graph.add_signal_edge(
+                        &SignalNode {
+                            name: format!("extern${}", name),
+                            kind: SignalNodeKind::Source,
+                        },
+                        my_id,
+                        SignalEdgeKind::Extern,
+                    );
+                }
+            }
+            AtomKind::Constant => {
+                let my_id = self.graph.add_signal_node(&SignalNode {
+                    name: global_signal_name.clone(),
+                    kind: SignalNodeKind::Normal,
+                });
+                self.graph.add_signal_edge(
+                    &SignalNode {
+                        name: format!("const${}", name),
+                        kind: SignalNodeKind::Source,
+                    },
+                    my_id,
+                    SignalEdgeKind::Constant,
+                );
+            }
+            _ => {}
+        }
+        let descriptor = &signal.descriptor();
+        match &descriptor.kind {
+            TypeKind::Enum(x) => {
+                for label in x {
+                    let label = label.replace("::", "$");
+                    let my_id = self.graph.add_signal_node(&SignalNode {
+                        name: format!("{}${}", module_path, label),
+                        kind: SignalNodeKind::Normal,
+                    });
+                    self.graph.add_signal_edge(
+                        &SignalNode {
+                            name: format!("const${}", label),
+                            kind: SignalNodeKind::Source,
+                        },
+                        my_id,
+                        SignalEdgeKind::Constant,
+                    );
+                    let my_id = self.graph.add_signal_node(&SignalNode {
+                        name: format!("{}${}", self.path.parent(), label),
+                        kind: SignalNodeKind::Normal,
+                    });
+                    self.graph.add_signal_edge(
+                        &SignalNode {
+                            name: format!("const${}", label),
+                            kind: SignalNodeKind::Source,
+                        },
+                        my_id,
+                        SignalEdgeKind::Constant,
+                    );
+                }
+            }
+            _ => {}
+        }
     }
     fn visit_end_namespace(&mut self, _name: &str, _node: &dyn Block) {
         self.namespace.pop();
@@ -309,7 +408,7 @@ pub fn check_timing<U: Block>(uut: &U) {
     // For each label, we extract the vertices and build a new graph
     for subgraph in unique_labels {
         let mut remap: HashMap<_, _> = Default::default();
-        let mut s: Graph<SignalNode, ()> = Graph::default();
+        let mut s: Graph<SignalNode, SignalEdgeKind> = Graph::default();
         for (ndx, label) in labels.iter().enumerate() {
             if *label == subgraph {
                 let old_index = g.from_index(ndx);
@@ -324,7 +423,7 @@ pub fn check_timing<U: Block>(uut: &U) {
             if remap.contains_key(&a) {
                 let a_new = remap.get(&a).unwrap();
                 let b_new = remap.get(&b).unwrap();
-                s.add_edge(*a_new, *b_new, ());
+                s.add_edge(*a_new, *b_new, *edge.weight());
             }
         }
         println!("Number of elements in subgraph {}", remap.len());

@@ -31,8 +31,7 @@ endmodule
 
 #[test]
 fn test_output_buffer_synthesizes() {
-    let mut uut = TopWrap::new(OutputBuffer::default());
-    uut.uut.i.connect();
+    let mut uut = OutputBuffer::default();
     uut.connect_all();
     yosys_validate("obuf", &generate_verilog(&uut)).unwrap();
 }

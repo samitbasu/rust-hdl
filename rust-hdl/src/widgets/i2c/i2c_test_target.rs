@@ -151,11 +151,7 @@ impl Logic for I2CTestTarget {
 
 #[test]
 fn test_i2c_test_target_synthesizable() {
-    let mut uut = TopWrap::new(I2CTestTarget::new(0x53));
-    uut.uut.clock.connect();
-    uut.uut.reset.connect();
-    uut.uut.sda.connect();
-    uut.uut.scl.connect();
+    let mut uut = I2CTestTarget::new(0x53);
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("i2c_test_target", &vlog).unwrap()

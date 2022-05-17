@@ -1,4 +1,5 @@
 use rand::Rng;
+use rust_hdl::core::check_timing::check_timing;
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
 
@@ -26,11 +27,7 @@ impl Logic for SyncVecTest {
 #[test]
 fn test_sync_vec() {
     let mut uut = SyncVecTest::default();
-    uut.clock1.connect();
-    uut.reset1.connect();
     uut.sender.sig_in.connect();
-    uut.clock2.connect();
-    uut.reset2.connect();
     uut.sender.send.connect();
     uut.connect_all();
     yosys_validate("sync", &generate_verilog(&uut)).unwrap();
@@ -77,8 +74,8 @@ fn test_sync_vec() {
 
 #[test]
 fn test_vector_synchronizer() {
-    top_wrap!(VectorSynchronizer<Bits<8>>, TestCircuit);
-    let mut dev: TestCircuit = Default::default();
+    type TestCircuit = TopWrap<VectorSynchronizer<Bits<8>>>;
+    let mut dev: TestCircuit = TopWrap::new(VectorSynchronizer::default());
     dev.uut.clock_in.connect();
     dev.uut.reset_in.connect();
     dev.uut.clock_out.connect();
@@ -147,8 +144,6 @@ impl Logic for SynchronousFIFOTest {
 #[test]
 fn test_sync_fifo_read_behavior_bug() {
     let mut uut = SynchronousFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo.read.connect();
     uut.fifo.data_in.connect();
     uut.fifo.write.connect();
@@ -206,8 +201,6 @@ impl Logic for BigFIFOTest {
 #[test]
 fn test_almost_empty_is_accurate_in_large_fifo() {
     let mut uut = BigFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo.read.connect();
     uut.fifo.data_in.connect();
     uut.fifo.write.connect();
@@ -239,8 +232,6 @@ fn test_almost_empty_is_accurate_in_large_fifo() {
 #[test]
 fn test_almost_empty_is_accurate_synchronous_fifo() {
     let mut uut = SynchronousFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo.read.connect();
     uut.fifo.data_in.connect();
     uut.fifo.write.connect();
@@ -284,8 +275,6 @@ fn test_almost_empty_is_accurate_synchronous_fifo() {
 #[test]
 fn test_fifo_can_be_filled_synchronous_fifo() {
     let mut uut = SynchronousFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo.read.connect();
     uut.fifo.data_in.connect();
     uut.fifo.write.connect();
@@ -331,8 +320,6 @@ fn test_fifo_can_be_filled_synchronous_fifo() {
 #[test]
 fn test_fifo_works_synchronous_fifo() {
     let mut uut = SynchronousFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo.read.connect();
     uut.fifo.data_in.connect();
     uut.fifo.write.connect();
@@ -415,12 +402,14 @@ impl Logic for AsynchronousFIFOTest {
 }
 
 #[test]
+fn test_fifo_timing() {
+    let uut = AsynchronousFIFOTest::default();
+    check_timing(&uut);
+}
+
+#[test]
 fn test_fifo_works_asynchronous_fifo() {
     let mut uut = AsynchronousFIFOTest::default();
-    uut.read_reset.connect();
-    uut.read_clock.connect();
-    uut.write_reset.connect();
-    uut.write_clock.connect();
     uut.fifo.read.connect();
     uut.fifo.data_in.connect();
     uut.fifo.write.connect();
@@ -509,10 +498,6 @@ impl Logic for AsyncBigFIFOTest {
 #[test]
 fn test_almost_empty_is_accurate_in_large_async_fifo() {
     let mut uut = AsyncBigFIFOTest::default();
-    uut.read_clock.connect();
-    uut.read_reset.connect();
-    uut.write_clock.connect();
-    uut.write_reset.connect();
     uut.fifo.read.connect();
     uut.fifo.data_in.connect();
     uut.fifo.write.connect();
@@ -575,8 +560,6 @@ impl Logic for ReducerFIFOTest {
 #[test]
 fn test_fifo_reducer_works() {
     let mut uut = ReducerFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.wide_fifo.write.connect();
     uut.wide_fifo.data_in.connect();
     uut.narrow_fifo.read.connect();

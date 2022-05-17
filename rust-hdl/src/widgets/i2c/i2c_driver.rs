@@ -284,13 +284,7 @@ fn test_i2c_driver_synthesizes() {
         delay_time: Duration::from_nanos(1500),
         clock_speed_hz: 48_000_000,
     };
-    let mut uut = TopWrap::new(I2CDriver::new(config));
-    uut.uut.scl.connect();
-    uut.uut.sda.connect();
-    uut.uut.clock.connect();
-    uut.uut.cmd.connect();
-    uut.uut.run.connect();
-    uut.uut.reset.connect();
+    let mut uut = I2CDriver::new(config);
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("i2cdriver", &vlog).unwrap()

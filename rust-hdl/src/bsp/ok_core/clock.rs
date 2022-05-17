@@ -33,8 +33,7 @@ endmodule
 
 #[test]
 fn test_clock_buffer() {
-    let mut uut: TopWrap<ClockBuffer> = TopWrap::new(ClockBuffer::default());
-    uut.uut.clock_in.connect();
+    let mut uut = ClockBuffer::default();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("bufg", &vlog).unwrap();

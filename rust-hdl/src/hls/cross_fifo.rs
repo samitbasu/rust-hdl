@@ -73,13 +73,6 @@ impl<
 #[test]
 fn test_hsl_cross_fifo_synthesizes() {
     let mut uut: CrossWiden<4, 5, 6, 16, 3, 4> = CrossWiden::new(WordOrder::LeastSignificantFirst);
-    uut.wide_bus.read.connect();
-    uut.wide_clock.connect();
-    uut.wide_reset.connect();
-    uut.narrow_bus.write.connect();
-    uut.narrow_bus.data.connect();
-    uut.narrow_clock.connect();
-    uut.narrow_reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("hsl_cross_fifo", &vlog).unwrap();
@@ -155,13 +148,6 @@ impl<
 fn test_hsl_cross_narrow_synthesizes() {
     let mut uut: CrossNarrow<16, 3, 4, 4, 5, 6> =
         CrossNarrow::new(WordOrder::LeastSignificantFirst);
-    uut.narrow_bus.read.connect();
-    uut.narrow_clock.connect();
-    uut.narrow_reset.connect();
-    uut.wide_bus.write.connect();
-    uut.wide_bus.data.connect();
-    uut.wide_clock.connect();
-    uut.wide_reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("hsl_cross_narrow_fifo", &vlog).unwrap();

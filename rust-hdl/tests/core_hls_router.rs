@@ -58,8 +58,6 @@ fn make_test_router() -> RouterTest {
         uut.router.nodes[i].ready.connect();
         uut.router.nodes[i].to_controller.connect();
     }
-    uut.clock.connect();
-    uut.reset.connect();
     uut.router.connect_all();
     uut
 }
@@ -202,12 +200,6 @@ impl Logic for RouterTestSetup {
 #[cfg(test)]
 fn make_router_test_setup() -> RouterTestSetup {
     let mut uut = RouterTestSetup::default();
-    uut.upstream.address.connect();
-    uut.upstream.address_strobe.connect();
-    uut.upstream.strobe.connect();
-    uut.upstream.from_controller.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     for dev in 0..3 {
         for port in 0..5 {
             uut.dev_a[dev].mosi_ports[port].ready.connect();

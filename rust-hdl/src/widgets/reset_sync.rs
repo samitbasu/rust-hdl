@@ -29,8 +29,6 @@ impl Logic for ResetSynchronizer {
 #[test]
 fn reset_synchronizer_is_synthesizable() {
     let mut uut = ResetSynchronizer::default();
-    uut.clock.connect();
-    uut.reset_in.connect();
     uut.connect_all();
     yosys_validate("reset_synch", &generate_verilog(&uut)).unwrap();
 }

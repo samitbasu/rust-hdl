@@ -27,7 +27,6 @@ impl Logic for RAMTest {
 #[test]
 fn test_synthesis_ram() {
     let mut uut = RAMTest::new();
-    uut.clock.connect();
     uut.ram.write_enable.connect();
     uut.ram.write_data.connect();
     uut.ram.write_address.connect();
@@ -40,7 +39,6 @@ fn test_synthesis_ram() {
 #[test]
 fn test_ram_works() {
     let mut uut = RAMTest::new();
-    uut.clock.connect();
     uut.ram.write_enable.connect();
     uut.ram.write_data.connect();
     uut.ram.write_address.connect();

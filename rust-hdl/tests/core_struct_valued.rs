@@ -43,7 +43,6 @@ impl Logic for MIGTester {
 #[test]
 fn test_mig_tester_vcd() {
     let mut uut = MIGTester::default();
-    uut.cmd_in.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_testbench(move |mut sim: Sim<MIGTester>| {
@@ -88,8 +87,7 @@ fn test_mig_tester_vcd() {
 
 #[test]
 fn test_mig_tester_synthesizes() {
-    let mut uut = TopWrap::new(MIGTester::default());
-    uut.uut.cmd_in.connect();
+    let mut uut = MIGTester::default();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("mig_tester_struct", &generate_verilog(&uut)).unwrap();

@@ -31,8 +31,6 @@ impl Logic for PWMTest {
 #[test]
 fn test_pwm_circuit() {
     let mut uut = PWMTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     yosys_validate("pwm", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();

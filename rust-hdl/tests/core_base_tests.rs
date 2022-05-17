@@ -32,9 +32,6 @@ mod tests {
         // Simulate 100 clock cycles
         uut.enable.next = true;
         println!("Starting");
-        uut.clock.connect();
-        uut.reset.connect();
-        uut.enable.connect();
         uut.connect_all();
         check_all(&uut).unwrap();
         let mut strobe_count = 0;
@@ -101,9 +98,6 @@ mod tests {
 
         let mut uut = StateMachine::new();
         println!("Starting");
-        uut.clock.connect();
-        uut.reset.connect();
-        uut.advance.connect();
         uut.connect_all();
         check_all(&uut).unwrap();
         for clock in 0..10 {
@@ -163,9 +157,6 @@ mod tests {
         // Simulate 100 clock cycles
         //uut.enable.next = true;
         println!("Starting");
-        uut.clock.connect();
-        uut.enable.connect();
-        uut.reset.connect();
         uut.connect_all();
     }
 

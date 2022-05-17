@@ -113,12 +113,7 @@ impl<const DW: usize, const DN: usize> FIFOReducerN<DW, DN> {
 
 #[test]
 fn fifo_reducern_is_synthesizable() {
-    let mut dev = TopWrap::new(FIFOReducerN::<32, 4>::new(WordOrder::MostSignificantFirst));
-    dev.uut.empty.connect();
-    dev.uut.full.connect();
-    dev.uut.data_in.connect();
-    dev.uut.clock.connect();
-    dev.uut.reset.connect();
+    let mut dev = FIFOReducerN::<32, 4>::new(WordOrder::MostSignificantFirst);
     dev.connect_all();
     yosys_validate("fifo_reducern", &generate_verilog(&dev)).unwrap();
 }

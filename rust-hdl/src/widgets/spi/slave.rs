@@ -277,15 +277,6 @@ fn test_spi_slave_synthesizes() {
         cpol: false,
     };
     let mut uut: SPISlave<64> = SPISlave::new(config);
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.bits.connect();
-    uut.wires.link_connect_dest();
-    uut.disabled.connect();
-    uut.start_send.connect();
-    uut.data_outbound.connect();
-    uut.bits.connect();
-    uut.continued_transaction.connect();
     uut.connect_all();
     yosys_validate("spi_slave", &generate_verilog(&uut)).unwrap();
 }

@@ -1,3 +1,4 @@
+use evalexpr::Operator::Const;
 use rust_hdl::core::check_logic_loops::check_logic_loops;
 use rust_hdl::core::check_timing::check_timing;
 use rust_hdl::core::prelude::*;
@@ -83,7 +84,7 @@ fn test_check_timing() {
         Stop,
     }
 
-    #[derive(LogicBlock, Default)]
+    #[derive(LogicBlock)]
     struct Basic {
         pub clock: Signal<In, Clock>,
         pub reset: Signal<In, Reset>,
@@ -94,6 +95,24 @@ fn test_check_timing() {
         pub green: Signal<Out, Bit>,
         counter: DFF<Bits<14>>,
         state: DFF<State>,
+        max_count: Constant<Bits<14>>,
+    }
+
+    impl Default for Basic {
+        fn default() -> Self {
+            Self {
+                clock: Default::default(),
+                reset: Default::default(),
+                data: Default::default(),
+                enable: Default::default(),
+                red: Default::default(),
+                amber: Default::default(),
+                green: Default::default(),
+                counter: Default::default(),
+                state: Default::default(),
+                max_count: Constant::new(563_u16.into()),
+            }
+        }
     }
 
     impl Logic for Basic {
@@ -102,6 +121,9 @@ fn test_check_timing() {
             dff_setup!(self, clock, reset, counter);
             if self.enable.val() {
                 self.counter.d.next = self.counter.q.val() + 1_usize;
+            }
+            if self.counter.q.val() > self.max_count.val() {
+                self.counter.d.next = 0_usize.into();
             }
             self.red.next = false;
             self.green.next = false;
@@ -126,13 +148,13 @@ fn test_check_timing() {
         }
     }
 
-    let mut uut = Copper::default();
+    let mut dut = Copper::default();
     //    check_logic_loops(&uut).unwrap();
-    check_timing(&uut);
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.data.link_connect_dest();
-    uut.iface.link_connect_dest();
-    uut.connect_all();
-    check_connected(&uut);
+    check_timing(&dut);
+    //    uut.clock.connect();
+    //    uut.reset.connect();
+    //    uut.data.link_connect_dest();
+    //    uut.iface.link_connect_dest();
+    dut.connect_all();
+    check_connected(&dut);
 }

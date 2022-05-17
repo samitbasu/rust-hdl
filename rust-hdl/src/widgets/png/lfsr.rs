@@ -55,10 +55,7 @@ impl Logic for LFSRSimple {
 
 #[test]
 fn test_lfsr_simple_synthesizes() {
-    let mut uut = TopWrap::new(LFSRSimple::default());
-    uut.uut.clock.connect();
-    uut.uut.strobe.connect();
-    uut.uut.reset.connect();
+    let mut uut = LFSRSimple::default();
     uut.connect_all();
     yosys_validate("lfsr", &generate_verilog(&uut)).unwrap();
 }

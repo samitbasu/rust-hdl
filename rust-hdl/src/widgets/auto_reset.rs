@@ -25,7 +25,6 @@ impl Logic for AutoReset {
 #[test]
 fn test_synch_reset_synchronizes() {
     let mut uut = AutoReset::default();
-    uut.clock.connect();
     uut.connect_all();
     yosys_validate("sync_reset", &generate_verilog(&uut)).unwrap();
 }

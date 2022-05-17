@@ -196,12 +196,7 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
 #[test]
 fn test_fir_is_synthesizable() {
     let coeffs = [1, -2, 3, -2, 1];
-    let mut uut =
-        TopWrap::new(MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::<3>::new(&coeffs));
-    uut.uut.data_in.connect();
-    uut.uut.strobe_in.connect();
-    uut.uut.clock.connect();
-    uut.uut.reset.connect();
+    let mut uut = MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::<3>::new(&coeffs);
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("fir", &vlog).unwrap();

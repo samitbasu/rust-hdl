@@ -112,14 +112,6 @@ enum BidiState {
 #[test]
 fn test_bidi_master2_synthesizable() {
     let mut uut = BidiMaster::<Bits<8>>::default();
-    uut.bus.link_connect_dest();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.data_to_bus.empty.connect();
-    uut.data_to_bus.almost_empty.connect();
-    uut.data_to_bus.data.connect();
-    uut.data_from_bus.full.connect();
-    uut.data_from_bus.almost_full.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("bidi_master2", &vlog).unwrap();
@@ -155,16 +147,6 @@ impl<T: Synth> Logic for BidiSimulatedDevice<T> {
 #[test]
 fn test_bidi_device_synthesizable() {
     let mut uut = BidiSimulatedDevice::<Bits<8>>::default();
-    uut.bus.connect();
-    uut.data_from_bus.full.connect();
-    uut.data_from_bus.almost_full.connect();
-    uut.data_to_bus.data.connect();
-    uut.data_to_bus.empty.connect();
-    uut.data_to_bus.almost_empty.connect();
-    uut.clock.connect();
-    uut.bus.sig_not_read.connect();
-    uut.bus.sig_not_write.connect();
-    uut.bus.sig_master.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("bidi_device", &vlog).unwrap();

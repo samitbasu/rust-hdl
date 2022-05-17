@@ -168,15 +168,6 @@ impl<const A: usize> Logic for BaseController<A> {
 #[test]
 fn test_base_controller_is_synthesizable() {
     let mut uut = BaseController::<4>::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.from_cpu.data.connect();
-    uut.from_cpu.empty.connect();
-    uut.from_cpu.almost_empty.connect();
-    uut.to_cpu.full.connect();
-    uut.to_cpu.almost_full.connect();
-    uut.bus.to_controller.connect();
-    uut.bus.ready.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("base_controller", &vlog).unwrap();

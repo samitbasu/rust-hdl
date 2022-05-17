@@ -38,9 +38,6 @@ impl Xorshift128State {
 #[test]
 fn test_lfsr_operation() {
     let mut uut = LFSRSimple::default();
-    uut.clock.connect();
-    uut.strobe.connect();
-    uut.reset.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<LFSRSimple>| {

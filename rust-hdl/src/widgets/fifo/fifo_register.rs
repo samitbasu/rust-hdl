@@ -59,11 +59,6 @@ impl<T: Synth> Logic for RegisterFIFO<T> {
 #[test]
 fn test_register_fifo_is_synthesizable() {
     let mut uut = RegisterFIFO::<Bits<16>>::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.write.connect();
-    uut.read.connect();
-    uut.data_in.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("fifo_reg", &vlog).unwrap();

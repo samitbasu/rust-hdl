@@ -40,12 +40,7 @@ impl<const N: usize, const A: usize> Logic for MuxSlaves<N, A> {
 
 #[test]
 fn test_spi_mux_slaves_is_synthesizable() {
-    let mut uut = TopWrap::new(MuxSlaves::<4, 2>::default());
-    for i in 0..4 {
-        uut.uut.to_slaves[i].miso.connect();
-    }
-    uut.uut.sel.connect();
-    uut.uut.from_master.link_connect_dest();
+    let mut uut = MuxSlaves::<4, 2>::default();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("spi_mux_slaves", &vlog).unwrap();
@@ -91,14 +86,7 @@ impl<const N: usize, const A: usize> Logic for MuxMasters<N, A> {
 
 #[test]
 fn test_spi_mux_is_synthesizable() {
-    let mut uut = TopWrap::new(MuxMasters::<4, 2>::default());
-    for i in 0..4 {
-        uut.uut.from_masters[i].mosi.connect();
-        uut.uut.from_masters[i].mclk.connect();
-        uut.uut.from_masters[i].msel.connect();
-    }
-    uut.uut.sel.connect();
-    uut.uut.to_bus.miso.connect();
+    let mut uut = MuxMasters::<4, 2>::default();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("spi_mux", &vlog).unwrap();

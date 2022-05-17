@@ -26,8 +26,6 @@ impl Logic for HLSFIFOTest {
 #[test]
 fn test_hls_fifo_works() {
     let mut uut = HLSFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo.bus_write.write.connect();
     uut.fifo.bus_write.data.connect();
     uut.fifo.bus_read.read.connect();
@@ -128,8 +126,6 @@ fn test_feeder_works() {
         .map(|_| Bits::<8>::from(rand::thread_rng().gen::<u8>()))
         .collect::<Vec<_>>();
     let mut uut = FIFOTestFixture::new(&data);
-    uut.clock.connect();
-    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();

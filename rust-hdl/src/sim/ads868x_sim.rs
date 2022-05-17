@@ -226,9 +226,6 @@ impl Logic for ADS868XSimulator {
 #[test]
 fn test_ads8689_synthesizes() {
     let mut uut = ADS868XSimulator::new(ADS868XSimulator::spi_sw());
-    uut.wires.link_connect_dest();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     yosys_validate("ads8689", &generate_verilog(&uut)).unwrap();
 }

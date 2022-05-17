@@ -112,16 +112,7 @@ impl<
 
 #[test]
 fn cross_widen_fifo_is_synthesizable() {
-    let mut dev = TopWrap::new(CrossWidenFIFO::<16, 8, 9, 128, 5, 6>::new(
-        WordOrder::MostSignificantFirst,
-    ));
-    dev.uut.data_in.connect();
-    dev.uut.write.connect();
-    dev.uut.write_clock.connect();
-    dev.uut.write_reset.connect();
-    dev.uut.read.connect();
-    dev.uut.read_clock.connect();
-    dev.uut.read_reset.connect();
+    let mut dev = CrossWidenFIFO::<16, 8, 9, 128, 5, 6>::new(WordOrder::MostSignificantFirst);
     dev.connect_all();
     yosys_validate("cross_wide", &generate_verilog(&dev)).unwrap();
 }
@@ -234,16 +225,7 @@ impl<
 
 #[test]
 fn cross_narrow_fifo_is_synthesizable() {
-    let mut dev = TopWrap::new(CrossNarrowFIFO::<128, 5, 6, 16, 8, 9>::new(
-        WordOrder::MostSignificantFirst,
-    ));
-    dev.uut.data_in.connect();
-    dev.uut.write.connect();
-    dev.uut.write_clock.connect();
-    dev.uut.write_reset.connect();
-    dev.uut.read.connect();
-    dev.uut.read_clock.connect();
-    dev.uut.read_reset.connect();
+    let mut dev = CrossNarrowFIFO::<128, 5, 6, 16, 8, 9>::new(WordOrder::MostSignificantFirst);
     dev.connect_all();
     yosys_validate("cross_narrow", &generate_verilog(&dev)).unwrap();
 }

@@ -69,8 +69,6 @@ impl Logic for HostTest {
 #[cfg(test)]
 fn make_host_test() -> HostTest {
     let mut uut = HostTest::default();
-    uut.sys_clock.connect();
-    uut.bidi_clock.connect();
     uut.iport.port_in.connect();
     uut.iport.ready_in.connect();
     uut.pc_to_host.bus_write.data.connect();

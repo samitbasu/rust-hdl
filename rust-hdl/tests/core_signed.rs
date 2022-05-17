@@ -23,8 +23,7 @@ impl Default for CircuitSigned {
 
 #[test]
 fn signed_vals_synthesize() {
-    let mut uut = TopWrap::new(CircuitSigned::default());
-    uut.uut.x.connect();
+    let mut uut = CircuitSigned::default();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("signed", &vlog).unwrap()

@@ -27,8 +27,6 @@ impl Logic for RegFIFOTest {
 #[test]
 fn test_register_fifo_works() {
     let mut uut = RegFIFOTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.out_fifo.read.connect();
     uut.in_fifo.write.connect();
     uut.in_fifo.data_in.connect();

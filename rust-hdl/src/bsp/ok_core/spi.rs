@@ -133,11 +133,7 @@ fn test_ok_spi_master_synthesizes() {
         cpha: true,
         cpol: true,
     };
-    let mut uut = TopWrap::new(OKSPIMaster::new(Default::default(), spi_config));
-    uut.uut.wires.link_connect_dest();
-    uut.uut.ok1.connect();
-    uut.uut.clock.connect();
-    uut.uut.reset.connect();
+    let mut uut = OKSPIMaster::new(Default::default(), spi_config);
     uut.connect_all();
     yosys_validate("ok_spi_synth", &generate_verilog(&uut)).unwrap();
 }
@@ -189,10 +185,6 @@ fn test_ok_spi_master_works() {
     }
 
     let mut uut = TopOK::new();
-    uut.wires.link_connect_dest();
-    uut.ok1.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.slave.data_outbound.connect();
     uut.slave.bits.connect();
     uut.slave.start_send.connect();

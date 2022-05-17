@@ -39,9 +39,6 @@ impl<const D: usize> Logic for MISOPort<D> {
 #[test]
 fn test_local_in_port_is_synthesizable() {
     let mut dev = MISOPort::<16>::default();
-    dev.bus.link_connect_dest();
-    dev.port_in.connect();
-    dev.ready_in.connect();
     dev.connect_all();
     let vlog = generate_verilog(&dev);
     yosys_validate("localin", &vlog).unwrap();

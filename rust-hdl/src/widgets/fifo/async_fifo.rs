@@ -96,16 +96,7 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 #[test]
 fn component_async_fifo_is_synthesizable() {
     declare_async_fifo!(TFifo, Bits<8>, 16, 1);
-    top_wrap!(TFifo, Wrapper);
-    let mut dev: Wrapper = Default::default();
-    dev.uut.write.connect();
-    dev.uut.write_clock.connect();
-    dev.uut.write_reset.connect();
-    dev.uut.data_in.connect();
-    dev.uut.write.connect();
-    dev.uut.read_clock.connect();
-    dev.uut.read_reset.connect();
-    dev.uut.read.connect();
+    let mut dev: TFifo = Default::default();
     dev.connect_all();
     yosys_validate("async_fifo", &generate_verilog(&dev)).unwrap();
 }

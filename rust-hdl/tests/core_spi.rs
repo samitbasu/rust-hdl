@@ -39,9 +39,6 @@ impl Default for SPITestAsync {
 #[test]
 fn test_spi_txn_completes() {
     let mut uut = SPITestAsync::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.bus.link_connect_dest();
     uut.master.bits_outbound.connect();
     uut.master.continued_transaction.connect();
     uut.master.data_outbound.connect();
@@ -127,8 +124,6 @@ fn test_spi_xchange_modes() {
 #[cfg(test)]
 fn test_spi_xchange(config: SPIConfig) {
     let mut uut = SPITestPair::new(config);
-    uut.clock.connect();
-    uut.reset.connect();
     uut.master.continued_transaction.connect();
     uut.master.start_send.connect();
     uut.master.data_outbound.connect();

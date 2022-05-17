@@ -81,13 +81,7 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 
 #[test]
 fn component_fifo_is_synthesizable() {
-    top_wrap!(SynchronousFIFO<Bits<8>, 4, 5, 1>, Wrapper);
-    let mut dev: Wrapper = Default::default();
-    dev.uut.clock.connect();
-    dev.uut.reset.connect();
-    dev.uut.read.connect();
-    dev.uut.write.connect();
-    dev.uut.data_in.connect();
+    let mut dev: SynchronousFIFO<Bits<8>, 4, 5, 1> = Default::default();
     dev.connect_all();
     yosys_validate("fifo", &generate_verilog(&dev)).unwrap();
 }

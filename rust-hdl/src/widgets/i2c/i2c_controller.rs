@@ -234,14 +234,7 @@ fn test_i2c_controller_synthesizes() {
         delay_time: Duration::from_nanos(1500),
         clock_speed_hz: 48_000_000,
     };
-    let mut uut = TopWrap::new(I2CController::new(config));
-    uut.uut.scl.connect();
-    uut.uut.sda.connect();
-    uut.uut.clock.connect();
-    uut.uut.write_data_in.connect();
-    uut.uut.cmd.connect();
-    uut.uut.run.connect();
-    uut.uut.reset.connect();
+    let mut uut = I2CController::new(config);
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("i2ccontroller", &vlog).unwrap()
@@ -374,6 +367,6 @@ fn test_i2c_controller_operation() {
         }
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 80_000_000_000, "i2c_controller.vcd")
+    sim.run_to_file(Box::new(uut), 160_000_000_000, "i2c_controller.vcd")
         .unwrap()
 }

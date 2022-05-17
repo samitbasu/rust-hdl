@@ -33,12 +33,10 @@ fn make_test_device() -> TestSDRAMDevice {
         clock: Default::default(),
         reset: Default::default(),
     };
-    uut.clock.connect();
     uut.cntrl.data_in.connect();
     uut.cntrl.cmd_strobe.connect();
     uut.cntrl.cmd_address.connect();
     uut.cntrl.write_not_read.connect();
-    uut.reset.connect();
     uut.connect_all();
     uut
 }
@@ -47,13 +45,6 @@ fn make_test_device() -> TestSDRAMDevice {
 fn make_test_controller() -> SDRAMBurstController<5, 8, 8, 16> {
     let timings = MemoryTimings::fast_boot_sim(100e6);
     let mut uut = SDRAMBurstController::new(3, timings, OutputBuffer::DelayOne);
-    uut.cmd_strobe.connect();
-    uut.cmd_address.connect();
-    uut.data_in.connect();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.sdram.link_connect_dest();
-    uut.write_not_read.connect();
     uut.connect_all();
     uut
 }

@@ -4,9 +4,6 @@ use rust_hdl::widgets::prelude::*;
 #[test]
 fn test_rising_edge_detector_works() {
     let mut uut = EdgeDetector::new(true);
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.input_signal.connect();
     uut.connect_all();
     yosys_validate("edge_2", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
@@ -40,9 +37,6 @@ fn test_rising_edge_detector_works() {
 #[test]
 fn test_falling_edge_detector_works() {
     let mut uut = EdgeDetector::new(false);
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.input_signal.connect();
     uut.connect_all();
     yosys_validate("edge_1", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();

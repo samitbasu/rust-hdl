@@ -4,12 +4,7 @@ use rust_hdl::widgets::prelude::*;
 #[test]
 fn test_fir_is_synthesizable() {
     let coeffs = [1_i16, 2, 3, 2, 1];
-    let mut uut =
-        TopWrap::new(MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::<3>::new(&coeffs));
-    uut.uut.data_in.connect();
-    uut.uut.strobe_in.connect();
-    uut.uut.clock.connect();
-    uut.uut.reset.connect();
+    let mut uut = MultiplyAccumulateSymmetricFiniteImpulseResponseFilter::<3>::new(&coeffs);
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("fir_synth", &vlog).unwrap();
@@ -19,11 +14,7 @@ fn test_fir_is_synthesizable() {
 fn test_fir_impulse_response_is_expected() {
     type MACFIRTest = MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<3>;
     let coeffs = [1_i16, 3, 4, 5, 4, 3, 1];
-    let mut uut = TopWrap::new(MACFIRTest::new(&coeffs));
-    uut.uut.data_in.connect();
-    uut.uut.strobe_in.connect();
-    uut.uut.clock.connect();
-    uut.uut.reset.connect();
+    let mut uut = MACFIRTest::new(&coeffs);
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("fir_sim", &vlog).unwrap();
@@ -54,10 +45,6 @@ fn test_fir_impulse_response_is_expected() {
         Ok(())
     });
     let mut x = MACFIRTest::new(&coeffs);
-    x.data_in.connect();
-    x.strobe_in.connect();
-    x.clock.connect();
-    x.reset.connect();
     x.connect_all();
     sim.run_traced(
         Box::new(x),

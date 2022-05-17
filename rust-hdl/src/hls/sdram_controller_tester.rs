@@ -200,8 +200,6 @@ fn test_sdram_controller_tester_synthesizes() {
         MemoryTimings::fast_boot_sim(100e6),
         OutputBuffer::DelayOne,
     );
-    uut.dram.read_data.connect();
-    uut.upstream.link_connect_dest();
     uut.connect_all();
     yosys_validate("sdram_controller_tester_hls", &generate_verilog(&uut)).unwrap();
 }

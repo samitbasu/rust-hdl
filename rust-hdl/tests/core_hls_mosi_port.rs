@@ -38,15 +38,8 @@ impl Logic for MOSIPortTest {
 #[test]
 fn test_port_test_synthesizes() {
     let mut uut = MOSIPortTest::default();
-    uut.bus.clock.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.strobe.connect();
     uut.port_a.ready.connect();
     uut.port_b.ready.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("test_port", &vlog).unwrap();
@@ -54,15 +47,8 @@ fn test_port_test_synthesizes() {
 #[test]
 fn test_port_test_works() {
     let mut uut = MOSIPortTest::default();
-    uut.bus.clock.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.strobe.connect();
     uut.port_a.ready.connect();
     uut.port_b.ready.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<MOSIPortTest>| x.clock.next = !x.clock.val());
@@ -117,15 +103,8 @@ fn test_port_test_works() {
 #[test]
 fn test_port_pipeline() {
     let mut uut = MOSIPortTest::default();
-    uut.bus.clock.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.strobe.connect();
     uut.port_a.ready.connect();
     uut.port_b.ready.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<MOSIPortTest>| x.clock.next = !x.clock.val());
@@ -210,12 +189,6 @@ impl Logic for MOSIWidePortTest {
 #[test]
 fn test_wport_test_synthesizes() {
     let mut uut = MOSIWidePortTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.strobe.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("wide_test_port", &vlog).unwrap();
@@ -224,12 +197,6 @@ fn test_wport_test_synthesizes() {
 #[test]
 fn test_wide_port_test_works() {
     let mut uut = MOSIWidePortTest::default();
-    uut.clock.connect();
-    uut.reset.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.strobe.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<MOSIWidePortTest>| {
@@ -332,13 +299,7 @@ impl Logic for MOSIPortFIFOTest {
 #[test]
 fn test_mosi_port_fifo_synthesizes() {
     let mut uut = MOSIPortFIFOTest::default();
-    uut.bus.strobe.connect();
-    uut.bus.from_controller.connect();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
     uut.port_a.fifo_bus.link_connect_dest();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("mosi_port_fifo", &vlog).unwrap();
@@ -347,13 +308,7 @@ fn test_mosi_port_fifo_synthesizes() {
 #[test]
 fn test_mosi_port_fifo_works() {
     let mut uut = MOSIPortFIFOTest::default();
-    uut.bus.address.connect();
-    uut.bus.address_strobe.connect();
-    uut.bus.strobe.connect();
-    uut.bus.from_controller.connect();
     uut.port_a.fifo_bus.link_connect_dest();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     let vals = [0xDEAD_u16, 0xBEEF_u16, 0xBABE_u16, 0xCAFE_u16];

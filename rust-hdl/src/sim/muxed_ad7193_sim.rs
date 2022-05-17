@@ -43,10 +43,6 @@ impl Logic for MuxedAD7193Simulators {
 #[test]
 fn test_mux_is_synthesizable() {
     let mut uut = MuxedAD7193Simulators::new(AD7193Config::hw());
-    uut.wires.link_connect_dest();
-    uut.addr.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     yosys_validate("mux_7193", &generate_verilog(&uut)).unwrap();
 }

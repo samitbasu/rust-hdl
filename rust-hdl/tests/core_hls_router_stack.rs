@@ -41,11 +41,10 @@ impl HLSNamedPorts for BridgeTest {
 
 #[test]
 fn test_bridge_test_stack_synthesizes() {
-    let mut uut = TopWrap::new(BridgeTest::default());
-    uut.uut.upstream.link_connect_dest();
-    uut.uut.port_a.ready.connect();
-    uut.uut.port_b.port_in.connect();
-    uut.uut.port_b.ready_in.connect();
+    let mut uut = BridgeTest::default();
+    uut.port_a.ready.connect();
+    uut.port_b.port_in.connect();
+    uut.port_b.ready_in.connect();
     uut.connect_all();
     yosys_validate("bridge_test_stack", &generate_verilog(&uut)).unwrap();
 }
@@ -86,14 +85,13 @@ impl HLSNamedPorts for BridgePair {
 
 #[test]
 fn test_bridge_pair_synthesizes() {
-    let mut uut = TopWrap::new(BridgePair::default());
-    uut.uut.upstream.link_connect_dest();
-    uut.uut.devs[0].port_a.ready.connect();
-    uut.uut.devs[0].port_b.port_in.connect();
-    uut.uut.devs[0].port_b.ready_in.connect();
-    uut.uut.devs[1].port_a.ready.connect();
-    uut.uut.devs[1].port_b.port_in.connect();
-    uut.uut.devs[1].port_b.ready_in.connect();
+    let mut uut = BridgePair::default();
+    uut.devs[0].port_a.ready.connect();
+    uut.devs[0].port_b.port_in.connect();
+    uut.devs[0].port_b.ready_in.connect();
+    uut.devs[1].port_a.ready.connect();
+    uut.devs[1].port_b.port_in.connect();
+    uut.devs[1].port_b.ready_in.connect();
     uut.connect_all();
     yosys_validate("bridge_pair_stack", &generate_verilog(&uut)).unwrap();
 }

@@ -247,7 +247,7 @@ fn hdl_match(m: &syn::ExprMatch) -> Result<TS> {
         return Err(syn::Error::new(
             m.span(),
             "HDL synthesis requires all matches _end_ in a default pattern to ensure proper reset behavior"
-        ))
+        ));
     }
     Ok(quote!({
        {

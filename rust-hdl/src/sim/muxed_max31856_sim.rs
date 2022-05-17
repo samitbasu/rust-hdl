@@ -44,10 +44,6 @@ impl Logic for MuxedMAX31856Simulators {
 fn test_mux_is_synthesizable() {
     use super::ad7193_sim::AD7193Config;
     let mut uut = MuxedMAX31856Simulators::new(AD7193Config::hw().spi);
-    uut.wires.link_connect_dest();
-    uut.addr.connect();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     yosys_validate("mux_31865", &generate_verilog(&uut)).unwrap();
 }

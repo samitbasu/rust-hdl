@@ -220,39 +220,15 @@ impl<const N: usize> Logic for SPIMaster<N> {
 
 #[test]
 fn test_spi_master_is_synthesizable() {
-    #[derive(LogicBlock)]
-    struct Wrap {
-        uut: SPIMaster<64>,
-    }
-
-    impl Logic for Wrap {
-        fn update(&mut self) {}
-    }
-
-    impl Default for Wrap {
-        fn default() -> Self {
-            let config = SPIConfig {
-                clock_speed: 48_000_000,
-                cs_off: true,
-                mosi_off: false,
-                speed_hz: 1_000_000,
-                cpha: true,
-                cpol: false,
-            };
-            Self {
-                uut: SPIMaster::new(config),
-            }
-        }
-    }
-
-    let mut dev = Wrap::default();
-    dev.uut.clock.connect();
-    dev.uut.reset.connect();
-    dev.uut.bits_outbound.connect();
-    dev.uut.data_outbound.connect();
-    dev.uut.start_send.connect();
-    dev.uut.continued_transaction.connect();
-    dev.uut.wires.miso.connect();
+    let config = SPIConfig {
+        clock_speed: 48_000_000,
+        cs_off: true,
+        mosi_off: false,
+        speed_hz: 1_000_000,
+        cpha: true,
+        cpol: false,
+    };
+    let mut dev = SPIMaster::<64>::new(config);
     dev.connect_all();
     yosys_validate("spi_master", &generate_verilog(&dev)).unwrap();
 }

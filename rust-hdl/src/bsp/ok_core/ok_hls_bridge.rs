@@ -171,12 +171,7 @@ impl<const A: usize> Default for OpalKellyHLSBridge<A> {
 
 #[test]
 fn test_ok_hls_bridge_synthesizes() {
-    let mut uut = TopWrap::new(OpalKellyHLSBridge::<16>::default());
-    uut.uut.ok1.connect();
-    uut.uut.ti_clk.connect();
-    uut.uut.pipe_out.datain.connect();
-    uut.uut.bus.to_controller.connect();
-    uut.uut.bus.ready.connect();
+    let mut uut = OpalKellyHLSBridge::<16>::default();
     uut.connect_all();
     yosys_validate("ok_hls_bridge", &generate_verilog(&uut)).unwrap()
 }

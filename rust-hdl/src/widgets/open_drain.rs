@@ -32,8 +32,7 @@ impl Logic for OpenDrainBuffer {
 
 #[test]
 fn test_opendrain_synthesizes() {
-    let mut uut = TopWrap::new(OpenDrainBuffer::default());
-    uut.uut.enable.connect();
+    let mut uut = OpenDrainBuffer::default();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("open_drain", &vlog).unwrap()

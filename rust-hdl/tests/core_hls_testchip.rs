@@ -6,11 +6,6 @@ use test_common::soc::SoCTestChip;
 #[cfg(test)]
 fn make_test_chip() -> SoCTestChip {
     let mut uut = SoCTestChip::default();
-    uut.sys_clock.connect();
-    uut.clock.connect();
-    uut.from_cpu.write.connect();
-    uut.from_cpu.data.connect();
-    uut.to_cpu.read.connect();
     uut.connect_all();
     uut
 }

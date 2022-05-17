@@ -49,7 +49,6 @@ pub use crate::reset_sim;
 pub use crate::sim_assert;
 pub use crate::sim_assert_eq;
 pub use crate::target_path;
-pub use crate::top_wrap;
 pub use crate::vcd_path;
 pub use crate::wait_clock_cycle;
 pub use crate::wait_clock_cycles;

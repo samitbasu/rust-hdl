@@ -38,8 +38,6 @@ impl ExpanderTest {
 #[test]
 fn test_expander_works() {
     let mut uut = ExpanderTest::new(WordOrder::MostSignificantFirst);
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo_in.data_in.connect();
     uut.fifo_in.write.connect();
     uut.fifo_out.read.connect();
@@ -84,8 +82,6 @@ fn test_expander_works() {
 #[test]
 fn test_expander_works_with_lsw_first() {
     let mut uut = ExpanderTest::new(WordOrder::LeastSignificantFirst);
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo_in.data_in.connect();
     uut.fifo_in.write.connect();
     uut.fifo_out.read.connect();
@@ -159,8 +155,6 @@ impl FattenTest {
 #[test]
 fn test_fatten_works() {
     let mut uut = FattenTest::new(WordOrder::MostSignificantFirst);
-    uut.clock.connect();
-    uut.reset.connect();
     uut.fifo.data_in.connect();
     uut.fifo.write.connect();
     uut.fifo.read.connect();

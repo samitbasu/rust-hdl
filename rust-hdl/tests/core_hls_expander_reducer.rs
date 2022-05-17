@@ -70,8 +70,6 @@ impl Default for ReducerTestFixture {
 #[test]
 fn test_reducer_test_fixture_synthesizes() {
     let mut uut = ReducerTestFixture::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();
@@ -82,8 +80,6 @@ fn test_reducer_test_fixture_synthesizes() {
 #[test]
 fn test_reducer_test_fixture_operation() {
     let mut uut = ReducerTestFixture::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();
@@ -174,8 +170,6 @@ impl Default for ExpanderTestFixture {
 #[test]
 fn test_expander_test_fixture() {
     let mut uut = ExpanderTestFixture::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();
@@ -186,8 +180,6 @@ fn test_expander_test_fixture() {
 #[test]
 fn test_expander_test_fixture_operation() {
     let mut uut = ExpanderTestFixture::default();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();

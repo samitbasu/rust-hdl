@@ -36,8 +36,13 @@ impl Default for ISEOptions {
                 "okBTPipeOut.ngc",
             ]
             .iter()
-            .map(|x| format!("{}/{}",
-                             env!("FP_PATH", "Path to FrontPanelHDL/XEM6010-LX45"), x))
+            .map(|x| {
+                format!(
+                    "{}/{}",
+                    env!("FP_PATH", "Path to FrontPanelHDL/XEM6010-LX45"),
+                    x
+                )
+            })
             .collect(),
         }
     }

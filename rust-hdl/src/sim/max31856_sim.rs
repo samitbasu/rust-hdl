@@ -238,9 +238,6 @@ fn test_max31856_synthesizes() {
         cpha: true,
         cpol: true,
     });
-    uut.wires.link_connect_dest();
-    uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     yosys_validate("max31856", &generate_verilog(&uut)).unwrap();
 }

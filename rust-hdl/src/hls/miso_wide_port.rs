@@ -79,9 +79,6 @@ impl<const W: usize, const D: usize> Logic for MISOWidePort<W, D> {
 #[test]
 fn test_local_in_wide_port_is_synthesizable() {
     let mut dev = MISOWidePort::<64, 16>::default();
-    dev.bus.link_connect_dest();
-    dev.port_in.connect();
-    dev.strobe_in.connect();
     dev.connect_all();
     let vlog = generate_verilog(&dev);
     yosys_validate("local_wide_in", &vlog).unwrap();

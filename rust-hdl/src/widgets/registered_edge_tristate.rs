@@ -67,11 +67,7 @@ end
 
 #[test]
 fn test_tristate_edge_synthesizes() {
-    let mut uut = TopWrap::new(RegisteredEdgeTristate::<8>::default());
-    uut.uut.write_data.connect();
-    uut.uut.write_enable.connect();
-    uut.uut.clock.connect();
-    uut.uut.reset.connect();
+    let mut uut = RegisteredEdgeTristate::<8>::default();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("tristate_reg", &vlog).unwrap()

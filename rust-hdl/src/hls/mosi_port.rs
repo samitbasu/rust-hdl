@@ -46,8 +46,6 @@ impl<const D: usize> Logic for MOSIPort<D> {
 #[test]
 fn test_local_out_port_is_synthesizable() {
     let mut dev = MOSIPort::<16>::default();
-    dev.bus.link_connect_dest();
-    dev.ready.connect();
     dev.connect_all();
     let vlog = generate_verilog(&dev);
     yosys_validate("localout", &vlog).unwrap();

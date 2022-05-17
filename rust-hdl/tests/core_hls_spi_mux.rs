@@ -100,12 +100,9 @@ impl Default for SPIMuxTest {
 #[cfg(test)]
 fn make_spi_mux_test() -> SPIMuxTest {
     let mut uut = SPIMuxTest::default();
-    uut.sys_clock.connect();
-    uut.bidi_clock.connect();
     uut.pc_to_host.bus_write.data.connect();
     uut.pc_to_host.bus_write.write.connect();
     uut.host_to_pc.bus_read.read.connect();
-    uut.spi.miso.connect();
     uut.connect_all();
     uut
 }

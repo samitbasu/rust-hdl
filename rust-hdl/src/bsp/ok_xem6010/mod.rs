@@ -76,10 +76,6 @@ impl Logic for OKTest1 {
 #[test]
 fn test_ok_host_synthesizable() {
     let mut uut = OKTest1::new();
-    uut.hi.sig_in.connect();
-    uut.hi.sig_out.connect();
-    uut.hi.sig_inout.connect();
-    uut.hi.sig_aa.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     let _ucf = crate::toolchain::ise::generate_ucf(&uut);

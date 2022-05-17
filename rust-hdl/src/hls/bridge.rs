@@ -77,18 +77,6 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Bridge<D, A, N> {
 #[test]
 fn test_bridge_is_synthesizable() {
     let mut uut = Bridge::<16, 8, 6>::new(["a", "b", "c", "d", "e", "f"]);
-    uut.upstream.address.connect();
-    uut.upstream.address_strobe.connect();
-    uut.upstream.ready.connect();
-    uut.upstream.from_controller.connect();
-    uut.upstream.strobe.connect();
-    uut.upstream.clock.connect();
-    uut.upstream.reset.connect();
-    uut.upstream.address.connect();
-    for ndx in 0..6 {
-        uut.nodes[ndx].to_controller.connect();
-        uut.nodes[ndx].ready.connect();
-    }
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("soc_bridge", &vlog).unwrap();

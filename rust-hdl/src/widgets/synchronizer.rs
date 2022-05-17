@@ -24,11 +24,7 @@ impl Logic for BitSynchronizer {
 
 #[test]
 fn sync_is_synthesizable() {
-    top_wrap!(BitSynchronizer, Wrapper);
-    let mut dev: Wrapper = Default::default();
-    dev.uut.clock.connect();
-    dev.uut.reset.connect();
-    dev.uut.sig_in.connect();
+    let mut dev: BitSynchronizer = Default::default();
     dev.connect_all();
     yosys_validate("sync", &generate_verilog(&dev)).unwrap();
 }
@@ -101,13 +97,7 @@ impl<T: Synth> Logic for SyncSender<T> {
 
 #[test]
 fn sync_sender_is_synthesizable() {
-    top_wrap!(SyncSender<Bits<8>>, Wrapper);
-    let mut dev: Wrapper = Default::default();
-    dev.uut.clock.connect();
-    dev.uut.reset.connect();
-    dev.uut.sig_in.connect();
-    dev.uut.ack_in.connect();
-    dev.uut.send.connect();
+    let mut dev: SyncSender<Bits<8>> = Default::default();
     dev.connect_all();
     yosys_validate("sync_send", &generate_verilog(&dev)).unwrap();
 }
@@ -169,12 +159,7 @@ impl<T: Synth> Logic for SyncReceiver<T> {
 
 #[test]
 fn sync_receiver_is_synthesizable() {
-    top_wrap!(SyncReceiver<Bits<8>>, Wrapper);
-    let mut dev: Wrapper = Default::default();
-    dev.uut.clock.connect();
-    dev.uut.reset.connect();
-    dev.uut.sig_cross.connect();
-    dev.uut.flag_in.connect();
+    let mut dev: SyncReceiver<Bits<8>> = Default::default();
     dev.connect_all();
     yosys_validate("sync_recv", &generate_verilog(&dev)).unwrap();
 }
@@ -218,14 +203,7 @@ impl<T: Synth> Logic for VectorSynchronizer<T> {
 
 #[test]
 fn test_vec_sync_synthesizable() {
-    top_wrap!(VectorSynchronizer<Bits<8>>, Wrapper);
-    let mut dev: Wrapper = Default::default();
-    dev.uut.clock_in.connect();
-    dev.uut.reset_in.connect();
-    dev.uut.sig_in.connect();
-    dev.uut.send.connect();
-    dev.uut.clock_out.connect();
-    dev.uut.reset_out.connect();
+    let mut dev: VectorSynchronizer<Bits<8>> = Default::default();
     dev.connect_all();
     yosys_validate("vsync", &generate_verilog(&dev)).unwrap();
 }
