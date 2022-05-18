@@ -18,7 +18,7 @@ struct SDRAMSimulatedFIFOTester {
     ok_host: OpalKellyHost,
     counter: DFF<Bits<16>>,
     chip: SDRAMSimulator<5, 5, 10, 16>,
-    fifo: SDRAMFIFO<5, 5, 16, 16, 10>,
+    fifo: SDRAMFIFO<5, 5, 16, 16, 12>,
     clock: Signal<In, Clock>,
     cross: AsynchronousFIFO<Bits<16>, 4, 5, 1>,
     dl: OpalKellyDownloadFIFO,
@@ -53,6 +53,7 @@ impl Logic for SDRAMSimulatedFIFOTester {
         // Fast clock for these components
         self.counter.clock.next = self.clock.val();
         self.fifo.clock.next = self.clock.val();
+        self.fifo.ram_clock.next = self.clock.val();
         self.cross.write_clock.next = self.clock.val();
         // Slow clock here
         self.cross.read_clock.next = self.ok_host.ti_clk.val();
@@ -77,6 +78,10 @@ impl Logic for SDRAMSimulatedFIFOTester {
         self.ok_host.ok2.next = self.dl.ok2.val();
         // Link the SDRAM and the controller
         SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.chip.sdram);
+        self.cross.read_reset.next = NO_RESET;
+        self.cross.write_reset.next = NO_RESET;
+        self.fifo.reset.next = NO_RESET;
+        self.counter.reset.next = NO_RESET;
     }
 }
 

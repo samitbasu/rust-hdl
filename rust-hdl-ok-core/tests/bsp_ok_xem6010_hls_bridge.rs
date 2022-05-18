@@ -2,10 +2,8 @@ mod test_common;
 
 use crate::test_common::tools::ok_test_prelude;
 
-use rust_hdl_ok_core::core::ok_hls_bridge::{
-    disable_streaming, drain_stream, enable_streaming, ping_bridge, read_data_from_address,
-    stream_read, write_data_to_address, OKHLSBridgeAddressConfig, OpalKellyHLSBridge,
-};
+use rust_hdl_ok_core::core::ok_hls_bridge::{disable_streaming, drain_stream, enable_streaming, ping_bridge, read_data_from_address, stream_read, write_data_to_address,
+                                            OKHLSBridgeAddressConfig, OpalKellyHLSBridge};
 use rust_hdl_ok_core::core::prelude::*;
 
 use rust_hdl::core::prelude::*;

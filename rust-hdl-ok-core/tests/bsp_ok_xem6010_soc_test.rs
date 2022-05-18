@@ -10,6 +10,7 @@ use rust_hdl_ok_core::xem6010::pins::xem_6010_base_clock;
 use rust_hdl_ok_core::xem6010::XEM6010;
 
 use test_common::soc::SoCTestChip;
+use crate::test_common::soc::test_opalkelly_soc_hello;
 
 #[derive(LogicBlock)]
 struct OpalKellySoCTest {
@@ -62,10 +63,6 @@ fn test_opalkelly_xem_6010_soc() {
     uut.sys_clock.connect();
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/soc_hello"));
-}
-
-#[test]
-fn test_opalkelly_xem_6010_soc_ping() {
-    use crate::test_common::soc::test_opalkelly_soc_hello;
     test_opalkelly_soc_hello(target_path!("xem_6010/soc_hello/top.bit")).unwrap();
 }
+
