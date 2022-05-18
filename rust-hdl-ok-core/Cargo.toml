@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl = {version="^0.26.4", path="../rust-hdl"}
+rust-hdl = {version="^0.26.4"}
 rust-hdl-ok-frontpanel-sys = "0.2.0"
 regex = "1.5.4"
 rand = "0.8.5"
