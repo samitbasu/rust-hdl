@@ -46,7 +46,6 @@ pub struct SPIWiresSlave {
 #[derive(LogicBlock)]
 pub struct SPIMaster<const N: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub bits_outbound: Signal<In, Bits<16>>,
     pub data_outbound: Signal<In, Bits<N>>,
     pub data_inbound: Signal<Out, Bits<N>>,
@@ -78,7 +77,6 @@ impl<const N: usize> SPIMaster<N> {
         assert!(8 * config.speed_hz <= config.clock_speed);
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             bits_outbound: Default::default(),
             data_outbound: Default::default(),
             data_inbound: Default::default(),
@@ -114,7 +112,6 @@ impl<const N: usize> Logic for SPIMaster<N> {
         dff_setup!(
             self,
             clock,
-            reset,
             register_out,
             register_in,
             state,
@@ -125,7 +122,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
             mosi_flop,
             continued_save
         );
-        clock_reset!(self, clock, reset, strobe, miso_synchronizer);
+        clock!(self, clock, strobe, miso_synchronizer);
         // Activate the baud strobe
         self.strobe.enable.next = true;
         // Connect the MISO synchronizer to the input line

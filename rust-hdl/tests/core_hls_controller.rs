@@ -13,7 +13,6 @@ struct ControllerTest {
     port: MOSIPort<16>,
     iport: MISOPort<16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Default for ControllerTest {
@@ -28,7 +27,6 @@ impl Default for ControllerTest {
             port: Default::default(),
             iport: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -37,7 +35,7 @@ impl Logic for ControllerTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Connect the clocks
-        clock_reset!(self, clock, reset, to_cpu_fifo, from_cpu_fifo, controller);
+        clock!(self, clock, to_cpu_fifo, from_cpu_fifo, controller);
         // Connect the test interfaces
         FIFOWriteController::<Bits<16>>::join(
             &mut self.from_cpu,
@@ -65,7 +63,6 @@ impl Logic for ControllerTest {
 fn make_controller_test() -> ControllerTest {
     let mut uut = ControllerTest::default();
     uut.clock.connect();
-    uut.reset.connect();
     uut.from_cpu.data.connect();
     uut.from_cpu.write.connect();
     uut.to_cpu.read.connect();
@@ -91,7 +88,6 @@ fn test_ping_works() {
     });
     sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         // Send a PING command
         wait_clock_true!(sim, clock, x);
         for iter in 0..10 {
@@ -140,7 +136,6 @@ fn test_write_command_works() {
     });
     sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         // Send a PING command
         wait_clock_true!(sim, clock, x);
         for iter in 0..10 {
@@ -206,7 +201,6 @@ fn test_read_command_works() {
     });
     sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         // Send a PING command
         wait_clock_true!(sim, clock, x);
         for iter in 0..10 {
@@ -280,7 +274,6 @@ fn test_stream_command_works() {
     });
     sim.add_testbench(move |mut sim: Sim<ControllerTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         // Send a PING command
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 5);

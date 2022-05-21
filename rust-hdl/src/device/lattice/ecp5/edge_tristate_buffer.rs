@@ -8,7 +8,7 @@ pub struct EdgeTristateBuffer<T: Synth> {
     pub from_pin: Signal<Out, T>,
     pub output_enable: Signal<In, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, Bit>,
     pub pin: Signal<InOut, T>,
     dff_out: DFF<T>,
     dff_in: DFF<T>,
@@ -56,7 +56,7 @@ wire [{B}:0] bb_from_pin;
 
 impl<T: Synth> Logic for EdgeTristateBuffer<T> {
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, dff_out, dff_in);
+        dff_setup!(self, clock, dff_out, dff_in);
         self.buffer.write_enable.next = self.output_enable.val();
         self.dff_in.d.next = self.buffer.read_data.val();
         self.dff_out.d.next = self.to_pin.val();
@@ -65,8 +65,6 @@ impl<T: Synth> Logic for EdgeTristateBuffer<T> {
         Signal::<InOut, T>::link(&mut self.pin, &mut self.buffer.bus);
     }
     fn connect(&mut self) {
-        self.dff_out.reset.connect();
-        self.dff_in.reset.connect();
         self.dff_out.clock.connect();
         self.dff_in.clock.connect();
         self.buffer.write_enable.connect();

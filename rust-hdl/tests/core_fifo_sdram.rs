@@ -11,7 +11,6 @@ struct FIFOSDRAMTest {
     buffer: SDRAMOnChipBuffer<16>,
     fifo: SDRAMFIFOController<6, 4, 16, 16, 12>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 #[cfg(test)]
@@ -20,7 +19,7 @@ impl Logic for FIFOSDRAMTest {
     fn update(&mut self) {
         SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.buffer.buf_in);
         SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.dram.sdram);
-        clock_reset!(self, clock, reset, fifo);
+        clock!(self, clock, fifo);
         self.fifo.ram_clock.next = self.clock.val();
     }
 }
@@ -33,7 +32,6 @@ impl FIFOSDRAMTest {
             buffer: Default::default(),
             fifo: SDRAMFIFOController::new(cas_latency, timings, buffer),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -46,7 +44,6 @@ fn make_test_fifo_controller() -> FIFOSDRAMTest {
     uut.fifo.data_in.connect();
     uut.fifo.read.connect();
     uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     uut
 }
@@ -66,7 +63,6 @@ fn test_sdram_works() {
     });
     sim.add_testbench(move |mut sim: Sim<FIFOSDRAMTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_cycles!(sim, clock, x, 20);
         wait_clock_true!(sim, clock, x);
         for counter in 0_u32..512_u32 {

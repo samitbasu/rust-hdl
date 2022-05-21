@@ -7,7 +7,6 @@ use crate::core::ast::{
     VerilogLink, VerilogLinkDetails, VerilogLiteral, VerilogLoop, VerilogMatch, VerilogOp,
     VerilogOpUnary,
 };
-use crate::core::clock::{NO_RESET, RESET};
 use crate::core::code_writer::CodeWriter;
 use crate::core::verilog_visitor::{walk_block, VerilogVisitor};
 
@@ -65,12 +64,6 @@ impl VerilogCodeGenerator {
         }
         if x.starts_with(".") {
             x.remove(0);
-        }
-        if x == "NO_RESET" {
-            x = format!("1'b{}", if NO_RESET.rst { 1 } else { 0 })
-        }
-        if x == "RESET" {
-            x = format!("1'b{}", if RESET.rst { 1 } else { 0 })
         }
         x = x
             .replace(".", "$")

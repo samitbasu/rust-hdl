@@ -10,7 +10,6 @@ mod test_common;
 struct HLSFIFOTest {
     fifo: AsyncFIFO<Bits<8>, 3, 4, 1>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Logic for HLSFIFOTest {
@@ -18,8 +17,6 @@ impl Logic for HLSFIFOTest {
     fn update(&mut self) {
         self.fifo.write_clock.next = self.clock.val();
         self.fifo.read_clock.next = self.clock.val();
-        self.fifo.write_reset.next = self.reset.val();
-        self.fifo.read_reset.next = self.reset.val();
     }
 }
 
@@ -39,7 +36,6 @@ fn test_hls_fifo_works() {
     sim.add_clock(5, |x: &mut Box<HLSFIFOTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<HLSFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for sample in &rdata {
             x = sim.watch(|x| !x.fifo.bus_write.full.val(), x)?;
@@ -86,13 +82,12 @@ struct FIFOTestFixture {
     fifo: SyncFIFO<Bits<8>, 4, 5, 1>,
     reader: LazyFIFOReader<Bits<8>, 10>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Logic for FIFOTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, feeder, fifo, reader);
+        clock!(self, clock, feeder, fifo, reader);
         FIFOWriteController::<Bits<8>>::join(&mut self.feeder.bus, &mut self.fifo.bus_write);
         FIFOReadController::<Bits<8>>::join(&mut self.reader.bus, &mut self.fifo.bus_read);
     }
@@ -115,7 +110,6 @@ impl FIFOTestFixture {
                     .collect::<Vec<_>>(),
             ),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -137,7 +131,6 @@ fn test_feeder_works() {
     });
     sim.add_testbench(move |mut sim: Sim<FIFOTestFixture>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.feeder.start.next = true;
         x.reader.start.next = true;
@@ -159,20 +152,16 @@ struct FIFOTestFixtureAsync {
     fifo: AsyncFIFO<Bits<8>, 4, 5, 1>,
     reader: LazyFIFOReader<Bits<8>, 10>,
     clock_write: Signal<In, Clock>,
-    reset_write: Signal<In, Reset>,
     clock_read: Signal<In, Clock>,
-    reset_read: Signal<In, Reset>,
 }
 
 impl Logic for FIFOTestFixtureAsync {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock_write, reset_write, feeder);
-        clock_reset!(self, clock_read, reset_read, reader);
+        clock!(self, clock_write, feeder);
+        clock!(self, clock_read, reader);
         self.fifo.write_clock.next = self.clock_write.val();
-        self.fifo.write_reset.next = self.reset_write.val();
         self.fifo.read_clock.next = self.clock_read.val();
-        self.fifo.read_reset.next = self.reset_read.val();
         FIFOWriteController::<Bits<8>>::join(&mut self.feeder.bus, &mut self.fifo.bus_write);
         FIFOReadController::<Bits<8>>::join(&mut self.reader.bus, &mut self.fifo.bus_read);
     }
@@ -195,9 +184,7 @@ impl FIFOTestFixtureAsync {
                     .collect::<Vec<_>>(),
             ),
             clock_write: Default::default(),
-            reset_write: Default::default(),
             clock_read: Default::default(),
-            reset_read: Default::default(),
         }
     }
 }
@@ -210,8 +197,6 @@ fn test_feeder_async_works() {
     let mut uut = FIFOTestFixtureAsync::new(&data);
     uut.clock_read.connect();
     uut.clock_write.connect();
-    uut.reset_read.connect();
-    uut.reset_write.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();
@@ -226,7 +211,6 @@ fn test_feeder_async_works() {
     });
     sim.add_testbench(move |mut sim: Sim<FIFOTestFixtureAsync>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock_write, reset_write, x);
         wait_clock_true!(sim, clock_write, x);
         x.feeder.start.next = true;
         wait_clock_cycle!(sim, clock_write, x);
@@ -235,7 +219,6 @@ fn test_feeder_async_works() {
     });
     sim.add_testbench(move |mut sim: Sim<FIFOTestFixtureAsync>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock_read, reset_read, x);
         wait_clock_true!(sim, clock_read, x);
         x.reader.start.next = true;
         wait_clock_cycle!(sim, clock_read, x);

@@ -35,7 +35,6 @@ pub struct SDRAMControllerTester<const R: usize, const C: usize> {
     output_avail: DFF<Bit>,
     state: DFF<State>,
     clock: Signal<Local, Clock>,
-    reset: Signal<Local, Reset>,
 }
 
 impl<const R: usize, const C: usize> SDRAMControllerTester<R, C> {
@@ -62,7 +61,6 @@ impl<const R: usize, const C: usize> SDRAMControllerTester<R, C> {
             output_avail: Default::default(),
             state: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -79,12 +77,10 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         SoCBusResponder::<16, 8>::link(&mut self.upstream, &mut self.local_bridge.upstream);
         SDRAMDriver::<16>::link(&mut self.dram, &mut self.controller.sdram);
         self.clock.next = self.upstream.clock.val();
-        self.reset.next = self.upstream.reset.val();
-        clock_reset!(self, clock, reset, controller, lsfr, lsfr_validate);
+        clock!(self, clock, controller, lsfr, lsfr_validate);
         dff_setup!(
             self,
             clock,
-            reset,
             dram_address,
             error_count,
             validation_count,
@@ -108,9 +104,7 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         self.lsfr.strobe.next = !self.entropy_funnel.full.val();
         self.entropy_funnel.write.next = !self.entropy_funnel.full.val();
         self.entropy_funnel.write_clock.next = self.upstream.clock.val();
-        self.entropy_funnel.write_reset.next = self.reset.val();
         self.entropy_funnel.read_clock.next = self.upstream.clock.val();
-        self.entropy_funnel.read_reset.next = self.reset.val();
         self.controller.data_in.next = self.entropy_funnel.data_out.val();
         self.controller.cmd_address.next = self.dram_address.q.val();
         self.controller.write_not_read.next = false;
@@ -119,9 +113,7 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         self.output_funnel.data_in.next = self.controller.data_out.val();
         self.output_funnel.write.next = self.controller.data_valid.val();
         self.output_funnel.write_clock.next = self.upstream.clock.val();
-        self.output_funnel.write_reset.next = self.reset.val();
         self.output_funnel.read_clock.next = self.upstream.clock.val();
-        self.output_funnel.read_reset.next = self.reset.val();
         self.error_out.strobe_in.next = false;
         self.validation_out.strobe_in.next = false;
         self.write_out.strobe_in.next = false;

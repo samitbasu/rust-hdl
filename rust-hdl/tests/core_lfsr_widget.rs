@@ -46,7 +46,6 @@ fn test_lfsr_operation() {
     sim.add_testbench(move |mut sim: Sim<LFSRSimple>| {
         let mut x = sim.init()?;
         let mut lf = Xorshift128State::default();
-        reset_sim!(sim, clock, reset, x);
         wait_clock_cycles!(sim, clock, x, 10);
         for _ in 0..1000 {
             sim_assert_eq!(sim, x.num.val().index() as u32, lf.get(), x);

@@ -8,7 +8,6 @@ use array_init::array_init;
 #[derive(LogicBlock)]
 pub struct DelayLine<D: Synth, const N: usize, const W: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub data_in: Signal<In, D>,
     pub data_out: Signal<Out, D>,
     pub delay: Signal<In, Bits<W>>,
@@ -20,7 +19,6 @@ impl<D: Synth, const N: usize, const W: usize> Default for DelayLine<D, N, W> {
         assert!(W >= clog2(N));
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             data_in: Default::default(),
             data_out: Default::default(),
             delay: Default::default(),
@@ -35,7 +33,6 @@ impl<D: Synth, const N: usize, const W: usize> Logic for DelayLine<D, N, W> {
         // Clock all of the delay lines
         for i in 0_usize..N {
             self.line[i].clock.next = self.clock.val();
-            self.line[i].reset.next = self.reset.val();
         }
         for i in 1_usize..N {
             self.line[i].d.next = self.line[i - 1].q.val();
@@ -73,7 +70,6 @@ fn test_delay_operation() {
     });
     sim.add_testbench(move |mut sim: Sim<DelayLineTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.delay.next = 0_usize.into();
         x.data_in.next = 0xDE_usize.into();

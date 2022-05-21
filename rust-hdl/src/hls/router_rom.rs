@@ -19,7 +19,6 @@ pub struct RouterROM<const D: usize, const A: usize, const N: usize> {
     virtual_address: DFF<Bits<A>>,
     address_strobe_delay: DFF<Bit>,
     clock: Signal<Local, Clock>,
-    reset: Signal<Local, Reset>,
     _address_map: Vec<String>,
 }
 
@@ -69,7 +68,6 @@ impl<const D: usize, const A: usize, const N: usize> RouterROM<D, A, N> {
             virtual_address: Default::default(),
             address_strobe_delay: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             _address_map,
         }
     }
@@ -79,17 +77,9 @@ impl<const D: usize, const A: usize, const N: usize> Logic for RouterROM<D, A, N
     #[hdl_gen]
     fn update(&mut self) {
         self.clock.next = self.upstream.clock.val();
-        self.reset.next = self.upstream.reset.val();
         self.upstream.ready.next = false;
         self.upstream.to_controller.next = 0_usize.into();
-        dff_setup!(
-            self,
-            clock,
-            reset,
-            active,
-            virtual_address,
-            address_strobe_delay
-        );
+        dff_setup!(self, clock, active, virtual_address, address_strobe_delay);
         self.node_decode.address.next = self.upstream.address.val();
         self.virtual_decode.address.next = self.upstream.address.val();
         if self.upstream.address_strobe.val() {
@@ -105,7 +95,6 @@ impl<const D: usize, const A: usize, const N: usize> Logic for RouterROM<D, A, N
             self.nodes[i].address_strobe.next = false;
             self.nodes[i].strobe.next = false;
             self.nodes[i].clock.next = self.clock.val();
-            self.nodes[i].reset.next = self.reset.val();
             if self.active.q.val().index() == i {
                 self.nodes[i].from_controller.next = self.upstream.from_controller.val();
                 self.nodes[i].address.next = self.virtual_address.q.val();

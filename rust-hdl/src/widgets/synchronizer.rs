@@ -7,7 +7,6 @@ pub struct BitSynchronizer {
     pub sig_in: Signal<In, Bit>,
     pub sig_out: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     dff0: DFF<Bit>,
     dff1: DFF<Bit>,
 }
@@ -15,7 +14,7 @@ pub struct BitSynchronizer {
 impl Logic for BitSynchronizer {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, dff0, dff1);
+        dff_setup!(self, clock, dff0, dff1);
         self.dff0.d.next = self.sig_in.val();
         self.dff1.d.next = self.dff0.q.val();
         self.sig_out.next = self.dff1.q.val();
@@ -40,7 +39,6 @@ pub enum SyncSenderState {
 pub struct SyncSender<T: Synth> {
     pub sig_in: Signal<In, T>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub sig_cross: Signal<Out, T>,
     pub flag_out: Signal<Out, Bit>,
     pub ack_in: Signal<In, Bit>,
@@ -54,8 +52,8 @@ pub struct SyncSender<T: Synth> {
 impl<T: Synth> Logic for SyncSender<T> {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, hold, state);
-        clock_reset!(self, clock, reset, sync);
+        dff_setup!(self, clock, hold, state);
+        clock!(self, clock, sync);
         // By default, the hold DFF does not change
         self.sig_cross.next = self.hold.q.val();
         self.flag_out.next = false.into();
@@ -112,7 +110,6 @@ pub enum SyncReceiverState {
 pub struct SyncReceiver<T: Synth> {
     pub sig_out: Signal<Out, T>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub sig_cross: Signal<In, T>,
     pub flag_in: Signal<In, Bit>,
     pub ack_out: Signal<Out, Bit>,
@@ -126,8 +123,8 @@ pub struct SyncReceiver<T: Synth> {
 impl<T: Synth> Logic for SyncReceiver<T> {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, hold, update_delay, state);
-        clock_reset!(self, clock, reset, sync);
+        dff_setup!(self, clock, hold, update_delay, state);
+        clock!(self, clock, sync);
         self.sig_out.next = self.hold.q.val();
         self.ack_out.next = false.into();
         self.sync.sig_in.next = self.flag_in.val();
@@ -168,13 +165,11 @@ fn sync_receiver_is_synthesizable() {
 pub struct VectorSynchronizer<T: Synth> {
     // The input interface...
     pub clock_in: Signal<In, Clock>,
-    pub reset_in: Signal<In, Reset>,
     pub sig_in: Signal<In, T>,
     pub busy: Signal<Out, Bit>,
     pub send: Signal<In, Bit>,
     // The output interface...
     pub clock_out: Signal<In, Clock>,
-    pub reset_out: Signal<In, Reset>,
     pub sig_out: Signal<Out, T>,
     pub update: Signal<Out, Bit>,
     // The two pieces of the synchronizer
@@ -185,8 +180,8 @@ pub struct VectorSynchronizer<T: Synth> {
 impl<T: Synth> Logic for VectorSynchronizer<T> {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock_in, reset_in, sender);
-        clock_reset!(self, clock_out, reset_out, recv);
+        clock!(self, clock_in, sender);
+        clock!(self, clock_out, recv);
         // Wire the inputs..
         self.sender.sig_in.next = self.sig_in.val();
         self.busy.next = self.sender.busy.val();

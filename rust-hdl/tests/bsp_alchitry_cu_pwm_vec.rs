@@ -7,7 +7,6 @@ use test_common::snore;
 
 #[derive(LogicBlock)]
 pub struct Fader {
-    pub reset: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
     pub active: Signal<Out, Bit>,
     pub enable: Signal<In, Bit>,
@@ -23,7 +22,6 @@ impl Fader {
             .map(|x| (Bits::<8>::from(x), snore(x + phase)))
             .collect::<BTreeMap<_, _>>();
         Self {
-            reset: Default::default(),
             clock: Signal::default(),
             active: Signal::new_with_default(false),
             enable: Signal::default(),
@@ -38,8 +36,8 @@ impl Fader {
 impl Logic for Fader {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, strobe, pwm);
-        dff_setup!(self, clock, reset, counter);
+        clock!(self, clock, strobe, pwm);
+        dff_setup!(self, clock, counter);
         self.rom.address.next = self.counter.q.val();
         self.counter.d.next = self.counter.q.val() + self.strobe.strobe.val();
         self.strobe.enable.next = self.enable.val();
@@ -55,18 +53,13 @@ pub struct AlchitryCuPWMVec<const P: usize> {
     leds: Signal<Out, Bits<8>>,
     local: Signal<Local, Bits<8>>,
     faders: [Fader; 8],
-    reset: Signal<Local, Reset>,
-    auto_reset: AutoReset,
 }
 
 impl<const P: usize> Logic for AlchitryCuPWMVec<P> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.auto_reset.clock.next = self.clock.val();
-        self.reset.next = self.auto_reset.reset.val();
         for i in 0_usize..8_usize {
             self.faders[i].clock.next = self.clock.val();
-            self.faders[i].reset.next = self.reset.val();
             self.faders[i].enable.next = true;
         }
         self.local.next = 0x00_u8.into();
@@ -94,8 +87,6 @@ impl<const P: usize> AlchitryCuPWMVec<P> {
             leds: rust_hdl::bsp::alchitry_cu::pins::leds(),
             local: Signal::default(),
             faders,
-            reset: Default::default(),
-            auto_reset: Default::default(),
         }
     }
 }

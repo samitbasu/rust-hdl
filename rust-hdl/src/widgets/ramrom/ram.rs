@@ -104,7 +104,6 @@ end
                 clock: "read_clock".into(),
                 inputs: vec!["read_address".into()],
                 outputs: vec!["read_data".into()],
-                reset: None,
             },
             TimingInfo {
                 name: "ram_write".into(),
@@ -115,7 +114,6 @@ end
                     "write_enable".into(),
                 ],
                 outputs: vec![],
-                reset: None,
             },
         ]
     }

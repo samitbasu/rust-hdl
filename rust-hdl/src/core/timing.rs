@@ -4,5 +4,4 @@ pub struct TimingInfo {
     pub clock: String,
     pub inputs: Vec<String>,
     pub outputs: Vec<String>,
-    pub reset: Option<String>,
 }

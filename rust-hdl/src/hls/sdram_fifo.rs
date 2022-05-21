@@ -6,7 +6,6 @@ use crate::widgets::sdram::SDRAMDriver;
 #[derive(LogicBlock)]
 pub struct SDRAMFIFO<const R: usize, const C: usize, const P: u32, const D: usize, const A: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub sdram: SDRAMDriver<D>,
     pub ram_clock: Signal<In, Clock>,
     pub bus_write: FIFOWriteResponder<Bits<D>>,
@@ -27,7 +26,7 @@ impl<const R: usize, const C: usize, const P: u32, const D: usize, const A: usiz
         self.bus_read.empty.next = self.controller.empty.val();
         self.bus_read.almost_empty.next = self.controller.empty.val();
         self.controller.read.next = self.bus_read.read.val();
-        clock_reset!(self, clock, reset, controller);
+        clock!(self, clock, controller);
         self.controller.ram_clock.next = self.ram_clock.val();
         SDRAMDriver::<D>::link(&mut self.sdram, &mut self.controller.sdram);
     }
@@ -43,7 +42,6 @@ impl<const R: usize, const C: usize, const P: u32, const D: usize, const A: usiz
     ) -> SDRAMFIFO<R, C, P, D, A> {
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             sdram: Default::default(),
             ram_clock: Default::default(),
             bus_write: Default::default(),

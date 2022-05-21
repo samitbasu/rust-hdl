@@ -15,22 +15,12 @@ struct ReducerTestFixture {
     narrow_fifo: SyncFIFO<Bits<4>, 4, 5, 1>,
     reader: LazyFIFOReader<Bits<4>, 12>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Logic for ReducerTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(
-            self,
-            clock,
-            reset,
-            feeder,
-            wide_fifo,
-            reducer,
-            narrow_fifo,
-            reader
-        );
+        clock!(self, clock, feeder, wide_fifo, reducer, narrow_fifo, reader);
         FIFOWriteController::<Bits<16>>::join(&mut self.feeder.bus, &mut self.wide_fifo.bus_write);
         FIFOReadController::<Bits<16>>::join(
             &mut self.reducer.bus_read,
@@ -62,7 +52,6 @@ impl Default for ReducerTestFixture {
             narrow_fifo: Default::default(),
             reader: LazyFIFOReader::new(&data2, &bursty_vec(1024)),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -89,7 +78,6 @@ fn test_reducer_test_fixture_operation() {
     });
     sim.add_testbench(move |mut sim: Sim<ReducerTestFixture>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.feeder.start.next = true;
         x.reader.start.next = true;
@@ -115,16 +103,14 @@ struct ExpanderTestFixture {
     word_fifo: SyncFIFO<Bits<16>, 4, 5, 1>,
     reader: LazyFIFOReader<Bits<16>, 10>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Logic for ExpanderTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(
+        clock!(
             self,
             clock,
-            reset,
             feeder,
             nibble_fifo,
             expander,
@@ -162,7 +148,6 @@ impl Default for ExpanderTestFixture {
             word_fifo: Default::default(),
             reader: LazyFIFOReader::new(&data1, &bursty_vec(256)),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -189,7 +174,6 @@ fn test_expander_test_fixture_operation() {
     });
     sim.add_testbench(move |mut sim: Sim<ExpanderTestFixture>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.feeder.start.next = true;
         x.reader.start.next = true;

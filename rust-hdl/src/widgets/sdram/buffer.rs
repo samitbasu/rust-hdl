@@ -15,18 +15,15 @@ pub struct SDRAMOnChipBuffer<const D: usize> {
     write_flop: DFF<Bits<D>>,
     read_flop: DFF<Bits<D>>,
     clock: Signal<Local, Clock>,
-    reset: Signal<Local, Reset>,
 }
 
 impl<const D: usize> Logic for SDRAMOnChipBuffer<D> {
     #[hdl_gen]
     fn update(&mut self) {
         self.clock.next = self.buf_in.clk.val();
-        self.reset.next = self.buf_in.reset.val();
         dff_setup!(
             self,
             clock,
-            reset,
             we_not_flop,
             cas_not_flop,
             ras_not_flop,
@@ -57,7 +54,6 @@ impl<const D: usize> Logic for SDRAMOnChipBuffer<D> {
         self.buf_out.write_data.next = self.write_flop.q.val();
         // Forward the clock
         self.buf_out.clk.next = self.buf_in.clk.val(); // FIXME - clock was inverted here...
-        self.buf_out.reset.next = self.buf_in.reset.val();
     }
 }
 

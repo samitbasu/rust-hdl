@@ -9,18 +9,14 @@ pub const MHZ100: u64 = 100_000_000;
 pub struct AlchitryCuPulser {
     pulser: Pulser,
     clock: Signal<In, Clock>,
-    reset: Signal<Local, Reset>,
     leds: Signal<Out, Bits<8>>,
-    auto_reset: AutoReset,
 }
 
 impl Logic for AlchitryCuPulser {
     #[hdl_gen]
     fn update(&mut self) {
         self.pulser.enable.next = true;
-        self.auto_reset.clock.next = self.clock.val();
-        self.reset.next = self.auto_reset.reset.val();
-        clock_reset!(self, clock, reset, pulser);
+        clock!(self, clock, pulser);
         self.leds.next = 0x00_u32.into();
         if self.pulser.pulse.val() {
             self.leds.next = 0xAA_u32.into();
@@ -38,9 +34,7 @@ impl Default for AlchitryCuPulser {
         Self {
             pulser,
             clock: rust_hdl::bsp::alchitry_cu::pins::clock(),
-            reset: Default::default(),
             leds: rust_hdl::bsp::alchitry_cu::pins::leds(),
-            auto_reset: Default::default(),
         }
     }
 }

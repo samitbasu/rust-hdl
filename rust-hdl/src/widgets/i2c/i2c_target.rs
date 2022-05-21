@@ -24,7 +24,6 @@ pub struct I2CTarget {
     pub sda: Signal<InOut, Bit>,
     pub scl: Signal<InOut, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub from_bus: Signal<Out, Bits<8>>,
     pub bus_write: Signal<Out, Bit>,
     pub active: Signal<In, Bit>,
@@ -53,7 +52,7 @@ impl Logic for I2CTarget {
         Signal::<InOut, Bit>::link(&mut self.sda, &mut self.sda_driver.bus);
         Signal::<InOut, Bit>::link(&mut self.scl, &mut self.scl_driver.bus);
         // Clock the internal structures
-        dff_setup!(self, clock, reset, state, sda_flop, read_bit, count, accum);
+        dff_setup!(self, clock, state, sda_flop, read_bit, count, accum);
         // Latch prevention
         self.scl_driver.enable.next = false;
         self.sda_driver.enable.next = self.sda_flop.q.val();

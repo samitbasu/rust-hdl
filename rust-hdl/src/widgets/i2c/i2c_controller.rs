@@ -40,7 +40,6 @@ pub struct I2CController {
     pub write_data_in: Signal<In, Bits<8>>,
     pub read_data_out: Signal<Out, Bits<8>>,
     pub read_valid: Signal<Out, Bit>,
-    pub reset: Signal<In, Reset>,
     pub ack: Signal<Out, Bit>,
     pub nack: Signal<Out, Bit>,
     driver: I2CDriver,
@@ -65,7 +64,6 @@ impl I2CController {
             write_data_in: Default::default(),
             read_data_out: Default::default(),
             read_valid: Default::default(),
-            reset: Default::default(),
             ack: Default::default(),
             nack: Default::default(),
             driver: I2CDriver::new(config),
@@ -84,8 +82,8 @@ impl Logic for I2CController {
     fn update(&mut self) {
         Signal::<InOut, Bit>::link(&mut self.sda, &mut self.driver.sda);
         Signal::<InOut, Bit>::link(&mut self.scl, &mut self.driver.scl);
-        clock_reset!(self, clock, reset, driver);
-        dff_setup!(self, clock, reset, counter, read_data, write_data, state, started, last_read);
+        clock!(self, clock, driver);
+        dff_setup!(self, clock, counter, read_data, write_data, state, started, last_read);
         self.driver.run.next = false;
         self.driver.cmd.next = I2CDriverCmd::Noop;
         // Default values
@@ -243,7 +241,6 @@ fn test_i2c_controller_synthesizes() {
 #[derive(LogicBlock)]
 struct I2CControllerTest {
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
     controller: I2CController,
     target_1: I2CTestTarget,
     target_2: I2CTestTarget,
@@ -254,7 +251,7 @@ struct I2CControllerTest {
 impl Logic for I2CControllerTest {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, controller, target_1, target_2);
+        clock!(self, clock, controller, target_1, target_2);
         Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.controller.scl);
         Signal::<InOut, Bit>::join(&mut self.pullup_sda.bus, &mut self.controller.sda);
         Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.target_1.scl);
@@ -278,7 +275,6 @@ impl Default for I2CControllerTest {
         };
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             controller: I2CController::new(config),
             target_1: I2CTestTarget::new(0x53),
             target_2: I2CTestTarget::new(0x57),
@@ -313,7 +309,6 @@ fn test_i2c_controller_operation() {
         .collect::<Vec<_>>();
     let mut uut = I2CControllerTest::default();
     uut.clock.connect();
-    uut.reset.connect();
     uut.controller.cmd.connect();
     uut.controller.run.connect();
     uut.controller.write_data_in.connect();
@@ -336,7 +331,6 @@ fn test_i2c_controller_operation() {
     });
     sim.add_testbench(move |mut sim: Sim<I2CControllerTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         // Check that a write to an invalid address is NACKed.
         i2c_begin_write!(sim, clock, x, 0x54_u32);
         sim_assert!(sim, x.controller.nack.val() & !x.controller.ack.val(), x);

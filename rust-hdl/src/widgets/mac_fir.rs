@@ -20,7 +20,6 @@ pub struct MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<const ADDR_BIT
     pub data_out: Signal<Out, Signed<48>>,
     pub strobe_out: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub busy: Signal<Out, Bit>,
     coeff_memory: SyncROM<Signed<16>, ADDR_BITS>,
     left_bank: RAM<Signed<16>, ADDR_BITS>,
@@ -63,7 +62,7 @@ impl<const ADDR_BITS: usize> Logic
         self.left_bank.write_clock.next = self.clock.val();
         self.right_bank.read_clock.next = self.clock.val();
         self.right_bank.write_clock.next = self.clock.val();
-        dff_setup!(self, clock, reset, head_ptr, index, accum, state);
+        dff_setup!(self, clock, head_ptr, index, accum, state);
         // Connect the head pointer to the write address of the two bank memories
         self.left_bank.write_address.next = self.head_ptr.d.val();
         self.right_bank.write_address.next = self.head_ptr.d.val();
@@ -171,7 +170,6 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
             data_out: Default::default(),
             strobe_out: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             busy: Default::default(),
             coeff_memory: coeffs.into_iter().into(),
             left_bank: Default::default(),

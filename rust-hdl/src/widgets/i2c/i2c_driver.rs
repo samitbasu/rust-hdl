@@ -45,7 +45,6 @@ pub struct I2CDriver {
     pub run: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
     pub error: Signal<Out, Bit>,
-    pub reset: Signal<In, Reset>,
     pub read_bit: Signal<Out, Bit>,
     pub read_valid: Signal<Out, Bit>,
     state: DFF<State>,
@@ -67,8 +66,8 @@ impl Logic for I2CDriver {
     fn update(&mut self) {
         Signal::<InOut, Bit>::link(&mut self.sda, &mut self.sda_driver.bus);
         Signal::<InOut, Bit>::link(&mut self.scl, &mut self.scl_driver.bus);
-        dff_setup!(self, clock, reset, state, sda_flop, scl_flop);
-        clock_reset!(self, clock, reset, delay);
+        dff_setup!(self, clock, state, sda_flop, scl_flop);
+        clock!(self, clock, delay);
         // Latch avoidance and default conditions
         self.delay.trigger.next = false;
         self.sda_driver.enable.next = self.sda_flop.q.val();
@@ -271,7 +270,6 @@ impl I2CDriver {
             clear_scl: Default::default(),
             set_sda: Default::default(),
             set_scl: Default::default(),
-            reset: Default::default(),
             read_bit: Default::default(),
             read_valid: Default::default(),
         }

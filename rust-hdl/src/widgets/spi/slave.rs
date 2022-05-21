@@ -22,7 +22,6 @@ enum SPISlaveState {
 #[derive(LogicBlock)]
 pub struct SPISlave<const N: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub wires: SPIWiresSlave,
     pub disabled: Signal<In, Bit>,
     pub busy: Signal<Out, Bit>,
@@ -70,7 +69,6 @@ impl<const N: usize> SPISlave<N> {
     pub fn new(config: SPIConfig) -> Self {
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             wires: Default::default(),
             disabled: Default::default(),
             busy: Default::default(),
@@ -108,7 +106,6 @@ impl<const N: usize> Logic for SPISlave<N> {
         dff_setup!(
             self,
             clock,
-            reset,
             miso_flop,
             done_flop,
             register_out,
@@ -120,10 +117,9 @@ impl<const N: usize> Logic for SPISlave<N> {
             escape,
             boot_delay
         );
-        clock_reset!(
+        clock!(
             self,
             clock,
-            reset,
             capture_detector,
             advance_detector,
             edge_detector,

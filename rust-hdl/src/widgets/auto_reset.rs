@@ -3,21 +3,20 @@ use crate::widgets::dff::DFF;
 
 #[derive(Clone, Debug, LogicBlock, Default)]
 pub struct AutoReset {
-    pub reset: Signal<Out, Reset>,
+    pub reset: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    dff: DFF<Bits<3>>,
+    dff: DFF<Bits<8>>,
 }
 
 impl Logic for AutoReset {
     #[hdl_gen]
     fn update(&mut self) {
         self.dff.clock.next = self.clock.val();
-        self.dff.reset.next = NO_RESET;
         self.dff.d.next = self.dff.q.val();
-        self.reset.next = NO_RESET;
+        self.reset.next = false.into();
         if !self.dff.q.val().all() {
             self.dff.d.next = self.dff.q.val() + 1_usize;
-            self.reset.next = RESET;
+            self.reset.next = true.into();
         }
     }
 }

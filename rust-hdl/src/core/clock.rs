@@ -32,41 +32,9 @@ impl From<bool> for Clock {
     }
 }
 
-#[repr(transparent)]
-#[derive(Clone, Copy, Default, PartialEq, Eq, Hash, Debug)]
-pub struct Reset {
-    pub rst: bool,
-}
-
-pub const NO_RESET: Reset = Reset { rst: false };
-pub const RESET: Reset = Reset { rst: true };
-
-impl Into<bool> for Reset {
-    fn into(self) -> bool {
-        self.rst
-    }
-}
-
-/*
-impl From<bool> for Reset {
-    fn from(x: bool) -> Reset {
-        Reset { rst: x }
-    }
-}
-*/
-
-impl std::ops::Not for Reset {
-    type Output = bool;
-
-    fn not(self) -> Self::Output {
-        !self.rst
-    }
-}
-
 #[macro_export]
-macro_rules! clock_reset {
-    ($self: ident, $clock: ident, $reset: ident, $($subs: ident), +) => {
+macro_rules! clock {
+    ($self: ident, $clock: ident, $($subs: ident), +) => {
         $($self.$subs.clock.next = $self.$clock.val());+;
-        $($self.$subs.reset.next = $self.$reset.val());+;
     }
 }

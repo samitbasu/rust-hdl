@@ -13,19 +13,16 @@ struct CrossWidenTestFixture {
     cross: CrossWiden<4, 5, 6, 16, 3, 4>,
     reader: LazyFIFOReader<Bits<16>, 10>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Logic for CrossWidenTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, feeder, reader);
+        clock!(self, clock, feeder, reader);
         FIFOWriteController::<Bits<4>>::join(&mut self.feeder.bus, &mut self.cross.narrow_bus);
         FIFOReadResponder::<Bits<16>>::join(&mut self.cross.wide_bus, &mut self.reader.bus);
         self.cross.wide_clock.next = self.clock.val();
-        self.cross.wide_reset.next = self.reset.val();
         self.cross.narrow_clock.next = self.clock.val();
-        self.cross.narrow_reset.next = self.reset.val();
     }
 }
 
@@ -45,7 +42,6 @@ impl Default for CrossWidenTestFixture {
             cross: CrossWiden::new(WordOrder::LeastSignificantFirst),
             reader: LazyFIFOReader::new(&data1, &bursty_vec(256)),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -56,7 +52,6 @@ fn test_cross_widen_test_fixture() {
     uut.clock.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
-    uut.reset.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<CrossWidenTestFixture>| {
@@ -64,7 +59,6 @@ fn test_cross_widen_test_fixture() {
     });
     sim.add_testbench(move |mut sim: Sim<CrossWidenTestFixture>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.feeder.start.next = true;
         x.reader.start.next = true;
@@ -88,19 +82,16 @@ struct CrossNarrowTestFixture {
     cross: CrossNarrow<16, 3, 4, 4, 5, 6>,
     reader: LazyFIFOReader<Bits<4>, 12>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Logic for CrossNarrowTestFixture {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, feeder, reader);
+        clock!(self, clock, feeder, reader);
         FIFOWriteController::<Bits<16>>::join(&mut self.feeder.bus, &mut self.cross.wide_bus);
         FIFOReadResponder::<Bits<4>>::join(&mut self.cross.narrow_bus, &mut self.reader.bus);
         self.cross.wide_clock.next = self.clock.val();
-        self.cross.wide_reset.next = self.reset.val();
         self.cross.narrow_clock.next = self.clock.val();
-        self.cross.narrow_reset.next = self.reset.val();
     }
 }
 
@@ -120,7 +111,6 @@ impl Default for CrossNarrowTestFixture {
             cross: CrossNarrow::new(WordOrder::LeastSignificantFirst),
             reader: LazyFIFOReader::new(&data2, &bursty_vec(1024)),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -129,7 +119,6 @@ impl Default for CrossNarrowTestFixture {
 fn test_cross_narrow_test_fixture() {
     let mut uut = CrossNarrowTestFixture::default();
     uut.clock.connect();
-    uut.reset.connect();
     uut.feeder.start.connect();
     uut.reader.start.connect();
     uut.connect_all();
@@ -139,7 +128,6 @@ fn test_cross_narrow_test_fixture() {
     });
     sim.add_testbench(move |mut sim: Sim<CrossNarrowTestFixture>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.feeder.start.next = true;
         x.reader.start.next = true;

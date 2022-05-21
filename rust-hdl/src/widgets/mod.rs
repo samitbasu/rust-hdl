@@ -14,7 +14,6 @@ pub mod pulser;
 pub mod pwm;
 pub mod ramrom;
 pub mod registered_edge_tristate;
-pub mod reset_sync;
 pub mod sdram;
 pub mod shot;
 pub mod spi;

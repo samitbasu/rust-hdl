@@ -14,22 +14,15 @@ pub struct AlchitryCuPWMVecSyncROM<const P: usize> {
     local: Signal<Local, Bits<8>>,
     faders: [FaderWithSyncROM; 8],
     pll: ICE40PLLBlock<MHZ100, MHZ25>,
-    reset: Signal<Local, Reset>,
 }
 
 impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
     #[hdl_gen]
     fn update(&mut self) {
         self.pll.clock_in.next = self.clock.val();
-        if !self.pll.locked.val() {
-            self.reset.next = RESET;
-        } else {
-            self.reset.next = NO_RESET;
-        }
         for i in 0_usize..8_usize {
-            self.faders[i].reset.next = self.reset.val();
             self.faders[i].clock.next = self.pll.clock_out.val();
-            self.faders[i].enable.next = true;
+            self.faders[i].enable.next = self.pll.locked.val();
         }
         self.local.next = 0x00_u8.into();
         for i in 0_usize..8_usize {
@@ -57,7 +50,6 @@ impl<const P: usize> AlchitryCuPWMVecSyncROM<P> {
             local: Signal::default(),
             faders,
             pll: ICE40PLLBlock::default(),
-            reset: Default::default(),
         }
     }
 }

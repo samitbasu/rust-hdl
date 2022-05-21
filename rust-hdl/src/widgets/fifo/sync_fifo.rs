@@ -13,7 +13,6 @@ macro_rules! declare_sync_fifo {
 #[derive(LogicBlock, Default)]
 pub struct SynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     // Read interface
     pub read: Signal<In, Bit>,
     pub data_out: Signal<Out, D>,
@@ -52,7 +51,7 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, read_logic, write_logic);
+        clock!(self, clock, read_logic, write_logic);
         // Connect up the read interface
         self.read_logic.read.next = self.read.val();
         self.empty.next = self.read_logic.empty.val();

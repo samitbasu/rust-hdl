@@ -13,10 +13,8 @@ pub struct CrossWiden<
 > {
     pub narrow_bus: FIFOWriteResponder<Bits<DN>>,
     pub narrow_clock: Signal<In, Clock>,
-    pub narrow_reset: Signal<In, Reset>,
     pub wide_bus: FIFOReadResponder<Bits<DW>>,
     pub wide_clock: Signal<In, Clock>,
-    pub wide_reset: Signal<In, Reset>,
     widen: CrossWidenFIFO<DN, NN, NNP1, DW, WN, WNP1>,
 }
 
@@ -33,10 +31,8 @@ impl<
         Self {
             narrow_bus: Default::default(),
             narrow_clock: Default::default(),
-            narrow_reset: Default::default(),
             wide_bus: Default::default(),
             wide_clock: Default::default(),
-            wide_reset: Default::default(),
             widen: CrossWidenFIFO::new(order),
         }
     }
@@ -59,14 +55,12 @@ impl<
         self.narrow_bus.full.next = self.widen.full.val();
         self.narrow_bus.almost_full.next = self.widen.full.val();
         self.widen.write_clock.next = self.narrow_clock.val();
-        self.widen.write_reset.next = self.narrow_reset.val();
         // Wire up the output side
         self.wide_bus.data.next = self.widen.data_out.val();
         self.wide_bus.empty.next = self.widen.empty.val();
         self.wide_bus.almost_empty.next = self.widen.empty.val();
         self.widen.read.next = self.wide_bus.read.val();
         self.widen.read_clock.next = self.wide_clock.val();
-        self.widen.read_reset.next = self.wide_reset.val();
     }
 }
 
@@ -89,10 +83,8 @@ pub struct CrossNarrow<
 > {
     pub wide_bus: FIFOWriteResponder<Bits<DW>>,
     pub wide_clock: Signal<In, Clock>,
-    pub wide_reset: Signal<In, Reset>,
     pub narrow_bus: FIFOReadResponder<Bits<DN>>,
     pub narrow_clock: Signal<In, Clock>,
-    pub narrow_reset: Signal<In, Reset>,
     narrow: CrossNarrowFIFO<DW, WN, WNP1, DN, NN, NNP1>,
 }
 
@@ -109,10 +101,8 @@ impl<
         Self {
             wide_bus: Default::default(),
             wide_clock: Default::default(),
-            wide_reset: Default::default(),
             narrow_bus: Default::default(),
             narrow_clock: Default::default(),
-            narrow_reset: Default::default(),
             narrow: CrossNarrowFIFO::new(order),
         }
     }
@@ -134,13 +124,11 @@ impl<
         self.wide_bus.full.next = self.narrow.full.val();
         self.wide_bus.almost_full.next = self.narrow.full.val();
         self.narrow.write_clock.next = self.wide_clock.val();
-        self.narrow.write_reset.next = self.wide_reset.val();
         self.narrow_bus.data.next = self.narrow.data_out.val();
         self.narrow_bus.empty.next = self.narrow.empty.val();
         self.narrow_bus.almost_empty.next = self.narrow.empty.val();
         self.narrow.read.next = self.narrow_bus.read.val();
         self.narrow.read_clock.next = self.narrow_clock.val();
-        self.narrow.read_reset.next = self.narrow_reset.val();
     }
 }
 

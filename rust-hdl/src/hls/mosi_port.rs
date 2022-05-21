@@ -15,7 +15,6 @@ pub struct MOSIPort<const D: usize> {
     pub strobe_out: Signal<Out, Bit>,
     pub ready: Signal<In, Bit>,
     pub clock_out: Signal<Out, Clock>,
-    pub reset_out: Signal<Out, Reset>,
     state: DFF<Bits<D>>,
     address_active: DFF<Bit>,
     strobe: DFF<Bit>,
@@ -25,8 +24,7 @@ impl<const D: usize> Logic for MOSIPort<D> {
     #[hdl_gen]
     fn update(&mut self) {
         self.clock_out.next = self.bus.clock.val();
-        self.reset_out.next = self.bus.reset.val();
-        dff_setup!(self, clock_out, reset_out, state, address_active, strobe);
+        dff_setup!(self, clock_out, state, address_active, strobe);
         self.port_out.next = self.state.q.val();
         self.address_active.d.next = self.bus.select.val();
         self.bus.ready.next = false;

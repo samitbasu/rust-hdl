@@ -45,7 +45,6 @@ always @(posedge clk) q <= d;",
             clock: "clk".to_string(),
             inputs: vec!["d".into()],
             outputs: vec!["q".into()],
-            reset: None,
         }]
     }
 }

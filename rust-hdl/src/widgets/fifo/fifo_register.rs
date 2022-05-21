@@ -12,7 +12,6 @@ pub struct RegisterFIFO<T: Synth> {
     pub full: Signal<Out, Bit>,
     pub empty: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     value: DFF<T>,
     filled: DFF<Bit>,
     error: DFF<Bit>,
@@ -21,7 +20,7 @@ pub struct RegisterFIFO<T: Synth> {
 impl<T: Synth> Logic for RegisterFIFO<T> {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, value, filled, error);
+        dff_setup!(self, clock, value, filled, error);
         // There are two states to consider.  The first is the
         // empty state (no internal data)
         if self.write.val() {

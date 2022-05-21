@@ -1,7 +1,6 @@
 use rust_hdl::bsp::alchitry_cu::ice_pll::ICE40PLLBlock;
 use rust_hdl::bsp::alchitry_cu::synth::generate_bitstream;
 use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::AutoReset;
 use rust_hdl::widgets::pulser::Pulser;
 use std::time::Duration;
 
@@ -19,13 +18,8 @@ pub struct AlchitryCuPulserPLL {
 impl Logic for AlchitryCuPulserPLL {
     #[hdl_gen]
     fn update(&mut self) {
-        self.pulser.enable.next = true;
         self.pll.clock_in.next = self.clock.val();
-        if self.pll.locked.val() {
-            self.pulser.reset.next = NO_RESET;
-        } else {
-            self.pulser.reset.next = RESET;
-        }
+        self.pulser.enable.next = self.pll.locked.val();
         self.pulser.clock.next = self.pll.clock_out.val();
         self.leds.next = 0x00_u8.into();
         if self.pulser.pulse.val() {

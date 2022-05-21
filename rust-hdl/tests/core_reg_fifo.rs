@@ -5,7 +5,6 @@ use rust_hdl::widgets::prelude::*;
 #[derive(LogicBlock, Default)]
 struct RegFIFOTest {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub in_fifo: SynchronousFIFO<Bits<16>, 4, 5, 1>,
     pub reg_fifo: RegisterFIFO<Bits<16>>,
     pub out_fifo: SynchronousFIFO<Bits<16>, 4, 5, 1>,
@@ -14,7 +13,7 @@ struct RegFIFOTest {
 impl Logic for RegFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, reg_fifo, in_fifo, out_fifo);
+        clock!(self, clock, reg_fifo, in_fifo, out_fifo);
         self.reg_fifo.data_in.next = self.in_fifo.data_out.val();
         self.in_fifo.read.next = !self.reg_fifo.full.val() & !self.in_fifo.empty.val();
         self.reg_fifo.write.next = !self.reg_fifo.full.val() & !self.in_fifo.empty.val();
@@ -39,7 +38,6 @@ fn test_register_fifo_works() {
     sim.add_clock(5, |x: &mut Box<RegFIFOTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<RegFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for sample in &rdata {
             x = sim.watch(|x| !x.in_fifo.full.val(), x)?;

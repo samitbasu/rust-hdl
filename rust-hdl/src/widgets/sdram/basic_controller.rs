@@ -37,7 +37,6 @@ enum State {
 #[derive(LogicBlock)]
 pub struct SDRAMBaseController<const R: usize, const C: usize, const L: usize, const D: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub sdram: SDRAMDriver<D>,
     // Command interface
     pub data_in: Signal<In, Bits<L>>,
@@ -103,7 +102,6 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
         let mode_register = cas_delay << 4;
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             sdram: Default::default(),
             cmd: Default::default(),
             data_in: Default::default(),
@@ -169,7 +167,6 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
         dff_setup!(
             self,
             clock,
-            reset,
             state,
             reg_data_write,
             reg_data_read,
@@ -184,7 +181,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
             refresh_needed,
             data_out_counter
         );
-        clock_reset!(self, clock, reset, read_valid);
+        clock!(self, clock, read_valid);
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
         self.refresh_counter.d.next = self.refresh_counter.q.val() + 1_usize;
         self.cmd.next = SDRAMCommand::NOP;
@@ -381,6 +378,5 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
         self.sdram.we_not.next = self.encode.we_not.val();
         self.encode.cmd.next = self.cmd.val();
         self.sdram.clk.next = self.clock.val();
-        self.sdram.reset.next = self.reset.val();
     }
 }

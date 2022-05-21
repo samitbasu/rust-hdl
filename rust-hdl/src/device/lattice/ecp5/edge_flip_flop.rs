@@ -5,12 +5,11 @@ pub struct EdgeFlipFlop<T: Synth> {
     pub d: Signal<In, T>,
     pub q: Signal<Out, T>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
 }
 
 fn wrapper_once() -> &'static str {
     r##"
-OFS1P3DX inst_OFS1P3DX(.SCLK(clock), .SP(1'b1), .D(d), .Q(q), .CD(reset));
+OFS1P3DX inst_OFS1P3DX(.SCLK(clock), .SP(1'b1), .D(d), .Q(q), .CD(1'b0));
     "##
 }
 
@@ -19,7 +18,7 @@ fn wrapper_multiple(count: usize) -> String {
         .map(|x| {
             format!(
                 "
-OFS1P3DX ofs_{x}(.SCLK(clock), .SP(1'b1), .D(d[{x}]), .Q(q[{x}]), .CD(reset));
+OFS1P3DX ofs_{x}(.SCLK(clock), .SP(1'b1), .D(d[{x}]), .Q(q[{x}]), .CD(1'b0));
 ",
                 x = x
             )
@@ -30,12 +29,8 @@ OFS1P3DX ofs_{x}(.SCLK(clock), .SP(1'b1), .D(d[{x}]), .Q(q[{x}]), .CD(reset));
 
 impl<T: Synth> Logic for EdgeFlipFlop<T> {
     fn update(&mut self) {
-        if self.clock.pos_edge() | self.reset.pos_edge() {
-            if self.reset.val().into() {
-                self.q.next = T::default();
-            } else {
-                self.q.next = self.d.val()
-            }
+        if self.clock.pos_edge() {
+            self.q.next = self.d.val()
         }
     }
     fn connect(&mut self) {

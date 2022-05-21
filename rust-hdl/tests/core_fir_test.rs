@@ -32,7 +32,6 @@ fn test_fir_impulse_response_is_expected() {
     });
     sim.add_testbench(move |mut sim: Sim<MACFIRTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for val in [0_i32, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0] {
             x.data_in.next = val.into();

@@ -5,9 +5,7 @@ use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 struct SyncVecTest {
-    pub reset1: Signal<In, Reset>,
     pub clock1: Signal<In, Clock>,
-    pub reset2: Signal<In, Reset>,
     pub clock2: Signal<In, Clock>,
     pub sender: SyncSender<Bits<8>>,
     pub recv: SyncReceiver<Bits<8>>,
@@ -16,8 +14,8 @@ struct SyncVecTest {
 impl Logic for SyncVecTest {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock1, reset1, sender);
-        clock_reset!(self, clock2, reset2, recv);
+        clock!(self, clock1, sender);
+        clock!(self, clock2, recv);
         self.sender.ack_in.next = self.recv.ack_out.val();
         self.recv.flag_in.next = self.sender.flag_out.val();
         self.recv.sig_cross.next = self.sender.sig_cross.val();
@@ -40,7 +38,6 @@ fn test_sync_vec() {
     });
     sim.add_testbench(move |mut sim: Sim<SyncVecTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock1, reset1, x);
         wait_clock_true!(sim, clock1, x);
         for i in 0..150 {
             x.sender.sig_in.next = (i as u32).into();
@@ -54,7 +51,6 @@ fn test_sync_vec() {
     });
     sim.add_testbench(move |mut sim: Sim<SyncVecTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock2, reset2, x);
         wait_clock_true!(sim, clock2, x);
         for i in 0_u32..150_u32 {
             x = sim.watch(|x| x.recv.update.val(), x)?;
@@ -77,9 +73,7 @@ fn test_vector_synchronizer() {
     type TestCircuit = TopWrap<VectorSynchronizer<Bits<8>>>;
     let mut dev: TestCircuit = TopWrap::new(VectorSynchronizer::default());
     dev.uut.clock_in.connect();
-    dev.uut.reset_in.connect();
     dev.uut.clock_out.connect();
-    dev.uut.reset_out.connect();
     dev.uut.send.connect();
     dev.uut.sig_in.connect();
     dev.connect_all();
@@ -93,7 +87,6 @@ fn test_vector_synchronizer() {
     });
     sim.add_testbench(move |mut sim: Sim<TestCircuit>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, uut.clock_in, uut.reset_in, x);
         x = sim.watch(|x| x.uut.clock_in.val().clk, x)?;
         for i in 0..150 {
             x.uut.sig_in.next = (i as u32).into();
@@ -108,7 +101,6 @@ fn test_vector_synchronizer() {
     });
     sim.add_testbench(move |mut sim: Sim<TestCircuit>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, uut.clock_out, uut.reset_out, x);
         x = sim.watch(|x| x.uut.clock_out.val().clk, x)?;
         for i in 0_u32..150_u32 {
             x = sim.watch(|x| x.uut.update.val(), x)?;
@@ -129,7 +121,6 @@ fn test_vector_synchronizer() {
 
 #[derive(LogicBlock, Default)]
 struct SynchronousFIFOTest {
-    pub reset: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
     pub fifo: SynchronousFIFO<Bits<16>, 4, 5, 4>,
 }
@@ -137,7 +128,7 @@ struct SynchronousFIFOTest {
 impl Logic for SynchronousFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, fifo);
+        clock!(self, clock, fifo);
     }
 }
 
@@ -154,7 +145,6 @@ fn test_sync_fifo_read_behavior_bug() {
     });
     sim.add_testbench(move |mut sim: Sim<SynchronousFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for counter in 0_u32..8 {
             x.fifo.data_in.next = counter.into();
@@ -186,7 +176,6 @@ declare_sync_fifo!(BigFIFO, Bits<8>, 1024, 256);
 
 #[derive(LogicBlock, Default)]
 struct BigFIFOTest {
-    pub reset: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
     pub fifo: BigFIFO,
 }
@@ -194,7 +183,7 @@ struct BigFIFOTest {
 impl Logic for BigFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, fifo);
+        clock!(self, clock, fifo);
     }
 }
 
@@ -209,7 +198,6 @@ fn test_almost_empty_is_accurate_in_large_fifo() {
     sim.add_clock(5, |x: &mut Box<BigFIFOTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<BigFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for counter in 0_u32..1024_u32 {
             x.fifo.data_in.next = counter.into();
@@ -242,7 +230,6 @@ fn test_almost_empty_is_accurate_synchronous_fifo() {
     });
     sim.add_testbench(move |mut sim: Sim<SynchronousFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for counter in 0_u32..4_u32 {
             x.fifo.data_in.next = counter.into();
@@ -289,7 +276,6 @@ fn test_fifo_can_be_filled_synchronous_fifo() {
     });
     sim.add_testbench(move |mut sim: Sim<SynchronousFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for sample in &rdata {
             x.fifo.data_in.next = (*sample).into();
@@ -335,7 +321,6 @@ fn test_fifo_works_synchronous_fifo() {
     });
     sim.add_testbench(move |mut sim: Sim<SynchronousFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for sample in &rdata {
             x = sim.watch(|x| !x.fifo.full.val(), x)?;
@@ -385,9 +370,7 @@ fn test_fifo_works_synchronous_fifo() {
 #[derive(LogicBlock, Default)]
 struct AsynchronousFIFOTest {
     pub read_clock: Signal<In, Clock>,
-    pub read_reset: Signal<In, Reset>,
     pub write_clock: Signal<In, Clock>,
-    pub write_reset: Signal<In, Reset>,
     pub fifo: AsynchronousFIFO<Bits<16>, 4, 5, 4>,
 }
 
@@ -395,9 +378,7 @@ impl Logic for AsynchronousFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.fifo.write_clock.next = self.write_clock.val();
-        self.fifo.write_reset.next = self.write_reset.val();
         self.fifo.read_clock.next = self.read_clock.val();
-        self.fifo.read_reset.next = self.read_reset.val();
     }
 }
 
@@ -428,7 +409,6 @@ fn test_fifo_works_asynchronous_fifo() {
     });
     sim.add_testbench(move |mut sim: Sim<AsynchronousFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, write_clock, write_reset, x);
         wait_clock_true!(sim, write_clock, x);
         for sample in &rdata {
             x = sim.watch(|x| !x.fifo.full.val(), x)?;
@@ -449,7 +429,6 @@ fn test_fifo_works_asynchronous_fifo() {
     });
     sim.add_testbench(move |mut sim: Sim<AsynchronousFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, read_clock, read_reset, x);
         wait_clock_true!(sim, read_clock, x);
         for sample in &rdata_read {
             x = sim.watch(|x| !x.fifo.empty.val(), x)?;
@@ -478,9 +457,7 @@ fn test_fifo_works_asynchronous_fifo() {
 
 #[derive(LogicBlock, Default)]
 struct AsyncBigFIFOTest {
-    pub read_reset: Signal<In, Reset>,
     pub read_clock: Signal<In, Clock>,
-    pub write_reset: Signal<In, Reset>,
     pub write_clock: Signal<In, Clock>,
     pub fifo: AsynchronousFIFO<Bits<16>, 10, 11, 256>,
 }
@@ -488,9 +465,7 @@ struct AsyncBigFIFOTest {
 impl Logic for AsyncBigFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.fifo.write_reset.next = self.write_reset.val();
         self.fifo.write_clock.next = self.write_clock.val();
-        self.fifo.read_reset.next = self.read_reset.val();
         self.fifo.read_clock.next = self.read_clock.val();
     }
 }
@@ -511,8 +486,6 @@ fn test_almost_empty_is_accurate_in_large_async_fifo() {
     });
     sim.add_testbench(move |mut sim: Sim<AsyncBigFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, write_clock, write_reset, x);
-        reset_sim!(sim, read_clock, read_reset, x);
         wait_clock_true!(sim, write_clock, x);
         for counter in 0_u32..1024_u32 {
             x.fifo.data_in.next = counter.into();
@@ -536,7 +509,6 @@ fn test_almost_empty_is_accurate_in_large_async_fifo() {
 #[derive(LogicBlock, Default)]
 struct ReducerFIFOTest {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub wide_fifo: SynchronousFIFO<Bits<16>, 4, 5, 4>,
     pub narrow_fifo: SynchronousFIFO<Bits<8>, 4, 5, 4>,
     pub reducer: FIFOReducer<16, 8, false>,
@@ -545,7 +517,7 @@ struct ReducerFIFOTest {
 impl Logic for ReducerFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, wide_fifo, narrow_fifo, reducer);
+        clock!(self, clock, wide_fifo, narrow_fifo, reducer);
         // Connect the reducer to the wide (upstream) FIFO
         self.reducer.data_in.next = self.wide_fifo.data_out.val();
         self.reducer.empty.next = self.wide_fifo.empty.val();
@@ -579,7 +551,6 @@ fn test_fifo_reducer_works() {
     });
     sim.add_testbench(move |mut sim: Sim<ReducerFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for sample in &rdata {
             x = sim.watch(|x| !x.wide_fifo.full.val(), x)?;

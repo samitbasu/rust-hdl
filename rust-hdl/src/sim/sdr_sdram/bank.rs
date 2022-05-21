@@ -23,7 +23,6 @@ pub enum BankState {
 pub struct MemoryBank<const R: usize, const C: usize, const A: usize, const D: usize> {
     // Constraint - A = R + C
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub cas_delay: Signal<In, Bits<3>>,
     pub write_burst: Signal<In, Bit>,
     pub address: Signal<In, Bits<13>>,
@@ -70,7 +69,6 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<
         let t_wr = timings.t_wr() - 1;
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             cas_delay: Default::default(),
             write_burst: Default::default(),
             address: Default::default(),
@@ -118,7 +116,6 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         dff_setup!(
             self,
             clock,
-            reset,
             refresh_counter,
             refresh_active,
             write_reg,
@@ -130,7 +127,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
             delay_counter,
             t_activate
         );
-        clock_reset!(self, clock, reset, delay_line, read_delay_line);
+        clock!(self, clock, delay_line, read_delay_line);
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
         self.error.next = false;
         // Model the row-column multiplexing
@@ -389,7 +386,6 @@ fn mk_bank_sim() -> MemoryBank<5, 5, 10, 16> {
     uut.address.connect();
     uut.cmd.connect();
     uut.clock.connect();
-    uut.reset.connect();
     uut.cas_delay.connect();
     uut.write_burst.connect();
     uut.burst_len.connect();
@@ -423,7 +419,7 @@ fn test_bank_activation_immediate_close_is_ok_with_delay() {
     sim.add_testbench(move |mut sim: Sim<MemoryBank<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
         let timing = MemoryTimings::mt48lc8m16a2(500e6);
-        reset_sim!(sim, clock, reset, x);
+
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 30);
         x.cmd.next = SDRAMCommand::Active;
@@ -468,7 +464,7 @@ fn test_bank_activation_immediate_close_fails_for_timing() {
     sim.add_testbench(move |mut sim: Sim<MemoryBank<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
         let timing = MemoryTimings::mt48lc8m16a2(500e6);
-        reset_sim!(sim, clock, reset, x);
+
         wait_clock_true!(sim, clock, x);
         wait_clock_cycle!(sim, clock, x);
         x.cmd.next = SDRAMCommand::Active;
@@ -536,7 +532,7 @@ fn test_bank_write() {
     sim.add_testbench(move |mut sim: Sim<MemoryBank<5, 5, 10, 16>>| {
         let mut x = sim.init()?;
         let timing = MemoryTimings::mt48lc8m16a2(500e6);
-        reset_sim!(sim, clock, reset, x);
+
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 30);
         x.cmd.next = SDRAMCommand::Active;

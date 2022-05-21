@@ -74,7 +74,6 @@ end",
             clock: "clock".to_string(),
             inputs: vec!["address".to_string()],
             outputs: vec!["data".to_string()],
-            reset: None,
         }]
     }
 }

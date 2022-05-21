@@ -610,18 +610,11 @@ fn hdl_macro(x: &syn::ExprMacro) -> Result<TS> {
         "dff_setup" => {
             let args: DFFSetupArgs = x.mac.parse_body()?;
             let args_clock = &args.clock;
-            let args_reset = &args.reset;
             let clk = common::fixup_ident(quote!(#args_clock).to_string());
-            let reset = common::fixup_ident(quote!(#args_reset).to_string());
             let dffs_clk = &args
                 .dffs
                 .iter()
                 .map(|x| common::fixup_ident(quote!(#x.clock.next).to_string()))
-                .collect::<Vec<_>>();
-            let dffs_reset = &args
-                .dffs
-                .iter()
-                .map(|x| common::fixup_ident(quote!(#x.reset.next).to_string()))
                 .collect::<Vec<_>>();
             let dffs_d = &args
                 .dffs
@@ -637,33 +630,24 @@ fn hdl_macro(x: &syn::ExprMacro) -> Result<TS> {
                 {
                     let mut ret = vec![];
                     #(ret.push(ast::VerilogStatement::Assignment(ast::VerilogExpression::Signal(#dffs_clk.to_string()), ast::VerilogExpression::Signal(#clk.to_string()))));*;
-                    #(ret.push(ast::VerilogStatement::Assignment(ast::VerilogExpression::Signal(#dffs_reset.to_string()), ast::VerilogExpression::Signal(#reset.to_string()))));*;
                     #(ret.push(ast::VerilogStatement::Assignment(ast::VerilogExpression::Signal(#dffs_d.to_string()), ast::VerilogExpression::Signal(#dffs_q.to_string()))));*;
                     ast::VerilogStatement::Macro(ret)
                 }
             ))
         }
-        "clock_reset" => {
+        "clock" => {
             let args: DFFSetupArgs = x.mac.parse_body()?;
             let args_clock = &args.clock;
-            let args_reset = &args.reset;
             let clk = common::fixup_ident(quote!(#args_clock).to_string());
-            let reset = common::fixup_ident(quote!(#args_reset).to_string());
             let dffs_clk = &args
                 .dffs
                 .iter()
                 .map(|x| common::fixup_ident(quote!(#x.clock.next).to_string()))
                 .collect::<Vec<_>>();
-            let dffs_reset = &args
-                .dffs
-                .iter()
-                .map(|x| common::fixup_ident(quote!(#x.reset.next).to_string()))
-                .collect::<Vec<_>>();
             Ok(quote!(
                 {
                     let mut ret = vec![];
                     #(ret.push(ast::VerilogStatement::Assignment(ast::VerilogExpression::Signal(#dffs_clk.to_string()), ast::VerilogExpression::Signal(#clk.to_string()))));*;
-                    #(ret.push(ast::VerilogStatement::Assignment(ast::VerilogExpression::Signal(#dffs_reset.to_string()), ast::VerilogExpression::Signal(#reset.to_string()))));*;
                     ast::VerilogStatement::Macro(ret)
                 }
             ))

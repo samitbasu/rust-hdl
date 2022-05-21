@@ -45,8 +45,6 @@ pub struct SDRAMSimulator<
     load_mode_timing: Constant<Bits<32>>,
     t_rrd: Constant<Bits<32>>,
     banks_busy: Signal<Local, Bit>,
-    auto_reset: AutoReset,
-    reset: Signal<Local, Reset>,
 }
 
 impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
@@ -56,12 +54,9 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
     fn update(&mut self) {
         // Clock logic
         self.clock.next = self.sdram.clk.val();
-        self.auto_reset.clock.next = self.clock.val();
-        self.reset.next = self.auto_reset.reset.val();
         dff_setup!(
             self,
             clock,
-            reset,
             state,
             counter,
             auto_refresh_init_counter,
@@ -83,7 +78,6 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         self.sdram.read_data.next = 0_usize.into();
         for i in 0..4 {
             self.banks[i].clock.next = self.clock.val();
-            self.banks[i].reset.next = self.reset.val();
             if self.sdram.write_enable.val() {
                 self.banks[i].write_data.next = self.sdram.write_data.val();
             } else {
@@ -260,9 +254,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> SDRAMSimula
             t_rrd: Constant::new(bank_bank_delay.into()),
             load_mode_timing: Constant::new((timings.load_mode_command_timing_clocks - 1).into()),
             banks_busy: Default::default(),
-            auto_reset: Default::default(),
             decode: Default::default(),
-            reset: Default::default(),
         }
     }
 }

@@ -187,7 +187,6 @@ fn test_nested_router_function() {
     });
     sim.add_testbench(move |mut sim: Sim<RouterNest>| {
         let mut x = sim.init()?;
-        x.upstream.reset.next = NO_RESET;
         let test_one = x
             .ports()
             .iter()
@@ -392,7 +391,6 @@ fn test_nested_router_function_wide_fifo() {
     });
     sim.add_testbench(move |mut sim: Sim<HLSLevel0>| {
         let mut x = sim.init()?;
-        x.upstream.reset.next = NO_RESET;
         bus_address_strobe!(sim, x, upstream, 2);
         bus_write_strobe!(sim, x, upstream, 0xDEAD_u16);
         bus_write_strobe!(sim, x, upstream, 0xBEEF_u16);

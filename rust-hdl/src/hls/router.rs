@@ -18,7 +18,6 @@ pub struct Router<const D: usize, const A: usize, const N: usize> {
     virtual_address: DFF<Bits<A>>,
     address_strobe_delay: DFF<Bit>,
     clock: Signal<Local, Clock>,
-    reset: Signal<Local, Reset>,
     _address_map: Vec<String>,
 }
 
@@ -63,7 +62,6 @@ impl<const D: usize, const A: usize, const N: usize> Router<D, A, N> {
             virtual_address: Default::default(),
             address_strobe_delay: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             _address_map,
         }
     }
@@ -73,17 +71,9 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Router<D, A, N> {
     #[hdl_gen]
     fn update(&mut self) {
         self.clock.next = self.upstream.clock.val();
-        self.reset.next = self.upstream.reset.val();
         self.upstream.ready.next = false;
         self.upstream.to_controller.next = 0_usize.into();
-        dff_setup!(
-            self,
-            clock,
-            reset,
-            active,
-            virtual_address,
-            address_strobe_delay
-        );
+        dff_setup!(self, clock, active, virtual_address, address_strobe_delay);
         // Delay the address strobe by 1 clock cycle to allow the virtual address
         // calculation to be pipelined.
         self.address_strobe_delay.d.next = self.upstream.address_strobe.val();
@@ -93,7 +83,6 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Router<D, A, N> {
             self.nodes[i].address_strobe.next = false;
             self.nodes[i].strobe.next = false;
             self.nodes[i].clock.next = self.clock.val();
-            self.nodes[i].reset.next = self.reset.val();
             if (self.upstream.address.val() >= self.node_start_address[i].val())
                 & (self.upstream.address.val() < self.node_end_address[i].val())
                 & self.upstream.address_strobe.val()

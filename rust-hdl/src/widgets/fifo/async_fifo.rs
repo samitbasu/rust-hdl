@@ -19,7 +19,6 @@ pub struct AsynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BL
     pub almost_empty: Signal<Out, Bit>,
     pub underflow: Signal<Out, Bit>,
     pub read_clock: Signal<In, Clock>,
-    pub read_reset: Signal<In, Reset>,
     pub read_fill: Signal<Out, Bits<NP1>>,
     // Write interface
     pub write: Signal<In, Bit>,
@@ -28,7 +27,6 @@ pub struct AsynchronousFIFO<D: Synth, const N: usize, const NP1: usize, const BL
     pub almost_full: Signal<Out, Bit>,
     pub overflow: Signal<Out, Bit>,
     pub write_clock: Signal<In, Clock>,
-    pub write_reset: Signal<In, Reset>,
     pub write_fill: Signal<Out, Bits<NP1>>,
     // Internal RAM
     ram: RAM<D, N>,
@@ -49,7 +47,6 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
     fn update(&mut self) {
         // Connect up the read interface
         self.read_logic.clock.next = self.read_clock.val();
-        self.read_logic.reset.next = self.read_reset.val();
         self.read_logic.read.next = self.read.val();
         self.empty.next = self.read_logic.empty.val();
         self.almost_empty.next = self.read_logic.almost_empty.val();
@@ -57,7 +54,6 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
         self.underflow.next = self.read_logic.underflow.val();
         // Connect up the write interface
         self.write_logic.clock.next = self.write_clock.val();
-        self.write_logic.reset.next = self.write_reset.val();
         self.overflow.next = self.write_logic.overflow.val();
         self.almost_full.next = self.write_logic.almost_full.val();
         self.full.next = self.write_logic.full.val();
@@ -73,17 +69,13 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
         self.read_logic.ram_read_data.next = self.ram.read_data.val();
         // Connect the read block --> write block via a synchronizer
         self.read_to_write.clock_in.next = self.read_clock.val();
-        self.read_to_write.reset_in.next = self.read_reset.val();
         self.read_to_write.clock_out.next = self.write_clock.val();
-        self.read_to_write.reset_out.next = self.write_reset.val();
         self.read_to_write.sig_in.next = self.read_logic.read_address_out.val();
         self.write_logic.read_address.next = self.read_to_write.sig_out.val();
         self.read_to_write.send.next = !self.read_to_write.busy.val();
         // Connect the write block --> read block via a synchronizer
         self.write_to_read.clock_in.next = self.write_clock.val();
-        self.write_to_read.reset_in.next = self.write_reset.val();
         self.write_to_read.clock_out.next = self.read_clock.val();
-        self.write_to_read.reset_out.next = self.read_reset.val();
         self.write_to_read.sig_in.next = self.write_logic.write_address_delayed.val();
         self.read_logic.write_address_delayed.next = self.write_to_read.sig_out.val();
         self.write_to_read.send.next = !self.write_to_read.busy.val();

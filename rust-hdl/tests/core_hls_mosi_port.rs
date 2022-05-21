@@ -8,7 +8,6 @@ struct MOSIPortTest {
     port_a: MOSIPort<16>,
     port_b: MOSIPort<16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Default for MOSIPortTest {
@@ -19,7 +18,6 @@ impl Default for MOSIPortTest {
             port_a: Default::default(),
             port_b: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -28,7 +26,6 @@ impl Logic for MOSIPortTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
-        self.bus.reset.next = self.reset.val();
         SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
         SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.port_b.bus);
@@ -54,7 +51,6 @@ fn test_port_test_works() {
     sim.add_clock(5, |x: &mut Box<MOSIPortTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_cycles!(sim, clock, x, 10);
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 1_usize.into();
@@ -110,7 +106,6 @@ fn test_port_pipeline() {
     sim.add_clock(5, |x: &mut Box<MOSIPortTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_cycles!(sim, clock, x, 10);
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 1_usize.into();
@@ -153,7 +148,6 @@ struct MOSIWidePortTest {
     port_a: MOSIWidePort<64, 16>,
     port_b: MOSIWidePort<64, 16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Default for MOSIWidePortTest {
@@ -164,7 +158,6 @@ impl Default for MOSIWidePortTest {
             port_a: Default::default(),
             port_b: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -179,7 +172,6 @@ impl Logic for MOSIWidePortTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
-        self.bus.reset.next = self.reset.val();
         SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
         SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.port_b.bus);
@@ -204,7 +196,6 @@ fn test_wide_port_test_works() {
     });
     sim.add_testbench(move |mut sim: Sim<MOSIWidePortTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 0_usize.into();
         x.bus.address_strobe.next = true;
@@ -265,7 +256,6 @@ struct MOSIPortFIFOTest {
     bridge: Bridge<16, 2, 1>,
     port_a: MOSIFIFOPort<16, 4, 5, 1>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Default for MOSIPortFIFOTest {
@@ -275,7 +265,6 @@ impl Default for MOSIPortFIFOTest {
             bridge: Bridge::new(["port_a"]),
             port_a: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -290,7 +279,6 @@ impl Logic for MOSIPortFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.bus.clock.next = self.clock.val();
-        self.bus.reset.next = self.reset.val();
         SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
     }
@@ -317,7 +305,6 @@ fn test_mosi_port_fifo_works() {
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.bus.address.next = 0_usize.into();
         x.bus.address_strobe.next = true;

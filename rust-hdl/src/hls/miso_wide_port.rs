@@ -9,7 +9,6 @@ pub struct MISOWidePort<const W: usize, const D: usize> {
     pub port_in: Signal<In, Bits<W>>,
     pub strobe_in: Signal<In, Bit>,
     pub clock_out: Signal<Out, Clock>,
-    pub reset_out: Signal<Out, Reset>,
     accum: DFF<Bits<W>>,
     address_active: DFF<Bit>,
     offset: Constant<Bits<W>>,
@@ -29,7 +28,6 @@ impl<const W: usize, const D: usize> Default for MISOWidePort<W, D> {
             port_in: Default::default(),
             strobe_in: Default::default(),
             clock_out: Default::default(),
-            reset_out: Default::default(),
             accum: Default::default(),
             address_active: Default::default(),
             offset: Constant::new(D.into()),
@@ -45,16 +43,7 @@ impl<const W: usize, const D: usize> Logic for MISOWidePort<W, D> {
     #[hdl_gen]
     fn update(&mut self) {
         self.clock_out.next = self.bus.clock.val();
-        self.reset_out.next = self.bus.reset.val();
-        dff_setup!(
-            self,
-            clock_out,
-            reset_out,
-            accum,
-            address_active,
-            count,
-            ready
-        );
+        dff_setup!(self, clock_out, accum, address_active, count, ready);
         // Latch prevention
         self.address_active.d.next = self.bus.select.val();
         self.bus.ready.next = false;

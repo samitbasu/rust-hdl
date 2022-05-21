@@ -13,7 +13,6 @@ struct HLSSDRAMFIFOTest {
     fifo: SDRAMFIFO<5, 5, 4, 16, 12>,
     sdram: SDRAMSimulator<5, 5, 10, 16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Default for HLSSDRAMFIFOTest {
@@ -23,7 +22,6 @@ impl Default for HLSSDRAMFIFOTest {
             fifo: SDRAMFIFO::new(3, timings, OutputBuffer::Wired),
             sdram: SDRAMSimulator::new(timings),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -31,7 +29,7 @@ impl Default for HLSSDRAMFIFOTest {
 impl Logic for HLSSDRAMFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, fifo);
+        clock!(self, clock, fifo);
         self.fifo.ram_clock.next = self.clock.val();
         SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.sdram.sdram);
     }
@@ -63,7 +61,6 @@ fn test_hls_sdram_fifo_works() {
     });
     sim.add_testbench(move |mut sim: Sim<HLSSDRAMFIFOTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_cycles!(sim, clock, x, 20);
         hls_fifo_write_lazy!(sim, clock, x, fifo.bus_write, &data);
         sim.done(x)

@@ -16,7 +16,6 @@ pub struct FIFOReducerN<const DW: usize, const DN: usize> {
     // This is a synchronous design.  The clock is assumed
     // to be shared with both the input and output fifos.
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     load_count: DFF<Bits<8>>,
     data_available: Signal<Local, Bit>,
     will_write: Signal<Local, Bit>,
@@ -31,7 +30,7 @@ pub struct FIFOReducerN<const DW: usize, const DN: usize> {
 impl<const DW: usize, const DN: usize> Logic for FIFOReducerN<DW, DN> {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, load_count, data_store);
+        dff_setup!(self, clock, load_count, data_store);
         // We have data if either the store has data or if data is ready
         // from the input fifo
         self.data_available.next = self.load_count.q.val().any() | !self.empty.val();
@@ -93,7 +92,6 @@ impl<const DW: usize, const DN: usize> FIFOReducerN<DW, DN> {
             write: Default::default(),
             full: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             load_count: Default::default(),
             data_available: Default::default(),
             will_write: Default::default(),

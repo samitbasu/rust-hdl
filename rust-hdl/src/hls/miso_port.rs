@@ -12,7 +12,6 @@ pub struct MISOPort<const D: usize> {
     pub bus: SoCPortResponder<D>,
     pub port_in: Signal<In, Bits<D>>,
     pub clock_out: Signal<Out, Clock>,
-    pub reset_out: Signal<Out, Reset>,
     pub ready_in: Signal<In, Bit>,
     pub strobe_out: Signal<Out, Bit>,
     address_active: DFF<Bit>,
@@ -22,8 +21,7 @@ impl<const D: usize> Logic for MISOPort<D> {
     #[hdl_gen]
     fn update(&mut self) {
         self.clock_out.next = self.bus.clock.val();
-        self.reset_out.next = self.bus.reset.val();
-        dff_setup!(self, clock_out, reset_out, address_active);
+        dff_setup!(self, clock_out, address_active);
         self.address_active.d.next = self.bus.select.val();
         self.bus.to_controller.next = 0_usize.into();
         self.bus.ready.next = false;

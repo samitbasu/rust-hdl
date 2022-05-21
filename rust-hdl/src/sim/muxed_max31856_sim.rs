@@ -10,7 +10,6 @@ pub struct MuxedMAX31856Simulators {
     pub mux: MuxSlaves<8, 3>,
     pub addr: Signal<In, Bits<3>>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     adcs: Vec<MAX31856Simulator>,
 }
 
@@ -21,7 +20,6 @@ impl MuxedMAX31856Simulators {
             mux: Default::default(),
             addr: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             adcs: (0..8).map(|_| MAX31856Simulator::new(config)).collect(),
         }
     }
@@ -34,7 +32,6 @@ impl Logic for MuxedMAX31856Simulators {
         self.mux.sel.next = self.addr.val();
         for i in 0_usize..8_usize {
             self.adcs[i].clock.next = self.clock.val();
-            self.adcs[i].reset.next = self.reset.val();
             SPIWiresMaster::join(&mut self.mux.to_slaves[i], &mut self.adcs[i].wires);
         }
     }

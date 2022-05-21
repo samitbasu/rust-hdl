@@ -21,7 +21,6 @@ pub struct AD7193Simulator {
     // Slave SPI bus
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     // ROM that stores register widths
     reg_width_rom: ROM<Bits<5>, 3>,
     // RAM that stores register contents
@@ -87,7 +86,6 @@ impl AD7193Simulator {
         Self {
             wires: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             reg_width_rom,
             reg_ram,
             oneshot: Shot::new(config.spi.clock_speed, config.sample_time),
@@ -110,15 +108,8 @@ impl Logic for AD7193Simulator {
         // Clock internal components
         self.reg_ram.read_clock.next = self.clock.val();
         self.reg_ram.write_clock.next = self.clock.val();
-        clock_reset!(self, clock, reset, oneshot, spi_slave);
-        dff_setup!(
-            self,
-            clock,
-            reset,
-            state,
-            reg_write_index,
-            conversion_counter
-        );
+        clock!(self, clock, oneshot, spi_slave);
+        dff_setup!(self, clock, state, reg_write_index, conversion_counter);
         // Set default values
         self.spi_slave.start_send.next = false;
         self.cmd.next = self.spi_slave.data_inbound.val().get_bits::<8>(0_usize);
@@ -229,7 +220,6 @@ fn test_ad7193_synthesizes() {
 #[derive(LogicBlock)]
 struct Test7193 {
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
     master: SPIMaster<64>,
     adc: AD7193Simulator,
 }
@@ -237,7 +227,7 @@ struct Test7193 {
 impl Logic for Test7193 {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, master, adc);
+        clock!(self, clock, master, adc);
         SPIWiresMaster::join(&mut self.master.wires, &mut self.adc.wires);
     }
 }
@@ -246,7 +236,6 @@ impl Default for Test7193 {
     fn default() -> Self {
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             master: SPIMaster::new(AD7193Config::sw().spi),
             adc: AD7193Simulator::new(AD7193Config::sw()),
         }
@@ -316,7 +305,6 @@ fn do_spi_txn(
 fn mk_test7193() -> Test7193 {
     let mut uut = Test7193::default();
     uut.clock.connect();
-    uut.reset.connect();
     uut.master.continued_transaction.connect();
     uut.master.start_send.connect();
     uut.master.data_outbound.connect();
@@ -338,7 +326,6 @@ fn test_reg_reads() {
     sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Do the first read to initialize the chip
@@ -368,7 +355,7 @@ fn test_reg_writes() {
     sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
+
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Initialize the chip...
@@ -403,7 +390,7 @@ fn test_single_conversion() {
     sim.add_clock(5, |x: &mut Box<Test7193>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test7193>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
+
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Initialize the chip...

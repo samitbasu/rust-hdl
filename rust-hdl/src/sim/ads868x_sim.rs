@@ -20,7 +20,6 @@ enum ADS868XState {
 pub struct ADS868XSimulator {
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     // RAM to store register values
     reg_ram: RAM<Bits<16>, 5>,
     // SPI slave device
@@ -66,7 +65,6 @@ impl ADS868XSimulator {
         Self {
             wires: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             reg_ram: Default::default(),
             spi_slave: SPISlave::new(spi_config),
             state: Default::default(),
@@ -96,8 +94,8 @@ impl Logic for ADS868XSimulator {
         // Clock internal components
         self.reg_ram.read_clock.next = self.clock.val();
         self.reg_ram.write_clock.next = self.clock.val();
-        clock_reset!(self, clock, reset, spi_slave);
-        dff_setup!(self, clock, reset, state, conversion_counter, inbound);
+        clock!(self, clock, spi_slave);
+        dff_setup!(self, clock, state, conversion_counter, inbound);
         // Set default values
         self.spi_slave.start_send.next = false;
         self.spi_slave.continued_transaction.next = false;
@@ -233,7 +231,6 @@ fn test_ads8689_synthesizes() {
 #[derive(LogicBlock)]
 struct Test8689 {
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
     master: SPIMaster<32>,
     adc: ADS868XSimulator,
 }
@@ -241,7 +238,7 @@ struct Test8689 {
 impl Logic for Test8689 {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, master, adc);
+        clock!(self, clock, master, adc);
         SPIWiresMaster::join(&mut self.master.wires, &mut self.adc.wires);
     }
 }
@@ -250,7 +247,6 @@ impl Default for Test8689 {
     fn default() -> Self {
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             master: SPIMaster::new(ADS868XSimulator::spi_sw()),
             adc: ADS868XSimulator::new(ADS868XSimulator::spi_sw()),
         }
@@ -286,7 +282,6 @@ fn do_spi_txn(
 fn mk_test8689() -> Test8689 {
     let mut uut = Test8689::default();
     uut.clock.connect();
-    uut.reset.connect();
     uut.master.continued_transaction.connect();
     uut.master.start_send.connect();
     uut.master.data_outbound.connect();
@@ -308,7 +303,7 @@ fn test_reg_writes() {
     sim.add_clock(5, |x: &mut Box<Test8689>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test8689>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
+
         wait_clock_cycles!(sim, clock, x, 50);
         wait_clock_true!(sim, clock, x);
         wait_clock_cycle!(sim, clock, x);

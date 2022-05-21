@@ -8,7 +8,6 @@ pub struct Shot<const N: usize> {
     pub trigger: Signal<In, Bit>,
     pub active: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub fired: Signal<Out, Bit>,
     duration: Constant<Bits<N>>,
     counter: DFF<Bits<N>>,
@@ -25,7 +24,6 @@ impl<const N: usize> Shot<N> {
             trigger: Signal::default(),
             active: Signal::new_with_default(false),
             clock: Signal::default(),
-            reset: Default::default(),
             fired: Default::default(),
             duration: Constant::new(clocks.into()),
             counter: Default::default(),
@@ -37,7 +35,7 @@ impl<const N: usize> Shot<N> {
 impl<const N: usize> Logic for Shot<N> {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, counter, state);
+        dff_setup!(self, clock, counter, state);
         if self.state.q.val() {
             self.counter.d.next = self.counter.q.val() + 1_u32;
         }

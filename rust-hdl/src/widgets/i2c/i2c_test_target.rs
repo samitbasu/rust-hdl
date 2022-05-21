@@ -22,7 +22,6 @@ pub struct I2CTestTarget {
     // The I2C Clock line.  Must have an external pullup
     pub scl: Signal<InOut, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     phy: I2CTarget,
     mem: RAM<Bits<16>, 4>,
     ptr: DFF<Bits<4>>,
@@ -40,7 +39,6 @@ impl I2CTestTarget {
             sda: Default::default(),
             scl: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             phy: Default::default(),
             mem: Default::default(),
             ptr: Default::default(),
@@ -59,10 +57,10 @@ impl Logic for I2CTestTarget {
         Signal::<InOut, Bit>::link(&mut self.sda, &mut self.phy.sda);
         Signal::<InOut, Bit>::link(&mut self.scl, &mut self.phy.scl);
         // Clock internal logic
-        clock_reset!(self, clock, reset, phy);
+        clock!(self, clock, phy);
         self.mem.read_clock.next = self.clock.val();
         self.mem.write_clock.next = self.clock.val();
-        dff_setup!(self, clock, reset, ptr, outgoing, save, state, active);
+        dff_setup!(self, clock, ptr, outgoing, save, state, active);
         // Latch prevention
         // Wire up the RAM
         self.mem.write_data.next = bit_cast::<16, 8>(self.save.q.val()) << 8_usize

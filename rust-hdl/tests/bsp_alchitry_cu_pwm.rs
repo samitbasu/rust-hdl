@@ -12,16 +12,12 @@ pub struct AlchitryCuPWM<const P: usize> {
     leds: Signal<Out, Bits<8>>,
     rom: ROM<Bits<P>, 8>,
     counter: DFF<Bits<8>>,
-    auto_reset: AutoReset,
-    reset: Signal<Local, Reset>,
 }
 
 impl<const P: usize> Logic for AlchitryCuPWM<P> {
     #[hdl_gen]
     fn update(&mut self) {
-        self.auto_reset.clock.next = self.clock.val();
-        self.reset.next = self.auto_reset.reset.val();
-        clock_reset!(self, clock, reset, pwm, strobe, counter);
+        clock!(self, clock, pwm, strobe, counter);
         self.pwm.enable.next = true;
         self.rom.address.next = self.counter.q.val();
         self.pwm.threshold.next = self.rom.data.val();
@@ -46,8 +42,6 @@ impl<const P: usize> AlchitryCuPWM<P> {
             leds: rust_hdl::bsp::alchitry_cu::pins::leds(),
             rom: ROM::new(rom),
             counter: Default::default(),
-            auto_reset: Default::default(),
-            reset: Default::default(),
         }
     }
 }

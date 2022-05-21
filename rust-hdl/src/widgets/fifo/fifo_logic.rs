@@ -8,7 +8,6 @@ use crate::widgets::dff::DFF;
 pub struct FIFOReadLogic<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {
     // Clock
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     // FIFO facing interface
     pub read: Signal<In, Bit>,
     pub data_out: Signal<Out, D>,
@@ -39,7 +38,7 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
 {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, reset, read_address, dff_underflow);
+        dff_setup!(self, clock, read_address, dff_underflow);
         // Connect the clocks.
         self.ram_read_clock.next = self.clock.val();
         // Compute the is empty flag
@@ -89,7 +88,6 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Default
     fn default() -> Self {
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             read: Default::default(),
             data_out: Default::default(),
             empty: Default::default(),
@@ -127,7 +125,6 @@ pub struct FIFOWriteLogic<D: Synth, const N: usize, const NP1: usize, const BLOC
     pub almost_full: Signal<Out, Bit>,
     pub overflow: Signal<Out, Bit>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub ram_write_address: Signal<Out, Bits<N>>,
     pub ram_write_clock: Signal<Out, Clock>,
     pub ram_write_data: Signal<Out, D>,
@@ -158,7 +155,6 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Default
             almost_full: Default::default(),
             overflow: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             ram_write_address: Default::default(),
             ram_write_clock: Default::default(),
             ram_write_data: Default::default(),
@@ -186,7 +182,6 @@ impl<D: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> Logic
         dff_setup!(
             self,
             clock,
-            reset,
             dff_overflow,
             write_address,
             dff_write_address_delay

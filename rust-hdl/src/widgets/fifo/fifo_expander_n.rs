@@ -21,7 +21,6 @@ pub struct FIFOExpanderN<const DN: usize, const DW: usize> {
     // Synchronous design.  Assumes the same clock drives the
     // corresponding interfaces of the input and output fifos.
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     load_count: DFF<Bits<8>>,
     loaded: Signal<Local, Bit>,
     complete_data_available: Signal<Local, Bit>,
@@ -38,7 +37,7 @@ impl<const DN: usize, const DW: usize> Logic for FIFOExpanderN<DN, DW> {
     #[hdl_gen]
     fn update(&mut self) {
         // Clocks and latch prevention for the DFFs
-        dff_setup!(self, clock, reset, load_count, data_store);
+        dff_setup!(self, clock, load_count, data_store);
         // Loaded if we have shifted M-1 data elements into the data store
         self.loaded.next = self.load_count.q.val() == self.ratio.val();
         // Complete data is available if we have shifted M-1 data elements into
@@ -87,7 +86,6 @@ impl<const DN: usize, const DW: usize> FIFOExpanderN<DN, DW> {
             write: Default::default(),
             full: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             load_count: Default::default(),
             loaded: Default::default(),
             complete_data_available: Default::default(),

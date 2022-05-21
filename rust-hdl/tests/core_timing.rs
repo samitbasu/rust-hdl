@@ -26,14 +26,13 @@ fn test_check_timing() {
     struct Widget {
         pub write: WriteInterface,
         pub clock: Signal<In, Clock>,
-        pub reset: Signal<In, Reset>,
         lm: DFF<Bit>,
     }
 
     impl Logic for Widget {
         #[hdl_gen]
         fn update(&mut self) {
-            clock_reset!(self, clock, reset, lm);
+            clock!(self, clock, lm);
             self.lm.d.next = self.write.enable.val();
             self.write.full.next = self.lm.q.val();
         }
@@ -42,7 +41,6 @@ fn test_check_timing() {
     #[derive(LogicBlock, Default)]
     struct Copper {
         pub clock: Signal<In, Clock>,
-        pub reset: Signal<In, Reset>,
         pub data: WriteInterface,
         pub iface: ReadInterface,
         pub red: Signal<Out, Bit>,
@@ -58,8 +56,8 @@ fn test_check_timing() {
     impl Logic for Copper {
         #[hdl_gen]
         fn update(&mut self) {
-            clock_reset!(self, clock, reset, b1, b2, widget);
-            dff_setup!(self, clock, reset, cc);
+            clock!(self, clock, b1, b2, widget);
+            dff_setup!(self, clock, cc);
             self.b1.enable.next = self.data.enable.val();
             self.b2.enable.next = self.data.enable.val();
             self.cc.d.next = self.cc.q.val();
@@ -87,7 +85,6 @@ fn test_check_timing() {
     #[derive(LogicBlock)]
     struct Basic {
         pub clock: Signal<In, Clock>,
-        pub reset: Signal<In, Reset>,
         pub data: WriteInterface,
         pub enable: Signal<In, Bit>,
         pub red: Signal<Out, Bit>,
@@ -102,7 +99,6 @@ fn test_check_timing() {
         fn default() -> Self {
             Self {
                 clock: Default::default(),
-                reset: Default::default(),
                 data: Default::default(),
                 enable: Default::default(),
                 red: Default::default(),
@@ -118,7 +114,7 @@ fn test_check_timing() {
     impl Logic for Basic {
         #[hdl_gen]
         fn update(&mut self) {
-            dff_setup!(self, clock, reset, counter);
+            dff_setup!(self, clock, counter);
             if self.enable.val() {
                 self.counter.d.next = self.counter.q.val() + 1_usize;
             }

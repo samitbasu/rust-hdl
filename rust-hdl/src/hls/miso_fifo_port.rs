@@ -19,7 +19,6 @@ impl<const W: usize, const N: usize, const NP1: usize, const BLOCK: u32> Logic
     fn update(&mut self) {
         SoCPortResponder::<W>::link(&mut self.bus, &mut self.port.bus);
         self.fifo.clock.next = self.bus.clock.val();
-        self.fifo.reset.next = self.bus.reset.val();
         self.fifo.bus_read.read.next = self.port.strobe_out.val();
         self.port.ready_in.next = !self.fifo.bus_read.empty.val();
         self.port.port_in.next = self.fifo.bus_read.data.val();

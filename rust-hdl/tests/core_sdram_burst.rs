@@ -9,7 +9,6 @@ struct TestSDRAMDevice {
     buffer: SDRAMOnChipBuffer<16>,
     cntrl: SDRAMBurstController<5, 5, 4, 16>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Logic for TestSDRAMDevice {
@@ -17,7 +16,7 @@ impl Logic for TestSDRAMDevice {
     fn update(&mut self) {
         SDRAMDriver::<16>::join(&mut self.cntrl.sdram, &mut self.buffer.buf_in);
         SDRAMDriver::<16>::join(&mut self.buffer.buf_out, &mut self.dram.sdram);
-        clock_reset!(self, clock, reset, cntrl);
+        clock!(self, clock, cntrl);
     }
 }
 
@@ -31,7 +30,6 @@ fn make_test_device() -> TestSDRAMDevice {
         buffer: Default::default(),
         cntrl: SDRAMBurstController::new(3, timings, OutputBuffer::DelayTwo),
         clock: Default::default(),
-        reset: Default::default(),
     };
     uut.cntrl.data_in.connect();
     uut.cntrl.cmd_strobe.connect();
@@ -72,7 +70,6 @@ fn test_unit_boots() {
     });
     sim.add_testbench(move |mut sim: Sim<TestSDRAMDevice>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         x = sim.wait(10_000_000, x)?;
         sim_assert!(sim, !x.dram.test_error.val(), x);
         sim.done(x)
@@ -140,7 +137,6 @@ fn test_unit_writes() {
     let recv = test_data.clone();
     sim.add_testbench(move |mut sim: Sim<TestSDRAMDevice>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         sdram_basic_write!(
             sim,

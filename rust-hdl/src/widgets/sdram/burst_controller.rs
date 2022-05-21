@@ -37,7 +37,6 @@ enum State {
 #[derive(LogicBlock)]
 pub struct SDRAMBurstController<const R: usize, const C: usize, const L: u32, const D: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub sdram: SDRAMDriver<D>,
     // The input interface does not allow flow control.  You must hook this up to a
     // FIFO on the consumer side to send data or risk data loss.  It is your
@@ -110,7 +109,6 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize>
         let mode_register = cas_delay << 4;
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             sdram: Default::default(),
             cmd: Default::default(),
             data_in: Default::default(),
@@ -175,7 +173,6 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
         dff_setup!(
             self,
             clock,
-            reset,
             state,
             reg_address,
             reg_cmd_address,
@@ -189,7 +186,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
             data_strobe_reg,
             data_out_reg
         );
-        clock_reset!(self, clock, reset, read_valid);
+        clock!(self, clock, read_valid);
         // Latch prevention
         self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
         self.refresh_counter.d.next = self.refresh_counter.q.val() + 1_usize;
@@ -385,7 +382,6 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
         self.sdram.we_not.next = self.encode.we_not.val();
         self.encode.cmd.next = self.cmd.val();
         self.sdram.clk.next = self.clock.val();
-        self.sdram.reset.next = self.reset.val();
         self.data_in_reg.d.next = self.data_in.val();
     }
 }

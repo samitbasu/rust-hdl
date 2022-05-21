@@ -28,7 +28,6 @@ pub struct MAX31856Simulator {
     // Slave SPI bus
     pub wires: SPIWiresSlave,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     // RAM that stores the memory contents
     reg_ram: RAM<Bits<8>, 4>,
     // Used to handle auto conversions
@@ -77,7 +76,6 @@ impl MAX31856Simulator {
             boot: DFF::default(),
             reg_index: Default::default(),
             dstate: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -94,7 +92,6 @@ impl Logic for MAX31856Simulator {
         dff_setup!(
             self,
             clock,
-            reset,
             auto_conversions_enabled,
             auto_conversion_counter,
             state,
@@ -103,7 +100,7 @@ impl Logic for MAX31856Simulator {
             boot,
             dstate
         );
-        clock_reset!(self, clock, reset, auto_conversion_strobe, spi_slave);
+        clock!(self, clock, auto_conversion_strobe, spi_slave);
         // Set default values
         self.spi_slave.start_send.next = false;
         self.spi_slave.continued_transaction.next = false;
@@ -245,7 +242,6 @@ fn test_max31856_synthesizes() {
 #[derive(LogicBlock)]
 struct Test31856 {
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
     master: SPIMaster<64>,
     uut: MAX31856Simulator,
 }
@@ -253,7 +249,7 @@ struct Test31856 {
 impl Logic for Test31856 {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, master, uut);
+        clock!(self, clock, master, uut);
         SPIWiresMaster::join(&mut self.master.wires, &mut self.uut.wires);
     }
 }
@@ -262,7 +258,6 @@ impl Default for Test31856 {
     fn default() -> Self {
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             master: SPIMaster::new(AD7193Config::sw().spi),
             uut: MAX31856Simulator::new(AD7193Config::sw().spi),
         }
@@ -324,7 +319,6 @@ fn do_spi_txn(
 fn mk_test31856() -> Test31856 {
     let mut uut = Test31856::default();
     uut.clock.connect();
-    uut.reset.connect();
     uut.master.continued_transaction.connect();
     uut.master.start_send.connect();
     uut.master.data_outbound.connect();
@@ -346,7 +340,7 @@ fn test_multireg_reads() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
+
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 20);
         let cmd = 1_u64 << 32_u64;
@@ -370,7 +364,7 @@ fn test_multireg_write() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
+
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 20);
         let cmd = 0x81_u64 << 32_u64 | 0xDEADBEEF_u64;
@@ -398,7 +392,7 @@ fn test_reg_reads() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
+
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 20);
         for ndx in 0..16 {
@@ -428,7 +422,7 @@ fn test_reg_writes() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
+
         // Initialize the chip...
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 20);
@@ -470,7 +464,7 @@ fn test_single_conversion() {
     sim.add_clock(5, |x: &mut Box<Test31856>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<Test31856>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
+
         wait_clock_true!(sim, clock, x);
         wait_clock_cycles!(sim, clock, x, 50);
         x = reg_write(0, 0x80, x, &mut sim)?;

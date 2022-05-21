@@ -282,15 +282,6 @@ impl Probe for TimingChecker {
             );
             self.add_write(&write_name, SignalNodeKind::Sink, SignalEdgeKind::Clock);
             self.pop_read_scope();
-            if let Some(reset) = &info.reset {
-                self.push_read_scope();
-                self.add_read(
-                    &format!("{}${}", self.path.to_string(), reset),
-                    SignalNodeKind::Normal,
-                );
-                self.add_write(&write_name, SignalNodeKind::Sink, SignalEdgeKind::Reset);
-                self.pop_read_scope();
-            }
         }
         self.clear_scope();
     }

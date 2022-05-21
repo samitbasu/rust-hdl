@@ -132,26 +132,22 @@ pub fn fixup_ident(x: String) -> String {
     y
 }
 
-// The dff_setup macro uses clock, reset, dfflist arguments
+// The dff_setup macro uses clock, dfflist arguments
 #[derive(Debug)]
 pub struct DFFSetupArgs {
     pub me: Expr,
     pub clock: Expr,
-    pub reset: Expr,
     pub dffs: Vec<Expr>,
 }
 
 impl Parse for DFFSetupArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let clock: Expr;
-        let reset: Expr;
         let mut dffs = Vec::new();
 
         let me: Expr = input.parse()?;
         input.parse::<Token![,]>()?;
         clock = input.parse()?;
-        input.parse::<Token![,]>()?;
-        reset = input.parse()?;
         input.parse::<Token![,]>()?;
         while !input.is_empty() {
             let dff_name: Expr = input.parse()?;
@@ -160,11 +156,6 @@ impl Parse for DFFSetupArgs {
                 input.parse::<Token![,]>()?;
             }
         }
-        Ok(DFFSetupArgs {
-            me,
-            clock,
-            reset,
-            dffs,
-        })
+        Ok(DFFSetupArgs { me, clock, dffs })
     }
 }

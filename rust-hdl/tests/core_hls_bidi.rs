@@ -19,7 +19,6 @@ struct BusTest {
     master_from_bus_fifo: SyncFIFO<Bits<8>, 4, 5, 1>,
     master_to_bus_fifo: SyncFIFO<Bits<8>, 4, 5, 1>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
 }
 
 impl Default for BusTest {
@@ -44,7 +43,6 @@ impl Default for BusTest {
             master_from_bus_fifo: Default::default(),
             master_to_bus_fifo: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -53,10 +51,9 @@ impl Logic for BusTest {
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the components
-        clock_reset!(
+        clock!(
             self,
             clock,
-            reset,
             master,
             dtm_feeder,
             dtm_reader,
@@ -113,7 +110,6 @@ fn test_bidi2_bus_test_synthesizes() {
     uut.dtm_feeder.start.connect();
     uut.dtm_reader.start.connect();
     uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("tribus", &vlog).unwrap();
@@ -127,7 +123,6 @@ fn test_bidi2_bus_works() {
     uut.dtm_feeder.start.connect();
     uut.dtm_reader.start.connect();
     uut.clock.connect();
-    uut.reset.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("tribus_0", &vlog).unwrap();
@@ -135,7 +130,6 @@ fn test_bidi2_bus_works() {
     sim.add_clock(5, |x: &mut Box<BusTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<BusTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.dtm_feeder.start.next = true;
         x.dtm_reader.start.next = true;

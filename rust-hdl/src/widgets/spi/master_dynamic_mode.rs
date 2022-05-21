@@ -50,7 +50,6 @@ impl Into<SPIConfig> for SPIConfigDynamicMode {
 #[derive(LogicBlock)]
 pub struct SPIMasterDynamicMode<const N: usize> {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub bits_outbound: Signal<In, Bits<16>>,
     pub data_outbound: Signal<In, Bits<N>>,
     pub data_inbound: Signal<Out, Bits<N>>,
@@ -82,7 +81,6 @@ impl<const N: usize> SPIMasterDynamicMode<N> {
         assert!(8 * config.speed_hz <= config.clock_speed);
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             bits_outbound: Default::default(),
             data_outbound: Default::default(),
             data_inbound: Default::default(),
@@ -118,7 +116,6 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
         dff_setup!(
             self,
             clock,
-            reset,
             register_out,
             register_in,
             state,
@@ -131,7 +128,7 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
             cpha_flop,
             cpol_flop
         );
-        clock_reset!(self, clock, reset, miso_synchronizer, strobe);
+        clock!(self, clock, miso_synchronizer, strobe);
         // Activate the baud strobe
         self.strobe.enable.next = true;
         // Connect the MISO synchronizer to the input line

@@ -5,7 +5,6 @@ use rust_hdl::hls::prelude::*;
 struct RouterTest {
     router: Router<16, 8, 6>,
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 struct DummyBridge(pub usize);
@@ -32,7 +31,6 @@ impl Default for RouterTest {
         Self {
             router,
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -40,7 +38,6 @@ impl Default for RouterTest {
 impl Logic for RouterTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.router.upstream.reset.next = self.reset.val();
         self.router.upstream.clock.next = self.clock.val();
     }
 }
@@ -53,7 +50,6 @@ fn make_test_router() -> RouterTest {
     uut.router.upstream.from_controller.connect();
     uut.router.upstream.strobe.connect();
     uut.router.upstream.clock.connect();
-    uut.router.upstream.reset.connect();
     for i in 0..6 {
         uut.router.nodes[i].ready.connect();
         uut.router.nodes[i].to_controller.connect();
@@ -76,7 +72,6 @@ fn test_router_function() {
     sim.add_clock(5, |x: &mut Box<RouterTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<RouterTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         x.router.upstream.address.next = 7_usize.into();
         x.router.upstream.address_strobe.next = true;
@@ -149,7 +144,6 @@ impl Logic for RouterTestDevice {
 fn test_device_synthesizes() {
     let mut uut = RouterTestDevice::default();
     uut.upstream.clock.connect();
-    uut.upstream.reset.connect();
     uut.upstream.from_controller.connect();
     uut.upstream.address.connect();
     uut.upstream.address_strobe.connect();
@@ -168,7 +162,6 @@ struct RouterTestSetup {
     router: Router<16, 8, 3>,
     dev_a: [RouterTestDevice; 3],
     clock: Signal<In, Clock>,
-    reset: Signal<In, Reset>,
 }
 
 impl Default for RouterTestSetup {
@@ -180,7 +173,6 @@ impl Default for RouterTestSetup {
             router: Router::new(names, [&dev_a[0], &dev_a[1], &dev_a[2]]),
             dev_a,
             clock: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -193,7 +185,6 @@ impl Logic for RouterTestSetup {
             SoCBusController::<16, 8>::join(&mut self.router.nodes[i], &mut self.dev_a[i].upstream);
         }
         self.upstream.clock.next = self.clock.val();
-        self.upstream.reset.next = self.reset.val();
     }
 }
 
@@ -229,7 +220,6 @@ fn test_router_test_setup_works() {
     ];
     sim.add_testbench(move |mut sim: Sim<RouterTestSetup>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for address in 0_u8..15 {
             // Sweep the address space...

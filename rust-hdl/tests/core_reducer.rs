@@ -3,7 +3,6 @@ use rust_hdl::widgets::prelude::*;
 
 #[derive(LogicBlock)]
 struct ReducerTest {
-    pub reset: Signal<In, Reset>,
     pub clock: Signal<In, Clock>,
     pub fifo_in: SynchronousFIFO<Bits<32>, 4, 5, 1>,
     pub fifo_out: SynchronousFIFO<Bits<4>, 8, 9, 1>,
@@ -13,7 +12,7 @@ struct ReducerTest {
 impl Logic for ReducerTest {
     #[hdl_gen]
     fn update(&mut self) {
-        clock_reset!(self, clock, reset, fifo_in, fifo_out, redux);
+        clock!(self, clock, fifo_in, fifo_out, redux);
         self.redux.empty.next = self.fifo_in.empty.val();
         self.redux.data_in.next = self.fifo_in.data_out.val();
         self.fifo_in.read.next = self.redux.read.val();
@@ -26,7 +25,6 @@ impl Logic for ReducerTest {
 impl ReducerTest {
     pub fn new(order: WordOrder) -> Self {
         Self {
-            reset: Default::default(),
             clock: Default::default(),
             fifo_in: Default::default(),
             fifo_out: Default::default(),
@@ -46,7 +44,6 @@ fn test_reducer_works() {
     sim.add_clock(5, |x: &mut Box<ReducerTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<ReducerTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for datum in [0xDEADBEEF_u32, 0xCAFEBABE] {
             x = sim.watch(|x| !x.fifo_in.full.val(), x)?;
@@ -85,7 +82,6 @@ fn test_reducer_works_least_sig_word_first() {
     sim.add_clock(5, |x: &mut Box<ReducerTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<ReducerTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for datum in [0xFEEBDAED_u32, 0xEBABEFAC] {
             x = sim.watch(|x| !x.fifo_in.full.val(), x)?;
@@ -118,7 +114,6 @@ declare_narrowing_fifo!(Slim, 32, 16, 4, 256);
 #[derive(LogicBlock)]
 struct SlimTest {
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pub fifo: Slim,
 }
 
@@ -127,8 +122,6 @@ impl Logic for SlimTest {
     fn update(&mut self) {
         self.fifo.write_clock.next = self.clock.val();
         self.fifo.read_clock.next = self.clock.val();
-        self.fifo.write_reset.next = self.reset.val();
-        self.fifo.read_reset.next = self.reset.val();
     }
 }
 
@@ -136,7 +129,6 @@ impl SlimTest {
     pub fn new(order: WordOrder) -> Self {
         Self {
             clock: Default::default(),
-            reset: Default::default(),
             fifo: Slim::new(order),
         }
     }
@@ -153,7 +145,6 @@ fn test_slim_works() {
     sim.add_clock(5, |x: &mut Box<SlimTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<SlimTest>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_true!(sim, clock, x);
         for datum in [0xDEADBEEF_u32, 0xCAFEBABE] {
             x = sim.watch(|x| !x.fifo.full.val(), x)?;

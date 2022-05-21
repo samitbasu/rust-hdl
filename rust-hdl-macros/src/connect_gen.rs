@@ -145,17 +145,15 @@ fn connect_macro(m: &syn::ExprMacro) -> Result<TS> {
                 #(
                     logic::logic_connect_fn(&mut #me.#dff.clock);
                     logic::logic_connect_fn(&mut #me.#dff.d);
-                    logic::logic_connect_fn(&mut #me.#dff.reset);
                 )*
             })
-        } else if macro_name == "clock_reset" {
+        } else if macro_name == "clock" {
             let args: DFFSetupArgs = m.mac.parse_body()?;
             let me = &args.me;
             let dff = &args.dffs;
             Ok(quote! {
                 #(
                     logic::logic_connect_fn(&mut #me.#dff.clock);
-                    logic::logic_connect_fn(&mut #me.#dff.reset);
                 )*
             })
         } else {

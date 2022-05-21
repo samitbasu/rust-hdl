@@ -7,7 +7,6 @@ use crate::widgets::dff::DFF;
 pub struct MOSIWidePort<const W: usize, const D: usize> {
     pub bus: SoCPortResponder<D>,
     pub clock_out: Signal<Out, Clock>,
-    pub reset_out: Signal<Out, Reset>,
     pub port_out: Signal<Out, Bits<W>>,
     pub strobe_out: Signal<Out, Bit>,
     accum: DFF<Bits<W>>,
@@ -27,7 +26,6 @@ impl<const W: usize, const D: usize> Default for MOSIWidePort<W, D> {
         Self {
             bus: Default::default(),
             clock_out: Default::default(),
-            reset_out: Default::default(),
             port_out: Default::default(),
             strobe_out: Default::default(),
             accum: Default::default(),
@@ -45,17 +43,7 @@ impl<const W: usize, const D: usize> Logic for MOSIWidePort<W, D> {
     #[hdl_gen]
     fn update(&mut self) {
         self.clock_out.next = self.bus.clock.val();
-        self.reset_out.next = self.bus.reset.val();
-        dff_setup!(
-            self,
-            clock_out,
-            reset_out,
-            accum,
-            state,
-            address_active,
-            count,
-            strobe
-        );
+        dff_setup!(self, clock_out, accum, state, address_active, count, strobe);
         // Compute the select/enable flag
         self.address_active.d.next = self.bus.select.val();
         self.bus.ready.next = false;

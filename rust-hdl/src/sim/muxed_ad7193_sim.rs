@@ -10,7 +10,6 @@ pub struct MuxedAD7193Simulators {
     pub addr: Signal<In, Bits<3>>,
     pub mux: MuxSlaves<8, 3>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     adcs: [AD7193Simulator; 8],
 }
 
@@ -21,7 +20,6 @@ impl MuxedAD7193Simulators {
             mux: Default::default(),
             addr: Default::default(),
             clock: Default::default(),
-            reset: Default::default(),
             adcs: array_init::array_init(|_| AD7193Simulator::new(config)),
         }
     }
@@ -33,7 +31,6 @@ impl Logic for MuxedAD7193Simulators {
         SPIWiresSlave::link(&mut self.wires, &mut self.mux.from_master);
         for i in 0_usize..8 {
             self.adcs[i].clock.next = self.clock.val();
-            self.adcs[i].reset.next = self.reset.val();
             SPIWiresMaster::join(&mut self.mux.to_slaves[i], &mut self.adcs[i].wires);
         }
         self.mux.sel.next = self.addr.val();
