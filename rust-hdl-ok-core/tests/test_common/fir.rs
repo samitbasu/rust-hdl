@@ -33,9 +33,7 @@ impl Logic for OpalKellyFIRTest {
         self.i_fifo.clock.next = self.ok_host.ti_clk.val();
         self.o_fifo.clock.next = self.ok_host.ti_clk.val();
         self.fir.clock.next = self.ok_host.ti_clk.val();
-        self.fir.reset.next = NO_RESET;
         self.delay_read.clock.next = self.ok_host.ti_clk.val();
-        self.delay_read.reset.next = NO_RESET;
         // Connect the input pipe to the input fifo
         self.i_fifo.data_in.next = signed_cast(self.i_pipe.dataout.val());
         self.i_fifo.write.next = self.i_pipe.write.val();
@@ -44,11 +42,9 @@ impl Logic for OpalKellyFIRTest {
         self.will_feed.next = !self.fir.busy.val() & !self.i_fifo.empty.val();
         self.fir.strobe_in.next = self.will_feed.val();
         self.i_fifo.read.next = self.will_feed.val();
-        self.i_fifo.reset.next = NO_RESET;
         self.o_fifo.data_in.next = self.fir.data_out.val().get_bits::<16>(0_usize);
         self.o_fifo.write.next = self.fir.strobe_out.val();
         self.o_fifo.read.next = self.delay_read.q.val();
-        self.o_fifo.reset.next = NO_RESET;
         self.delay_read.d.next = self.o_pipe.read.val();
         self.o_pipe.datain.next = unsigned_cast(self.o_fifo.data_out.val());
     }

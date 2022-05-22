@@ -41,7 +41,6 @@ impl Logic for OpalKellyPLLTest {
     #[hdl_gen]
     fn update(&mut self) {
         self.pll.clock_in.next = self.raw_clock.val();
-        self.pll.reset.next = NO_RESET;
         self.slow_pulser.enable.next = true;
         self.med_pulser.enable.next = true;
         self.fast_pulser.enable.next = true;
@@ -51,9 +50,6 @@ impl Logic for OpalKellyPLLTest {
         self.led.next = bit_cast::<8, 1>(self.slow_pulser.pulse.val().into())
             | (bit_cast::<8, 1>(self.fast_pulser.pulse.val().into()) << 5_usize)
             | (bit_cast::<8, 1>(self.med_pulser.pulse.val().into()) << 7_usize);
-        self.med_pulser.reset.next = NO_RESET;
-        self.slow_pulser.reset.next = NO_RESET;
-        self.fast_pulser.reset.next = NO_RESET;
     }
 }
 

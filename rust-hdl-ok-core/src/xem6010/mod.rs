@@ -63,7 +63,6 @@ impl Logic for OKTest1 {
         OpalKellyHostInterface::link(&mut self.hi, &mut self.ok_host.hi);
         self.auto_reset.clock.next = self.ok_host.ti_clk.val();
         self.pulser.clock.next = self.ok_host.ti_clk.val();
-        self.pulser.reset.next = self.auto_reset.reset.val();
         self.pulser.enable.next = true;
         if self.pulser.pulse.val() {
             self.led.next = 0xFF_u8.into();

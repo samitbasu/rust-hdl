@@ -78,10 +78,6 @@ impl Logic for SDRAMSimulatedFIFOTester {
         self.ok_host.ok2.next = self.dl.ok2.val();
         // Link the SDRAM and the controller
         SDRAMDriver::<16>::join(&mut self.fifo.sdram, &mut self.chip.sdram);
-        self.cross.read_reset.next = NO_RESET;
-        self.cross.write_reset.next = NO_RESET;
-        self.fifo.reset.next = NO_RESET;
-        self.counter.reset.next = NO_RESET;
     }
 }
 

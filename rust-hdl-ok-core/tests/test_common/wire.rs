@@ -64,7 +64,6 @@ impl Logic for OpalKellyWireTest {
         // Wire or in OK2
         self.ok_host.ok2.next =
             self.o_wire.ok2.val() | self.o_wire_1.ok2.val() | self.o_trig.ok2.val();
-        self.trig_counter.reset.next = NO_RESET;
     }
 }
 

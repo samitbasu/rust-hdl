@@ -31,8 +31,6 @@ impl Logic for OpalKellySPIMuxTest {
         self.addr.ok1.next = self.ok_host.ok1.val();
         // Connect the addr to the mux select
         self.mux_adc.addr.next = bit_cast::<3, 16>(self.addr.dataout.val());
-        self.mux_adc.reset.next = NO_RESET;
-        self.spi.reset.next = NO_RESET;
     }
 }
 

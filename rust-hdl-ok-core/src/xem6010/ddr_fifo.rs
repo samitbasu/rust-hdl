@@ -25,7 +25,7 @@ pub struct DDRFIFO {
     pub o_clock: Signal<Out, Clock>,
     pub raw_sys_clock: Signal<In, Clock>,
     // Reset signal
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, Bit>,
     // Read interface
     pub read: Signal<In, Bit>,
     pub data_out: Signal<Out, Bits<32>>,
@@ -60,8 +60,6 @@ pub struct DDRFIFO {
     // Status byte
     pub status: Signal<Out, Bits<8>>,
     mig_clock: Signal<Local, Clock>,
-    mig_reset: Signal<Local, Reset>,
-    reset_bit: Signal<Local, Bit>,
 }
 
 impl Logic for DDRFIFO {
@@ -72,7 +70,6 @@ impl Logic for DDRFIFO {
         // Forward the raw clock
         self.mig.raw_sys_clk.next = self.raw_sys_clock.val();
         self.mig_clock.next = self.mig.clk_out.val();
-        self.mig_reset.next = self.mig.reset_out.val();
         // Update the output clock with the generated (buffered) clock
         self.o_clock.next = self.mig.clk_out.val();
         // Connect the flops and the interfaces to that buffered clock
@@ -80,13 +77,10 @@ impl Logic for DDRFIFO {
         self.mig.p0_wr.clock.next = self.mig.clk_out.val();
         self.mig.p0_cmd.clock.next = self.mig.clk_out.val();
         self.front_porch.read_clock.next = self.mig.clk_out.val();
-        self.front_porch.read_reset.next = self.mig.reset_out.val();
         self.back_porch.write_clock.next = self.mig.clk_out.val();
-        self.back_porch.write_reset.next = self.mig.reset_out.val();
         dff_setup!(
             self,
             mig_clock,
-            mig_reset,
             write_address,
             read_address,
             state,
@@ -105,7 +99,6 @@ impl Logic for DDRFIFO {
         self.almost_full.next = self.front_porch.almost_full.val();
         self.full.next = self.front_porch.full.val();
         self.front_porch.write_clock.next = self.write_clock.val();
-        self.front_porch.write_reset.next = self.mig_reset.val();
         // Connect the back porch fifo to our published
         // interface
         self.data_out.next = self.back_porch.data_out.val();
@@ -113,7 +106,6 @@ impl Logic for DDRFIFO {
         self.almost_empty.next = self.back_porch.almost_empty.val();
         self.empty.next = self.back_porch.empty.val();
         self.back_porch.read_clock.next = self.read_clock.val();
-        self.back_porch.read_reset.next = self.reset.val();
         // By default, do nothing.
         self.mig.p0_cmd.cmd.next.instruction = MIGInstruction::Refresh;
         self.mig.p0_cmd.cmd.next.byte_address = 0_usize.into();
@@ -194,19 +186,12 @@ impl Logic for DDRFIFO {
         }
         // Wire up the reset
         self.mig.reset.next = self.reset.val();
-        // Set the status byte
-        if self.reset.val() == RESET {
-            self.reset_bit.next = true;
-        } else {
-            self.reset_bit.next = false;
-        }
         self.status.next = bit_cast::<8, 1>(self.mig.p0_wr.error.val().into())
             | (bit_cast::<8, 1>(self.mig.p0_wr.underrun.val().into()) << 1_usize)
             | (bit_cast::<8, 1>(self.mig.p0_cmd.full.val().into()) << 2_usize)
             | (bit_cast::<8, 1>(self.mig.p0_rd.error.val().into()) << 3_usize)
             | (bit_cast::<8, 1>(self.mig.p0_rd.overflow.val().into()) << 4_usize)
             | (bit_cast::<8, 1>(self.have_data.val().into()) << 5_usize)
-            | (bit_cast::<8, 1>(self.reset_bit.val().into()) << 6_usize)
             | (bit_cast::<8,1>(true.into()) << 7_usize);
     }
 }

@@ -15,9 +15,7 @@ pub struct OpalKellyFastBlinky {
     pub clock_p: Signal<In, Clock>,
     pub clock_n: Signal<In, Clock>,
     pub clk_100mhz: Signal<Local, Clock>,
-    reset_100mhz: Signal<Local, Reset>,
     pub clock_div: OpalKellySystemClock7,
-    ar: AutoReset,
 }
 
 impl OpalKellyFastBlinky {
@@ -29,9 +27,7 @@ impl OpalKellyFastBlinky {
             clock_p: clk[0].clone(),
             clock_n: clk[1].clone(),
             clk_100mhz: Default::default(),
-            reset_100mhz: Default::default(),
             clock_div: Default::default(),
-            ar: Default::default(),
         }
     }
 }
@@ -42,9 +38,7 @@ impl Logic for OpalKellyFastBlinky {
         self.clock_div.clock_p.next = self.clock_p.val();
         self.clock_div.clock_n.next = self.clock_n.val();
         self.clk_100mhz.next = self.clock_div.sys_clock.val();
-        self.ar.clock.next = self.clk_100mhz.val();
-        self.reset_100mhz.next = self.ar.reset.val();
-        clock_reset!(self, clk_100mhz, reset_100mhz, pulser);
+        clock!(self, clk_100mhz, pulser);
         self.pulser.enable.next = true;
         if self.pulser.pulse.val() {
             self.led.next = 0xFF_u8.into();

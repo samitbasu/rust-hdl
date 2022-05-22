@@ -52,7 +52,6 @@ impl Logic for OpalKellySoCTest {
         self.pipe_in.ok1.next = self.ok_host.ok1.val();
         self.pipe_out.ok1.next = self.ok_host.ok1.val();
         self.ok_host.ok2.next = self.pipe_in.ok2.val() | self.pipe_out.ok2.val();
-        self.read_delay.reset.next = NO_RESET;
     }
 }
 

@@ -26,7 +26,6 @@ impl Logic for OpalKellyDownload32FIFOTest {
         self.counter.d.next =
             self.counter.q.val() + bit_cast::<32, 1>(self.will_write.val().into());
         self.dl.write.next = self.will_write.val();
-        self.counter.reset.next = NO_RESET;
     }
 }
 
@@ -83,7 +82,6 @@ impl Logic for OpalKellyDownloadFIFOTest {
             self.counter.q.val() + bit_cast::<16, 1>(self.will_write.val().into());
         self.dl.data_in.next = self.counter.q.val();
         self.dl.data_write.next = self.will_write.val();
-        self.counter.reset.next = NO_RESET;
     }
 }
 

@@ -36,8 +36,6 @@ impl Logic for OpalKellySPITest {
         self.spi.clock.next = self.ok_host.ti_clk.val();
         self.adc.clock.next = self.ok_host.ti_clk.val();
         SPIWiresMaster::join(&mut self.spi.wires, &mut self.adc.wires);
-        self.adc.reset.next = NO_RESET;
-        self.spi.reset.next = NO_RESET;
     }
 }
 

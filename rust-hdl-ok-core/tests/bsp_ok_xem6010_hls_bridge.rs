@@ -69,8 +69,6 @@ impl Logic for OpalKellyHLSBridgeTest {
         self.stream_port.ready_in.next = true;
         self.stream_port.port_in.next = self.stream_cnt.q.val();
         self.stream_cnt.d.next = self.stream_cnt.q.val() + self.stream_port.strobe_out.val();
-        self.data_fifo.reset.next = NO_RESET;
-        self.stream_cnt.reset.next = NO_RESET;
     }
 }
 

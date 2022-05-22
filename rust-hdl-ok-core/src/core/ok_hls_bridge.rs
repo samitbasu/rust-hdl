@@ -52,30 +52,24 @@ pub struct OpalKellyHLSBridge<const A: usize> {
     pipe_out: BTPipeOut,
     words_avail: WireOut,
     space_avail: WireOut,
-    space_counter: DFF<Bits<16>>,
+    space_counter: DFFWithInit<Bits<16>>,
     word_counter: DFF<Bits<16>>,
     read_delay: DFF<bool>,
     block_flow_control: WireIn,
-    sr: AutoReset,
-    reset: Signal<Local, Reset>,
 }
 
 impl<const A: usize> Logic for OpalKellyHLSBridge<A> {
     #[hdl_gen]
     fn update(&mut self) {
-        // Wire up the reset
-        self.sr.clock.next = self.ti_clk.val();
-        self.reset.next = self.sr.reset.val();
         // Clock the internal components
-        clock_reset!(
+        clock!(
             self,
             ti_clk,
-            reset,
             controller,
             pc_to_fpga_fifo,
             fpga_to_pc_fifo
         );
-        dff_setup!(self, ti_clk, reset, space_counter, word_counter, read_delay);
+        dff_setup!(self, ti_clk, space_counter, word_counter, read_delay);
         // Link the FIFOs to the HLS controller
         FIFOReadController::<Bits<16>>::join(
             &mut self.controller.from_cpu,
@@ -151,12 +145,10 @@ impl<const A: usize> OpalKellyHLSBridge<A> {
             pipe_out: BTPipeOut::new(config.pipe_out),
             words_avail: WireOut::new(config.words_avail),
             space_avail: WireOut::new(config.space_avail),
-            space_counter: DFF::new_with_reset_val((1_usize << 12).into()),
+            space_counter: DFFWithInit::new((1_usize << 12).into()),
             word_counter: Default::default(),
             read_delay: Default::default(),
             block_flow_control: WireIn::new(config.block_flow_control),
-            sr: Default::default(),
-            reset: Default::default(),
         }
     }
 }

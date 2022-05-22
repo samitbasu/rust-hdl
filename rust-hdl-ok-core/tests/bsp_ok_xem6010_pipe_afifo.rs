@@ -70,11 +70,6 @@ impl Logic for OpalKellyPipeAFIFOTest {
         self.fifo_in.read.next = !self.fifo_in.empty.val() & !self.fifo_out.full.val();
         self.fifo_out.data_in.next = self.fifo_in.data_out.val() << 1_u32;
         self.fifo_out.write.next = !self.fifo_in.empty.val() && !self.fifo_out.full.val();
-        self.fifo_in.write_reset.next = NO_RESET;
-        self.fifo_out.write_reset.next = NO_RESET;
-        self.fifo_in.read_reset.next = NO_RESET;
-        self.fifo_out.read_reset.next = NO_RESET;
-        self.delay_read.reset.next = NO_RESET;
     }
 }
 

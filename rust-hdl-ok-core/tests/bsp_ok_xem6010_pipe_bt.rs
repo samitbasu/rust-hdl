@@ -76,11 +76,6 @@ impl Logic for OpalKellyBTPipeOutTest {
             | (bit_cast::<8, 1>(self.fifo_out.almost_full.val().into()) << 3_usize)
             | (bit_cast::<8, 1>(self.fifo_out.overflow.val().into()) << 4_usize)
             | (bit_cast::<8, 1>(self.fifo_out.underflow.val().into()) << 5_usize));
-        self.strobe.reset.next = NO_RESET;
-        self.fifo_out.read_reset.next = NO_RESET;
-        self.fifo_out.write_reset.next = NO_RESET;
-        self.counter.reset.next = NO_RESET;
-        self.delay_read.reset.next = NO_RESET;
     }
 }
 

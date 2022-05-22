@@ -31,7 +31,6 @@ pub struct OKSPIMaster {
     pub ok1: Signal<In, Bits<31>>,
     pub ok2: Signal<Out, Bits<17>>,
     pub clock: Signal<In, Clock>,
-    pub reset: Signal<In, Reset>,
     pipe_in: PipeIn,
     pipe_out: PipeOut,
     bits: WireIn,
@@ -48,11 +47,10 @@ impl Logic for OKSPIMaster {
     fn update(&mut self) {
         // Link the wires
         SPIWiresMaster::link(&mut self.wires, &mut self.core.wires);
-        clock_reset!(self, clock, reset, core);
+        clock!(self, clock, core);
         dff_setup!(
             self,
             clock,
-            reset,
             data_outbound,
             output_register,
             data_inbound
@@ -118,7 +116,6 @@ impl OKSPIMaster {
             data_outbound: Default::default(),
             output_register: Default::default(),
             data_inbound: Default::default(),
-            reset: Default::default(),
         }
     }
 }
@@ -146,7 +143,6 @@ fn test_ok_spi_master_works() {
         ok1: Signal<In, Bits<31>>,
         ok2: Signal<Out, Bits<17>>,
         clock: Signal<In, Clock>,
-        reset: Signal<In, Reset>,
         core: OKSPIMaster,
         slave: SPISlave<64>,
     }
@@ -157,7 +153,7 @@ fn test_ok_spi_master_works() {
             SPIWiresMaster::link(&mut self.wires, &mut self.core.wires);
             self.core.ok1.next = self.ok1.val();
             self.ok2.next = self.core.ok2.val();
-            clock_reset!(self, clock, reset, core, slave);
+            clock!(self, clock, core, slave);
             SPIWiresMaster::join(&mut self.wires, &mut self.slave.wires);
         }
     }
@@ -177,7 +173,6 @@ fn test_ok_spi_master_works() {
                 ok1: Default::default(),
                 ok2: Default::default(),
                 clock: Default::default(),
-                reset: Default::default(),
                 core: OKSPIMaster::new(Default::default(), spi_config),
                 slave: SPISlave::new(spi_config),
             }
@@ -196,7 +191,6 @@ fn test_ok_spi_master_works() {
     sim.add_clock(5, |x: &mut Box<TopOK>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<TopOK>| {
         let mut x = sim.init()?;
-        reset_sim!(sim, clock, reset, x);
         wait_clock_cycle!(sim, clock, x, 20);
         wait_clock_true!(sim, clock, x);
         x.slave.data_outbound.next = 0xcafebabe5ea15e5e_u64.into();

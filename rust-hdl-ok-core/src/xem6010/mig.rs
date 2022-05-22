@@ -74,13 +74,11 @@ pub struct MemoryInterfaceGenerator {
     // Raw clock from the system - cannot be intercepted
     pub raw_sys_clk: Signal<In, Clock>,
     // Reset - must be handled externally
-    pub reset: Signal<In, Reset>,
+    pub reset: Signal<In, Bit>,
     // Calibration complete
     pub calib_done: Signal<Out, Bit>,
     // Buffered 100 MHz clock
     pub clk_out: Signal<Out, Clock>,
-    // Delayed reset
-    pub reset_out: Signal<Out, Reset>,
     // P0 command port
     pub p0_cmd: CommandPort,
     // P0 write port
@@ -131,7 +129,6 @@ impl Default for MemoryInterfaceGenerator {
             reset: Default::default(),
             calib_done: Default::default(),
             clk_out: Default::default(),
-            reset_out: Default::default(),
             p0_cmd: Default::default(),
             p0_wr: Default::default(),
             p0_rd: Default::default(),
@@ -156,12 +153,9 @@ impl Logic for MemoryInterfaceGenerator {
     fn update(&mut self) {
         // Connect the hardware side of the fifos to the raw clock
         self.cmd_fifo.read_clock.next = self.raw_sys_clk.val();
-        self.cmd_fifo.read_reset.next = self.reset.val();
         self.write_fifo.read_clock.next = self.raw_sys_clk.val();
-        self.write_fifo.read_reset.next = self.reset.val();
         self.read_fifo.write_clock.next = self.raw_sys_clk.val();
-        self.read_fifo.write_reset.next = self.reset.val();
-        dff_setup!(self, raw_sys_clk, reset, state, calib, timer, address);
+        dff_setup!(self, raw_sys_clk, state, calib, timer, address);
         // Connect the command fifo to the command port
         self.cmd_fifo.data_in.next = self.p0_cmd.cmd.val();
         self.cmd_fifo.write.next = self.p0_cmd.enable.val();
@@ -169,7 +163,6 @@ impl Logic for MemoryInterfaceGenerator {
         self.p0_cmd.full.next = self.cmd_fifo.full.val();
         self.cmd_fifo.write_clock.next = self.p0_cmd.clock.val();
         self.cmd_reset.clock.next = self.p0_cmd.clock.val();
-        self.cmd_fifo.write_reset.next = self.cmd_reset.reset.val();
         // Connect the write fifo to the write port
         self.write_fifo.data_in.next = self.p0_wr.data.val();
         self.write_fifo.write.next = self.p0_wr.enable.val();
@@ -179,7 +172,6 @@ impl Logic for MemoryInterfaceGenerator {
         self.p0_wr.underrun.next = self.write_fifo.underflow.val();
         self.write_fifo.write_clock.next = self.p0_wr.clock.val();
         self.wr_reset.clock.next = self.p0_wr.clock.val();
-        self.write_fifo.write_reset.next = self.wr_reset.reset.val();
         self.p0_wr.count.next = self.write_fifo.write_fill.val();
         // Connect the read fifo to the read port
         self.p0_rd.data.next = self.read_fifo.data_out.val();
@@ -190,7 +182,6 @@ impl Logic for MemoryInterfaceGenerator {
         self.p0_rd.full.next = self.read_fifo.full.val();
         self.read_fifo.read_clock.next = self.p0_rd.clock.val();
         self.rd_reset.clock.next = self.p0_rd.clock.val();
-        self.read_fifo.read_reset.next = self.rd_reset.reset.val();
         self.p0_rd.count.next = self.read_fifo.read_fill.val();
         self.calib_done.next = self.calib.q.val();
         self.cmd.next = self.cmd_fifo.data_out.val();
@@ -203,7 +194,6 @@ impl Logic for MemoryInterfaceGenerator {
         self.cmd_fifo.read.next = false;
         self.write_fifo.read.next = false;
         self.read_fifo.write.next = false;
-        self.reset_out.next = NO_RESET;
         match self.state.q.val() {
             State::Init => {
                 self.state.d.next = State::Calibrating;
@@ -213,7 +203,6 @@ impl Logic for MemoryInterfaceGenerator {
                 if self.timer.q.val() == 0_usize {
                     self.calib.d.next = true;
                     self.state.d.next = State::Idle;
-                    self.reset_out.next = RESET;
                 }
             }
             State::Idle => {
@@ -278,7 +267,6 @@ impl Logic for MemoryInterfaceGenerator {
     fn connect(&mut self) {
         self.calib_done.connect();
         self.clk_out.connect();
-        self.reset_out.connect();
         self.p0_cmd.empty.connect();
         self.p0_cmd.full.connect();
         self.p0_wr.empty.connect();
@@ -321,16 +309,6 @@ impl Logic for MemoryInterfaceGenerator {
         self.address.clock.connect();
         self.wr_reset.clock.connect();
         self.rd_reset.clock.connect();
-        self.read_fifo.read_reset.connect();
-        self.read_fifo.write_reset.connect();
-        self.cmd_fifo.write_reset.connect();
-        self.cmd_fifo.read_reset.connect();
-        self.write_fifo.read_reset.connect();
-        self.write_fifo.write_reset.connect();
-        self.address.reset.connect();
-        self.calib.reset.connect();
-        self.timer.reset.connect();
-        self.state.reset.connect();
         self.cmd_reset.clock.connect();
     }
     fn hdl(&self) -> Verilog {

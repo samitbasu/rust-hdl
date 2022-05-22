@@ -21,10 +21,6 @@ pub struct SoCTestChip {
     mosi_port: MOSIPort<16>, // At address
     miso_port: MISOPort<16>,
     data_fifo: SynchronousFIFO<Bits<16>, 8, 9, 1>,
-    auto_reset: AutoReset,
-    reset: Signal<Local, Reset>,
-    auto_reset_sys: AutoReset,
-    reset_sys: Signal<Local, Reset>,
 }
 
 impl Default for SoCTestChip {
@@ -41,10 +37,6 @@ impl Default for SoCTestChip {
             mosi_port: Default::default(),
             miso_port: Default::default(),
             data_fifo: Default::default(),
-            auto_reset: Default::default(),
-            reset: Default::default(),
-            auto_reset_sys: Default::default(),
-            reset_sys: Default::default(),
         }
     }
 }
@@ -52,25 +44,16 @@ impl Default for SoCTestChip {
 impl Logic for SoCTestChip {
     #[hdl_gen]
     fn update(&mut self) {
-        self.auto_reset.clock.next = self.clock.val();
-        self.reset.next = self.auto_reset.reset.val();
-        self.auto_reset_sys.clock.next = self.sys_clock.val();
-        self.reset_sys.next = self.auto_reset_sys.reset.val();
         self.from_cpu_fifo.write_clock.next = self.clock.val();
-        self.from_cpu_fifo.write_reset.next = self.reset.val();
         self.to_cpu_fifo.read_clock.next = self.clock.val();
-        self.to_cpu_fifo.read_reset.next = self.reset.val();
         self.from_cpu_fifo.read_clock.next = self.sys_clock.val();
-        self.from_cpu_fifo.read_reset.next = self.reset_sys.val();
         self.to_cpu_fifo.write_clock.next = self.sys_clock.val();
-        self.to_cpu_fifo.write_reset.next = self.reset_sys.val();
         self.soc_host.clock.next = self.sys_clock.val();
-        self.soc_host.reset.next = self.reset_sys.val();
         // Connect the controller to the bridge
         SoCBusController::<16, 8>::join(&mut self.soc_host.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.mosi_port.bus);
         SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.miso_port.bus);
-        clock_reset!(self, sys_clock, reset_sys, data_fifo);
+        clock!(self, sys_clock, data_fifo);
         // Wire the MOSI port to the input of the data_fifo
         self.data_fifo.data_in.next = self.mosi_port.port_out.val() << 1_usize;
         self.data_fifo.write.next = self.mosi_port.strobe_out.val();

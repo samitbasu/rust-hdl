@@ -69,11 +69,7 @@ impl Logic for OpalKellyDDR7Test {
         self.ddr_fifo.read.next = self.delay_read.q.val();
         self.ddr_fifo.read_clock.next = self.ok_host.ti_clk.val();
         // Connect the reset
-        if self.reset.dataout.val().any() {
-            self.ddr_fifo.reset.next = RESET;
-        } else {
-            self.ddr_fifo.reset.next = NO_RESET;
-        }
+        self.ddr_fifo.reset.next = self.reset.dataout.val().any();
         // Wire the OK busses
         self.reset.ok1.next = self.ok_host.ok1.val();
         self.pipe_in.ok1.next = self.ok_host.ok1.val();

@@ -53,7 +53,6 @@ impl Logic for OpalKellyPipeTest {
         }
         self.o_wire.datain.next = self.accum.q.val();
 
-        self.accum.reset.next = NO_RESET;
     }
 }
 
@@ -136,8 +135,6 @@ impl Logic for OpalKellyPipeRAMTest {
         self.write_address.d.next = self.write_address.q.val() + self.i_pipe.write.val();
         self.read_address.d.next = self.read_address.q.val() + self.o_pipe.read.val();
 
-        self.read_address.reset.next = NO_RESET;
-        self.write_address.reset.next = NO_RESET;
     }
 }
 
@@ -201,8 +198,6 @@ impl Logic for OpalKellyPipeFIFOTest {
         self.fifo.write.next = self.i_pipe.write.val();
         self.fifo.data_in.next = self.i_pipe.dataout.val();
 
-        self.delay_read.reset.next = NO_RESET;
-        self.fifo.reset.next = NO_RESET;
     }
 }
 
