@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-ok-core"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license = "MIT"
 description = "Board support package for OpalKelly XEM6010 and XEM7010 FPGA modules"

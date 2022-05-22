@@ -104,19 +104,47 @@ fn mk_spi_config(flags: [bool; 3]) -> SPIConfig {
 }
 
 #[test]
-fn test_spi_xchange_modes() {
-    test_spi_xchange(mk_spi_config([false, false, false]));
-    test_spi_xchange(mk_spi_config([false, false, true]));
-    test_spi_xchange(mk_spi_config([false, true, false]));
-    test_spi_xchange(mk_spi_config([false, true, true]));
-    test_spi_xchange(mk_spi_config([true, false, false]));
-    test_spi_xchange(mk_spi_config([true, false, true]));
-    test_spi_xchange(mk_spi_config([true, true, false]));
-    test_spi_xchange(mk_spi_config([true, true, true]));
+fn test_spi_xchange_mode_000() {
+    test_spi_xchange(mk_spi_config([false, false, false]), "000");
+}
+
+#[test]
+fn test_spi_xchange_mode_001() {
+    test_spi_xchange(mk_spi_config([false, false, true]), "001");
+}
+
+#[test]
+fn test_spi_xchange_mode_010() {
+    test_spi_xchange(mk_spi_config([false, true, false]), "010");
+}
+
+#[test]
+fn test_spi_xchange_mode_011() {
+    test_spi_xchange(mk_spi_config([false, true, true]), "011");
+}
+
+#[test]
+fn test_spi_xchange_mode_100() {
+    test_spi_xchange(mk_spi_config([true, false, false]), "100");
+}
+
+#[test]
+fn test_spi_xchange_mode_101() {
+    test_spi_xchange(mk_spi_config([true, false, true]), "101");
+}
+
+#[test]
+fn test_spi_xchange_mode_110() {
+    test_spi_xchange(mk_spi_config([true, true, false]), "110");
+}
+
+#[test]
+fn test_spi_xchange_mode_111() {
+    test_spi_xchange(mk_spi_config([true, true, true]), "111");
 }
 
 #[cfg(test)]
-fn test_spi_xchange(config: SPIConfig) {
+fn test_spi_xchange(config: SPIConfig, name: &str) {
     let mut uut = SPITestPair::new(config);
     uut.master.continued_transaction.connect();
     uut.master.start_send.connect();
@@ -128,12 +156,12 @@ fn test_spi_xchange(config: SPIConfig) {
     uut.slave.disabled.connect();
     uut.slave.bits.connect();
     uut.connect_all();
-    yosys_validate("spi_1", &generate_verilog(&uut)).unwrap();
+    yosys_validate(&format!("spi_{}", name), &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<SPITestPair>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<SPITestPair>| {
         let mut x = sim.init()?;
-        wait_clock_cycles!(sim, clock, x, 4);
+        wait_clock_cycles!(sim, clock, x, 16);
         for _ in 0..4 {
             wait_clock_true!(sim, clock, x);
             x.master.data_outbound.next = 0xDEADBEEF_u32.into();
@@ -149,6 +177,7 @@ fn test_spi_xchange(config: SPIConfig) {
     });
     sim.add_testbench(move |mut sim: Sim<SPITestPair>| {
         let mut x = sim.init()?;
+        wait_clock_cycles!(sim, clock, x, 16);
         for _ in 0..4 {
             wait_clock_true!(sim, clock, x);
             x.slave.data_outbound.next = 0xCAFEBABE_u32.into();
@@ -161,6 +190,6 @@ fn test_spi_xchange(config: SPIConfig) {
         }
         sim.done(x)
     });
-    //    sim.run_traced(uut, 1_000_000, std::fs::File::create("spi_x1.vcd").unwrap()).unwrap()
+//    sim.run_to_file(Box::new(uut), 1_000_000, &vcd_path!(format!("spi_xfer_test_{}.vcd", name))).unwrap();
     sim.run(Box::new(uut), 1_000_000).unwrap();
 }

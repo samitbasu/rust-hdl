@@ -20,3 +20,4 @@ pub mod spi;
 pub mod strobe;
 pub mod synchronizer;
 pub mod tristate;
+pub mod dff_with_init;

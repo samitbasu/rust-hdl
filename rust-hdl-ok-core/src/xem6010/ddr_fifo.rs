@@ -61,6 +61,7 @@ pub struct DDRFIFO {
     pub status: Signal<Out, Bits<8>>,
     mig_clock: Signal<Local, Clock>,
     mig_reset: Signal<Local, Reset>,
+    reset_bit: Signal<Local, Bit>,
 }
 
 impl Logic for DDRFIFO {
@@ -194,12 +195,19 @@ impl Logic for DDRFIFO {
         // Wire up the reset
         self.mig.reset.next = self.reset.val();
         // Set the status byte
+        if self.reset.val() == RESET {
+            self.reset_bit.next = true;
+        } else {
+            self.reset_bit.next = false;
+        }
         self.status.next = bit_cast::<8, 1>(self.mig.p0_wr.error.val().into())
             | (bit_cast::<8, 1>(self.mig.p0_wr.underrun.val().into()) << 1_usize)
             | (bit_cast::<8, 1>(self.mig.p0_cmd.full.val().into()) << 2_usize)
             | (bit_cast::<8, 1>(self.mig.p0_rd.error.val().into()) << 3_usize)
             | (bit_cast::<8, 1>(self.mig.p0_rd.overflow.val().into()) << 4_usize)
-            | (bit_cast::<8, 1>(self.have_data.val().into()) << 5_usize);
+            | (bit_cast::<8, 1>(self.have_data.val().into()) << 5_usize)
+            | (bit_cast::<8, 1>(self.reset_bit.val().into()) << 6_usize)
+            | (bit_cast::<8,1>(true.into()) << 7_usize);
     }
 }
 

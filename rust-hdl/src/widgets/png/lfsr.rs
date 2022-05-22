@@ -1,6 +1,7 @@
 use crate::core::prelude::*;
 use crate::dff_setup;
 use crate::widgets::dff::DFF;
+use crate::widgets::prelude::DFFWithInit;
 
 // Adopted from Alchitry.com Lucid module `pn_gen`
 // This version does not provide seed setting.  It generates a fixed sequence.
@@ -9,16 +10,11 @@ pub struct LFSRSimple {
     pub clock: Signal<In, Clock>,
     pub strobe: Signal<In, Bit>,
     pub num: Signal<Out, Bits<32>>,
-    x: DFF<Bits<32>>,
-    y: DFF<Bits<32>>,
-    z: DFF<Bits<32>>,
-    w: DFF<Bits<32>>,
+    x: DFFWithInit<Bits<32>>,
+    y: DFFWithInit<Bits<32>>,
+    z: DFFWithInit<Bits<32>>,
+    w: DFFWithInit<Bits<32>>,
     t: Signal<Local, Bits<32>>,
-    x_init: Constant<Bits<32>>,
-    y_init: Constant<Bits<32>>,
-    z_init: Constant<Bits<32>>,
-    w_init: Constant<Bits<32>>,
-    boot: DFF<Bit>,
 }
 
 const SEED: u128 = 0x843233523a613966423b622562592c62;
@@ -29,16 +25,11 @@ impl Default for LFSRSimple {
             clock: Default::default(),
             strobe: Default::default(),
             num: Default::default(),
-            x: Default::default(),
-            y: Default::default(),
-            z: Default::default(),
-            w: Default::default(),
             t: Default::default(),
-            x_init: Constant::new((SEED & 0xFFFF_FFFF_u128).into()),
-            y_init: Constant::new(((SEED >> 32) & 0xFFFF_FFFF_u128).into()),
-            z_init: Constant::new(((SEED >> 64) & 0xFFFF_FFFF_u128).into()),
-            w_init: Constant::new(((SEED >> 96) & 0xFFFF_FFFF_u128).into()),
-            boot: Default::default(),
+            x: DFFWithInit::new((SEED & 0xFFFF_FFFF_u128).into()),
+            y: DFFWithInit::new(((SEED >> 32) & 0xFFFF_FFFF_u128).into()),
+            z: DFFWithInit::new(((SEED >> 64) & 0xFFFF_FFFF_u128).into()),
+            w: DFFWithInit::new(((SEED >> 96) & 0xFFFF_FFFF_u128).into()),
         }
     }
 }
@@ -46,17 +37,10 @@ impl Default for LFSRSimple {
 impl Logic for LFSRSimple {
     #[hdl_gen]
     fn update(&mut self) {
-        dff_setup!(self, clock, x, y, z, w, boot);
+        dff_setup!(self, clock, x, y, z, w);
         self.num.next = self.w.q.val();
         self.t.next = self.x.q.val() ^ (self.x.q.val() << 11_usize);
-        if !self.boot.q.val() {
-            self.boot.d.next = true;
-            self.x.d.next = self.x_init.val();
-            self.y.d.next = self.y_init.val();
-            self.z.d.next = self.z_init.val();
-            self.w.d.next = self.w_init.val();
-        }
-        if self.strobe.val() & self.boot.q.val() {
+        if self.strobe.val() {
             self.x.d.next = self.y.q.val();
             self.y.d.next = self.z.q.val();
             self.z.d.next = self.w.q.val();

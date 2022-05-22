@@ -1,11 +1,10 @@
 use crate::core::prelude::*;
 use crate::dff_setup;
 use crate::widgets::dff::DFF;
-use crate::widgets::prelude::{BitSynchronizer, Strobe};
+use crate::widgets::prelude::{BitSynchronizer, DFFWithInit, Strobe};
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum SPIState {
-    Boot,
     Idle,
     Dwell,
     LoadBit,
@@ -62,7 +61,7 @@ pub struct SPIMaster<const N: usize> {
     pointerm1: Signal<Local, Bits<16>>,
     clock_state: DFF<Bit>,
     done_flop: DFF<Bit>,
-    msel_flop: DFF<Bit>,
+    msel_flop: DFFWithInit<Bit>,
     mosi_flop: DFF<Bit>,
     miso_synchronizer: BitSynchronizer,
     continued_save: DFF<Bit>,
@@ -93,7 +92,7 @@ impl<const N: usize> SPIMaster<N> {
             pointerm1: Default::default(),
             clock_state: Default::default(),
             done_flop: Default::default(),
-            msel_flop: Default::default(),
+            msel_flop: DFFWithInit::new(config.cs_off),
             mosi_flop: Default::default(),
             miso_synchronizer: Default::default(),
             continued_save: Default::default(),
@@ -139,10 +138,6 @@ impl<const N: usize> Logic for SPIMaster<N> {
         self.busy.next = true;
         // The main state machine
         match self.state.q.val() {
-            SPIState::Boot => {
-                self.msel_flop.d.next = self.cs_off.val();
-                self.state.d.next = SPIState::Idle;
-            }
             SPIState::Idle => {
                 self.busy.next = false;
                 self.clock_state.d.next = self.cpol.val();
@@ -209,7 +204,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
                 }
             }
             _ => {
-                self.state.d.next = SPIState::Boot;
+                self.state.d.next = SPIState::Idle;
             }
         }
     }

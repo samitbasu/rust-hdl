@@ -10,6 +10,7 @@ pub use crate::dff_setup;
 pub use crate::widgets::auto_reset::AutoReset;
 pub use crate::widgets::delay_line::DelayLine;
 pub use crate::widgets::dff::DFF;
+pub use crate::widgets::dff_with_init::DFFWithInit;
 pub use crate::widgets::edge_detector::EdgeDetector;
 pub use crate::widgets::fifo::cross_fifo::CrossNarrowFIFO;
 pub use crate::widgets::fifo::cross_fifo::CrossWidenFIFO;
