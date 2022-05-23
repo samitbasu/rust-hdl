@@ -30,10 +30,14 @@ impl<T: Synth> Logic for DFF<T> {
     fn hdl(&self) -> Verilog {
         Verilog::Custom(format!(
             "\
+initial begin
+   q = {:x};
+end
+
 always @(posedge clock) begin
    q <= d;
 end
-      "
+      ", T::default().verilog()
         ))
     }
     fn timing(&self) -> Vec<TimingInfo> {

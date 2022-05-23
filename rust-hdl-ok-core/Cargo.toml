@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-ok-core"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 license = "MIT"
 description = "Board support package for OpalKelly XEM6010 and XEM7010 FPGA modules"
@@ -12,7 +12,7 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl = {version="^0.27.0"}
+rust-hdl = {version="^0.28.0"}
 rust-hdl-ok-frontpanel-sys = "0.2.0"
 regex = "1.5.4"
 rand = "0.8.5"
