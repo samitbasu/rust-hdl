@@ -2,10 +2,16 @@ use crate::core::prelude::*;
 use crate::dff_setup;
 use crate::widgets::dff::DFF;
 
+/// A [BitSynchronizer] is used to move signals that are asynchronous to a clock into that
+/// clock domain using a pair of back-to-back flip-flops.  While the first flip flop may
+/// become metastable, the second one is likely to be stable.
 #[derive(LogicBlock, Default)]
 pub struct BitSynchronizer {
+    /// The input signal, which is asynchronous to the clock
     pub sig_in: Signal<In, Bit>,
+    /// The output signal, synchronized to the clock
     pub sig_out: Signal<Out, Bit>,
+    /// The clock signal to synchronize the output to
     pub clock: Signal<In, Clock>,
     dff0: DFF<Bit>,
     dff1: DFF<Bit>,
@@ -29,20 +35,34 @@ fn sync_is_synthesizable() {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
-pub enum SyncSenderState {
+enum SyncSenderState {
     Idle,
     WaitAck,
     WaitDone,
 }
 
+/// When you need to send many bits between two clock domains, it is risky to use a vector
+/// of [BitSynchronizer] structs.  That is because, you cannot guarantee at any given moment
+/// that all of the bits of your multi-bit signal will cross into the new clock domain at once.
+/// So to synchronize a multi-bit signal, use a [SyncSender] and [SyncReceiver] pair.  These
+/// widgets will use a set of handshake signals to move a value from one clock domain to another
+/// safely.  Note that while the state machine is executing, the synchronizer will indicate it
+/// is busy.  Crossing clock domains with greater ease is best done with an [AsynchronousFIFO].
 #[derive(LogicBlock, Default)]
 pub struct SyncSender<T: Synth> {
+    /// The input signal to synchronize across clock domains
     pub sig_in: Signal<In, T>,
+    /// The input signals are assumed to be synchronous to this clock
     pub clock: Signal<In, Clock>,
+    /// These are the wires used to send signals to the [SyncReceiver].
     pub sig_cross: Signal<Out, T>,
+    /// A protocol flag signal indicating that data is ready to be transferred to the second clock doamin.
     pub flag_out: Signal<Out, Bit>,
+    /// A protocol flag signal indicating that the data has been transferred to the second clock domain.
     pub ack_in: Signal<In, Bit>,
+    /// A signal indicating that the [SyncSender] is busy transferring data to the second clock domain.
     pub busy: Signal<Out, Bit>,
+    /// A protocol signal - raise this high for one cycle to latch [sig_in].
     pub send: Signal<In, Bit>,
     hold: DFF<T>,
     state: DFF<SyncSenderState>,
@@ -101,18 +121,27 @@ fn sync_sender_is_synthesizable() {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
-pub enum SyncReceiverState {
+enum SyncReceiverState {
     WaitSteady,
     WaitDone,
 }
 
+/// A [SyncReceiver] works together with a [SyncSender] to transmit data from one clock domain
+/// to another (in one direction).  To use a [SyncReceiver] wire up the [sig_cross], [flag_in]
+/// and [ack_out] signals between the two.
 #[derive(LogicBlock, Default)]
 pub struct SyncReceiver<T: Synth> {
+    /// The data output synchronized to the receiver's clock
     pub sig_out: Signal<Out, T>,
+    /// The receivers clock signal.  Data is synchronized to this clock.
     pub clock: Signal<In, Clock>,
+    /// The wires used to send data from the [SyncSender] to the [SyncReceiver].
     pub sig_cross: Signal<In, T>,
+    /// This is wired up to the [SyncSender::flag_out], and carries the new-data flag.
     pub flag_in: Signal<In, Bit>,
+    /// This is wired up to the [SyncSender::ack_in], and carries the acknowledge flag.
     pub ack_out: Signal<Out, Bit>,
+    /// This signal will strobe high for one clock when the output is valid and synchronized.
     pub update: Signal<Out, Bit>,
     hold: DFF<T>,
     update_delay: DFF<Bit>,
@@ -161,18 +190,34 @@ fn sync_receiver_is_synthesizable() {
     yosys_validate("sync_recv", &generate_verilog(&dev)).unwrap();
 }
 
+/// A [VectorSynchronizer] uses a [SyncSender] and [SyncReceiver] in a matched pair to
+/// transmit a vector of bits (or any [Synth] type from one clock domain to a second
+/// clock domain without metastability or data corruption.  You can think of a [VectorSynchronizer]
+/// as a single-element asynchronous FIFO, and indeed [AsynchronousFIFO] uses the [VectorSynchronizer]
+/// internally.
+///
+/// Note that the [VectorSynchronizer] can be used to reflect a value/register into a
+/// second clock domain by tying `self.send.next = !self.busy.val()`.  In that case, the output
+/// signal will be always attempting to follow the [sig_in] input as quickly as possible.
 #[derive(LogicBlock, Default)]
 pub struct VectorSynchronizer<T: Synth> {
-    // The input interface...
+    /// The input clock interface.  Input data is clocked in using this clock.
     pub clock_in: Signal<In, Clock>,
+    /// The input data interface.  Any synthesizable type can be used here.  This is the data to send.
     pub sig_in: Signal<In, T>,
+    /// The busy signal is asserted as long as the synchronizer is, well, synchronizing.  You must
+    /// wait until this flag goes low before attempting to send more data.  The [send] signal is
+    /// only valid when [busy] is low.
     pub busy: Signal<Out, Bit>,
+    /// Raise the [send] signal for a single clock cycle to indicate that the current data on
+    /// [sig_in] should be sent across the synchronizer.
     pub send: Signal<In, Bit>,
-    // The output interface...
+    /// The clock to use on the output side of the [VectorSynchronizer].  This is the output clock.
     pub clock_out: Signal<In, Clock>,
+    /// Data synchronized to the output clock [clock_out].
     pub sig_out: Signal<Out, T>,
+    /// The update flag is strobed whenever a new valid output is available on [sig_out].
     pub update: Signal<Out, Bit>,
-    // The two pieces of the synchronizer
     sender: SyncSender<T>,
     recv: SyncReceiver<T>,
 }

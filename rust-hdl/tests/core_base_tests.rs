@@ -15,6 +15,7 @@ enum FooState {
 #[allow(dead_code)]
 mod tests {
     use rust_hdl::core::prelude::*;
+    use rust_hdl::simple_sim;
     use rust_hdl::widgets::prelude::*;
 
     #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
@@ -197,6 +198,29 @@ mod tests {
         ep.done(x)?;
         println!("TB 2 done");
         Ok(())
+    }
+
+    #[test]
+    fn test_macro_tb() {
+        let mut x = Circuit {
+            x: Signal::default(),
+            strobe: Strobe::new(1000, 10.0),
+        };
+        let mut sim = simple_sim!(Circuit, strobe.clock, 5, ep, {
+            let x = ep.init()?;
+            println!("Hello from macro driven simple simulation");
+            let mut x = ep.wait(125, x)?;
+            println!(
+                "Hello from macro driven simple simluation at time {}",
+                ep.time()
+            );
+            x.x.next = 89_u32.into();
+            ep.done(x)
+        });
+        x.strobe.clock.connect();
+        x.strobe.enable.connect();
+        x.connect_all();
+        sim.run(Box::new(x), 400).unwrap();
     }
 
     #[test]

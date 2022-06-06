@@ -51,9 +51,11 @@
 //! - Test - some various test infrastructure firmware and tools for testing.
 //!
 
+#![warn(missing_docs)]
 pub mod bsp;
 pub mod core;
 pub mod device;
+pub mod docs;
 pub mod hls;
 pub mod sim;
 pub mod toolchain;

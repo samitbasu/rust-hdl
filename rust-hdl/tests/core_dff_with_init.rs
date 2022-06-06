@@ -15,7 +15,7 @@ impl Default for DFFWithNonzeroInit {
         Self {
             clock: Default::default(),
             dff: DFFWithInit::new(42_usize.into()),
-            count: Default::default()
+            count: Default::default(),
         }
     }
 }
@@ -46,5 +46,6 @@ fn test_dff_with_nonzero_init() {
         }
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 10000, &vcd_path!("dff_non_zero.vcd")).unwrap()
+    sim.run_to_file(Box::new(uut), 10000, &vcd_path!("dff_non_zero.vcd"))
+        .unwrap()
 }

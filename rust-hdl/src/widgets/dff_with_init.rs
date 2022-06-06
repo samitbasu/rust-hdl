@@ -1,7 +1,7 @@
-use std::ops::BitXor;
 use crate::core::prelude::*;
 use crate::core::timing::TimingInfo;
 use crate::widgets::dff::DFF;
+use std::ops::BitXor;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct DFFWithInit<T: Synth + BitXor<Output = T>> {
@@ -32,4 +32,3 @@ impl<T: Synth + BitXor<Output = T>> Logic for DFFWithInit<T> {
         self.dff.d.next = self.d.val() ^ self.init.val();
     }
 }
-

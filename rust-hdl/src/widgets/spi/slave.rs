@@ -19,17 +19,32 @@ enum SPISlaveState {
     Disabled,
 }
 
+/// The [SPISlave] is mostly meant for testing the [SPIMaster], but you can
+/// use it to implement a SPI endpoint in the FPGA if you want to.  This [SPISlave]
+/// is not very robust, so be cautious with using it.  In particular, with a very
+/// badly behaved SPI master, it may not operate as expected.
 #[derive(LogicBlock)]
 pub struct SPISlave<const N: usize> {
+    /// The clock driving the [SPISlave]
     pub clock: Signal<In, Clock>,
+    /// The bus connecting us to the [SPIMaster] or an external SPI bus.
     pub wires: SPIWiresSlave,
+    /// Raise thie `disabled` signal if you want the [SPISlave] to ignore the `wires` signals.
     pub disabled: Signal<In, Bit>,
+    /// Indicates the [SPISlave] is busy (typically, receiving data from the [SPIMaster].
     pub busy: Signal<Out, Bit>,
+    /// Data received from the [SPIMaster] is output on these wires.
     pub data_inbound: Signal<Out, Bits<N>>,
+    /// Assert for a single cycle to latch the data to be sent back to the [SPIMaster] on the MISO line.  Latches
+    /// `data_outbound`,`bits` and `continued_transaction` when asserted.
     pub start_send: Signal<In, Bit>,
+    /// Data destined for the [SPIMaster] on the next transaction.
     pub data_outbound: Signal<In, Bits<N>>,
+    /// Number of bits to send.  Capped at 16 bits (which corresponds to 64K bits on the send - not realistic).
     pub bits: Signal<In, Bits<16>>,
+    /// Set this to true to indicate that the next transaction will be continued from this one (i.e., do not hangup at the end).
     pub continued_transaction: Signal<In, Bit>,
+    /// A flag that indicates the inbound data is valid.
     pub transfer_done: Signal<Out, Bit>,
     miso_flop: DFF<Bit>,
     done_flop: DFF<Bit>,
@@ -51,21 +66,32 @@ pub struct SPISlave<const N: usize> {
     boot_delay: DFF<Bits<4>>,
 }
 
-///
-/// Here is a table of the SPI setup:
-/// CPOL  CPHA  EDGE  ACTION
-///  0     0     R     Sample
-///  0     0     F     Change
-///  0     1     R     Change
-///  0     1     F     Sample
-///  1     0     R     Change
-///  1     0     F     Sample
-///  1     1     R     Sample
-///  1     1     F     Change
-///
-/// So Sample on Rising edge if CPOL == CPHA
-/// Also, CPHA decides if we start in the sample state or in the change state
+//
+// Here is a table of the SPI setup:
+// CPOL  CPHA  EDGE  ACTION
+//  0     0     R     Sample
+//  0     0     F     Change
+//  0     1     R     Change
+//  0     1     F     Sample
+//  1     0     R     Change
+//  1     0     F     Sample
+//  1     1     R     Sample
+//  1     1     F     Change
+//
+// So Sample on Rising edge if CPOL == CPHA
+// Also, CPHA decides if we start in the sample state or in the change state
 impl<const N: usize> SPISlave<N> {
+    /// Generate a new [SPISlave] with the given [SPIConfig]
+    ///
+    /// # Arguments
+    ///
+    /// * `config`: The [SPIConfig] that configures the slave receiver.
+    ///
+    /// returns: SPISlave<{ N }>
+    ///
+    /// # Examples
+    ///
+    /// See [ADS868XSimulator] for an example of how a [SPISlave] can be used.
     pub fn new(config: SPIConfig) -> Self {
         Self {
             clock: Default::default(),

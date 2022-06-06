@@ -432,3 +432,20 @@ macro_rules! sim_assert_eq {
         }
     };
 }
+
+#[macro_export]
+macro_rules! simple_sim {
+    ($kind: ty, $($clock: ident).+, $clock_speed_hz: expr, $fixture: ident, $testbench: expr) => {
+        {
+            let mut sim = Simulation::new();
+            let half_period = 1_000_000_000_000 / (2 * $clock_speed_hz);
+            sim.add_clock(half_period, |x: &mut Box<$kind>| x.$($clock).+.next = !x.$($clock).+.val());
+            sim.add_testbench(move |mut $fixture: Sim<$kind>| {
+                $testbench
+            });
+            sim
+        }
+    }
+}
+
+pub const SIMULATION_TIME_ONE_SECOND: u64 = 1_000_000_000_000;

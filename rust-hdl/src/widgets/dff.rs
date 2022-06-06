@@ -37,7 +37,8 @@ end
 always @(posedge clock) begin
    q <= d;
 end
-      ", T::default().verilog()
+      ",
+            T::default().verilog()
         ))
     }
     fn timing(&self) -> Vec<TimingInfo> {

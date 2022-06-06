@@ -34,6 +34,7 @@ pub use crate::core::signed::{
     signed, signed_bit_cast, signed_cast, unsigned_bit_cast, unsigned_cast, Signed,
 };
 pub use crate::core::simulate::simulate;
+pub use crate::core::simulate::SIMULATION_TIME_ONE_SECOND;
 pub use crate::core::simulate::{Sim, SimError, Simulation};
 pub use crate::core::synth::Synth;
 pub use crate::core::synth::VCDValue;
@@ -45,6 +46,7 @@ pub use crate::core::verilog_visitor::VerilogVisitor;
 pub use crate::core::yosys::*;
 pub use crate::sim_assert;
 pub use crate::sim_assert_eq;
+pub use crate::simple_sim;
 pub use crate::target_path;
 pub use crate::vcd_path;
 pub use crate::wait_clock_cycle;
