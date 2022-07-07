@@ -8,4 +8,5 @@ set num_added [ gtkwave::addSignalsFromList $all_facs ]
 puts "num signals added: $num_added"
 gtkwave::/Time/Zoom/Zoom_Full
 set dumpname [gtkwave::getDumpFileName]
-gtkwave::/File/Print_To_File PDF {Letter (8.5" x 11")} Minimal $dumpname.pdf
+#gtkwave::/File/Print_To_File PDF {Letter (8.5" x 11")} Minimal $dumpname.pdf
+gtkwave::/File/Grab_To_File $dumpname.png
