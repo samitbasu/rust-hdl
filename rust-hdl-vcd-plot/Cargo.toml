@@ -11,3 +11,10 @@ num-bigint = "0.4.3"
 substring = "1.4.5"
 vcd = "0.6.1"
 anyhow = "1.0.58"
+
+[lib]
+path = "src/lib/lib.rs"
+
+[[bin]]
+name = "vcd2svg"
+path = "src/main.rs"

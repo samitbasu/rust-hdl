@@ -62,6 +62,7 @@ fn main() {
     let mut uut = Blinky::default();
     uut.connect_all();
     sim.run_to_file(Box::new(uut), 5 * SIMULATION_TIME_ONE_SECOND, "blinky.vcd").unwrap();
+    vcd_to_svg("blinky.vcd", "blinky.svg", &["uut.clock", "uut.led"], 0, 4_000_000_000_000).unwrap();
 }
 ```
 
@@ -69,7 +70,10 @@ Running the above (a release run is highly recommended) will generate a `vcd` fi
 a trace file for FPGAs and hardware in general).  You can open this using e.g., `gtkwave`.
 If you have, for example, an Alchitry Cu board you can generate a bitstream for this exampling
 with a single call.  It's a little more involved, so we will cover that in the detailed
-documentation.
+documentation.  It will also render that `vcd` file into an `svg` you can view with an ordinary
+web browser.  This is the end result
+
+![](images/blinky_all.svg)
 
 #### License
 

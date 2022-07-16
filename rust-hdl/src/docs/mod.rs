@@ -1,3 +1,5 @@
+use crate::docs::vcd2svg::trace_collection::TraceCollection;
+use crate::docs::vcd2svg::vcd_to_svg;
 use embed_doc_image::embed_doc_image;
 
 ///
@@ -12,6 +14,7 @@ use embed_doc_image::embed_doc_image;
 ///```rust
 ///use std::time::Duration;
 ///use rust_hdl::core::prelude::*;
+/// use rust_hdl::docs::vcd2svg::vcd_to_svg;
 ///use rust_hdl::widgets::prelude::*;
 ///
 ///const CLOCK_SPEED_HZ : u64 = 10_000;
@@ -51,7 +54,9 @@ use embed_doc_image::embed_doc_image;
 ///
 ///let mut uut = Blinky::default();
 ///uut.connect_all();
-///sim.run_to_file(Box::new(uut), 5*SIMULATION_TIME_ONE_SECOND, "blinky.vcd").unwrap();
+///sim.run_to_file(Box::new(uut), 5*SIMULATION_TIME_ONE_SECOND, "/tmp/blinky.vcd").unwrap();
+///vcd_to_svg("/tmp/blinky.vcd","images/blinky_all.svg",&["uut.clock", "uut.led"], 0, 4_000_000_000_000).unwrap();
+///vcd_to_svg("/tmp/blinky.vcd","images/blinky_pulse.svg",&["uut.clock", "uut.led"], 900_000_000_000, 1_500_000_000_000).unwrap();
 ///```
 ///Running the above (a release run is highly recommended) will generate a `vcd` file (which is
 /// a trace file for FPGAs and hardware in general).  You can open this using e.g., `gtkwave`.
@@ -63,6 +68,28 @@ use embed_doc_image::embed_doc_image;
 ///
 /// ![Pulse detail][pulse_detail]
 ///
-#[embed_doc_image("full_sim_time", "images/blinky_all.png")]
-#[embed_doc_image("pulse_detail", "images/blinky_pulse.png")]
+#[embed_doc_image("full_sim_time", "images/blinky_all.svg")]
+#[embed_doc_image("pulse_detail", "images/blinky_pulse.svg")]
 pub struct BlinkyExample;
+pub mod vcd2svg;
+
+#[ignore]
+#[test]
+fn test_blink_example_1() {
+    vcd_to_svg(
+        "/tmp/blinky.vcd",
+        "tmp.blinky.svg",
+        &["uut.clock", "uut.led"],
+        0,
+        4_000_000_000_000,
+    )
+    .unwrap();
+    vcd_to_svg(
+        "/tmp/blinky.vcd",
+        "images/blinky_pulse.svg",
+        &["uut.clock", "uut.led"],
+        900_000_000_000,
+        1_500_000_000_000,
+    )
+    .unwrap();
+}

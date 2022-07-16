@@ -1,5 +1,4 @@
 use crate::core::prelude::*;
-use crate::core::timing::TimingInfo;
 use crate::widgets::dff::DFF;
 use std::ops::BitXor;
 

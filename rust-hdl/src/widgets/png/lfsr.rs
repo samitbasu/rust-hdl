@@ -1,6 +1,5 @@
 use crate::core::prelude::*;
 use crate::dff_setup;
-use crate::widgets::dff::DFF;
 use crate::widgets::prelude::DFFWithInit;
 
 // Adopted from Alchitry.com Lucid module `pn_gen`
