@@ -52,12 +52,38 @@ fn test_clog2_is_correct() {
     assert_eq!(clog2(1024), 10);
 }
 
+/// The [Bits] type is used to capture values with arbitrarily large (but known) bit length
+///
+/// One significant difference between hardware design and software programming is the need
+/// (and indeed ability) to easily manipulate collections of bits that are of various lengths.
+/// While Rust has built in types to represent 8, 16, 32, 64, and 128 bits (at the time of this
+/// writing, anyway), it is difficult to represent a 5 bit type.  Or a 256 bit type.  Or indeed
+/// any bit length that differs from one of the supported values.
+///
+/// In hardware design, the bit size is nearly always unusual, as bits occupy physical space,
+/// and as a result, as a logic designer, you will intentionally use the smallest number of
+/// bits needed to capture a value.  For example, if you are reading a single nibble at a
+/// time from a bus, this is clearly a 4 bit value, and storing it in a `u8` is a waste of
+/// space and resources.
+///
+/// To model this behavior in RustHDL, we have the [Bits] type, which attempts to be as close
+/// as possible to a hardware bit vector.  The size must be known at compile time, and there is
+/// some internal optimization for short bitvectors being represented efficiently, but ideally
+/// you should be able to think of it as a bit of arbitrary length.  Note that the [Bits]
+/// type is `Copy`, which is quite important.  This means in your RustHDL code, you can freely
+/// copy and assign bitvectors without worrying about the borrow checker or trying to call
+/// `clone` in the midst of your HDL.
+///
+/// For the most part, the [Bits] type is meant to act like a `u32` or `u128` type as far
+/// as your code is concerned.  But the emulation of built-in types is not perfect, and
+/// you may struggle with them a bit.
 #[derive(Clone, Debug, Copy)]
 pub enum Bits<const N: usize> {
     Short(ShortBitVec<N>),
     Long(BitVec<N>),
 }
 
+/// Convert from a [BigUint] to a [Bits], taking only the lowest order N bits.
 impl<const N: usize> From<BigUint> for Bits<N> {
     fn from(x: BigUint) -> Self {
         assert!(x.bits() <= N as u64);

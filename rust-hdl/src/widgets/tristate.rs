@@ -17,7 +17,7 @@ use crate::core::prelude::*;
 /// # use rust_hdl::widgets::prelude::*;
 ///
 /// // An example of a simple tristate 8-bit bus
-/// #[derive(LogicBlock, Default)]
+/// #[derive(LogicInterface, Default)]
 /// struct EightBitBus {
 ///    bus: TristateBuffer<Bits<8>>,
 /// }

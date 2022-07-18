@@ -86,7 +86,7 @@ impl TraceCollection {
     }
 
     pub fn as_svg(&self, metrics: &DisplayMetrics) -> anyhow::Result<Document> {
-        let mut document = Document::new()
+        let document = Document::new()
             .set(
                 "viewBox",
                 (0, 0, metrics.canvas_width, metrics.canvas_height),
@@ -113,7 +113,7 @@ impl TraceCollection {
             } else if let Some(s) = self.string_valued.get(&details.0) {
                 document = metrics.vector_signal_plot(index, s, document);
             } else {
-                return anyhow::bail!("Unable to find signal {} in the trace...", details.1);
+                anyhow::bail!("Unable to find signal {} in the trace...", details.1)
             }
         }
         Ok(document)

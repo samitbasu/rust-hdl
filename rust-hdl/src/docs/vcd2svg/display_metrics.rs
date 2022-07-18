@@ -3,7 +3,6 @@ use crate::docs::vcd2svg::time_view::TimeView;
 use crate::docs::vcd2svg::timed_value::{changes, TimedValue};
 use crate::docs::vcd2svg::utils::{line, rect, time_label};
 use crate::docs::vcd2svg::vcd_style::VCDStyle;
-use regex::internal::Input;
 use svg::node::element::path::Data;
 use svg::node::element::{Path, Text, SVG};
 
@@ -268,7 +267,7 @@ impl DisplayMetrics {
         document
     }
 
-    pub(crate) fn horiz_grid_line(&self, index: usize, mut doc: SVG) -> SVG {
+    pub(crate) fn horiz_grid_line(&self, index: usize, doc: SVG) -> SVG {
         if self.style.grid_lines.is_none() {
             return doc;
         }

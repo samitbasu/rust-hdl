@@ -13,7 +13,6 @@ use petgraph::prelude::*;
 use petgraph::unionfind::UnionFind;
 use petgraph::visit::NodeIndexable;
 use std::collections::HashMap;
-use std::fmt::Write;
 
 #[derive(Clone, Debug, Copy, PartialEq)]
 pub enum SignalNodeKind {
