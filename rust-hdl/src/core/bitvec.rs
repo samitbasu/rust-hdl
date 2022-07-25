@@ -230,6 +230,11 @@ define_vec_from_uint!(u32);
 define_vec_from_uint!(u64);
 define_vec_from_uint!(u128);
 define_vec_from_uint!(usize);
+define_vec_from_uint!(i8);
+define_vec_from_uint!(i16);
+define_vec_from_uint!(i32);
+define_vec_from_uint!(i64);
+define_vec_from_uint!(i128);
 
 macro_rules! define_uint_from_vec {
     ($name:ident, $width: expr) => {
@@ -246,6 +251,30 @@ macro_rules! define_uint_from_vec {
     };
 }
 
+macro_rules! define_int_from_vec {
+    ($name: ident, $width: expr) => {
+        impl<const N: usize> From<BitVec<N>> for $name {
+            fn from(t: BitVec<N>) -> Self {
+                assert!(N <= $width);
+                let mut x: $name = 0;
+                if t.bits[N - 1] {
+                    for i in 0..N {
+                        x = x << 1;
+                        x = x | if t.bits[N - 1 - i] { 0 } else { 1 }
+                    }
+                    x = -x + 1
+                } else {
+                    for i in 0..N {
+                        x = x << 1;
+                        x = x | if t.bits[N - 1 - i] { 1 } else { 0 }
+                    }
+                }
+                x
+            }
+        }
+    };
+}
+
 define_uint_from_vec!(u8, 8);
 define_uint_from_vec!(u16, 16);
 define_uint_from_vec!(u32, 32);
@@ -255,6 +284,12 @@ define_uint_from_vec!(u128, 128);
 define_uint_from_vec!(usize, 64);
 #[cfg(target_pointer_width = "32")]
 define_uint_from_vec!(usize, 32);
+
+define_int_from_vec!(i8, 8);
+define_int_from_vec!(i16, 16);
+define_int_from_vec!(i32, 32);
+define_int_from_vec!(i64, 64);
+define_int_from_vec!(i128, 128);
 
 #[cfg(test)]
 mod tests {

@@ -171,7 +171,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                     }
                 }
                 SDRAMCommand::LoadModeRegister => {
-                    if self.auto_refresh_init_counter.q.val() < 2_u32.into() {
+                    if self.auto_refresh_init_counter.q.val() < 2 {
                         self.state.d.next = MasterState::Error;
                     } else {
                         self.counter.d.next = 0_usize.into();
@@ -198,11 +198,10 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                 if self.cmd.val() != SDRAMCommand::NOP {
                     self.state.d.next = MasterState::Error;
                 }
-                if self.burst_len.q.val() > 3_u32.into() {
+                if self.burst_len.q.val() > 3 {
                     self.state.d.next = MasterState::Error;
                 }
-                if (self.cas_latency.q.val() > 3_u32.into()) | (self.cas_latency.q.val() == 0_usize)
-                {
+                if (self.cas_latency.q.val() > 3) | (self.cas_latency.q.val() == 0) {
                     self.state.d.next = MasterState::Error;
                 }
                 if self.op_mode.q.val() != 0_u32 {

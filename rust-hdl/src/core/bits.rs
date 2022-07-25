@@ -77,13 +77,281 @@ fn test_clog2_is_correct() {
 /// For the most part, the [Bits] type is meant to act like a `u32` or `u128` type as far
 /// as your code is concerned.  But the emulation of built-in types is not perfect, and
 /// you may struggle with them a bit.
+///
+/// # Operations
+/// Only a subset of operations are defined for [Bits].  These are the operations that can
+/// be synthesized in hardware without surprises (generally speaking).  In Rust, you can
+/// operate between [Bits] types and other [Bits] of the _same width_, or you can
+/// use integer literals.  *Be careful!* Especially when manipulating signed quantities.
+///
+/// ## Addition
+/// You can perform wrapping addition using the `+` operator.
+/// Here are some simple examples of addition. First the version using a literal
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<200> = bits(0xDEAD_BEEE);
+/// let y: Bits<200> = x + 1;
+/// assert_eq!(y, bits(0xDEAD_BEEF));
+/// ```
+///
+/// And now a second example that uses two [Bits] values
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<40> = bits(0xDEAD_0000);
+/// let y: Bits<40> = bits(0x0000_CAFE);
+/// let z = x + y;
+/// assert_eq!(z, bits(0xDEAD_CAFE));
+/// ```
+///
+/// Note that the addition operator is _silently wrapping_.  In other words the carry
+/// bit is discarded silently (again - this is what hardware typically does).  So you
+/// may find this result surprising:
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<40> = bits(0xFF_FFFF_FFFF);
+/// let y = x + 1;
+/// assert_eq!(y, bits(0));
+/// ```
+///
+/// In this case, the addition of 1 caused [x] to wrap to all zeros.  This is totally normal,
+/// and what one would expect from hardware addition (without a carry).  If you _need_ the
+/// carry bit, then the solution is to first cast to 1 higher bit, and then add, or alternately,
+/// to compute the carry directly.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<40> = bits(0xFF_FFFF_FFFF);
+/// let y = bit_cast::<41, 40>(x) + 1;
+/// assert_eq!(y, bits(0x100_0000_0000));
+/// ```
+///
+/// The order of the arguments does not matter.  The bit width of the calculation will be
+/// determined by the [Bits] width.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x : Bits<25> = bits(0xCAFD);
+/// let y = 1 + x;
+/// assert_eq!(y, bits(0xCAFE));
+/// ```
+///
+/// However, you cannot combine two different width [Bits] values in a single expression.
+/// ```compile_fail
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<20> = bits(0x1234);
+/// let y: Bits<21> = bits(0x5123);
+/// let z = x + y; // Won't compile!
+/// ```
+///
+/// ## Subtraction
+/// Hardware subtraction is defined using 2-s complement representation for negative numbers.
+/// This is pretty much a universal standard for representing negative numbers in binary, and
+/// has the added advantage that a hardware subtractor can be built from an adder and some basic
+/// gates.  Subtraction operates much like the [Wrapping] class.  Note that overflow and underflow
+/// are _not_ detected in RustHDL (nor are they detected in most hardware implementations either).
+///
+/// Here is a simple example with a literal and subtraction that does not cause udnerflow
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<40> = bits(0xDEAD_BEF0);
+/// let y = x - 1;
+/// assert_eq!(y, bits(0xDEAD_BEEF));
+/// ```
+///
+/// When values underflow, the representation is still valid as a 2-s complement number.  For
+/// example,
+///
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(0x40);
+/// let y: Bits<16> = bits(0x60);
+/// let z = x - y;
+/// assert_eq!(z, bits(0xFFFF-0x20+1));
+/// ```
+///
+/// Here, we compare the value of `z` with `0xFFFF-0x20+1` which is the 2-s complement
+/// representation of `-0x20`.  You can work with signed integer values to make it slightly
+/// easier to perform the calculations.  In those cases, RustHDL will automatically sign extend
+/// the value to make it operate as expected:
+///
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(0x40);
+/// let y: Bits<16> = bits(0x60);
+/// let z = x - y;
+/// let i : i16 = z.into();
+/// assert_eq!(i, -0x20);
+/// ```
+///
+/// You can also put the literal on the left side of the subtraction expression, as expected.  The
+/// bitwidth of the computation will be driven by the width of the [Bits] in the expression.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x = bits::<32>(0xBABE);
+/// let z = 0xB_BABE - x;
+/// assert_eq!(z, bits(0xB_0000));
+/// ```
+///
+/// ## Bitwise And
+///
+/// You can combine [Bits] using the and operator `&`.  In general, avoid using the shortcut
+/// logical operator `&&`, since this operator is really only defined for logical (scalar) values
+/// of type `bool`.
+///
+/// ```
+/// # use  rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(0xDEAD_BEEF);
+/// let y: Bits<16> = bits(0xFFFF_0000);
+/// let z = x & y;
+/// assert_eq!(z, bits(0xDEAD_0000));
+/// ```
+///
+/// Of course, you can also use a literal value in the `and` operation.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(0xDEAD_BEEF);
+/// let z = x & 0x0000_FFFF;
+/// assert_eq!(z, bits(0xBEEF))
+/// ```
+///
+/// and similarly, the literal can appear on the left of the `and` expression.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(0xCAFE_BEEF);
+/// let z = 0xFFFF_0000 & x;
+/// assert_eq!(z, bits(0xCAFE_0000));
+/// ```
+///
+/// Just like all other binary operations, you cannot mix widths (unless one of the
+/// values is a literal).
+/// ```compile_fail
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(0xFEED_FACE);
+/// let y: Bits<17> = bits(0xABCE);
+/// let z = x & y; // Won't compile!
+/// ```
+///
+/// ## Bitwise Or
+///
+/// There is also a bitwise-OR operation using the `|` symbol.  Note that the logical OR
+/// (or shortcut OR) operator `||` is not supported for [Bits], as it is only defined for
+/// scalar boolean values.
+///
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x : Bits<16> = bits(0xBEEF_0000);
+/// let y : Bits<16> = bits(0x0000_CAFE);
+/// let z = x | y;
+/// assert_eq!(z, bits(0xBEEF_CAFE));
+/// ```
+///
+/// You can also use literals
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x : Bits<16> = bits(0xBEEF_0000);
+/// let z = x | 0x0000_CAFE;
+/// assert_eq!(z, bits(0xBEEF_CAFE));
+/// ```
+///
+/// The caveat about mixing [Bits] of different widths still applies.
+///
+/// ## Bitwise Xor
+///
+/// There is a bitwise-Xor operation using the `^` operator.  This will compute the
+/// bitwise exclusive OR of the two values.
+///
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x : Bits<16> = bits(0xCAFE_BABE);
+/// let y : Bits<16> = bits(0xFF00_00FF);
+/// let z = y ^ x;
+/// let w = z ^ y; // XOR applied twice is a null-op
+/// assert_eq!(w, x);
+/// ```
+///
+/// ## Bitwise comparison
+///
+/// The equality operator `==` can compare two [Bits] for bit-wise equality.
+///
+///```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(0x5ea1);
+/// let y: Bits<16> = bits(0xbadb);
+/// assert_eq!(x == y, false)
+///```
+///
+/// Again, it is a compile time failure to attempt to compare [Bits] of different
+/// widths.
+///
+///```compile_fail
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<15> = bits(52);
+/// let y: Bits<16> = bits(32);
+/// let z = x == y; // Won't compile - bit widths must match
+///```
+///
+/// You can compare to literals, as they will automatically extended (or truncated) to match the
+/// bitwidth of the [Bits] value.
+///
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x : Bits<16> = bits(32);
+/// let z = x == 32;
+/// let y = 32 == x;
+/// assert!(z);
+/// assert!(y);
+/// ```
+///
+/// ## Unsigned comparison
+///
+/// Currently, RustHDL only supports unsigned comparisons.  If you compare a [Bits] value
+/// to a signed integer, it will first convert the signed integer into 2s complement
+/// representation and then perform an unsigned comparison.  That is most likely _not_ what
+/// you want.  However, until there is full support for signed integer computations, that is
+/// the behavior you get.  Hardware signed comparisons require more circuitry and logic
+/// than unsigned comparisons, so the rationale is to not inadvertently bloat your hardware
+/// designs with sign-aware circuitry when you don't explicitly invoke it.
+///
+/// Here are some simple examples.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(52);
+/// let y: Bits<16> = bits(13);
+/// assert!(y < x)
+/// ```
+///
+/// We can also compare with literals, which RustHDL will expand out to match the bit width
+/// of the [Bits] being compared to.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(52);
+/// let y = x < 135;  // Converts the 135 to a Bits<16> and then compares
+/// assert!(y)
+/// ```
+///
+/// The signed-unsigned problem shows up in this case for example:
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(52);
+/// let y = x > -15;
+/// assert!(!y); // In unsigned comparisons, -15 > 52!
+/// ```
+/// This occurs because of the conversion of -15 to an unsigned 16 bit value prior to the
+/// comparison.
 #[derive(Clone, Debug, Copy)]
 pub enum Bits<const N: usize> {
+    #[doc(hidden)]
     Short(ShortBitVec<N>),
+    #[doc(hidden)]
     Long(BitVec<N>),
 }
 
 /// Convert from a [BigUint] to a [Bits], taking only the lowest order N bits.
+/// ```
+/// # use num_bigint::BigUint;
+/// # use rust_hdl::core::bits::Bits;
+/// let x = BigUint::parse_bytes(b"10111000101", 2).unwrap();
+/// let y : Bits<16> = x.into();
+/// println!("y = {:x}", y); // Prints y = 02c5
+/// ```
 impl<const N: usize> From<BigUint> for Bits<N> {
     fn from(x: BigUint) -> Self {
         assert!(x.bits() <= N as u64);
@@ -99,6 +367,21 @@ impl<const N: usize> From<BigUint> for Bits<N> {
     }
 }
 
+#[test]
+fn test_cast_from_biguint() {
+    let x = BigUint::parse_bytes(b"1011000101", 2).unwrap();
+    let y: Bits<16> = x.into();
+    let p = format!("y = {:x}", y);
+    assert_eq!(p, "y = 02c5");
+    println!("y = {:x}", y);
+}
+
+/// Allows you to format a [Bits] as a binary string
+/// ```
+/// # use rust_hdl::core::bits::Bits;
+/// let y = Bits::<16>::from(0b1011_0100_0010_0000);
+/// println!("y = {:b}", y); // Prints y = 1011010000100000
+/// ```
 impl<const N: usize> Binary for Bits<N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for i in 0..N {
@@ -112,6 +395,19 @@ impl<const N: usize> Binary for Bits<N> {
     }
 }
 
+#[test]
+fn test_print_as_binary() {
+    let x = Bits::<16>::from(0b_1011_0100_1000_0000_u16);
+    let p = format!("x = {:b}", x);
+    assert_eq!(p, "x = 1011010010000000")
+}
+
+/// Allows you to format a [Bits] as a lowercase hex string
+/// ```
+/// # use rust_hdl::core::bits::Bits;
+/// let y = Bits::<16>::from(0xcafe);
+/// println!("y = {:x}", y); // Prints y = cafe
+/// ```
 impl<const N: usize> LowerHex for Bits<N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let m: usize = N + (4 - (N % 4)) % 4; // Round up to an integer number of nibbles
@@ -125,6 +421,19 @@ impl<const N: usize> LowerHex for Bits<N> {
     }
 }
 
+#[test]
+fn test_print_as_lowercase_hex() {
+    let x = Bits::<16>::from(0xcafe_u16);
+    let p = format!("x = {:x}", x);
+    assert_eq!(p, "x = cafe");
+}
+
+/// Allows you to format a [Bits] as an uppercase hex string
+/// ```
+/// # use rust_hdl::core::bits::Bits;
+/// let y = Bits::<16>::from(0xcafe);
+/// println!("y = {:X}", y); // Prints y = CAFE
+/// ```
 impl<const N: usize> UpperHex for Bits<N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let m: usize = N + (4 - (N % 4)) % 4; // Round up to an integer number of nibbles
@@ -138,13 +447,69 @@ impl<const N: usize> UpperHex for Bits<N> {
     }
 }
 
+#[test]
+fn test_print_as_uppercase_hex() {
+    let x = Bits::<16>::from(0xcafe);
+    let p = format!("x = {:X}", x);
+    assert_eq!(p, "x = CAFE");
+}
+
 #[inline(always)]
+/// Convenience function to construct [Bits] from an unsigned literal
+/// Sometimes, you know you will be working with a value that is smaller than
+/// 128 bits (the current maximum sized built-in unsigned integer in Rust).
+/// In those cases, the [bits] function can make construction slightly
+/// simpler.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x : Bits<14> = bits(0xDEA);
+/// assert_eq!("0dea", format!("{:x}", x))
+/// ```
 pub fn bits<const N: usize>(x: u128) -> Bits<N> {
     let t: Bits<N> = x.into();
     t
 }
 
 #[inline(always)]
+/// Cast from one bit width to another with truncation or zero padding
+/// The [bit_cast] function allows you to convert from one bit width
+/// to another.  It handles the different widths in the following simplified
+/// manner:
+///    - if casting to a narrower bit width, the most significant bits are
+///      discarded until the new value fits into the specified bits
+///    - if casting to a wider bit width, the most significant bits are
+///      padded with zeros until the new value occupies the specified bits
+/// This may seem a bit counterintuitive, but it fits logical circuitry
+/// behavior.  Narrowing is usually done by preserving the least significant
+/// bits (so that the carry bits are discarded when adding, for example).
+/// Widening is also usually done (for unsigned values) by zero extending
+/// the most significant bits.  The [bit_cast] operation does both of
+/// these operations depending on the arguments.
+///
+/// First, an example of widening, in this case, an extra nibble is
+/// added to the most significant bits, and is set to zero.
+///```
+/// # use rust_hdl::core::prelude::*;
+/// let x : Bits<12> = bits(0xEAF);
+/// let y : Bits<16> = bit_cast(x); // M = 16, N = 12
+/// assert_eq!(y, bits::<16>(0x0EAF));
+///```
+///
+/// In the second example, we downcast, this time, discarding the most
+/// significant nibble.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x : Bits<16> = bits(0xDEAF);
+/// let y : Bits<12> = bit_cast(x); // M = 12, N = 16
+/// assert_eq!(y, bits::<12>(0xEAF));
+/// ```
+///
+/// Note that internally, you can [bit_cast] from an arbitrary bit length
+/// to another arbitrary bit length without losing information because of
+/// any internal Rust limit.
+///
+/// Note also that bit-casting does _not_ preserve signedness.  Generally,
+/// RustHDL follows hardware conventions that values are unsigned.
 pub fn bit_cast<const M: usize, const N: usize>(x: Bits<N>) -> Bits<M> {
     match x {
         Bits::Short(t) => {
@@ -163,6 +528,7 @@ pub fn bit_cast<const M: usize, const N: usize>(x: Bits<N>) -> Bits<M> {
     }
 }
 
+#[doc(hidden)]
 impl<const N: usize> Into<VCDValue> for Bits<N> {
     fn into(self) -> VCDValue {
         if N == 1 {
@@ -185,8 +551,42 @@ impl<const N: usize> Into<VCDValue> for Bits<N> {
     }
 }
 
+#[test]
+fn test_bits_from_int() {
+    let x: Bits<20> = 0x52345.into();
+    let i: i32 = x.into();
+    assert_eq!(i, 0x52345);
+}
+
+#[test]
+fn test_signed_bits_from_int() {
+    let x: Bits<20> = (-1_i32).into();
+    let i: i32 = x.into();
+    let u: u32 = x.into();
+    assert_eq!(u, 0xFFFFF);
+    assert_eq!(i, -1);
+}
+
+#[test]
+fn test_bits_from_int_via_bits() {
+    let x: Bits<23> = bits(23);
+    let u: u32 = x.into();
+    assert_eq!(u, 23);
+}
+
 impl<const N: usize> Bits<N> {
     #[inline(always)]
+    /// The [any] function returns true if any of the
+    /// individual bits are true, and false otherwise.
+    /// This reduction operation is equivalent to a logical
+    /// OR of all the bits in the vector.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<14> = bits(0xDEA);
+    /// assert_eq!(x.any(), true);
+    /// let y : Bits<14> = Bits::default();
+    /// assert_eq!(y.any(), false);
+    /// ```
     pub fn any(&self) -> bool {
         match self {
             Bits::Short(x) => x.any(),
@@ -195,6 +595,17 @@ impl<const N: usize> Bits<N> {
     }
 
     #[inline(always)]
+    /// The [all] function returns true if all of the individual
+    /// bits are true, and false otherwise.  This reduction
+    /// operation is equivalent to a logical AND of all the bits
+    /// in the vector.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<14> = bits(0xDEA);
+    /// assert_eq!(x.all(), false);
+    /// let y : Bits<14> = bits(0x3FFF);
+    /// assert_eq!(y.all(), true);
+    /// ```
     pub fn all(&self) -> bool {
         match self {
             Bits::Short(x) => x.all(),
@@ -203,6 +614,17 @@ impl<const N: usize> Bits<N> {
     }
 
     #[inline(always)]
+    /// The [xor] function computes the exclusive OR of all
+    /// the bits in the vector.  This is equivalent to counting
+    /// the number of ones.  If the number is odd, the XOR will
+    /// be true.  If even, it will be false.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x: Bits<12> = bits(0b1100_0100_1100);
+    /// assert_eq!(x.xor(), true);
+    /// let y: Bits<12> = bits(0b1100_0110_1100);
+    /// assert_eq!(y.xor(), false);
+    /// ```
     pub fn xor(&self) -> bool {
         match self {
             Bits::Short(x) => x.xor(),
@@ -210,6 +632,20 @@ impl<const N: usize> Bits<N> {
         }
     }
 
+    /// The [index] function is used when a [Bits] is going
+    /// to be used to index into an array or some other bit vector.
+    /// This is typically a very specialized hardware operation,
+    /// so there are limited cases in which it can be used.  Also,
+    /// there is an assumption that the [Bits] being used as
+    /// an index is sufficiently small to fit in a natural word (assume 32 bits, here
+    /// for safety).  In practice, that means, that if you are
+    /// indexing into a register using some other register/value,
+    /// the _length_ of the register is limited to a few billion bits.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x: Bits<12> = bits(0b1100_0100_1100);
+    /// assert_eq!(x.index(), 0b1100_0100_1100_usize);
+    /// ```
     pub fn index(&self) -> usize {
         match self {
             Bits::Short(x) => x.short() as usize,
@@ -218,16 +654,44 @@ impl<const N: usize> Bits<N> {
     }
 
     #[inline(always)]
+    /// Return the number of bits in the current [Bits].
+    /// Because this is determined at compile time, it is
+    /// of limited use as a runtime function, but is there
+    /// nonetheless.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<14> = Bits::default();
+    /// assert_eq!(x.len(), 14);
+    /// ```
     pub fn len(&self) -> usize {
         N
     }
 
-    // Warning!! this can overflow
+    /// Compute the number of possible values that a [Bits]
+    /// can take.  This is basically 2 raised to the Nth
+    /// power.  Because the result is returned as a [usize],
+    /// you must be careful, since this can easily overflow.
+    /// A [Bits<256>] for example, cannot represent [count]
+    /// on a normal 64 bit machine.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// assert_eq!(Bits::<16>::count(), 1 << 16);
+    /// ```
     pub fn count() -> usize {
         1 << N
     }
 
     #[inline(always)]
+    /// Extract the [index] bit from the given [Bits]. This will
+    /// cause a runtime panic if the [index] bit is out of range
+    /// of the width of the bitvector.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<14> = bits(0b10110);
+    /// assert_eq!(x.get_bit(0), false);
+    /// assert_eq!(x.get_bit(1), true);
+    /// assert_eq!(x.get_bit(2), true); // You get the idea
+    /// ```
     pub fn get_bit(&self, index: usize) -> bool {
         assert!(index < N);
         match self {
@@ -236,6 +700,17 @@ impl<const N: usize> Bits<N> {
         }
     }
 
+    /// Replace the given bit of a [Bits] with a new bit value.
+    /// This method leaves the original value alone, and returns
+    /// a new [Bits] with all bits except the designated one left
+    /// alone.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x: Bits<16> = bits(0b1100_0000);
+    /// let x = x.replace_bit(0, true);
+    /// let x = x.replace_bit(7, false);
+    /// assert_eq!(x, bits(0b0100_0001));
+    /// ```
     pub fn replace_bit(&self, index: usize, val: bool) -> Self {
         assert!(index < N);
         match self {
@@ -245,12 +720,30 @@ impl<const N: usize> Bits<N> {
     }
 
     #[inline(always)]
+    /// Return a subset of bits from a [Bits] value, with a given offset.
+    /// To preserve the feasibility of representing this in hardware, the width
+    /// of the result must be fixed (the argument [M]), and only the offset
+    /// can be computed.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x: Bits<40> = bits(0xDEAD_BEEF_CA);
+    /// let y = x.get_bits::<32>(8);
+    /// assert_eq!(y, bits(0xDEAD_BEEF))
+    /// ```
     pub fn get_bits<const M: usize>(&self, index: usize) -> Bits<M> {
         assert!(index <= N);
         bit_cast::<M, N>(*self >> index)
     }
 
     #[inline(always)]
+    /// Set a group of bits in a value.  This operation modifies the
+    /// value in place.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let mut x: Bits<40> = bits(0xDEAD_BEEF_CA);
+    /// x.set_bits::<16>(8, bits(0xCAFE));
+    /// assert_eq!(x, bits(0xDEAD_CAFE_CA));
+    /// ```
     pub fn set_bits<const M: usize>(&mut self, index: usize, rhs: Bits<M>) {
         assert!(index <= N);
         assert!(index + M <= N);
@@ -261,6 +754,12 @@ impl<const N: usize> Bits<N> {
     }
 
     #[inline(always)]
+    /// Returns a [Bits] value that contains [N] ones.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x = Bits::<40>::mask();
+    /// assert_eq!(x, bits(0xFF_FFFF_FFFF));
+    /// ```
     pub fn mask() -> Bits<N> {
         if N <= SHORT_BITS {
             Bits::Short(ShortBitVec::<N>::mask())
@@ -269,6 +768,13 @@ impl<const N: usize> Bits<N> {
         }
     }
 
+    /// Returns the width in bits of the [BitVec].
+    /// Note that this is the number of bits allocated.
+    /// It does not depend on the value at all.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// assert_eq!(Bits::<40>::width(), 40);
+    /// ```
     pub const fn width() -> usize {
         N
     }
@@ -276,6 +782,13 @@ impl<const N: usize> Bits<N> {
 
 impl From<bool> for Bits<1> {
     #[inline(always)]
+    /// Convenience method that allows you to convert
+    /// a boolean into a single bit-width [Bits].
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<1> = true.into();
+    /// assert_eq!(x, bits(1))
+    /// ```
     fn from(x: bool) -> Self {
         if x {
             1_usize.into()
@@ -287,6 +800,14 @@ impl From<bool> for Bits<1> {
 
 impl Into<bool> for Bits<1> {
     #[inline(always)]
+    /// Convenience method for converting a 1-bit
+    /// width [Bits] value into a boolean value.
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<1> = bits(1);
+    /// let y : bool = x.into();
+    /// assert!(y)
+    /// ```
     fn into(self) -> bool {
         let p: usize = self.into();
         if p == 0 {
@@ -299,12 +820,14 @@ impl Into<bool> for Bits<1> {
 
 macro_rules! define_from_uint {
     ($name:ident, $width:expr) => {
+        #[doc(hidden)]
         impl<const N: usize> From<Wrapping<$name>> for Bits<N> {
             fn from(x: Wrapping<$name>) -> Self {
                 x.0.into()
             }
         }
 
+        #[doc(hidden)]
         impl<const N: usize> From<$name> for Bits<N> {
             #[inline(always)]
             fn from(x: $name) -> Self {
@@ -317,6 +840,47 @@ macro_rules! define_from_uint {
             }
         }
 
+        #[doc(hidden)]
+        impl<const N: usize> From<Bits<N>> for $name {
+            #[inline(always)]
+            #[doc(hidden)]
+            fn from(x: Bits<N>) -> Self {
+                assert!(N <= $width);
+                match x {
+                    Bits::Short(t) => {
+                        let p: ShortType = t.into();
+                        p as $name
+                    }
+                    Bits::Long(t) => t.into(),
+                }
+            }
+        }
+    };
+}
+
+macro_rules! define_from_int {
+    ($name:ident, $width:expr) => {
+        #[doc(hidden)]
+        impl<const N: usize> From<Wrapping<$name>> for Bits<N> {
+            fn from(x: Wrapping<$name>) -> Self {
+                x.0.into()
+            }
+        }
+
+        #[doc(hidden)]
+        impl<const N: usize> From<$name> for Bits<N> {
+            #[inline(always)]
+            fn from(x: $name) -> Self {
+                if N > SHORT_BITS {
+                    let y: BitVec<N> = x.into();
+                    Bits::Long(y)
+                } else {
+                    Bits::Short((x as ShortType).into())
+                }
+            }
+        }
+
+        #[doc(hidden)]
         impl<const N: usize> From<Bits<N>> for $name {
             #[inline(always)]
             fn from(x: Bits<N>) -> Self {
@@ -324,7 +888,13 @@ macro_rules! define_from_uint {
                 match x {
                     Bits::Short(t) => {
                         let p: ShortType = t.into();
-                        p as $name
+                        if (p & (1 << (N - 1)) != 0) && (N < SHORT_BITS) {
+                            // The top bit is set, which means as a signed
+                            // integer, this value should be considered neg
+                            -((p ^ ((1 << N) - 1)) as $name) - 1
+                        } else {
+                            p as $name
+                        }
                     }
                     Bits::Long(t) => t.into(),
                 }
@@ -344,7 +914,14 @@ define_from_uint!(usize, 64);
 #[cfg(target_pointer_width = "32")]
 define_from_uint!(usize, 32);
 
+define_from_int!(i8, 8);
+define_from_int!(i16, 16);
+define_from_int!(i32, 32);
+define_from_int!(i64, 64);
+define_from_int!(i128, 128);
+
 #[inline(always)]
+#[doc(hidden)]
 fn binop<Tshort, TLong, const N: usize>(
     a: Bits<N>,
     b: Bits<N>,
@@ -373,6 +950,7 @@ where
 
 macro_rules! op {
     ($func: ident, $method: ident, $op: tt) => {
+        #[doc(hidden)]
         impl<const N: usize> std::ops::$method<Bits<N>> for Bits<N> {
             type Output = Bits<N>;
 
@@ -382,6 +960,7 @@ macro_rules! op {
             }
         }
 
+        #[doc(hidden)]
         impl<const N: usize> std::ops::$method<usize> for Bits<N> {
             type Output = Bits<N>;
 
@@ -391,6 +970,47 @@ macro_rules! op {
             }
         }
 
+        #[doc(hidden)]
+        impl<const N: usize> std::ops::$method<u8> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: u8) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
+        #[doc(hidden)]
+        impl<const N: usize> std::ops::$method<i8> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: i8) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
+        #[doc(hidden)]
+        impl<const N: usize> std::ops::$method<u16> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: u16) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
+        #[doc(hidden)]
+        impl<const N: usize> std::ops::$method<i16> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: i16) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
+        #[doc(hidden)]
         impl<const N: usize> std::ops::$method<u32> for Bits<N> {
             type Output = Bits<N>;
 
@@ -400,6 +1020,17 @@ macro_rules! op {
             }
         }
 
+        #[doc(hidden)]
+        impl<const N: usize> std::ops::$method<i32> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: i32) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
+        #[doc(hidden)]
         impl<const N: usize> std::ops::$method<u64> for Bits<N> {
             type Output = Bits<N>;
 
@@ -409,6 +1040,38 @@ macro_rules! op {
             }
         }
 
+        #[doc(hidden)]
+        impl<const N: usize> std::ops::$method<i64> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: i64) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
+
+        #[doc(hidden)]
+        impl<const N: usize> std::ops::$method<u128> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: u128) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
+        #[doc(hidden)]
+        impl<const N: usize> std::ops::$method<i128> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: i128) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
+        #[doc(hidden)]
         impl<const N: usize> std::ops::$method<Bits<N>> for usize {
             type Output = Bits<N>;
 
@@ -428,12 +1091,26 @@ op!(bitxor, BitXor, ^);
 op!(shr, Shr, >>);
 op!(shl, Shl, <<);
 
-impl<const N: usize> std::default::Default for Bits<N> {
+/// Construct a default [Bits] - i.e., a zero bit vector of length N.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x : Bits<200> = Default::default();
+/// assert_eq!(x, bits(0));
+/// ```
+impl<const N: usize> Default for Bits<N> {
     fn default() -> Bits<N> {
         bits::<N>(0)
     }
 }
 
+/// Bitwise inversion of a [Bits] vector
+/// The `!` operator will invert each bit in a [Bits] vector.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x : Bits<16> = bits(0xAAAA);
+/// let y = !x;
+/// assert_eq!(y, bits(0x5555))
+/// ```
 impl<const N: usize> std::ops::Not for Bits<N> {
     type Output = Bits<N>;
 
@@ -445,14 +1122,46 @@ impl<const N: usize> std::ops::Not for Bits<N> {
     }
 }
 
-impl<const N: usize> std::cmp::Ord for Bits<N> {
+#[doc(hidden)]
+impl<const N: usize> Ord for Bits<N> {
     fn cmp(&self, other: &Bits<N>) -> Ordering {
         self.partial_cmp(other).unwrap()
     }
 }
 
-// TODO - add the usize variants to this
-impl<const N: usize> std::cmp::PartialOrd<Bits<N>> for Bits<N> {
+macro_rules! partial_cmp_with_base_type {
+    ($kind: ty) => {
+        #[doc(hidden)]
+        impl<const N: usize> std::cmp::PartialOrd<Bits<N>> for $kind {
+            fn partial_cmp(&self, other: &Bits<N>) -> Option<Ordering> {
+                let self_as_bits: Bits<N> = (*self).into();
+                self_as_bits.partial_cmp(other)
+            }
+        }
+        #[doc(hidden)]
+        impl<const N: usize> std::cmp::PartialOrd<$kind> for Bits<N> {
+            fn partial_cmp(&self, other: &$kind) -> Option<Ordering> {
+                let other_as_bits: Bits<N> = (*other).into();
+                self.partial_cmp(&other_as_bits)
+            }
+        }
+    };
+}
+
+partial_cmp_with_base_type!(u8);
+partial_cmp_with_base_type!(u16);
+partial_cmp_with_base_type!(u32);
+partial_cmp_with_base_type!(u64);
+partial_cmp_with_base_type!(u128);
+partial_cmp_with_base_type!(i8);
+partial_cmp_with_base_type!(i16);
+partial_cmp_with_base_type!(i32);
+partial_cmp_with_base_type!(i64);
+partial_cmp_with_base_type!(i128);
+partial_cmp_with_base_type!(usize);
+
+#[doc(hidden)]
+impl<const N: usize> PartialOrd<Bits<N>> for Bits<N> {
     #[inline(always)]
     fn partial_cmp(&self, other: &Bits<N>) -> Option<Ordering> {
         match self {
@@ -468,8 +1177,8 @@ impl<const N: usize> std::cmp::PartialOrd<Bits<N>> for Bits<N> {
     }
 }
 
-// TODO - add the usize variants to this
-impl<const N: usize> std::cmp::PartialEq<Bits<N>> for Bits<N> {
+#[doc(hidden)]
+impl<const N: usize> PartialEq<Bits<N>> for Bits<N> {
     #[inline(always)]
     fn eq(&self, other: &Bits<N>) -> bool {
         match self {
@@ -485,8 +1194,9 @@ impl<const N: usize> std::cmp::PartialEq<Bits<N>> for Bits<N> {
     }
 }
 
-macro_rules! partial_eq_with_uint {
+macro_rules! partial_eq_with_base_type {
     ($kind: ty) => {
+        #[doc(hidden)]
         impl<const N: usize> std::cmp::PartialEq<$kind> for Bits<N> {
             #[inline(always)]
             fn eq(&self, other: &$kind) -> bool {
@@ -494,25 +1204,48 @@ macro_rules! partial_eq_with_uint {
                 self.eq(&other_as_bits)
             }
         }
+        #[doc(hidden)]
+        impl<const N: usize> std::cmp::PartialEq<Bits<N>> for $kind {
+            #[inline(always)]
+            fn eq(&self, other: &Bits<N>) -> bool {
+                let self_as_bits: Bits<N> = (*self).into();
+                self_as_bits.eq(other)
+            }
+        }
     };
 }
 
-partial_eq_with_uint!(u8);
-partial_eq_with_uint!(u16);
-partial_eq_with_uint!(u32);
-partial_eq_with_uint!(u64);
-partial_eq_with_uint!(u128);
-partial_eq_with_uint!(usize);
+partial_eq_with_base_type!(u8);
+partial_eq_with_base_type!(u16);
+partial_eq_with_base_type!(u32);
+partial_eq_with_base_type!(u64);
+partial_eq_with_base_type!(u128);
+partial_eq_with_base_type!(i8);
+partial_eq_with_base_type!(i16);
+partial_eq_with_base_type!(i32);
+partial_eq_with_base_type!(i64);
+partial_eq_with_base_type!(i128);
+partial_eq_with_base_type!(usize);
 
-impl std::cmp::PartialEq<bool> for Bits<1> {
+#[doc(hidden)]
+impl PartialEq<bool> for Bits<1> {
     #[inline(always)]
     fn eq(&self, other: &bool) -> bool {
         self.get_bit(0) == *other
     }
 }
 
-impl<const N: usize> std::cmp::Eq for Bits<N> {}
+#[doc(hidden)]
+impl PartialEq<Bits<1>> for bool {
+    fn eq(&self, other: &Bits<1>) -> bool {
+        *self == other.get_bit(0)
+    }
+}
 
+#[doc(hidden)]
+impl<const N: usize> Eq for Bits<N> {}
+
+#[doc(hidden)]
 impl<const N: usize> std::hash::Hash for Bits<N> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
@@ -522,6 +1255,7 @@ impl<const N: usize> std::hash::Hash for Bits<N> {
     }
 }
 
+#[doc(hidden)]
 impl<const N: usize> std::ops::Add<bool> for Bits<N> {
     type Output = Bits<N>;
 
@@ -539,6 +1273,12 @@ mod tests {
     use std::num::Wrapping;
 
     use super::{bit_cast, bits, clog2, Bits};
+
+    #[test]
+    fn test_get_bits_section() {
+        let x: Bits<40> = bits(0xDAD_BEEF_CA);
+        let y = x.get_bits::<32>(8);
+    }
 
     #[test]
     fn test_short_from_u8() {

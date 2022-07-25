@@ -52,6 +52,7 @@
 //!
 
 #![warn(missing_docs)]
+
 pub mod bsp;
 pub mod core;
 pub mod device;
