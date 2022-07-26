@@ -63,7 +63,7 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Logic for FIFOReduce
         if self.reverse.val() ^ self.loaded.q.val() {
             self.data_to_write.next = self.data_in.val().get_bits::<DN>(self.offset.val().into());
         } else {
-            self.data_to_write.next = self.data_in.val().get_bits::<DN>(0_usize.into());
+            self.data_to_write.next = self.data_in.val().get_bits::<DN>(0);
         }
         // The input to the output fifo is always data_to_write (although it may not be valid)
         self.data_out.next = self.data_to_write.val();

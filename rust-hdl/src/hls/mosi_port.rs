@@ -37,7 +37,7 @@ impl<const D: usize> Logic for MOSIPort<D> {
             }
             self.strobe.d.next = self.bus.strobe.val() & self.ready.val();
         }
-        self.bus.to_controller.next = 0_usize.into();
+        self.bus.to_controller.next = 0.into();
     }
 }
 

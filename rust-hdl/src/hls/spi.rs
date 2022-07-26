@@ -185,7 +185,7 @@ impl<const D: usize, const A: usize, const N: usize> Logic for HLSSPIMuxSlaves<D
     fn update(&mut self) {
         SoCBusResponder::<D, A>::link(&mut self.upstream, &mut self.bridge.upstream);
         SoCPortController::<D>::join(&mut self.bridge.nodes[0], &mut self.select.bus);
-        for i in 0_usize..N {
+        for i in 0..N {
             SPIWiresMaster::link(&mut self.to_slaves[i], &mut self.mux.to_slaves[i]);
         }
         self.mux.sel.next = self.select.port_out.val();
@@ -236,7 +236,7 @@ impl<const D: usize, const A: usize, const N: usize> Logic for HLSSPIMuxMasters<
     fn update(&mut self) {
         SoCBusResponder::<D, A>::link(&mut self.upstream, &mut self.bridge.upstream);
         SoCPortController::<D>::join(&mut self.bridge.nodes[0], &mut self.select.bus);
-        for i in 0_usize..N {
+        for i in 0..N {
             SPIWiresSlave::link(&mut self.from_masters[i], &mut self.mux.from_masters[i]);
         }
         self.mux.sel.next = self.select.port_out.val();

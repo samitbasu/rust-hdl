@@ -302,13 +302,14 @@ fn test_clog2_is_correct() {
 ///
 /// ## Unsigned comparison
 ///
-/// Currently, RustHDL only supports unsigned comparisons.  If you compare a [Bits] value
+/// The [Bits] type only supports unsigned comparisons.  If you compare a [Bits] value
 /// to a signed integer, it will first convert the signed integer into 2s complement
 /// representation and then perform an unsigned comparison.  That is most likely _not_ what
 /// you want.  However, until there is full support for signed integer computations, that is
 /// the behavior you get.  Hardware signed comparisons require more circuitry and logic
 /// than unsigned comparisons, so the rationale is to not inadvertently bloat your hardware
-/// designs with sign-aware circuitry when you don't explicitly invoke it.
+/// designs with sign-aware circuitry when you don't explicitly invoke it.  If you want signed
+/// values, use [Signed].
 ///
 /// Here are some simple examples.
 /// ```
@@ -336,6 +337,32 @@ fn test_clog2_is_correct() {
 /// ```
 /// This occurs because of the conversion of -15 to an unsigned 16 bit value prior to the
 /// comparison.
+///
+/// ## Shift Left
+///
+/// RustHDl supports left shift bit operations using the `<<` operator.
+/// Bits that shift off the left end of
+/// the bit vector (most significant bits).
+///
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(0xDEAD);
+/// let y = x << 8;
+/// assert_eq!(y, bits(0xAD00));
+/// ```
+///
+/// ## Shift Right
+///
+/// Right shifting is also supported using the `>>` operator.
+/// Bits that shift off the right end of the
+/// the bit vector (least significant bits).
+///
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = bits(0xDEAD);
+/// let y = x >> 8;
+/// assert_eq!(y, bits(0x00DE));
+/// ```
 #[derive(Clone, Debug, Copy)]
 pub enum Bits<const N: usize> {
     #[doc(hidden)]
@@ -791,9 +818,9 @@ impl From<bool> for Bits<1> {
     /// ```
     fn from(x: bool) -> Self {
         if x {
-            1_usize.into()
+            1.into()
         } else {
-            0_usize.into()
+            0.into()
         }
     }
 }
@@ -809,12 +836,7 @@ impl Into<bool> for Bits<1> {
     /// assert!(y)
     /// ```
     fn into(self) -> bool {
-        let p: usize = self.into();
-        if p == 0 {
-            false
-        } else {
-            true
-        }
+        self.get_bit(0)
     }
 }
 
@@ -1158,7 +1180,6 @@ partial_cmp_with_base_type!(i16);
 partial_cmp_with_base_type!(i32);
 partial_cmp_with_base_type!(i64);
 partial_cmp_with_base_type!(i128);
-partial_cmp_with_base_type!(usize);
 
 #[doc(hidden)]
 impl<const N: usize> PartialOrd<Bits<N>> for Bits<N> {
@@ -1493,8 +1514,8 @@ mod tests {
     #[test]
     fn test_constants_and_bits() {
         let a = bits::<16>(0xdead);
-        let b = a + 1_u32;
-        let c = 1_usize + a;
+        let b = a + 1;
+        let c = 1 + a;
         println!("{:x}", b);
         assert_eq!(b, bits::<16>(0xdeae));
         assert_eq!(b, c);

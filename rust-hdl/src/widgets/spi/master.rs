@@ -146,7 +146,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
                     self.register_out.d.next = self.data_outbound.val();
                     self.state.d.next = SPIState::Dwell; // Transition to the DWELL state
                     self.pointer.d.next = self.bits_outbound.val(); // set bit pointer to number of bit to send (1 based)
-                    self.register_in.d.next = 0_usize.into(); // Clear out the input store register
+                    self.register_in.d.next = 0.into(); // Clear out the input store register
                     self.msel_flop.d.next = !self.cs_off.val(); // Activate the chip select
                     self.continued_save.d.next = self.continued_transaction.val();
                 } else {

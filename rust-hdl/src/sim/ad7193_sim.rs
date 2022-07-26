@@ -112,17 +112,17 @@ impl Logic for AD7193Simulator {
         dff_setup!(self, clock, state, reg_write_index, conversion_counter);
         // Set default values
         self.spi_slave.start_send.next = false;
-        self.cmd.next = self.spi_slave.data_inbound.val().get_bits::<8>(0_usize);
-        self.reg_index.next = self.cmd.val().get_bits::<3>(3_usize);
-        self.rw_flag.next = self.cmd.val().get_bit(6_usize);
+        self.cmd.next = self.spi_slave.data_inbound.val().get_bits::<8>(0);
+        self.reg_index.next = self.cmd.val().get_bits::<3>(3);
+        self.rw_flag.next = self.cmd.val().get_bit(6);
         self.reg_width_rom.address.next = self.reg_index.val();
         self.reg_ram.read_address.next = self.reg_index.val();
         self.reg_ram.write_address.next = self.reg_index.val();
         self.spi_slave.continued_transaction.next = false;
-        self.spi_slave.bits.next = 0_u16.into();
-        self.spi_slave.data_outbound.next = 0_u64.into();
+        self.spi_slave.bits.next = 0.into();
+        self.spi_slave.data_outbound.next = 0.into();
         self.reg_ram.write_enable.next = false;
-        self.reg_ram.write_data.next = 0_usize.into();
+        self.reg_ram.write_data.next = 0.into();
         self.spi_slave.disabled.next = false;
         self.oneshot.trigger.next = false;
         match self.state.q.val() {
@@ -133,8 +133,8 @@ impl Logic for AD7193Simulator {
             }
             AD7193State::Ready => {
                 self.spi_slave.continued_transaction.next = true;
-                self.spi_slave.bits.next = 8_u16.into();
-                self.spi_slave.data_outbound.next = 0xFF_u64.into();
+                self.spi_slave.bits.next = 8.into();
+                self.spi_slave.data_outbound.next = 0xFF.into();
                 self.spi_slave.start_send.next = true;
                 self.state.d.next = AD7193State::GettingCmd;
             }
@@ -150,18 +150,17 @@ impl Logic for AD7193Simulator {
             }
             AD7193State::ReadCmd => {
                 self.spi_slave.continued_transaction.next = true;
-                self.spi_slave.bits.next =
-                    bit_cast::<16, 5>(self.reg_width_rom.data.val()) + 8_usize;
+                self.spi_slave.bits.next = bit_cast::<16, 5>(self.reg_width_rom.data.val()) + 8;
                 self.spi_slave.data_outbound.next =
-                    (bit_cast::<64, 24>(self.reg_ram.read_data.val()) << 8_usize)
-                        | Bits::<64>::from(0xBA_u64);
+                    (bit_cast::<64, 24>(self.reg_ram.read_data.val()) << 8)
+                        | Bits::<64>::from(0xBA);
                 self.spi_slave.start_send.next = true;
                 self.state.d.next = AD7193State::WaitSlaveIdle;
             }
             AD7193State::WriteCmd => {
                 self.spi_slave.continued_transaction.next = true;
                 self.spi_slave.bits.next = bit_cast::<16, 5>(self.reg_width_rom.data.val());
-                self.spi_slave.data_outbound.next = 0xFFFFFFFF_u64.into();
+                self.spi_slave.data_outbound.next = 0xFFFF_FFFF_u32.into();
                 self.spi_slave.start_send.next = true;
                 self.state.d.next = AD7193State::DoWrite;
             }
@@ -172,8 +171,8 @@ impl Logic for AD7193Simulator {
                     self.reg_ram.write_enable.next = true;
                     self.reg_ram.write_address.next = self.reg_write_index.q.val();
                     self.state.d.next = AD7193State::WaitSlaveIdle;
-                    if (self.reg_write_index.q.val() == Bits::<3>::from(1_u8))
-                        & self.spi_slave.data_inbound.val().get_bit(21_usize)
+                    if (self.reg_write_index.q.val() == Bits::<3>::from(1))
+                        & self.spi_slave.data_inbound.val().get_bit(21)
                     {
                         self.state.d.next = AD7193State::SingleConversion;
                         self.oneshot.trigger.next = true;
@@ -192,11 +191,11 @@ impl Logic for AD7193Simulator {
                 }
             }
             AD7193State::SingleConversionCommit => {
-                self.reg_ram.write_address.next = 3_usize.into();
+                self.reg_ram.write_address.next = 3.into();
                 self.reg_ram.write_data.next = self.conversion_counter.q.val();
                 self.reg_ram.write_enable.next = true;
-                self.conversion_counter.d.next = self.conversion_counter.q.val() + 0x100_usize;
-                self.spi_slave.data_outbound.next = 0_u64.into();
+                self.conversion_counter.d.next = self.conversion_counter.q.val() + 0x100;
+                self.spi_slave.data_outbound.next = 0.into();
                 self.state.d.next = AD7193State::Ready;
             }
             _ => {

@@ -116,10 +116,10 @@ fn test_check_timing() {
         fn update(&mut self) {
             dff_setup!(self, clock, counter);
             if self.enable.val() {
-                self.counter.d.next = self.counter.q.val() + 1_usize;
+                self.counter.d.next = self.counter.q.val() + 1;
             }
             if self.counter.q.val() > self.max_count.val() {
-                self.counter.d.next = 0_usize.into();
+                self.counter.d.next = 0.into();
             }
             self.red.next = false;
             self.green.next = false;

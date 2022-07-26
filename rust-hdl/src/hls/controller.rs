@@ -47,39 +47,39 @@ impl<const A: usize> Logic for BaseController<A> {
         self.opcode.next = self.from_cpu.data.val().get_bits::<8>(8);
         // Default values for output signals.
         self.from_cpu.read.next = false;
-        self.to_cpu.data.next = 0_usize.into();
+        self.to_cpu.data.next = 0.into();
         self.to_cpu.write.next = false;
         self.bus.clock.next = self.clock.val();
-        self.bus.from_controller.next = 0_usize.into();
+        self.bus.from_controller.next = 0.into();
         self.bus.strobe.next = false;
-        self.bus.address.next = 0_usize.into();
+        self.bus.address.next = 0.into();
         self.bus.address_strobe.next = false;
         match self.state.q.val() {
             BaseControllerState::Idle => {
                 if !self.from_cpu.empty.val() {
-                    if self.opcode.val() == 0_u16 {
+                    if self.opcode.val() == 0 {
                         // Skip opcodes that are NOOP
                         self.from_cpu.read.next = true;
-                    } else if self.opcode.val() == 1_u8 {
+                    } else if self.opcode.val() == 1 {
                         self.state.d.next = BaseControllerState::Ping;
-                    } else if self.opcode.val() == 2_u8 {
+                    } else if self.opcode.val() == 2 {
                         // Latch the address
                         self.bus.address.next = self.from_cpu.data.val().get_bits::<A>(0);
                         self.bus.address_strobe.next = true;
                         self.from_cpu.read.next = true;
                         self.state.d.next = BaseControllerState::ReadLoadCount;
-                    } else if self.opcode.val() == 3_u8 {
+                    } else if self.opcode.val() == 3 {
                         // Latch the address
                         self.bus.address.next = self.from_cpu.data.val().get_bits::<A>(0);
                         self.bus.address_strobe.next = true;
                         self.from_cpu.read.next = true;
                         self.state.d.next = BaseControllerState::WriteLoadCount;
-                    } else if self.opcode.val() == 4_u8 {
+                    } else if self.opcode.val() == 4 {
                         self.bus.address.next = self.from_cpu.data.val().get_bits::<A>(0);
                         self.bus.address_strobe.next = true;
                         self.from_cpu.read.next = true;
                         self.state.d.next = BaseControllerState::PollWait;
-                    } else if self.opcode.val() == 5_u8 {
+                    } else if self.opcode.val() == 5 {
                         self.bus.address.next = self.from_cpu.data.val().get_bits::<A>(0);
                         self.bus.address_strobe.next = true;
                         self.from_cpu.read.next = true;
@@ -105,8 +105,8 @@ impl<const A: usize> Logic for BaseController<A> {
                     self.to_cpu.data.next = self.bus.to_controller.val();
                     self.bus.strobe.next = true;
                     self.to_cpu.write.next = true;
-                    self.counter.d.next = self.counter.q.val() - 1_u32;
-                    if self.counter.q.val() == 1_usize {
+                    self.counter.d.next = self.counter.q.val() - 1;
+                    if self.counter.q.val() == 1 {
                         self.state.d.next = BaseControllerState::Idle;
                     }
                 }
@@ -123,8 +123,8 @@ impl<const A: usize> Logic for BaseController<A> {
                     self.bus.from_controller.next = self.from_cpu.data.val();
                     self.bus.strobe.next = true;
                     self.from_cpu.read.next = true;
-                    self.counter.d.next = self.counter.q.val() - 1_u32;
-                    if self.counter.q.val() == 1_usize {
+                    self.counter.d.next = self.counter.q.val() - 1;
+                    if self.counter.q.val() == 1 {
                         self.state.d.next = BaseControllerState::Idle;
                     }
                 }

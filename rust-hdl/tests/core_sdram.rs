@@ -88,9 +88,9 @@ macro_rules! sdram_basic_write {
         $uut.$cntrl.cmd_strobe.next = true;
         wait_clock_cycle!($sim, clock, $uut);
         $uut.$cntrl.cmd_strobe.next = false;
-        $uut.$cntrl.cmd_address.next = 0_usize.into();
+        $uut.$cntrl.cmd_address.next = 0.into();
         $uut.$cntrl.write_not_read.next = false;
-        $uut.$cntrl.data_in.next = 0_usize.into();
+        $uut.$cntrl.data_in.next = 0.into();
     };
 }
 
@@ -103,7 +103,7 @@ macro_rules! sdram_basic_read {
         $uut.$cntrl.cmd_strobe.next = true;
         wait_clock_cycle!($sim, clock, $uut);
         $uut.$cntrl.cmd_strobe.next = false;
-        $uut.$cntrl.cmd_address.next = 0_usize.into();
+        $uut.$cntrl.cmd_address.next = 0.into();
         $uut = $sim.watch(|x| x.$cntrl.data_valid.val(), $uut)?;
         $uut.$cntrl.data_out.val()
     }};

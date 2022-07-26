@@ -63,13 +63,13 @@ impl Logic for I2CTestTarget {
         dff_setup!(self, clock, ptr, outgoing, save, state, active);
         // Latch prevention
         // Wire up the RAM
-        self.mem.write_data.next = bit_cast::<16, 8>(self.save.q.val()) << 8_usize
-            | bit_cast::<16, 8>(self.phy.from_bus.val());
+        self.mem.write_data.next =
+            bit_cast::<16, 8>(self.save.q.val()) << 8 | bit_cast::<16, 8>(self.phy.from_bus.val());
         self.mem.write_enable.next = false;
         self.mem.write_address.next = self.ptr.q.val();
         self.mem.read_address.next = self.ptr.q.val();
         self.phy.active.next = self.active.q.val();
-        self.phy.to_bus.next = 0_usize.into();
+        self.phy.to_bus.next = 0.into();
         self.phy.write_enable.next = false;
         // Default controls
         match self.state.q.val() {
@@ -78,7 +78,7 @@ impl Logic for I2CTestTarget {
                     // Check if the address matches
                     if self.phy.from_bus.val().get_bits::<7>(1) == self.address.val() {
                         self.active.d.next = true;
-                        if !self.phy.from_bus.val().get_bit(0_usize) {
+                        if !self.phy.from_bus.val().get_bit(0) {
                             self.state.d.next = State::GetPointer;
                         } else {
                             self.state.d.next = State::WriteMSB;
@@ -108,7 +108,7 @@ impl Logic for I2CTestTarget {
             }
             State::WriteMSB => {
                 if self.phy.write_ok.val() {
-                    self.phy.to_bus.next = self.mem.read_data.val().get_bits::<8>(8_usize);
+                    self.phy.to_bus.next = self.mem.read_data.val().get_bits::<8>(8);
                     self.phy.write_enable.next = true;
                     self.state.d.next = State::CheckMSBAck;
                 }
@@ -123,7 +123,7 @@ impl Logic for I2CTestTarget {
             }
             State::WriteLSB => {
                 if self.phy.write_ok.val() {
-                    self.phy.to_bus.next = self.mem.read_data.val().get_bits::<8>(0_usize);
+                    self.phy.to_bus.next = self.mem.read_data.val().get_bits::<8>(0);
                     self.phy.write_enable.next = true;
                     self.state.d.next = State::CheckLSBAck;
                 }

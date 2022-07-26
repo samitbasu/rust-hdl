@@ -49,7 +49,7 @@ impl Logic for SoCTestChip {
         SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.miso_port.bus);
         clock!(self, sys_clock, data_fifo);
         // Wire the MOSI port to the input of the data_fifo
-        self.data_fifo.data_in.next = self.mosi_port.port_out.val() << 1_usize;
+        self.data_fifo.data_in.next = self.mosi_port.port_out.val() << 1;
         self.data_fifo.write.next = self.mosi_port.strobe_out.val();
         self.mosi_port.ready.next = !self.data_fifo.full.val();
         // Wire the MISO port to the output of the data fifo

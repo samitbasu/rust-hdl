@@ -64,22 +64,22 @@ impl<T: Synth, const N: usize> Logic for LazyFIFOFeeder<T, N> {
             FIFOFeederState::Running => {
                 if !self.bus.full.val() {
                     self.bus.write.next = true;
-                    if self.index.q.val() == (self.data_len.val() - 1_usize) {
+                    if self.index.q.val() == (self.data_len.val() - 1) {
                         self.state.d.next = FIFOFeederState::Done;
                     } else if self.sleep_rom.data.val().any() {
                         self.state.d.next = FIFOFeederState::Sleeping;
                         self.sleep_counter.d.next = self.sleep_rom.data.val();
                     } else {
-                        self.index.d.next = self.index.q.val() + 1_u32;
+                        self.index.d.next = self.index.q.val() + 1;
                     }
                 }
             }
             FIFOFeederState::Sleeping => {
-                if self.sleep_counter.q.val() == 0_u32 {
+                if self.sleep_counter.q.val() == 0 {
                     self.state.d.next = FIFOFeederState::Running;
-                    self.index.d.next = self.index.q.val() + 1_u32;
+                    self.index.d.next = self.index.q.val() + 1;
                 } else {
-                    self.sleep_counter.d.next = self.sleep_counter.q.val() - 1_u32;
+                    self.sleep_counter.d.next = self.sleep_counter.q.val() - 1;
                 }
             }
             FIFOFeederState::Done => {
@@ -151,22 +151,22 @@ impl<T: Synth, const N: usize> Logic for LazyFIFOReader<T, N> {
                         self.mismatch.d.next = true;
                     }
                     self.bus.read.next = true;
-                    if self.index.q.val() == (self.data_len.val() - 1_usize) {
+                    if self.index.q.val() == (self.data_len.val() - 1) {
                         self.state.d.next = FIFOFeederState::Done;
                     } else if self.sleep_rom.data.val().any() {
                         self.state.d.next = FIFOFeederState::Sleeping;
                         self.sleep_counter.d.next = self.sleep_rom.data.val();
                     } else {
-                        self.index.d.next = self.index.q.val() + 1_u32;
+                        self.index.d.next = self.index.q.val() + 1;
                     }
                 }
             }
             FIFOFeederState::Sleeping => {
-                if self.sleep_counter.q.val() == 0_u32 {
+                if self.sleep_counter.q.val() == 0 {
                     self.state.d.next = FIFOFeederState::Running;
-                    self.index.d.next = self.index.q.val() + 1_u32;
+                    self.index.d.next = self.index.q.val() + 1;
                 } else {
-                    self.sleep_counter.d.next = self.sleep_counter.q.val() - 1_u32;
+                    self.sleep_counter.d.next = self.sleep_counter.q.val() - 1;
                 }
             }
             FIFOFeederState::Done => {

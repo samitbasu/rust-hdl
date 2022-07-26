@@ -60,7 +60,7 @@ impl<const DW: usize, const DN: usize> Logic for FIFOReducerN<DW, DN> {
                 self.data_store.d.next = self.data_store.q.val() << self.offset.val();
             }
             if self.load_count.q.val().any() {
-                self.load_count.d.next = self.load_count.q.val() - 1_u32;
+                self.load_count.d.next = self.load_count.q.val() - 1;
             }
         }
         // if we will consume, then the store input comes from the data store
@@ -101,7 +101,7 @@ impl<const DW: usize, const DN: usize> FIFOReducerN<DW, DN> {
             ratio: Constant::new((DW / DN - 1).into()),
             offset: Constant::new(DN.into()),
             select: if !msw_first {
-                Constant::new(0_u32.into())
+                Constant::new(0.into())
             } else {
                 Constant::new((DW - DN).into())
             },

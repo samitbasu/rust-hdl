@@ -188,11 +188,11 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
         );
         clock!(self, clock, read_valid);
         // Latch prevention
-        self.delay_counter.d.next = self.delay_counter.q.val() + 1_usize;
-        self.refresh_counter.d.next = self.refresh_counter.q.val() + 1_usize;
+        self.delay_counter.d.next = self.delay_counter.q.val() + 1;
+        self.refresh_counter.d.next = self.refresh_counter.q.val() + 1;
         self.cmd.next = SDRAMCommand::NOP;
-        self.sdram.address.next = 0_usize.into();
-        self.sdram.bank.next = 0_usize.into();
+        self.sdram.address.next = 0.into();
+        self.sdram.bank.next = 0.into();
         // Insert registers to decouple the DRAM bus from the external bus
         self.data_out.next = self.data_out_reg.q.val();
         self.data_out_reg.d.next = self.sdram.read_data.val();
@@ -204,7 +204,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
         self.read_valid.data_in.next = false;
         self.read_valid.delay.next = self.cas_delay.val();
         // Calculate the read and write addresses
-        self.addr_col.next = bit_cast::<13, C>(self.reg_address.q.val().get_bits::<C>(0_usize));
+        self.addr_col.next = bit_cast::<13, C>(self.reg_address.q.val().get_bits::<C>(0));
         self.addr_row.next = bit_cast::<13, R>(
             self.reg_address
                 .q
@@ -227,22 +227,22 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
                 if self.delay_counter.q.val() == self.boot_delay.val() {
                     self.state.d.next = State::Precharge1;
                     self.cmd.next = SDRAMCommand::Precharge;
-                    self.sdram.address.next = 0xFFF_usize.into();
-                    self.delay_counter.d.next = 0_usize.into();
+                    self.sdram.address.next = 0xFFF.into();
+                    self.delay_counter.d.next = 0.into();
                 }
             }
             State::Precharge1 => {
                 if self.delay_counter.q.val() == self.t_rp.val() {
                     self.state.d.next = State::AutoRefresh1;
                     self.cmd.next = SDRAMCommand::AutoRefresh;
-                    self.delay_counter.d.next = 0_usize.into();
+                    self.delay_counter.d.next = 0.into();
                 }
             }
             State::AutoRefresh1 => {
                 if self.delay_counter.q.val() == self.t_rfc.val() {
                     self.state.d.next = State::AutoRefresh2;
                     self.cmd.next = SDRAMCommand::AutoRefresh;
-                    self.delay_counter.d.next = 0_usize.into();
+                    self.delay_counter.d.next = 0.into();
                 }
             }
             State::AutoRefresh2 => {
@@ -250,22 +250,22 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
                     self.state.d.next = State::LoadModeRegister;
                     self.cmd.next = SDRAMCommand::LoadModeRegister;
                     self.sdram.address.next = self.mode_register.val();
-                    self.delay_counter.d.next = 0_usize.into();
+                    self.delay_counter.d.next = 0.into();
                 }
             }
             State::LoadModeRegister => {
-                if self.delay_counter.q.val() == 4_usize {
+                if self.delay_counter.q.val() == 4 {
                     self.state.d.next = State::Idle;
                 }
             }
             State::Idle => {
-                self.delay_counter.d.next = 0_usize.into();
-                self.transfer_counter.d.next = 0_usize.into();
+                self.delay_counter.d.next = 0.into();
+                self.transfer_counter.d.next = 0.into();
                 if self.refresh_needed.q.val() {
                     // Refresh takes the highest priority
                     self.cmd.next = SDRAMCommand::AutoRefresh;
                     self.state.d.next = State::Refresh;
-                    self.refresh_counter.d.next = 0_usize.into();
+                    self.refresh_counter.d.next = 0.into();
                     self.refresh_needed.d.next = false;
                 } else if self.read_pending.q.val() {
                     self.reg_address.d.next = self.reg_cmd_address.q.val();
@@ -298,14 +298,14 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
             State::ReadActivate => {
                 if self.delay_counter.q.val() == self.t_rcd.val() {
                     self.state.d.next = State::ReadCycle;
-                    self.transfer_counter.d.next = 0_usize.into();
+                    self.transfer_counter.d.next = 0.into();
                 }
             }
             State::WriteActivate => {
                 self.sdram.write_enable.next = true;
                 if self.delay_counter.q.val() == self.t_rcd.val() {
                     self.state.d.next = State::WritePrep;
-                    self.transfer_counter.d.next = 0_usize.into();
+                    self.transfer_counter.d.next = 0.into();
                     self.data_strobe_reg.d.next = true;
                 }
             }
@@ -320,13 +320,13 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
                     self.sdram.bank.next = self.addr_bank.val();
                     self.sdram.address.next = self.addr_col.val();
                     self.cmd.next = SDRAMCommand::Write;
-                    self.transfer_counter.d.next = self.transfer_counter.q.val() + 1_usize;
-                    self.reg_address.d.next = self.reg_address.q.val() + 1_usize;
+                    self.transfer_counter.d.next = self.transfer_counter.q.val() + 1;
+                    self.reg_address.d.next = self.reg_address.q.val() + 1;
                 } else {
-                    self.delay_counter.d.next = 0_usize.into();
+                    self.delay_counter.d.next = 0.into();
                     self.state.d.next = State::Recovery;
                 }
-                if self.transfer_counter.q.val() < self.max_transfer_size.val() - 2_usize {
+                if self.transfer_counter.q.val() < self.max_transfer_size.val() - 2 {
                     self.data_strobe_reg.d.next = true;
                 }
             }
@@ -334,8 +334,8 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
                 self.sdram.write_enable.next = true;
                 if self.delay_counter.q.val() == self.t_wr.val() {
                     self.cmd.next = SDRAMCommand::Precharge;
-                    self.sdram.address.next = 0xFFFF_u32.into();
-                    self.delay_counter.d.next = 0_usize.into();
+                    self.sdram.address.next = 0xFFFF.into();
+                    self.delay_counter.d.next = 0.into();
                     self.state.d.next = State::Precharge;
                 }
             }
@@ -349,11 +349,11 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
                     self.sdram.bank.next = self.addr_bank.val();
                     self.sdram.address.next = self.addr_col.val();
                     self.cmd.next = SDRAMCommand::Read;
-                    self.transfer_counter.d.next = self.transfer_counter.q.val() + 1_usize;
+                    self.transfer_counter.d.next = self.transfer_counter.q.val() + 1;
                     self.read_valid.data_in.next = true;
-                    self.reg_address.d.next = self.reg_address.q.val() + 1_usize;
+                    self.reg_address.d.next = self.reg_address.q.val() + 1;
                 } else {
-                    self.delay_counter.d.next = 0_usize.into();
+                    self.delay_counter.d.next = 0.into();
                     self.state.d.next = State::Recovery;
                 }
             }

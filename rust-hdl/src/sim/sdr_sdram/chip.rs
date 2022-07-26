@@ -75,13 +75,13 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
         self.test_error.next = false;
         self.test_ready.next = false;
         // Connect up the banks to the I/O buffer
-        self.sdram.read_data.next = 0_usize.into();
+        self.sdram.read_data.next = 0.into();
         for i in 0..4 {
             self.banks[i].clock.next = self.clock.val();
             if self.sdram.write_enable.val() {
                 self.banks[i].write_data.next = self.sdram.write_data.val();
             } else {
-                self.banks[i].write_data.next = 0_usize.into();
+                self.banks[i].write_data.next = 0.into();
             }
             if self.banks[i].read_valid.val() {
                 self.sdram.read_data.next = self.banks[i].read_data.val();
@@ -89,19 +89,19 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
             self.banks[i].address.next = self.sdram.address.val();
             self.banks[i].cmd.next = self.cmd.val();
             self.banks[i].write_burst.next = self.write_burst_mode.q.val();
-            self.banks[i].burst_len.next = 1_usize.into();
+            self.banks[i].burst_len.next = 1.into();
             match self.burst_len.q.val().index() {
-                0 => self.banks[i].burst_len.next = 1_usize.into(),
-                1 => self.banks[i].burst_len.next = 2_usize.into(),
-                2 => self.banks[i].burst_len.next = 4_usize.into(),
-                3 => self.banks[i].burst_len.next = 8_usize.into(),
+                0 => self.banks[i].burst_len.next = 1.into(),
+                1 => self.banks[i].burst_len.next = 2.into(),
+                2 => self.banks[i].burst_len.next = 4.into(),
+                3 => self.banks[i].burst_len.next = 8.into(),
                 _ => self.state.d.next = MasterState::Error,
             }
-            self.banks[i].cas_delay.next = 2_usize.into();
+            self.banks[i].cas_delay.next = 2.into();
             match self.cas_latency.q.val().index() {
-                0 => self.banks[i].cas_delay.next = 0_usize.into(),
-                2 => self.banks[i].cas_delay.next = 2_usize.into(),
-                3 => self.banks[i].cas_delay.next = 3_usize.into(),
+                0 => self.banks[i].cas_delay.next = 0.into(),
+                2 => self.banks[i].cas_delay.next = 2.into(),
+                3 => self.banks[i].cas_delay.next = 3.into(),
                 _ => self.state.d.next = MasterState::Error,
             }
             if self.sdram.bank.val().index() == i {
@@ -112,9 +112,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
             if self.cmd.val() == SDRAMCommand::AutoRefresh {
                 self.banks[i].select.next = true;
             }
-            if (self.cmd.val() == SDRAMCommand::Precharge)
-                & self.sdram.address.val().get_bit(10_usize)
-            {
+            if (self.cmd.val() == SDRAMCommand::Precharge) & self.sdram.address.val().get_bit(10) {
                 self.banks[i].select.next = true;
             }
         }
@@ -129,7 +127,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                     // Although the spec says you should not do this, it is unavoidable with
                     // the Lattice FPGA.
                 }
-                self.counter.d.next = self.counter.q.val() + 1_usize;
+                self.counter.d.next = self.counter.q.val() + 1;
                 if self.counter.q.val() == self.boot_delay.val() {
                     self.state.d.next = MasterState::WaitPrecharge;
                 }
@@ -139,7 +137,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                     SDRAMCommand::NOP => {}
                     SDRAMCommand::Precharge => {
                         // make sure the ALL bit is set
-                        if self.sdram.address.val().get_bit(10_usize) != true {
+                        if self.sdram.address.val().get_bit(10) != true {
                             self.state.d.next = MasterState::Error;
                         } else {
                             self.counter.d.next = 0_u32.into();
@@ -152,7 +150,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                 }
             }
             MasterState::Precharge => {
-                self.counter.d.next = self.counter.q.val() + 1_usize;
+                self.counter.d.next = self.counter.q.val() + 1;
                 if self.counter.q.val() == self.t_rp.val() {
                     self.state.d.next = MasterState::WaitAutorefresh;
                 }
@@ -167,21 +165,21 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                         self.state.d.next = MasterState::Error;
                     } else {
                         self.auto_refresh_init_counter.d.next =
-                            self.auto_refresh_init_counter.q.val() + 1_usize;
+                            self.auto_refresh_init_counter.q.val() + 1;
                     }
                 }
                 SDRAMCommand::LoadModeRegister => {
                     if self.auto_refresh_init_counter.q.val() < 2 {
                         self.state.d.next = MasterState::Error;
                     } else {
-                        self.counter.d.next = 0_usize.into();
+                        self.counter.d.next = 0.into();
                         self.state.d.next = MasterState::LoadModeRegister;
-                        self.burst_len.d.next = self.sdram.address.val().get_bits::<3>(0_usize);
-                        self.burst_type.d.next = self.sdram.address.val().get_bit(3_usize);
-                        self.cas_latency.d.next = self.sdram.address.val().get_bits::<3>(4_usize);
-                        self.op_mode.d.next = self.sdram.address.val().get_bits::<2>(7_usize);
-                        self.write_burst_mode.d.next = self.sdram.address.val().get_bit(9_usize);
-                        if self.sdram.address.val().get_bits::<2>(10_usize) != 0_usize {
+                        self.burst_len.d.next = self.sdram.address.val().get_bits::<3>(0);
+                        self.burst_type.d.next = self.sdram.address.val().get_bit(3);
+                        self.cas_latency.d.next = self.sdram.address.val().get_bits::<3>(4);
+                        self.op_mode.d.next = self.sdram.address.val().get_bits::<2>(7);
+                        self.write_burst_mode.d.next = self.sdram.address.val().get_bit(9);
+                        if self.sdram.address.val().get_bits::<2>(10) != 0 {
                             self.state.d.next = MasterState::Error;
                         }
                     }
@@ -191,7 +189,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                 }
             },
             MasterState::LoadModeRegister => {
-                self.counter.d.next = self.counter.q.val() + 1_usize;
+                self.counter.d.next = self.counter.q.val() + 1;
                 if self.counter.q.val() == self.load_mode_timing.val() {
                     self.state.d.next = MasterState::Ready;
                 }
@@ -219,7 +217,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
             }
         }
         // Any banks that are in error mean the chip is in error.
-        for i in 0_usize..4 {
+        for i in 0..4 {
             if self.banks[i].error.val() {
                 self.state.d.next = MasterState::Error;
             }
@@ -423,7 +421,7 @@ macro_rules! sdram_boot {
         wait_clock_true!($sim, $clock, $uut);
         wait_clock_cycle!($sim, $clock, $uut);
         sdram_cmd!($uut, SDRAMCommand::Precharge);
-        $uut.sdram.address.next = 0xFFF_usize.into();
+        $uut.sdram.address.next = 0xFFF.into();
         wait_clock_cycle!($sim, $clock, $uut);
         sdram_cmd!($uut, SDRAMCommand::NOP);
         wait_clock_cycles!($sim, $clock, $uut, $timings.t_rp());

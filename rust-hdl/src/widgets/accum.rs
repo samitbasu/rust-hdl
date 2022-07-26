@@ -22,12 +22,12 @@ impl<const N: usize, const M: usize, const P: usize> Logic for Accum<N, M, P> {
         self.accum.d.next = self.accum.q.val();
         if self.strobe_in.val() {
             self.accum.d.next = self.accum.q.val() + bit_cast::<M, N>(self.data_in.val());
-            self.counter.d.next = self.counter.q.val() + 1_usize;
+            self.counter.d.next = self.counter.q.val() + 1;
         }
         if self.counter.q.val() == self.max_count.val() {
             self.strobe_out.next = true;
-            self.counter.d.next = 0_usize.into();
-            self.accum.d.next = 0_usize.into();
+            self.counter.d.next = 0.into();
+            self.accum.d.next = 0.into();
         }
     }
 }

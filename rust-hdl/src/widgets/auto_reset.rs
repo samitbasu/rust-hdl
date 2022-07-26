@@ -15,7 +15,7 @@ impl Logic for AutoReset {
         self.dff.d.next = self.dff.q.val();
         self.reset.next = false.into();
         if !self.dff.q.val().all() {
-            self.dff.d.next = self.dff.q.val() + 1_usize;
+            self.dff.d.next = self.dff.q.val() + 1;
             self.reset.next = true.into();
         }
     }

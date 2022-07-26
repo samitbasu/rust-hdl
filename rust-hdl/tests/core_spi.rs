@@ -50,7 +50,7 @@ fn test_spi_txn_completes() {
         wait_clock_cycles!(sim, clock, x, 4);
         wait_clock_true!(sim, clock, x);
         x.master.data_outbound.next = 0xDEADBEEF_u32.into();
-        x.master.bits_outbound.next = 32_usize.into();
+        x.master.bits_outbound.next = 32.into();
         x.master.start_send.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.master.start_send.next = false;
@@ -165,7 +165,7 @@ fn test_spi_xchange(config: SPIConfig, name: &str) {
         for _ in 0..4 {
             wait_clock_true!(sim, clock, x);
             x.master.data_outbound.next = 0xDEADBEEF_u32.into();
-            x.master.bits_outbound.next = 32_usize.into();
+            x.master.bits_outbound.next = 32.into();
             x.master.start_send.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.master.start_send.next = false;
@@ -181,7 +181,7 @@ fn test_spi_xchange(config: SPIConfig, name: &str) {
         for _ in 0..4 {
             wait_clock_true!(sim, clock, x);
             x.slave.data_outbound.next = 0xCAFEBABE_u32.into();
-            x.slave.bits.next = 32_usize.into();
+            x.slave.bits.next = 32.into();
             x.slave.start_send.next = true;
             wait_clock_cycle!(sim, clock, x);
             x = sim.watch(|x| x.slave.transfer_done.val().into(), x)?;

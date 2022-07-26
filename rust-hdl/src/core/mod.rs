@@ -1,6 +1,9 @@
 pub mod ast;
+#[doc(hidden)]
 pub mod atom;
+/// Module that supports arbitrary width bit vectors
 pub mod bits;
+#[doc(hidden)]
 pub mod bitvec;
 pub mod block;
 pub mod check_connected;
@@ -18,6 +21,7 @@ pub mod named_path;
 pub mod path_tools;
 pub mod prelude;
 pub mod probe;
+#[doc(hidden)]
 pub mod shortbitvec;
 pub mod signal;
 pub mod signed;

@@ -130,7 +130,7 @@ mod tests {
                     b_strobe: Strobe::new(10_000_000, 10.0),
                     clock: Signal::default(),
                     enable: Signal::default(),
-                    increment: Constant::new(32_usize.into()),
+                    increment: Constant::new(32.into()),
                     local: Signal::default(),
                 }
             }
@@ -278,7 +278,7 @@ mod tests {
             #[hdl_gen]
             fn update(&mut self) {
                 self.sum.next = bit_cast::<4, 1>(self.channel[0].val().into())
-                    | (bit_cast::<4, 1>(self.channel[1].val().into()) << 1_usize);
+                    | (bit_cast::<4, 1>(self.channel[1].val().into()) << 1);
             }
         }
 
@@ -306,10 +306,10 @@ fn test_local_logic() {
         #[hdl_gen]
         fn update(&mut self) {
             self.local.next = bit_cast::<3, 1>(self.signal.val().into());
-            self.local.next = self.local.val() + 1_usize;
-            self.is_odd.next = self.local.val().get_bit(0_usize);
-            self.local.next = self.local.val() + 1_usize;
-            self.is_even.next = self.local.val().get_bit(1_usize);
+            self.local.next = self.local.val() + 1;
+            self.is_odd.next = self.local.val().get_bit(0);
+            self.local.next = self.local.val() + 1;
+            self.is_even.next = self.local.val().get_bit(1);
         }
     }
 
@@ -323,16 +323,16 @@ fn test_local_logic() {
         let mut x = sim.init()?;
         x.signal.next = true;
         x = sim.wait(10, x)?;
-        sim_assert!(sim, x.local.val() == 3_usize, x);
+        sim_assert!(sim, x.local.val() == 3, x);
         x.signal.next = false;
         x = sim.wait(10, x)?;
-        sim_assert!(sim, x.local.val() == 2_usize, x);
+        sim_assert!(sim, x.local.val() == 2, x);
         x.signal.next = true;
         x = sim.wait(10, x)?;
-        sim_assert!(sim, x.local.val() == 3_usize, x);
+        sim_assert!(sim, x.local.val() == 3, x);
         x.signal.next = false;
         x = sim.wait(10, x)?;
-        sim_assert!(sim, x.local.val() == 2_usize, x);
+        sim_assert!(sim, x.local.val() == 2, x);
         sim.done(x)
     });
     sim.run_to_file(Box::new(uut), 100, &vcd_path!("even_odd_test.vcd"))
@@ -353,9 +353,9 @@ fn test_local_logic_loop_detection() {
         #[hdl_gen]
         fn update(&mut self) {
             self.foo.next = self.foo.val() + self.signal.val();
-            self.is_odd.next = self.foo.val().get_bit(0_usize);
-            self.foo.next = self.foo.val() + 1_usize;
-            self.is_even.next = self.foo.val().get_bit(1_usize);
+            self.is_odd.next = self.foo.val().get_bit(0);
+            self.foo.next = self.foo.val() + 1;
+            self.is_even.next = self.foo.val().get_bit(1);
         }
     }
 

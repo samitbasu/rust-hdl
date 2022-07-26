@@ -89,7 +89,7 @@ impl<const N: usize> std::ops::Neg for Signed<N> {
                 for ndx in 0..N {
                     val[ndx] = !x.get_bit(ndx);
                 }
-                Bits::Long(val.into()) + 1_usize
+                Bits::Long(val.into()) + 1
             }
         })
     }
@@ -256,7 +256,7 @@ mod tests {
     fn test_unsigned_cast() {
         let x = Signed::<16>::from(-23);
         let y: Bits<16> = unsigned_bit_cast(x);
-        assert_eq!(y, Bits::<16>::from(0xFFe9_usize))
+        assert_eq!(y, Bits::<16>::from(0xFFe9))
     }
 
     #[test]

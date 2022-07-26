@@ -121,26 +121,26 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
             State::Idle => {
                 self.cmd.ready.next = true;
                 if self.cmd.strobe_out.val() {
-                    self.error_count.d.next = 0_usize.into();
-                    self.dram_address.d.next = 0_usize.into();
+                    self.error_count.d.next = 0.into();
+                    self.dram_address.d.next = 0.into();
                     self.state.d.next = State::Writing;
-                    self.validation_count.d.next = 0_usize.into();
-                    self.write_count.d.next = 0_usize.into();
+                    self.validation_count.d.next = 0.into();
+                    self.write_count.d.next = 0.into();
                 }
             }
             State::Writing => {
                 if self.write_count.q.val() >= self.count.port_out.val() {
                     if !self.controller.busy.val() {
-                        self.dram_address.d.next = 0_usize.into();
+                        self.dram_address.d.next = 0.into();
                         self.state.d.next = State::Reading;
                         self.write_out.strobe_in.next = true;
                     }
                 } else if !self.controller.busy.val() & !self.entropy_funnel.empty.val() {
                     self.controller.write_not_read.next = true;
                     self.controller.cmd_strobe.next = true;
-                    self.dram_address.d.next = self.dram_address.q.val() + 4_usize;
+                    self.dram_address.d.next = self.dram_address.q.val() + 4;
                     self.entropy_funnel.read.next = true;
-                    self.write_count.d.next = self.write_count.q.val() + 4_usize;
+                    self.write_count.d.next = self.write_count.q.val() + 4;
                 }
             }
             State::Reading => {
@@ -153,7 +153,7 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
                 } else if !self.controller.busy.val() & !self.output_funnel.full.val() {
                     self.controller.write_not_read.next = false;
                     self.controller.cmd_strobe.next = true;
-                    self.dram_address.d.next = self.dram_address.q.val() + 4_usize;
+                    self.dram_address.d.next = self.dram_address.q.val() + 4;
                 }
             }
             _ => {
@@ -173,11 +173,11 @@ impl<const R: usize, const C: usize> Logic for SDRAMControllerTester<R, C> {
         self.lsfr_validate.strobe.next = false;
         if self.output_avail.q.val() {
             if self.output_pipeline.q.val() != self.lsfr_validate.num.val() {
-                self.error_count.d.next = self.error_count.q.val() + 2_usize;
+                self.error_count.d.next = self.error_count.q.val() + 2;
             }
             self.output_avail.d.next = false;
             self.lsfr_validate.strobe.next = true;
-            self.validation_count.d.next = self.validation_count.q.val() + 2_usize;
+            self.validation_count.d.next = self.validation_count.q.val() + 2;
         }
         self.error_out.port_in.next = self.error_count.q.val();
         self.validation_out.port_in.next = self.validation_count.q.val();

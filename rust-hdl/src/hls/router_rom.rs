@@ -78,7 +78,7 @@ impl<const D: usize, const A: usize, const N: usize> Logic for RouterROM<D, A, N
     fn update(&mut self) {
         self.clock.next = self.upstream.clock.val();
         self.upstream.ready.next = false;
-        self.upstream.to_controller.next = 0_usize.into();
+        self.upstream.to_controller.next = 0.into();
         dff_setup!(self, clock, active, virtual_address, address_strobe_delay);
         self.node_decode.address.next = self.upstream.address.val();
         self.virtual_decode.address.next = self.upstream.address.val();
@@ -89,9 +89,9 @@ impl<const D: usize, const A: usize, const N: usize> Logic for RouterROM<D, A, N
         // Delay the address strobe by 1 clock cycle to allow the virtual address
         // calculation to be pipelined.
         self.address_strobe_delay.d.next = self.upstream.address_strobe.val();
-        for i in 0_usize..N {
-            self.nodes[i].from_controller.next = 0x5ea1_usize.into();
-            self.nodes[i].address.next = 0_usize.into();
+        for i in 0..N {
+            self.nodes[i].from_controller.next = 0x5ea1.into();
+            self.nodes[i].address.next = 0.into();
             self.nodes[i].address_strobe.next = false;
             self.nodes[i].strobe.next = false;
             self.nodes[i].clock.next = self.clock.val();

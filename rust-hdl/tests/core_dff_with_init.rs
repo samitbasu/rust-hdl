@@ -14,7 +14,7 @@ impl Default for DFFWithNonzeroInit {
     fn default() -> Self {
         Self {
             clock: Default::default(),
-            dff: DFFWithInit::new(42_usize.into()),
+            dff: DFFWithInit::new(42.into()),
             count: Default::default(),
         }
     }
@@ -25,7 +25,7 @@ impl Logic for DFFWithNonzeroInit {
     fn update(&mut self) {
         dff_setup!(self, clock, dff);
         self.count.next = self.dff.q.val();
-        self.dff.d.next = self.dff.q.val() + 1_usize;
+        self.dff.d.next = self.dff.q.val() + 1;
     }
 }
 
@@ -39,10 +39,10 @@ fn test_dff_with_nonzero_init() {
     });
     sim.add_testbench(move |mut sim: Sim<DFFWithNonzeroInit>| {
         let mut x = sim.init()?;
-        sim_assert_eq!(sim, x.count.val(), 42_usize, x);
+        sim_assert_eq!(sim, x.count.val(), 42, x);
         for i in 0..12 {
             wait_clock_cycle!(sim, clock, x);
-            sim_assert_eq!(sim, x.count.val(), 42_usize + i + 1, x);
+            sim_assert_eq!(sim, x.count.val(), 42 + i + 1, x);
         }
         sim.done(x)
     });

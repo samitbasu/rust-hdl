@@ -101,27 +101,27 @@ impl Logic for I2CController {
                             // Latch the write data as the address
                             // Only the lower 7 bits are used.
                             // The last bit is set to 0 to indicate a write
-                            self.write_data.d.next = self.write_data_in.val() << 1_usize;
+                            self.write_data.d.next = self.write_data_in.val() << 1;
                             if !self.started.q.val() {
                                 self.driver.cmd.next = I2CDriverCmd::SendStart;
                             } else {
                                 self.driver.cmd.next = I2CDriverCmd::Restart;
                             }
                             self.driver.run.next = true;
-                            self.counter.d.next = 8_usize.into();
+                            self.counter.d.next = 8.into();
                             self.state.d.next = State::SendBuffer;
                             self.started.d.next = true;
                         }
                         I2CControllerCmd::BeginRead => {
                             // Set the lowest bit to indicate a read
-                            self.write_data.d.next = (self.write_data_in.val() << 1_usize) | 1_u32;
+                            self.write_data.d.next = (self.write_data_in.val() << 1) | 1;
                             if !self.started.q.val() {
                                 self.driver.cmd.next = I2CDriverCmd::SendStart;
                             } else {
                                 self.driver.cmd.next = I2CDriverCmd::Restart;
                             }
                             self.driver.run.next = true;
-                            self.counter.d.next = 8_usize.into();
+                            self.counter.d.next = 8.into();
                             self.state.d.next = State::SendBuffer;
                             self.started.d.next = true;
                         }
@@ -133,16 +133,16 @@ impl Logic for I2CController {
                         }
                         I2CControllerCmd::Write => {
                             self.write_data.d.next = self.write_data_in.val();
-                            self.counter.d.next = 8_usize.into();
+                            self.counter.d.next = 8.into();
                             self.state.d.next = State::SendBuffer;
                         }
                         I2CControllerCmd::Read => {
-                            self.counter.d.next = 8_usize.into();
+                            self.counter.d.next = 8.into();
                             self.state.d.next = State::GetBuffer;
                             self.last_read.d.next = false;
                         }
                         I2CControllerCmd::ReadLast => {
-                            self.counter.d.next = 8_usize.into();
+                            self.counter.d.next = 8.into();
                             self.state.d.next = State::GetBuffer;
                             self.last_read.d.next = true;
                         }
@@ -156,7 +156,7 @@ impl Logic for I2CController {
             }
             State::SendBuffer => {
                 if !self.driver.busy.val() {
-                    if self.counter.q.val() == 0_usize {
+                    if self.counter.q.val() == 0 {
                         self.driver.cmd.next = I2CDriverCmd::GetBit;
                         self.driver.run.next = true;
                         self.state.d.next = State::WaitAck;
@@ -166,15 +166,15 @@ impl Logic for I2CController {
                         } else {
                             self.driver.cmd.next = I2CDriverCmd::SendFalse;
                         }
-                        self.write_data.d.next = self.write_data.q.val() << 1_usize;
+                        self.write_data.d.next = self.write_data.q.val() << 1;
                         self.driver.run.next = true;
-                        self.counter.d.next = self.counter.q.val() - 1_usize;
+                        self.counter.d.next = self.counter.q.val() - 1;
                     }
                 }
             }
             State::GetBuffer => {
                 if !self.driver.busy.val() {
-                    if self.counter.q.val() == 0_usize {
+                    if self.counter.q.val() == 0 {
                         if self.last_read.q.val() {
                             self.driver.cmd.next = I2CDriverCmd::SendTrue;
                         } else {
@@ -192,9 +192,9 @@ impl Logic for I2CController {
             }
             State::WaitBit => {
                 if self.driver.read_valid.val() {
-                    self.read_data.d.next = (self.read_data.q.val() << 1_usize)
+                    self.read_data.d.next = (self.read_data.q.val() << 1)
                         | bit_cast::<8, 1>(self.driver.read_bit.val().into());
-                    self.counter.d.next = self.counter.q.val() - 1_usize;
+                    self.counter.d.next = self.counter.q.val() - 1;
                     self.state.d.next = State::GetBuffer;
                 }
             }

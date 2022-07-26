@@ -23,7 +23,7 @@ impl<const D: usize> Logic for MISOPort<D> {
         self.clock_out.next = self.bus.clock.val();
         dff_setup!(self, clock_out, address_active);
         self.address_active.d.next = self.bus.select.val();
-        self.bus.to_controller.next = 0_usize.into();
+        self.bus.to_controller.next = 0.into();
         self.bus.ready.next = false;
         self.strobe_out.next = false;
         if self.address_active.q.val() {

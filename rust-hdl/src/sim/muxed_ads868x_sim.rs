@@ -30,7 +30,7 @@ impl<const N: usize> Logic for MuxedADS868XSimulators<N> {
     #[hdl_gen]
     fn update(&mut self) {
         SPIWiresSlave::link(&mut self.wires, &mut self.mux.from_master);
-        for i in 0_usize..N {
+        for i in 0..N {
             self.adcs[i].clock.next = self.clock.val();
             SPIWiresMaster::join(&mut self.mux.to_slaves[i], &mut self.adcs[i].wires);
         }

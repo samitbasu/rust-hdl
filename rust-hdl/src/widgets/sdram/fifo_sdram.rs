@@ -134,7 +134,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
             == self.read_pointer.q.val();
         self.can_write.d.next = !self.dram_is_full.q.val() & !self.fp.almost_empty.val();
         self.can_read.d.next = !self.dram_is_empty.q.val() & !self.bp.almost_full.val();
-        self.controller.cmd_address.next = 0_usize.into();
+        self.controller.cmd_address.next = 0.into();
         self.controller.write_not_read.next = false;
         self.controller.cmd_strobe.next = false;
         self.fill.clock.next = self.ram_clock.val();
@@ -160,13 +160,13 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
             State::Read => {
                 self.read_pointer.d.next =
                     self.read_pointer.q.val() + self.line_to_word_ratio.val();
-                self.fill.d.next = self.fill.q.val() - 1_usize;
+                self.fill.d.next = self.fill.q.val() - 1;
                 self.state.d.next = State::Busy;
             }
             State::Write => {
                 self.write_pointer.d.next =
                     self.write_pointer.q.val() + self.line_to_word_ratio.val();
-                self.fill.d.next = self.fill.q.val() + 1_usize;
+                self.fill.d.next = self.fill.q.val() + 1;
                 self.state.d.next = State::Busy;
             }
             State::Busy => {
@@ -178,7 +178,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
                 self.state.d.next = State::Idle;
             }
         }
-        self.status.next = 0_usize.into();
+        self.status.next = 0.into();
         // We have 512Mbits of memory.
         // Each write is 128bits of data
         // So the max fill is 4M of data
@@ -187,28 +187,28 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
         //
         //524288   1048576   1572864   2097152   2621440   3145728   3670016   4194304
         if self.fill.q.val() > bits::<A>(838860) {
-            self.status.next = self.status.val() | 1_usize;
+            self.status.next = self.status.val() | 1;
         }
         if self.fill.q.val() > bits::<A>(1677721) {
-            self.status.next = self.status.val() | 2_usize;
+            self.status.next = self.status.val() | 2;
         }
         if self.fill.q.val() > bits::<A>(2516582) {
-            self.status.next = self.status.val() | 4_usize;
+            self.status.next = self.status.val() | 4;
         }
         if self.fill.q.val() > bits::<A>(3355443) {
-            self.status.next = self.status.val() | 8_usize;
+            self.status.next = self.status.val() | 8;
         }
         if self.underflow.val() | self.overflow.val() {
-            self.status.next = self.status.val() | 16_usize;
+            self.status.next = self.status.val() | 16;
         }
         if self.dram_is_empty.q.val() {
-            self.status.next = self.status.val() | 32_usize;
+            self.status.next = self.status.val() | 32;
         }
         if self.fp.empty.val() {
-            self.status.next = self.status.val() | 64_usize;
+            self.status.next = self.status.val() | 64;
         }
         if self.bp.full.val() {
-            self.status.next = self.status.val() | 128_usize;
+            self.status.next = self.status.val() | 128;
         }
     }
 }

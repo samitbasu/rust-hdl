@@ -166,7 +166,7 @@ macro_rules! bus_address_strobe {
         $uut.$field.address_strobe.next = true;
         wait_clock_cycle!($sim, $field.clock, $uut);
         $uut.$field.address_strobe.next = false;
-        $uut.$field.address.next = 0_usize.into();
+        $uut.$field.address.next = 0.into();
         $uut = $sim.watch(|x| x.$field.ready.val(), $uut)?;
     }};
 }

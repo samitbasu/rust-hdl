@@ -52,14 +52,14 @@ impl<const W: usize, const D: usize> Logic for MISOWidePort<W, D> {
             self.accum.d.next = self.port_in.val();
             self.count.d.next = self.modulo.val();
         }
-        self.bus.to_controller.next = 0_usize.into();
+        self.bus.to_controller.next = 0.into();
         self.ready.d.next = self.count.q.val().any() & self.address_active.q.val();
         if self.address_active.q.val() {
             self.bus.to_controller.next = self.accum.q.val().get_bits::<D>(self.shift.val().into());
             self.bus.ready.next = self.ready.q.val() & self.count.q.val().any();
             if self.bus.strobe.val() {
                 self.accum.d.next = self.accum.q.val() << self.offset.val();
-                self.count.d.next = self.count.q.val() - 1_usize;
+                self.count.d.next = self.count.q.val() - 1;
             }
         }
     }

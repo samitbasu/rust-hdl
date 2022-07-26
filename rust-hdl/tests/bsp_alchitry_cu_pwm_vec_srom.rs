@@ -20,12 +20,12 @@ impl<const P: usize> Logic for AlchitryCuPWMVecSyncROM<P> {
     #[hdl_gen]
     fn update(&mut self) {
         self.pll.clock_in.next = self.clock.val();
-        for i in 0_usize..8_usize {
+        for i in 0..8 {
             self.faders[i].clock.next = self.pll.clock_out.val();
             self.faders[i].enable.next = self.pll.locked.val();
         }
-        self.local.next = 0x00_u8.into();
-        for i in 0_usize..8_usize {
+        self.local.next = 0x00.into();
+        for i in 0..8 {
             self.local.next = self.local.val().replace_bit(i, self.faders[i].active.val());
         }
         self.leds.next = self.local.val();

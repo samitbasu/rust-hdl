@@ -92,14 +92,14 @@ impl<const ADDR_BITS: usize> Logic
         self.left_sample.next = self.left_bank.read_data.val();
         self.right_sample.next = self.right_bank.read_data.val();
         if self.state.q.val() == MACFIRState::CenterTap {
-            self.right_sample.next = 0_i32.into();
+            self.right_sample.next = 0.into();
         }
         // Wire up the accumulator
         self.mac_output.next = signed_bit_cast::<48, 32>(
             (self.left_sample.val() + self.right_sample.val()) * (self.coeff_memory.data.val()),
         ) + self.accum.q.val();
         if self.state.q.val() == MACFIRState::Idle {
-            self.mac_output.next = 0_i32.into();
+            self.mac_output.next = 0.into();
         }
         // Latch prevention...
         self.data_write.next = self.head_ptr.q.val();
@@ -115,18 +115,18 @@ impl<const ADDR_BITS: usize> Logic
                 }
             }
             MACFIRState::Dwell => {
-                self.index.d.next = self.index.q.val() + 1_usize;
+                self.index.d.next = self.index.q.val() + 1;
                 self.state.d.next = MACFIRState::Compute;
             }
             MACFIRState::Compute => {
-                self.index.d.next = self.index.q.val() + 1_usize;
+                self.index.d.next = self.index.q.val() + 1;
                 self.accum.d.next = self.mac_output.val();
                 if self.index.q.val() == self.iters.val() {
                     self.state.d.next = MACFIRState::CenterTap;
                 }
             }
             MACFIRState::CenterTap => {
-                self.index.d.next = self.index.q.val() + 1_usize;
+                self.index.d.next = self.index.q.val() + 1;
                 self.accum.d.next = self.mac_output.val();
                 self.state.d.next = MACFIRState::Write;
             }
@@ -134,10 +134,10 @@ impl<const ADDR_BITS: usize> Logic
                 self.strobe_out.next = true;
                 self.state.d.next = MACFIRState::Idle;
                 // Update the data write location (head pointer)
-                self.head_ptr.d.next = self.head_ptr.q.val() + 1_usize;
+                self.head_ptr.d.next = self.head_ptr.q.val() + 1;
                 // Reset the counter
-                self.index.d.next = 0_usize.into();
-                self.accum.d.next = 0_i32.into();
+                self.index.d.next = 0.into();
+                self.accum.d.next = 0.into();
             }
             _ => {
                 self.state.d.next = MACFIRState::Idle;

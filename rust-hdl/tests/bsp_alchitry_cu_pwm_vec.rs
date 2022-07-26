@@ -58,12 +58,12 @@ pub struct AlchitryCuPWMVec<const P: usize> {
 impl<const P: usize> Logic for AlchitryCuPWMVec<P> {
     #[hdl_gen]
     fn update(&mut self) {
-        for i in 0_usize..8_usize {
+        for i in 0..8 {
             self.faders[i].clock.next = self.clock.val();
             self.faders[i].enable.next = true;
         }
-        self.local.next = 0x00_u8.into();
-        for i in 0_usize..8_usize {
+        self.local.next = 0x00.into();
+        for i in 0..8 {
             self.local.next = self.local.val().replace_bit(i, self.faders[i].active.val());
         }
         self.leds.next = self.local.val();

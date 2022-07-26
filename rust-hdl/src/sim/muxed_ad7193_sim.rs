@@ -29,7 +29,7 @@ impl Logic for MuxedAD7193Simulators {
     #[hdl_gen]
     fn update(&mut self) {
         SPIWiresSlave::link(&mut self.wires, &mut self.mux.from_master);
-        for i in 0_usize..8 {
+        for i in 0..8 {
             self.adcs[i].clock.next = self.clock.val();
             SPIWiresMaster::join(&mut self.mux.to_slaves[i], &mut self.adcs[i].wires);
         }

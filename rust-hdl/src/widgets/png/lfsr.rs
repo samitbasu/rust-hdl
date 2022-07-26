@@ -38,15 +38,13 @@ impl Logic for LFSRSimple {
     fn update(&mut self) {
         dff_setup!(self, clock, x, y, z, w);
         self.num.next = self.w.q.val();
-        self.t.next = self.x.q.val() ^ (self.x.q.val() << 11_usize);
+        self.t.next = self.x.q.val() ^ (self.x.q.val() << 11);
         if self.strobe.val() {
             self.x.d.next = self.y.q.val();
             self.y.d.next = self.z.q.val();
             self.z.d.next = self.w.q.val();
-            self.w.d.next = self.w.q.val()
-                ^ (self.w.q.val() >> 19_usize)
-                ^ self.t.val()
-                ^ (self.t.val() >> 8_usize);
+            self.w.d.next =
+                self.w.q.val() ^ (self.w.q.val() >> 19) ^ self.t.val() ^ (self.t.val() >> 8);
         }
     }
 }

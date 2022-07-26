@@ -43,10 +43,10 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Bridge<D, A, N> {
     fn update(&mut self) {
         self.clock_out.next = self.upstream.clock.val();
         self.upstream.ready.next = false;
-        self.upstream.to_controller.next = 0_usize.into();
+        self.upstream.to_controller.next = 0.into();
         dff_setup!(self, clock_out, address_latch);
-        for i in 0_usize..N {
-            self.nodes[i].from_controller.next = 0_usize.into();
+        for i in 0..N {
+            self.nodes[i].from_controller.next = 0.into();
             self.nodes[i].select.next = false;
             self.nodes[i].strobe.next = false;
             self.nodes[i].clock.next = self.upstream.clock.val();

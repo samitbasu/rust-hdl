@@ -141,7 +141,7 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
         self.transfer_done.next = self.done_flop.q.val();
         // Latch prevention
         self.done_flop.d.next = false;
-        self.pointerm1.next = self.pointer.q.val() - 1_u32;
+        self.pointerm1.next = self.pointer.q.val() - 1;
         self.busy.next = self.state.q.val() != SPIState::Idle;
         // The main state machine
         match self.state.q.val() {
@@ -151,11 +151,11 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
                     // Capture the outgoing data in our register
                     self.register_out.d.next = self.data_outbound.val();
                     self.state.d.next = SPIState::SetMode; // Transition to the SetMode state - allows the clock to settle
-                    self.pointer.d.next = self.bits_outbound.val() & 0x00FF_usize; // set bit pointer to number of bit to send (1 based)
-                                                                                   // We bind the top two bits of the outbound register to the SPI mode.
-                    self.cpha_flop.d.next = self.bits_outbound.val().get_bit(9_usize);
-                    self.cpol_flop.d.next = self.bits_outbound.val().get_bit(8_usize);
-                    self.register_in.d.next = 0_usize.into(); // Clear out the input store register
+                    self.pointer.d.next = self.bits_outbound.val() & 0x00FF; // set bit pointer to number of bit to send (1 based)
+                                                                             // We bind the top two bits of the outbound register to the SPI mode.
+                    self.cpha_flop.d.next = self.bits_outbound.val().get_bit(9);
+                    self.cpol_flop.d.next = self.bits_outbound.val().get_bit(8);
+                    self.register_in.d.next = 0.into(); // Clear out the input store register
                     self.continued_save.d.next = self.continued_transaction.val();
                 } else {
                     if !self.continued_save.q.val() {

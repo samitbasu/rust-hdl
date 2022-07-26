@@ -175,25 +175,25 @@ impl<const N: usize> Logic for SPISlave<N> {
             .q
             .val()
             .get_bit(self.pointer.q.val().into());
-        self.boot_delay.d.next = self.boot_delay.q.val() + 1_usize;
+        self.boot_delay.d.next = self.boot_delay.q.val() + 1;
         match self.state.q.val() {
             SPISlaveState::Boot => {
-                if self.boot_delay.q.val() == 8_usize {
+                if self.boot_delay.q.val() == 8 {
                     self.state.d.next = SPISlaveState::Idle;
                 }
             }
             SPISlaveState::Idle => {
                 if self.edge_detector.edge_signal.val() {
-                    self.register_in.d.next = 0_u32.into();
+                    self.register_in.d.next = 0.into();
                     self.state.d.next = SPISlaveState::Waiting;
-                    self.pointer.d.next = 0_u16.into();
-                    self.escape.d.next = 0_u16.into();
+                    self.pointer.d.next = 0.into();
+                    self.escape.d.next = 0.into();
                 } else if self.start_send.val() {
                     self.register_out.d.next = self.data_outbound.val();
                     self.bits_saved.d.next = self.bits.val();
                     self.continued_saved.d.next = self.continued_transaction.val();
-                    self.pointer.d.next = self.bits.val() - 1_usize;
-                    self.register_in.d.next = 0_u32.into();
+                    self.pointer.d.next = self.bits.val() - 1;
+                    self.register_in.d.next = 0.into();
                     self.state.d.next = SPISlaveState::Armed;
                 } else if self.disabled.val() {
                     self.state.d.next = SPISlaveState::Disabled;
@@ -220,7 +220,7 @@ impl<const N: usize> Logic for SPISlave<N> {
                     self.state.d.next = SPISlaveState::Idle;
                 }
                 if !self.cpha.val() & (self.csel_synchronizer.sig_out.val() == self.cs_off.val()) {
-                    self.escape.d.next = self.escape.q.val() + 1_usize;
+                    self.escape.d.next = self.escape.q.val() + 1;
                     if self.escape.q.val().all() {
                         self.state.d.next = SPISlaveState::Idle;
                     }
@@ -232,7 +232,7 @@ impl<const N: usize> Logic for SPISlave<N> {
                 }
             }
             SPISlaveState::Capture => {
-                self.register_in.d.next = (self.register_in.q.val() << 1_usize)
+                self.register_in.d.next = (self.register_in.q.val() << 1)
                     | bit_cast::<N, 1>(self.wires.mosi.val().into());
                 self.state.d.next = SPISlaveState::Hold;
             }
@@ -248,12 +248,12 @@ impl<const N: usize> Logic for SPISlave<N> {
                             self.state.d.next = SPISlaveState::Hangup;
                         }
                     }
-                    self.escape.d.next = 0_u16.into();
+                    self.escape.d.next = 0.into();
                 } else if self.csel_synchronizer.sig_out.val() == self.cs_off.val() {
                     self.done_flop.d.next = true;
                     self.state.d.next = SPISlaveState::Idle;
                 } else {
-                    self.escape.d.next = self.escape.q.val() + 1_usize;
+                    self.escape.d.next = self.escape.q.val() + 1;
                 }
                 if self.escape.q.val() == self.clocks_per_baud.val() {
                     self.done_flop.d.next = true;
@@ -262,7 +262,7 @@ impl<const N: usize> Logic for SPISlave<N> {
             }
             SPISlaveState::Update => {
                 if self.pointer.q.val().any() {
-                    self.pointer.d.next = self.pointer.q.val() - 1_usize;
+                    self.pointer.d.next = self.pointer.q.val() - 1;
                 }
                 self.state.d.next = SPISlaveState::Settle;
             }
@@ -278,7 +278,7 @@ impl<const N: usize> Logic for SPISlave<N> {
             SPISlaveState::Disabled => {
                 if !self.disabled.val() {
                     self.state.d.next = SPISlaveState::Idle;
-                    self.register_out.d.next = 0_u32.into();
+                    self.register_out.d.next = 0.into();
                 }
             }
             _ => {

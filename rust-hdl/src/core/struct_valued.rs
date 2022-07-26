@@ -23,7 +23,7 @@ fn test_composite() {
     let x = MIGCmd {
         cmd: CmdType::Read,
         active: true,
-        len: 35_usize.into(),
+        len: 35.into(),
     };
 
     let y: Bits<9> = x.into();
@@ -33,7 +33,7 @@ fn test_composite() {
     let _x = MIGCmd {
         cmd: CmdType::Write,
         active: false,
-        len: 30_usize.into(),
+        len: 30.into(),
     };
 }
 

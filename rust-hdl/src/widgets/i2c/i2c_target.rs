@@ -70,7 +70,7 @@ impl Logic for I2CTarget {
         match self.state.q.val() {
             State::Idle => {
                 self.set_sda.next = true;
-                self.count.d.next = 0_usize.into();
+                self.count.d.next = 0.into();
                 if !self.sda_is_high.val() & self.scl_is_high.val() {
                     self.state.d.next = State::Start;
                 }
@@ -83,15 +83,15 @@ impl Logic for I2CTarget {
                 }
             }
             State::Writing => {
-                if self.accum.q.val().get_bit(7_usize) {
+                if self.accum.q.val().get_bit(7) {
                     self.set_sda.next = true;
                 } else {
                     self.clear_sda.next = true;
                 }
-                self.count.d.next = self.count.q.val() + 1_usize;
-                self.accum.d.next = self.accum.q.val() << 1_usize;
+                self.count.d.next = self.count.q.val() + 1;
+                self.accum.d.next = self.accum.q.val() << 1;
                 self.state.d.next = State::WaitSCLHigh;
-                if self.count.q.val() == 8_usize {
+                if self.count.q.val() == 8 {
                     self.state.d.next = State::WaitSCLHighAck;
                 }
             }
@@ -125,7 +125,7 @@ impl Logic for I2CTarget {
                 self.write_ok.next = true;
                 if self.write_enable.val() {
                     self.accum.d.next = self.to_bus.val();
-                    self.count.d.next = 0_usize.into();
+                    self.count.d.next = 0.into();
                     self.state.d.next = State::Writing;
                 }
                 if self.scl_is_high.val() {
@@ -135,10 +135,10 @@ impl Logic for I2CTarget {
             }
             State::Waiting => {
                 if !self.scl_is_high.val() {
-                    self.accum.d.next = (self.accum.q.val() << 1_usize)
-                        | bit_cast::<8, 1>(self.read_bit.q.val().into());
-                    self.count.d.next = self.count.q.val() + 1_usize;
-                    if self.count.q.val() == 7_usize {
+                    self.accum.d.next =
+                        (self.accum.q.val() << 1) | bit_cast::<8, 1>(self.read_bit.q.val().into());
+                    self.count.d.next = self.count.q.val() + 1;
+                    if self.count.q.val() == 7 {
                         self.state.d.next = State::Flag;
                     } else {
                         self.state.d.next = State::Reading;
@@ -155,8 +155,8 @@ impl Logic for I2CTarget {
             }
             State::Flag => {
                 self.bus_write.next = true;
-                self.accum.d.next = 0_u8.into();
-                self.count.d.next = 0_u8.into();
+                self.accum.d.next = 0.into();
+                self.count.d.next = 0.into();
                 self.state.d.next = State::Ack;
             }
             State::Ack => {

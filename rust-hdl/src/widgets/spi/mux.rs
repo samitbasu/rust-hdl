@@ -24,7 +24,7 @@ impl<const N: usize, const A: usize> Logic for MuxSlaves<N, A> {
     #[hdl_gen]
     fn update(&mut self) {
         self.from_master.miso.next = false;
-        for i in 0_usize..N {
+        for i in 0..N {
             self.to_slaves[i].mclk.next = true;
             self.to_slaves[i].msel.next = true;
             self.to_slaves[i].mosi.next = true;
@@ -72,7 +72,7 @@ impl<const N: usize, const A: usize> Logic for MuxMasters<N, A> {
         self.to_bus.mosi.next = true;
         self.to_bus.msel.next = true;
         self.to_bus.mclk.next = true;
-        for i in 0_usize..N {
+        for i in 0..N {
             self.from_masters[i].miso.next = true;
             if self.sel.val().index() == i {
                 self.to_bus.mosi.next = self.from_masters[i].mosi.val();

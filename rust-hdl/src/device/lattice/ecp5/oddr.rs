@@ -19,7 +19,7 @@ impl Logic for OutputDDR {
             self.q.next = self._capture.get_bit(1);
         }
         if self.reset.val().into() {
-            self._capture = 0_usize.into();
+            self._capture = 0.into();
             self.q.next = false;
         }
     }

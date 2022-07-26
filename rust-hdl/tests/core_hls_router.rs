@@ -73,12 +73,12 @@ fn test_router_function() {
     sim.add_testbench(move |mut sim: Sim<RouterTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        x.router.upstream.address.next = 7_usize.into();
+        x.router.upstream.address.next = 7.into();
         x.router.upstream.address_strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.router.upstream.address_strobe.next = false;
         x = sim.watch(|x| x.router.upstream.ready.val(), x)?;
-        x.router.upstream.from_controller.next = 0xDEAD_u16.into();
+        x.router.upstream.from_controller.next = 0xDEAD.into();
         x.router.upstream.strobe.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.router.upstream.strobe.next = false;
@@ -87,14 +87,10 @@ fn test_router_function() {
     sim.add_testbench(move |mut sim: Sim<RouterTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        x = sim.watch(|x| x.router.nodes[1].address.val() == 0x03_u8, x)?;
+        x = sim.watch(|x| x.router.nodes[1].address.val() == 0x03, x)?;
         x.router.nodes[1].ready.next = true;
         x = sim.watch(|x| x.router.nodes[1].strobe.val(), x)?;
-        sim_assert!(
-            sim,
-            x.router.nodes[1].from_controller.val() == 0xDEAD_u16,
-            x
-        );
+        sim_assert!(sim, x.router.nodes[1].from_controller.val() == 0xDEAD, x);
         wait_clock_cycles!(sim, clock, x, 10);
         sim.done(x)
     });
@@ -133,7 +129,7 @@ impl Logic for RouterTestDevice {
     #[hdl_gen]
     fn update(&mut self) {
         SoCBusResponder::<16, 8>::link(&mut self.upstream, &mut self.bridge.upstream);
-        for i in 0_usize..5 {
+        for i in 0..5 {
             SoCPortController::<16>::join(&mut self.bridge.nodes[i], &mut self.mosi_ports[i].bus);
             self.mosi_ports[i].ready.next = self.mosi_ports[i].bus.select.val();
         }
@@ -181,7 +177,7 @@ impl Logic for RouterTestSetup {
     #[hdl_gen]
     fn update(&mut self) {
         SoCBusResponder::<16, 8>::link(&mut self.upstream, &mut self.router.upstream);
-        for i in 0_usize..3 {
+        for i in 0..3 {
             SoCBusController::<16, 8>::join(&mut self.router.nodes[i], &mut self.dev_a[i].upstream);
         }
         self.upstream.clock.next = self.clock.val();

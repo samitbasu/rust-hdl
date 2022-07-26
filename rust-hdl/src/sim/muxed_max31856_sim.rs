@@ -30,7 +30,7 @@ impl Logic for MuxedMAX31856Simulators {
     fn update(&mut self) {
         SPIWiresSlave::link(&mut self.wires, &mut self.mux.from_master);
         self.mux.sel.next = self.addr.val();
-        for i in 0_usize..8_usize {
+        for i in 0..8 {
             self.adcs[i].clock.next = self.clock.val();
             SPIWiresMaster::join(&mut self.mux.to_slaves[i], &mut self.adcs[i].wires);
         }
