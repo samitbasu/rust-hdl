@@ -1,4 +1,5 @@
 use crate::core::prelude::*;
+use crate::core::signed::ToSignedBits;
 use crate::dff_setup;
 use crate::widgets::dff::DFF;
 use crate::widgets::ramrom::ram::RAM;
@@ -76,7 +77,7 @@ impl<const ADDR_BITS: usize> Logic
         self.left_ptr.next = bit_cast::<{ ADDR_BITS }, 32>(
             bit_cast::<32, { ADDR_BITS }>(self.head_ptr.q.val()) + self.bufsize.val()
                 - self.taps.val()
-                + 1_u32
+                + 1
                 + bit_cast::<32, { ADDR_BITS }>(self.index.q.val()),
         );
         // This is a bit awkward.  We want to do wrapping arithmetic, so we need an extra bit,
@@ -162,7 +163,7 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
         let coeff_short = coeffs[0..clen].iter().map(|x| *x).collect::<Vec<_>>();
         let coeffs = coeff_short
             .iter()
-            .map(|x| signed::<16>(*x as i32))
+            .map(|x| x.to_signed_bits())
             .collect::<Vec<_>>();
         Self {
             data_in: Default::default(),
@@ -178,15 +179,15 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
             left_ptr: Default::default(),
             right_ptr: Default::default(),
             index: Default::default(),
-            iters: Constant::new(((taps - 1) / 2).into()),
-            bufsize: Constant::new(Bits::<ADDR_BITS>::count().into()),
+            iters: Constant::new(((taps - 1) / 2).to_bits()),
+            bufsize: Constant::new(Bits::<ADDR_BITS>::count().to_bits()),
             left_sample: Default::default(),
             right_sample: Default::default(),
             accum: Default::default(),
             state: Default::default(),
             mac_output: Default::default(),
             data_write: Default::default(),
-            taps: Constant::new(taps.into()),
+            taps: Constant::new(taps.to_bits()),
         }
     }
 }

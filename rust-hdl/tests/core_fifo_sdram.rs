@@ -65,7 +65,7 @@ fn test_sdram_works() {
         let mut x = sim.init()?;
         wait_clock_cycles!(sim, clock, x, 20);
         wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..512_u32 {
+        for counter in 0..512 {
             x = sim.watch(|x| !x.fifo.full.val(), x)?;
             x.fifo.data_in.next = counter.into();
             x.fifo.write.next = true;
@@ -78,7 +78,7 @@ fn test_sdram_works() {
         let mut x = sim.init()?;
         wait_clock_cycles!(sim, clock, x, 20);
         wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..512_u32 {
+        for counter in 0..512 {
             x = sim.watch(|x| !x.fifo.empty.val(), x)?;
             sim_assert_eq!(sim, x.fifo.data_out.val(), counter, x);
             x.fifo.read.next = true;

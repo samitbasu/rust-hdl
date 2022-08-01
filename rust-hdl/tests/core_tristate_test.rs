@@ -49,14 +49,14 @@ fn test_tristate_buffer_works() {
         let mut x = sim.init()?;
         // Drive the bus
         x.left.buffer.write_enable.next = true;
-        for val in [42_u8, 32, 16, 0, 7] {
+        for val in [42, 32, 16, 0, 7] {
             x.left.buffer.write_data.next = val.into();
             x = sim.wait(10, x)?;
         }
         // Drop the bus drive
         x.left.buffer.write_enable.next = false;
         x = sim.wait(40, x)?;
-        for ndx in [43_u8, 33, 17, 1, 8] {
+        for ndx in [43, 33, 17, 1, 8] {
             x = sim.wait(10, x)?;
             sim_assert!(sim, x.left.buffer.read_data.val() == ndx, x);
         }
@@ -65,14 +65,14 @@ fn test_tristate_buffer_works() {
     sim.add_testbench(move |mut sim: Sim<BusTest>| {
         let mut x = sim.init()?;
         x.right.buffer.write_enable.next = false;
-        for ndx in [42_u8, 32, 16, 0, 7] {
+        for ndx in [42, 32, 16, 0, 7] {
             sim_assert!(sim, x.right.buffer.read_data.val() == ndx, x);
             x = sim.wait(10, x)?;
         }
         // Wait for the turn around
         x = sim.wait(40, x)?;
         x.right.buffer.write_enable.next = true;
-        for ndx in [43_u8, 33, 17, 1, 8] {
+        for ndx in [43, 33, 17, 1, 8] {
             x.right.buffer.write_data.next = ndx.into();
             x = sim.wait(10, x)?;
         }

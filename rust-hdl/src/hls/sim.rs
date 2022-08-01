@@ -6,7 +6,7 @@ macro_rules! hls_fifo_write_lazy {
             // Wait for the FIFO to not be full
             $uut = $sim.watch(|x| !x.$($fifo).+.full.val(), $uut)?;
             // Set the data lines and pulse the write signal
-            $uut.$($fifo).+.data.next = (*val).into();
+            $uut.$($fifo).+.data.next = (*val).to_bits();
             $uut.$($fifo).+.write.next = true;
             wait_clock_cycle!($sim, $clock, $uut);
             $uut.$($fifo).+.write.next = false;
@@ -27,7 +27,7 @@ macro_rules! hls_fifo_write {
             // Wait for the FIFO to not be full
             $uut = $sim.watch(|x| !x.$($fifo).+.full.val(), $uut)?;
             // Set the data lines and pulse the write signal
-            $uut.$($fifo).+.data.next = val.into();
+            $uut.$($fifo).+.data.next = val.to_bits();
             $uut.$($fifo).+.write.next = true;
             wait_clock_cycle!($sim, $clock, $uut);
             $uut.$($fifo).+.write.next = false;
@@ -75,12 +75,12 @@ macro_rules! hls_host_get_word {
         wait_clock_true!($sim, $clock, $uut);
         let mut ret = 0x0_u16;
         $uut = $sim.watch(|x| !x.$($fifo).+.bus_read.empty.val(), $uut)?;
-        ret = $uut.$($fifo).+.bus_read.data.val().into();
+        ret = $uut.$($fifo).+.bus_read.data.val().to_u16();
         $uut.$($fifo).+.bus_read.read.next = true;
         wait_clock_cycle!($sim, $clock, $uut);
         $uut.$($fifo).+.bus_read.read.next = false;
         $uut = $sim.watch(|x| !x.$($fifo).+.bus_read.empty.val(), $uut)?;
-        let byte: u8 = $uut.$($fifo).+.bus_read.data.val().into();
+        let byte: u8 = $uut.$($fifo).+.bus_read.data.val().to_u8();
         ret = (ret << 8) | (byte as u16);
         $uut.$($fifo).+.bus_read.read.next = true;
         wait_clock_cycle!($sim, $clock, $uut);
@@ -162,7 +162,7 @@ macro_rules! hls_host_drain {
 macro_rules! bus_address_strobe {
     ($sim: ident, $uut: ident, $field: ident, $addr: expr) => {{
         wait_clock_true!($sim, $field.clock, $uut);
-        $uut.$field.address.next = ($addr as usize).into();
+        $uut.$field.address.next = ($addr as u32).to_bits();
         $uut.$field.address_strobe.next = true;
         wait_clock_cycle!($sim, $field.clock, $uut);
         $uut.$field.address_strobe.next = false;
@@ -175,7 +175,7 @@ macro_rules! bus_address_strobe {
 macro_rules! bus_write_strobe {
     ($sim: ident,$uut: ident, $field: ident, $val: expr) => {{
         wait_clock_true!($sim, $field.clock, $uut);
-        $uut.$field.from_controller.next = $val.into();
+        $uut.$field.from_controller.next = ($val).to_bits();
         $uut.$field.strobe.next = true;
         wait_clock_cycle!($sim, $field.clock, $uut);
         $uut.$field.strobe.next = false;

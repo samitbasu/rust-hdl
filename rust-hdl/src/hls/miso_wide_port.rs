@@ -30,9 +30,9 @@ impl<const W: usize, const D: usize> Default for MISOWidePort<W, D> {
             clock_out: Default::default(),
             accum: Default::default(),
             address_active: Default::default(),
-            offset: Constant::new(D.into()),
-            shift: Constant::new((W - D).into()),
-            modulo: Constant::new((W / D).into()),
+            offset: Constant::new(D.to_bits()),
+            shift: Constant::new((W - D).to_bits()),
+            modulo: Constant::new((W / D).to_bits()),
             count: Default::default(),
             ready: Default::default(),
         }
@@ -55,7 +55,8 @@ impl<const W: usize, const D: usize> Logic for MISOWidePort<W, D> {
         self.bus.to_controller.next = 0.into();
         self.ready.d.next = self.count.q.val().any() & self.address_active.q.val();
         if self.address_active.q.val() {
-            self.bus.to_controller.next = self.accum.q.val().get_bits::<D>(self.shift.val().into());
+            self.bus.to_controller.next =
+                self.accum.q.val().get_bits::<D>(self.shift.val().index());
             self.bus.ready.next = self.ready.q.val() & self.count.q.val().any();
             if self.bus.strobe.val() {
                 self.accum.d.next = self.accum.q.val() << self.offset.val();

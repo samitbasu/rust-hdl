@@ -23,7 +23,7 @@ pub fn make_btree_from_iterable<I: Iterator<Item = D>, D: Synth, const N: usize>
 ) -> BTreeMap<Bits<N>, D> {
     let mut values = BTreeMap::new();
     for (index, val) in v.enumerate() {
-        let address: Bits<N> = index.into();
+        let address: Bits<N> = index.to_bits();
         values.insert(address, val);
     }
     values

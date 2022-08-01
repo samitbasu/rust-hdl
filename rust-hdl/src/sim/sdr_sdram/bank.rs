@@ -93,14 +93,14 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> MemoryBank<
             refresh_counter: Default::default(),
             refresh_active: Default::default(),
             t_activate: Default::default(),
-            t_ras: Constant::new(t_ras.into()),
-            t_rc: Constant::new(t_rc.into()),
-            t_rcd: Constant::new(t_rcd.into()),
-            t_rp: Constant::new(t_rp.into()),
-            t_wr: Constant::new(t_wr.into()),
-            t_refresh_max: Constant::new(t_refresh_max.into()),
-            t_rfc: Constant::new(t_rfc.into()),
-            row_shift: Constant::new(C.into()),
+            t_ras: Constant::new(t_ras.to_bits()),
+            t_rc: Constant::new(t_rc.to_bits()),
+            t_rcd: Constant::new(t_rcd.to_bits()),
+            t_rp: Constant::new(t_rp.to_bits()),
+            t_wr: Constant::new(t_wr.to_bits()),
+            t_refresh_max: Constant::new(t_refresh_max.to_bits()),
+            t_rfc: Constant::new(t_rfc.to_bits()),
+            row_shift: Constant::new(C.to_bits()),
         }
     }
 }
@@ -500,7 +500,7 @@ fn test_bank_write() {
         x.clock.next = !x.clock.val();
     });
     let data = [
-        0xABCD_u16, 0xDEAD_u16, 0xBEEF, 0x1234, 0xFACE, 0x5EA1, 0xCAFE, 0xBABE,
+        0xABCD, 0xDEAD, 0xBEEF, 0x1234, 0xFACE, 0x5EA1, 0xCAFE, 0xBABE,
     ];
     sim.add_testbench(move |mut sim: Sim<MemoryBank<5, 5, 10, 16>>| {
         let mut x = sim.init()?;

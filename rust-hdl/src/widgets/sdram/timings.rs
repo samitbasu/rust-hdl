@@ -1,3 +1,5 @@
+use crate::core::bits::LiteralType;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct MemoryTimings {
     pub initial_delay_in_nanoseconds: f64,

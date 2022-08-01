@@ -18,8 +18,8 @@ pub struct Fader {
 
 impl Fader {
     pub fn new(clock_frequency: u64, phase: u32) -> Self {
-        let rom = (0..256_u32)
-            .map(|x| (Bits::<8>::from(x), snore(x + phase)))
+        let rom = (0..256)
+            .map(|x| (x.to_bits(), snore(x + phase)))
             .collect::<BTreeMap<_, _>>();
         Self {
             clock: Signal::default(),

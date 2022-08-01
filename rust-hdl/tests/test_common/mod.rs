@@ -12,7 +12,7 @@ pub mod soc;
 pub fn snore<const P: usize>(x: u32) -> Bits<P> {
     let amp = (f64::exp(f64::sin(((x as f64) - 128.0 / 2.) * PI / 128.0)) - 0.36787944) * 108.0;
     let amp = (amp.max(0.0).min(255.0).floor() / 255.0 * (1 << P) as f64) as u8;
-    amp.into()
+    amp.to_bits()
 }
 
 #[derive(LogicBlock)]
@@ -29,8 +29,8 @@ pub struct FaderWithSyncROM {
 impl FaderWithSyncROM {
     #[cfg(test)]
     pub fn new(clock_frequency: u64, phase: u32) -> Self {
-        let rom = (0..256_u32)
-            .map(|x| (Bits::<8>::from(x), snore(x + phase)))
+        let rom = (0..256)
+            .map(|x| (x.to_bits(), snore(x + phase)))
             .collect::<BTreeMap<_, _>>();
         Self {
             clock: Signal::default(),

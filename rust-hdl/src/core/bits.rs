@@ -12,6 +12,9 @@ use std::num::Wrapping;
 // The short value must be less than 2^N
 // N <= SHORT_BITS --> Short repr, otherwise Long repr
 
+pub type LiteralType = u64;
+pub const LITERAL_BITS: usize = 64;
+
 /// Compute the minimum number of bits to represent a container with t items.
 /// This is basically `ceil(log2(t))` as a constant (compile time computable) function.
 /// You can use it where a const generic (bit width) argument is required.
@@ -371,7 +374,8 @@ pub enum Bits<const N: usize> {
     Long(BitVec<N>),
 }
 
-/// Convert from a [BigUint] to a [Bits], taking only the lowest order N bits.
+/// Convert from a [BigUint] to a [Bits].  Will panic if the number of bits
+/// needed to represent the value are greater than the width of the [Bits].
 /// ```
 /// # use num_bigint::BigUint;
 /// # use rust_hdl::core::bits::Bits;
@@ -379,11 +383,24 @@ pub enum Bits<const N: usize> {
 /// let y : Bits<16> = x.into();
 /// println!("y = {:x}", y); // Prints y = 02c5
 /// ```
+/// The following will panic, because the value cannot be represented in the
+/// given number of bits.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// # use num_bigint::BigUint;
+/// let x = BigUint::parse_bytes(b"10111000101", 2).unwrap();
+/// let y : Bits<12> = x.into(); // Panics
+/// ```
 impl<const N: usize> From<BigUint> for Bits<N> {
     fn from(x: BigUint) -> Self {
-        assert!(x.bits() <= N as u64);
+        assert!(
+            x.bits() <= N as u64,
+            "cannot fit value from BigUInt with {} bits into Bits<{}>",
+            x.bits(),
+            N
+        );
         if N <= SHORT_BITS {
-            x.to_u32().unwrap().into()
+            x.to_u64().unwrap().into()
         } else {
             let mut ret = [false; N];
             for i in 0..N {
@@ -424,7 +441,7 @@ impl<const N: usize> Binary for Bits<N> {
 
 #[test]
 fn test_print_as_binary() {
-    let x = Bits::<16>::from(0b_1011_0100_1000_0000_u16);
+    let x = Bits::<16>::from(0b_1011_0100_1000_0000);
     let p = format!("x = {:b}", x);
     assert_eq!(p, "x = 1011010010000000")
 }
@@ -441,7 +458,7 @@ impl<const N: usize> LowerHex for Bits<N> {
         let digits: usize = m / 4;
         for digit in 0..digits {
             let nibble: Bits<4> = self.get_bits(4 * (digits - 1 - digit));
-            let nibble_u8: u8 = nibble.into();
+            let nibble_u8: LiteralType = nibble.into();
             std::fmt::LowerHex::fmt(&nibble_u8, f)?;
         }
         Ok(())
@@ -450,7 +467,7 @@ impl<const N: usize> LowerHex for Bits<N> {
 
 #[test]
 fn test_print_as_lowercase_hex() {
-    let x = Bits::<16>::from(0xcafe_u16);
+    let x = Bits::<16>::from(0xcafe);
     let p = format!("x = {:x}", x);
     assert_eq!(p, "x = cafe");
 }
@@ -467,7 +484,7 @@ impl<const N: usize> UpperHex for Bits<N> {
         let digits: usize = m / 4;
         for digit in 0..digits {
             let nibble: Bits<4> = self.get_bits(4 * (digits - 1 - digit));
-            let nibble_u8: u8 = nibble.into();
+            let nibble_u8: LiteralType = nibble.into();
             std::fmt::UpperHex::fmt(&nibble_u8, f)?;
         }
         Ok(())
@@ -481,7 +498,6 @@ fn test_print_as_uppercase_hex() {
     assert_eq!(p, "x = CAFE");
 }
 
-#[inline(always)]
 /// Convenience function to construct [Bits] from an unsigned literal
 /// Sometimes, you know you will be working with a value that is smaller than
 /// 128 bits (the current maximum sized built-in unsigned integer in Rust).
@@ -492,12 +508,58 @@ fn test_print_as_uppercase_hex() {
 /// let x : Bits<14> = bits(0xDEA);
 /// assert_eq!("0dea", format!("{:x}", x))
 /// ```
-pub fn bits<const N: usize>(x: u128) -> Bits<N> {
+/// In most cases, it's easier to use `into`:
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<14> = 0xDEA.into();
+/// assert_eq!("0dea", format!("{:x}", x))
+/// ```
+pub fn bits<const N: usize>(x: LiteralType) -> Bits<N> {
     let t: Bits<N> = x.into();
     t
 }
 
-#[inline(always)]
+pub trait ToBits {
+    fn to_bits<const N: usize>(self) -> Bits<N>;
+}
+
+impl ToBits for u8 {
+    fn to_bits<const N: usize>(self) -> Bits<N> {
+        (self as LiteralType).into()
+    }
+}
+
+impl ToBits for u16 {
+    fn to_bits<const N: usize>(self) -> Bits<N> {
+        (self as LiteralType).into()
+    }
+}
+
+impl ToBits for u32 {
+    fn to_bits<const N: usize>(self) -> Bits<N> {
+        (self as LiteralType).into()
+    }
+}
+
+impl ToBits for u64 {
+    fn to_bits<const N: usize>(self) -> Bits<N> {
+        (self as LiteralType).into()
+    }
+}
+
+impl ToBits for usize {
+    fn to_bits<const N: usize>(self) -> Bits<N> {
+        (self as LiteralType).into()
+    }
+}
+
+impl ToBits for u128 {
+    fn to_bits<const N: usize>(self) -> Bits<N> {
+        assert!(N <= 128);
+        Bits::<N>::from(BigUint::from(self))
+    }
+}
+
 /// Cast from one bit width to another with truncation or zero padding
 /// The [bit_cast] function allows you to convert from one bit width
 /// to another.  It handles the different widths in the following simplified
@@ -536,12 +598,18 @@ pub fn bits<const N: usize>(x: u128) -> Bits<N> {
 /// any internal Rust limit.
 ///
 /// Note also that bit-casting does _not_ preserve signedness.  Generally,
-/// RustHDL follows hardware conventions that values are unsigned.
+/// RustHDL follows hardware conventions that values are unsigned.  If you
+/// want to work with signed bit vectors, use [Signed] instead.
 pub fn bit_cast<const M: usize, const N: usize>(x: Bits<N>) -> Bits<M> {
     match x {
         Bits::Short(t) => {
             let t: ShortType = t.into();
-            let k: Bits<M> = t.into();
+            let t = if M < N {
+                t & ShortBitVec::<M>::mask().short()
+            } else {
+                t
+            };
+            let k: Bits<M> = (t as LiteralType).into();
             k
         }
         Bits::Long(t) => {
@@ -579,25 +647,9 @@ impl<const N: usize> Into<VCDValue> for Bits<N> {
 }
 
 #[test]
-fn test_bits_from_int() {
-    let x: Bits<20> = 0x52345.into();
-    let i: i32 = x.into();
-    assert_eq!(i, 0x52345);
-}
-
-#[test]
-fn test_signed_bits_from_int() {
-    let x: Bits<20> = (-1_i32).into();
-    let i: i32 = x.into();
-    let u: u32 = x.into();
-    assert_eq!(u, 0xFFFFF);
-    assert_eq!(i, -1);
-}
-
-#[test]
 fn test_bits_from_int_via_bits() {
     let x: Bits<23> = bits(23);
-    let u: u32 = x.into();
+    let u: LiteralType = x.into();
     assert_eq!(u, 23);
 }
 
@@ -704,7 +756,7 @@ impl<const N: usize> Bits<N> {
     /// # use rust_hdl::core::prelude::*;
     /// assert_eq!(Bits::<16>::count(), 1 << 16);
     /// ```
-    pub fn count() -> usize {
+    pub fn count() -> u128 {
         1 << N
     }
 
@@ -759,7 +811,7 @@ impl<const N: usize> Bits<N> {
     /// ```
     pub fn get_bits<const M: usize>(&self, index: usize) -> Bits<M> {
         assert!(index <= N);
-        bit_cast::<M, N>(*self >> index)
+        bit_cast::<M, N>(*self >> index as LiteralType)
     }
 
     #[inline(always)]
@@ -774,9 +826,9 @@ impl<const N: usize> Bits<N> {
     pub fn set_bits<const M: usize>(&mut self, index: usize, rhs: Bits<M>) {
         assert!(index <= N);
         assert!(index + M <= N);
-        let mask = !(bit_cast::<N, M>(Bits::<M>::mask()) << index);
+        let mask = !(bit_cast::<N, M>(Bits::<M>::mask()) << index as LiteralType);
         let masked = *self & mask;
-        let replace = bit_cast::<N, M>(rhs) << index;
+        let replace = bit_cast::<N, M>(rhs) << index as LiteralType;
         *self = masked | replace
     }
 
@@ -804,6 +856,30 @@ impl<const N: usize> Bits<N> {
     /// ```
     pub const fn width() -> usize {
         N
+    }
+
+    pub fn to_u8(self) -> u8 {
+        assert!(N <= 8);
+        let x: LiteralType = self.into();
+        x as u8
+    }
+
+    pub fn to_u16(self) -> u16 {
+        assert!(N <= 16);
+        let x: LiteralType = self.into();
+        x as u16
+    }
+
+    pub fn to_u32(self) -> u32 {
+        assert!(N <= 32);
+        let x: LiteralType = self.into();
+        x as u32
+    }
+
+    pub fn to_u64(self) -> u64 {
+        assert!(N <= 64);
+        let x: LiteralType = self.into();
+        x as u64
     }
 }
 
@@ -840,107 +916,83 @@ impl Into<bool> for Bits<1> {
     }
 }
 
-macro_rules! define_from_uint {
-    ($name:ident, $width:expr) => {
-        #[doc(hidden)]
-        impl<const N: usize> From<Wrapping<$name>> for Bits<N> {
-            fn from(x: Wrapping<$name>) -> Self {
-                x.0.into()
-            }
+/// Convert from [u128] to [Bits].  Because of some restrictions on
+/// how Rust's type inference works, when you work with unsized
+/// literals (e.g., `x = 3`), there must either be a unique integer type
+/// that can fit the expression, or it will default to `i32`.  Unfortunately,
+/// in general, [Bits] are used to represent unsigned types.  The upshot
+/// of all this is that RustHDL selects one unsigned integer type to represent
+/// literals.  Although not idea, RustHDL uses a `u128` to represent literals
+/// so as to make HDL expressions as close to Verilog or VHDL.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = 0xDEAD.into(); // This is interpreteed as a 128 bit constant by Rust
+/// ```
+/// This example is the largest bit width literal you can express using current
+/// edition Rust:
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<128> = 0xDEADBEEF_CAFEBABE_1234ABCD_00005EA1.into();
+/// ```
+/// From a safety perspective, RustHDL will panic if the argument is too large to fit
+/// into the bit vector.  Thus, this example will panic, since the literal cannot be
+/// fit into 16 bits without truncation:
+/// ```should_panic
+/// # use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = 0xDEADBEEF.into(); // This will panic!
+/// ```
+impl<const N: usize> From<LiteralType> for Bits<N> {
+    fn from(x: LiteralType) -> Self {
+        if N > SHORT_BITS {
+            let y: BitVec<N> = x.into();
+            Bits::Long(y)
+        } else {
+            assert!(
+                x <= ShortBitVec::<N>::max_legal(),
+                "Value 0x{:x} does not fit into bitvector of length {}",
+                x,
+                N
+            );
+            Bits::Short((x as ShortType).into())
         }
-
-        #[doc(hidden)]
-        impl<const N: usize> From<$name> for Bits<N> {
-            #[inline(always)]
-            fn from(x: $name) -> Self {
-                if N > SHORT_BITS {
-                    let y: BitVec<N> = x.into();
-                    Bits::Long(y)
-                } else {
-                    Bits::Short((x as ShortType).into())
-                }
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> From<Bits<N>> for $name {
-            #[inline(always)]
-            #[doc(hidden)]
-            fn from(x: Bits<N>) -> Self {
-                assert!(N <= $width);
-                match x {
-                    Bits::Short(t) => {
-                        let p: ShortType = t.into();
-                        p as $name
-                    }
-                    Bits::Long(t) => t.into(),
-                }
-            }
-        }
-    };
+    }
 }
 
-macro_rules! define_from_int {
-    ($name:ident, $width:expr) => {
-        #[doc(hidden)]
-        impl<const N: usize> From<Wrapping<$name>> for Bits<N> {
-            fn from(x: Wrapping<$name>) -> Self {
-                x.0.into()
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> From<$name> for Bits<N> {
-            #[inline(always)]
-            fn from(x: $name) -> Self {
-                if N > SHORT_BITS {
-                    let y: BitVec<N> = x.into();
-                    Bits::Long(y)
-                } else {
-                    Bits::Short((x as ShortType).into())
-                }
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> From<Bits<N>> for $name {
-            #[inline(always)]
-            fn from(x: Bits<N>) -> Self {
-                assert!(N <= $width);
-                match x {
-                    Bits::Short(t) => {
-                        let p: ShortType = t.into();
-                        if (p & (1 << (N - 1)) != 0) && (N < SHORT_BITS) {
-                            // The top bit is set, which means as a signed
-                            // integer, this value should be considered neg
-                            -((p ^ ((1 << N) - 1)) as $name) - 1
-                        } else {
-                            p as $name
-                        }
-                    }
-                    Bits::Long(t) => t.into(),
-                }
-            }
-        }
-    };
+impl<const N: usize> From<Wrapping<LiteralType>> for Bits<N> {
+    fn from(x: Wrapping<LiteralType>) -> Self {
+        x.0.into()
+    }
 }
 
-define_from_uint!(u8, 8);
-define_from_uint!(u16, 16);
-define_from_uint!(u32, 32);
-define_from_uint!(u64, 64);
-define_from_uint!(u128, 128);
-
-#[cfg(target_pointer_width = "64")]
-define_from_uint!(usize, 64);
-#[cfg(target_pointer_width = "32")]
-define_from_uint!(usize, 32);
-
-define_from_int!(i8, 8);
-define_from_int!(i16, 16);
-define_from_int!(i32, 32);
-define_from_int!(i64, 64);
-define_from_int!(i128, 128);
+/// Convert a [Bits] back to [u128].  Until Rust supports larger integers, the [u128] is
+/// the largest integer type you can use without resorting to [BigUint].  RustHDL will panic
+/// if you try to convert a [Bits] that is more than 128 bits to a literal.  Even if the
+/// value in the bitvector would fit.
+///```
+///# use rust_hdl::core::prelude::*;
+/// let x: Bits<16> = 0xDEAD.into();
+/// let y: u128 = x.into();
+/// assert_eq!(y, 0xDEAD);
+///```
+///The following will panic even through the literal value stored in the 256 bit vector
+///is less than 128 bits.
+///```should_panic
+///# use rust_hdl::core::prelude::*;
+///let x : Bits<256> = 42.into();
+///let y: u128 = x.into(); // Panics!
+/// ```
+impl<const N: usize> From<Bits<N>> for LiteralType {
+    fn from(x: Bits<N>) -> Self {
+        assert!(N <= LITERAL_BITS);
+        match x {
+            Bits::Short(t) => {
+                let p: ShortType = t.into();
+                p as LiteralType
+            }
+            Bits::Long(t) => t.into(),
+        }
+    }
+}
 
 #[inline(always)]
 #[doc(hidden)]
@@ -982,119 +1034,15 @@ macro_rules! op {
             }
         }
 
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<usize> for Bits<N> {
+        impl<const N: usize> std::ops::$method<LiteralType> for Bits<N> {
             type Output = Bits<N>;
 
-            #[inline(always)]
-            fn $func(self, rhs: usize) -> Self::Output {
+            fn $func(self, rhs: LiteralType) -> Self::Output {
                 binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
             }
         }
 
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<u8> for Bits<N> {
-            type Output = Bits<N>;
-
-            #[inline(always)]
-            fn $func(self, rhs: u8) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<i8> for Bits<N> {
-            type Output = Bits<N>;
-
-            #[inline(always)]
-            fn $func(self, rhs: i8) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<u16> for Bits<N> {
-            type Output = Bits<N>;
-
-            #[inline(always)]
-            fn $func(self, rhs: u16) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<i16> for Bits<N> {
-            type Output = Bits<N>;
-
-            #[inline(always)]
-            fn $func(self, rhs: i16) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<u32> for Bits<N> {
-            type Output = Bits<N>;
-
-            #[inline(always)]
-            fn $func(self, rhs: u32) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<i32> for Bits<N> {
-            type Output = Bits<N>;
-
-            #[inline(always)]
-            fn $func(self, rhs: i32) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<u64> for Bits<N> {
-            type Output = Bits<N>;
-
-            #[inline(always)]
-            fn $func(self, rhs: u64) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<i64> for Bits<N> {
-            type Output = Bits<N>;
-
-            #[inline(always)]
-            fn $func(self, rhs: i64) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
-            }
-        }
-
-
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<u128> for Bits<N> {
-            type Output = Bits<N>;
-
-            #[inline(always)]
-            fn $func(self, rhs: u128) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<i128> for Bits<N> {
-            type Output = Bits<N>;
-
-            #[inline(always)]
-            fn $func(self, rhs: i128) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
-            }
-        }
-
-        #[doc(hidden)]
-        impl<const N: usize> std::ops::$method<Bits<N>> for usize {
+        impl<const N: usize> std::ops::$method<Bits<N>> for LiteralType {
             type Output = Bits<N>;
 
             #[inline(always)]
@@ -1151,35 +1099,21 @@ impl<const N: usize> Ord for Bits<N> {
     }
 }
 
-macro_rules! partial_cmp_with_base_type {
-    ($kind: ty) => {
-        #[doc(hidden)]
-        impl<const N: usize> std::cmp::PartialOrd<Bits<N>> for $kind {
-            fn partial_cmp(&self, other: &Bits<N>) -> Option<Ordering> {
-                let self_as_bits: Bits<N> = (*self).into();
-                self_as_bits.partial_cmp(other)
-            }
-        }
-        #[doc(hidden)]
-        impl<const N: usize> std::cmp::PartialOrd<$kind> for Bits<N> {
-            fn partial_cmp(&self, other: &$kind) -> Option<Ordering> {
-                let other_as_bits: Bits<N> = (*other).into();
-                self.partial_cmp(&other_as_bits)
-            }
-        }
-    };
+#[doc(hidden)]
+impl<const N: usize> std::cmp::PartialOrd<Bits<N>> for LiteralType {
+    fn partial_cmp(&self, other: &Bits<N>) -> Option<Ordering> {
+        let self_as_bits: Bits<N> = (*self).into();
+        self_as_bits.partial_cmp(other)
+    }
 }
 
-partial_cmp_with_base_type!(u8);
-partial_cmp_with_base_type!(u16);
-partial_cmp_with_base_type!(u32);
-partial_cmp_with_base_type!(u64);
-partial_cmp_with_base_type!(u128);
-partial_cmp_with_base_type!(i8);
-partial_cmp_with_base_type!(i16);
-partial_cmp_with_base_type!(i32);
-partial_cmp_with_base_type!(i64);
-partial_cmp_with_base_type!(i128);
+#[doc(hidden)]
+impl<const N: usize> std::cmp::PartialOrd<LiteralType> for Bits<N> {
+    fn partial_cmp(&self, other: &LiteralType) -> Option<Ordering> {
+        let other_as_bits: Bits<N> = (*other).into();
+        self.partial_cmp(&other_as_bits)
+    }
+}
 
 #[doc(hidden)]
 impl<const N: usize> PartialOrd<Bits<N>> for Bits<N> {
@@ -1215,38 +1149,21 @@ impl<const N: usize> PartialEq<Bits<N>> for Bits<N> {
     }
 }
 
-macro_rules! partial_eq_with_base_type {
-    ($kind: ty) => {
-        #[doc(hidden)]
-        impl<const N: usize> std::cmp::PartialEq<$kind> for Bits<N> {
-            #[inline(always)]
-            fn eq(&self, other: &$kind) -> bool {
-                let other_as_bits: Bits<N> = (*other).into();
-                self.eq(&other_as_bits)
-            }
-        }
-        #[doc(hidden)]
-        impl<const N: usize> std::cmp::PartialEq<Bits<N>> for $kind {
-            #[inline(always)]
-            fn eq(&self, other: &Bits<N>) -> bool {
-                let self_as_bits: Bits<N> = (*self).into();
-                self_as_bits.eq(other)
-            }
-        }
-    };
+#[doc(hidden)]
+impl<const N: usize> std::cmp::PartialEq<LiteralType> for Bits<N> {
+    fn eq(&self, other: &LiteralType) -> bool {
+        let other_as_bits: Bits<N> = (*other).into();
+        self.eq(&other_as_bits)
+    }
 }
 
-partial_eq_with_base_type!(u8);
-partial_eq_with_base_type!(u16);
-partial_eq_with_base_type!(u32);
-partial_eq_with_base_type!(u64);
-partial_eq_with_base_type!(u128);
-partial_eq_with_base_type!(i8);
-partial_eq_with_base_type!(i16);
-partial_eq_with_base_type!(i32);
-partial_eq_with_base_type!(i64);
-partial_eq_with_base_type!(i128);
-partial_eq_with_base_type!(usize);
+#[doc(hidden)]
+impl<const N: usize> std::cmp::PartialEq<Bits<N>> for LiteralType {
+    fn eq(&self, other: &Bits<N>) -> bool {
+        let self_as_bits: Bits<N> = (*self).into();
+        self_as_bits.eq(other)
+    }
+}
 
 #[doc(hidden)]
 impl PartialEq<bool> for Bits<1> {
@@ -1282,7 +1199,7 @@ impl<const N: usize> std::ops::Add<bool> for Bits<N> {
 
     fn add(self, rhs: bool) -> Self::Output {
         if rhs {
-            self + Bits::<N>::from(1_u8)
+            self + Bits::<N>::from(1)
         } else {
             self
         }
@@ -1291,148 +1208,155 @@ impl<const N: usize> std::ops::Add<bool> for Bits<N> {
 
 #[cfg(test)]
 mod tests {
+    use crate::core::bits::{LiteralType, ToBits};
     use std::num::Wrapping;
 
-    use super::{bit_cast, bits, clog2, Bits};
+    use super::{bit_cast, clog2, Bits};
 
     #[test]
     fn test_get_bits_section() {
-        let x: Bits<40> = bits(0xDAD_BEEF_CA);
+        let x: Bits<40> = 0xDAD_BEEF_CA.into();
         let y = x.get_bits::<32>(8);
     }
 
     #[test]
     fn test_short_from_u8() {
-        let x: Bits<4> = 135_u8.into();
-        let y: u8 = x.into();
-        assert_eq!(y, 135 & (0x0F));
+        let x: Bits<4> = 15.into();
+        let y: LiteralType = x.into();
+        assert_eq!(y, 15 & (0x0F));
     }
 
     #[test]
     fn test_short_from_u16() {
-        let x: Bits<12> = 14323_u16.into();
-        let y: u16 = x.into();
-        assert_eq!(y, 14323 & (0x0FFF));
+        let x: Bits<12> = 1432.into();
+        let y: LiteralType = x.into();
+        assert_eq!(y, 1432 & (0x0FFF));
     }
 
     #[test]
     fn test_short_from_u32() {
-        let x: Bits<100> = 12434234_u128.into();
-        let y: u128 = x.into();
-        assert_eq!(y, 12434234_u128);
+        let x: Bits<64> = 12434234.into();
+        let y: LiteralType = x.into();
+        assert_eq!(y, 12434234);
+    }
+
+    #[test]
+    fn test_from_u32() {
+        let x: Bits<64> = 0xFFFF_FFFF.into();
+        let y: LiteralType = x.into();
+        assert_eq!(y, 0xFFFF_FFFF);
     }
 
     #[test]
     fn or_test() {
-        let a: Bits<32> = 45_u32.into();
-        let b: Bits<32> = 10395_u32.into();
+        let a: Bits<32> = 45.into();
+        let b: Bits<32> = 10395.into();
         let c = a | b;
-        let c_u32: u32 = c.into();
-        assert_eq!(c_u32, 45_u32 | 10395_u32)
+        let c_u32: LiteralType = c.into();
+        assert_eq!(c_u32, 45 | 10395)
     }
     #[test]
     fn and_test() {
-        let a: Bits<32> = 45_u32.into();
-        let b: Bits<32> = 10395_u32.into();
+        let a: Bits<32> = 45.into();
+        let b: Bits<32> = 10395.into();
         let c = a & b;
-        let c_u32: u32 = c.into();
-        assert_eq!(c_u32, 45_u32 & 10395_u32)
+        let c_u32: LiteralType = c.into();
+        assert_eq!(c_u32, 45 & 10395)
     }
     #[test]
     fn xor_test() {
-        let a: Bits<32> = 45_u32.into();
-        let b: Bits<32> = 10395_u32.into();
+        let a: Bits<32> = 45.into();
+        let b: Bits<32> = 10395.into();
         let c = a ^ b;
-        let c_u32: u32 = c.into();
-        assert_eq!(c_u32, 45_u32 ^ 10395_u32)
+        let c_u32: LiteralType = c.into();
+        assert_eq!(c_u32, 45 ^ 10395)
     }
     #[test]
     fn not_test() {
-        let a: Bits<32> = 45_u32.into();
+        let a: Bits<32> = 45.into();
         let c = !a;
-        let c_u32: u32 = c.into();
-        assert_eq!(c_u32, !45_u32);
+        let c_u32: LiteralType = c.into();
+        assert_eq!(c_u32, (!45_u32) as LiteralType);
     }
     #[test]
     fn shr_test() {
-        let a: Bits<32> = 10395_u32.into();
-        let c: Bits<32> = a >> 4_u32;
-        let c_u32: u32 = c.into();
-        assert_eq!(c_u32, 10395_u32 >> 4);
+        let a: Bits<32> = 10395.into();
+        let c: Bits<32> = a >> 4;
+        let c_u32: LiteralType = c.into();
+        assert_eq!(c_u32, 10395 >> 4);
     }
     #[test]
     fn shr_test_pair() {
-        let a: Bits<32> = 10395_u32.into();
-        let b: Bits<32> = 4_u32.into();
+        let a: Bits<32> = 10395.into();
+        let b: Bits<32> = 4.into();
         let c = a >> b;
-        let c_u32: u32 = c.into();
-        assert_eq!(c_u32, 10395_u32 >> 4);
+        let c_u32: LiteralType = c.into();
+        assert_eq!(c_u32, 10395 >> 4);
     }
     #[test]
     fn shl_test() {
-        let a: Bits<32> = 10395_u32.into();
-        let c = a << 24_u32;
-        let c_u32: u32 = c.into();
-        assert_eq!(c_u32, 10395_u32 << 24);
+        let a: Bits<32> = 10395.into();
+        let c = a << 24;
+        let c_u32 = c.to_u32();
+        assert_eq!(c_u32, 10395 << 24);
     }
     #[test]
     fn shl_test_pair() {
-        let a: Bits<32> = 10395_u32.into();
-        let b: Bits<32> = 4_u32.into();
+        let a: Bits<32> = 10395.into();
+        let b: Bits<32> = 4.into();
         let c = a << b;
-        let c_u32: u32 = c.into();
-        assert_eq!(c_u32, 10395_u32 << 4);
+        let c_u32: LiteralType = c.into();
+        assert_eq!(c_u32, 10395 << 4);
     }
     #[test]
     fn add_works() {
-        let a: Bits<32> = 10234_u32.into();
-        let b: Bits<32> = 19423_u32.into();
+        let a: Bits<32> = 10234.into();
+        let b: Bits<32> = 19423.into();
         let c = a + b;
-        let c_u32: u32 = c.into();
-        assert_eq!(c_u32, 10234_u32 + 19423_u32);
+        let c_u32: LiteralType = c.into();
+        assert_eq!(c_u32, 10234 + 19423);
     }
     #[test]
     fn add_int_works() {
-        let a: Bits<32> = 10234_u32.into();
-        let b = 19423_u32;
+        let a: Bits<32> = 10234.into();
+        let b = 19423;
         let c: Bits<32> = a + b;
-        let c_u32: u32 = c.into();
-        assert_eq!(c_u32, 10234_u32 + 19423_u32);
+        let c_u32: LiteralType = c.into();
+        assert_eq!(c_u32, 10234 + 19423);
     }
     #[test]
     fn add_works_with_overflow() {
         let x = 2_042_102_334_u32;
         let y = 2_942_142_512_u32;
-        let a: Bits<32> = x.into();
-        let b: Bits<32> = y.into();
+        let a: Bits<32> = x.to_bits();
+        let b: Bits<32> = y.to_bits();
         let c = a + b;
-        let c_u32: u32 = c.into();
+        let c_u32 = c.to_u32();
         assert_eq!(Wrapping(c_u32), Wrapping(x) + Wrapping(y));
     }
     #[test]
     fn sub_works() {
         let x = 2_042_102_334_u32;
         let y = 2_942_142_512_u32;
-        let a: Bits<32> = x.into();
-        let b: Bits<32> = y.into();
+        let a: Bits<32> = x.to_bits();
+        let b: Bits<32> = y.to_bits();
         let c = a - b;
-        let c_u32: u32 = c.into();
+        let c_u32 = c.to_u32();
         assert_eq!(Wrapping(c_u32), Wrapping(x) - Wrapping(y));
     }
     #[test]
     fn sub_int_works() {
         let x = 2_042_102_334_u32;
-        let y = 2_942_142_512_u32;
-        let a: Bits<32> = x.into();
-        let b: u32 = y.into();
-        let c = a - b;
-        let c_u32: u32 = c.into();
-        assert_eq!(Wrapping(c_u32), Wrapping(x) - Wrapping(y));
+        let y = 2_942_142_512;
+        let a: Bits<32> = x.to_bits();
+        let c = a - y;
+        let c_u32 = c.to_u32();
+        assert_eq!(Wrapping(c_u32), Wrapping(x) - Wrapping(y as u32));
     }
     #[test]
     fn eq_works() {
-        let x = 2_032_142_351_u32;
-        let y = 2_942_142_512_u32;
+        let x = 2_032_142_351;
+        let y = 2_942_142_512;
         let a: Bits<32> = x.into();
         let b: Bits<32> = x.into();
         let c: Bits<32> = y.into();
@@ -1441,89 +1365,89 @@ mod tests {
     }
     #[test]
     fn all_works() {
-        let a: Bits<48> = 0xFFFF_FFFF_FFFF_u64.into();
+        let a: Bits<48> = 0xFFFF_FFFF_FFFF.into();
         assert!(a.all());
         assert!(a.any());
     }
     #[test]
     fn mask_works() {
-        let a: Bits<48> = 0xFFFF_FFFF_FFFF_u64.into();
+        let a: Bits<48> = 0xFFFF_FFFF_FFFF.into();
         let b = Bits::<48>::mask();
         assert_eq!(a, b);
-        let a: Bits<16> = 0xFFFF_u64.into();
+        let a: Bits<16> = 0xFFFF.into();
         let b = Bits::<16>::mask();
         assert_eq!(a, b)
     }
     #[test]
     fn get_bit_works() {
         // 0101 = 5
-        let a = bits::<48>(0xFFFF_FFFF_FFF5);
+        let a: Bits<48> = 0xFFFF_FFFF_FFF5.into();
         assert!(a.get_bit(0));
         assert!(!a.get_bit(1));
         assert!(a.get_bit(2));
         assert!(!a.get_bit(3));
-        let c = bits::<5>(3);
-        assert!(!a.get_bit(c.into()));
+        let c: Bits<5> = 3.into();
+        assert!(!a.get_bit(c.index()));
     }
     #[test]
     fn test_bit_cast_short() {
-        let a = bits::<8>(0xFF);
+        let a: Bits<8> = 0xFF.into();
         let b: Bits<16> = bit_cast(a);
-        assert_eq!(b, bits::<16>(0xFF));
+        assert_eq!(b, 0xFF);
         let c: Bits<4> = bit_cast(a);
-        assert_eq!(c, bits::<4>(0xF));
+        assert_eq!(c, 0xF);
     }
     #[test]
     fn test_bit_cast_long() {
-        let a = bits::<48>(0xabcd_dead_cafe_babe);
+        let a: Bits<48> = 0xdead_cafe_babe.into();
         let b: Bits<44> = bit_cast(a);
-        assert_eq!(b, bits::<44>(0xbcd_dead_cafe_babe));
+        assert_eq!(b, 0xead_cafe_babe);
         let b: Bits<32> = bit_cast(a);
-        assert_eq!(b, bits::<32>(0xcafe_babe));
+        assert_eq!(b, 0xcafe_babe);
     }
     #[test]
     fn test_bit_extract_long() {
-        let a = bits::<48>(0xabcd_dead_cafe_babe);
+        let a: Bits<48> = 0xdead_cafe_babe.into();
         let b: Bits<44> = a.get_bits(4);
-        assert_eq!(b, bits::<44>(0xabcd_dead_cafe_bab));
+        assert_eq!(b, 0xdead_cafe_bab);
         let b: Bits<32> = a.get_bits(16);
-        assert_eq!(b, bits::<32>(0xdead_cafe));
+        assert_eq!(b, 0xdead_cafe);
     }
     #[test]
     fn test_set_bit() {
-        let a = bits::<48>(0xabcd_dead_cafe_babe);
+        let a: Bits<48> = 0xdead_cafe_babe.into();
         let mut b = a;
         for i in 4..8 {
             b = b.replace_bit(i, false)
         }
-        assert_eq!(b, bits::<48>(0xabcd_dead_cafe_ba0e));
+        assert_eq!(b, 0xdead_cafe_ba0e);
     }
     #[test]
     fn test_set_bits() {
-        let a = bits::<16>(0xdead);
-        let b = bits::<4>(0xf);
+        let a: Bits<16> = 0xdead.into();
+        let b: Bits<4> = 0xf.into();
         let mut c = a.clone();
         c.set_bits(4, b);
-        assert_eq!(c, bits::<16>(0xdefd));
-        let a = bits::<48>(0xabcd_dead_cafe_babe);
-        let b = bits::<8>(0xde);
+        assert_eq!(c, 0xdefd);
+        let a: Bits<48> = 0xdead_cafe_babe.into();
+        let b: Bits<8> = 0xde.into();
         let mut c = a.clone();
         c.set_bits(16, b);
-        assert_eq!(c, bits::<48>(0xabcd_dead_cade_babe));
+        assert_eq!(c, 0xdead_cade_babe);
     }
     #[test]
     fn test_constants_and_bits() {
-        let a = bits::<16>(0xdead);
+        let a: Bits<16> = 0xdead.into();
         let b = a + 1;
         let c = 1 + a;
         println!("{:x}", b);
-        assert_eq!(b, bits::<16>(0xdeae));
+        assert_eq!(b, 0xdeae);
         assert_eq!(b, c);
     }
     #[test]
     fn test_clog2() {
         const A_WIDTH: usize = clog2(250);
-        let a = bits::<A_WIDTH>(153);
+        let a: Bits<{ A_WIDTH }> = 153.into();
         println!("{:x}", a);
         assert_eq!(a.len(), 8);
         assert_eq!(clog2(1024), 10);
@@ -1531,27 +1455,27 @@ mod tests {
     #[test]
     fn test_clog2_inline() {
         const A_WIDTH: usize = clog2(1000);
-        let a = bits::<A_WIDTH>(1023);
+        let a: Bits<A_WIDTH> = 1023.into();
         assert_eq!(a.len(), 10);
     }
     #[test]
     fn test_default() {
         const N: usize = 128;
         let a = Bits::<N>::default();
-        assert_eq!(a, bits(0));
+        assert_eq!(a, 0);
     }
     #[test]
     fn test_compare() {
-        let a = bits::<16>(35);
-        let b = bits::<16>(100);
+        let a: Bits<16> = 35.into();
+        let b: Bits<16> = 100.into();
         assert_ne!(a, b);
         assert!(a < b);
         assert!(b > a);
     }
     #[test]
     fn test_compare_long() {
-        let a = bits::<160>(35);
-        let b = bits::<160>(100);
+        let a: Bits<160> = 35.into();
+        let b: Bits<160> = 100.into();
         assert_ne!(a, b);
         assert!(a < b);
         assert!(b > a);

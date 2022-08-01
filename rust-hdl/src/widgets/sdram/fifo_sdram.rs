@@ -78,7 +78,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
             dram_is_empty: Default::default(),
             dram_is_full: Default::default(),
             state: Default::default(),
-            line_to_word_ratio: Constant::new(L.into()),
+            line_to_word_ratio: Constant::new(L.to_bits()),
             fill: Default::default(),
         }
     }
@@ -186,16 +186,16 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
         // use a chunk size of 2^19.
         //
         //524288   1048576   1572864   2097152   2621440   3145728   3670016   4194304
-        if self.fill.q.val() > bits::<A>(838860) {
+        if self.fill.q.val() > 838860 {
             self.status.next = self.status.val() | 1;
         }
-        if self.fill.q.val() > bits::<A>(1677721) {
+        if self.fill.q.val() > 1677721 {
             self.status.next = self.status.val() | 2;
         }
-        if self.fill.q.val() > bits::<A>(2516582) {
+        if self.fill.q.val() > 2516582 {
             self.status.next = self.status.val() | 4;
         }
-        if self.fill.q.val() > bits::<A>(3355443) {
+        if self.fill.q.val() > 3355443 {
             self.status.next = self.status.val() | 8;
         }
         if self.underflow.val() | self.overflow.val() {

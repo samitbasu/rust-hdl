@@ -82,7 +82,7 @@ fn test_unit_boots() {
 macro_rules! sdram_basic_write {
     ($sim: ident, $uut: ident, $cntrl: ident, $addr: expr, $data: expr) => {
         $uut = $sim.watch(|x| !x.$cntrl.busy.val(), $uut)?;
-        $uut.$cntrl.cmd_address.next = ($addr).into();
+        $uut.$cntrl.cmd_address.next = ($addr as u32).to_bits();
         $uut.$cntrl.write_not_read.next = true;
         $uut.$cntrl.cmd_strobe.next = true;
         wait_clock_cycle!($sim, clock, $uut);
@@ -91,7 +91,7 @@ macro_rules! sdram_basic_write {
         $uut.$cntrl.write_not_read.next = false;
         $uut.$cntrl.data_in.next = 0.into();
         for datum in $data {
-            $uut.$cntrl.data_in.next = (*datum).into();
+            $uut.$cntrl.data_in.next = (*datum as u32).to_bits();
             $uut = $sim.watch(|x| x.$cntrl.data_strobe.val(), $uut)?;
             wait_clock_cycle!($sim, clock, $uut);
         }
@@ -103,7 +103,7 @@ macro_rules! sdram_basic_read {
     ($sim: ident, $uut: ident, $cntrl: ident, $addr: expr, $count: expr) => {{
         let mut ret = vec![];
         $uut = $sim.watch(|x| !x.$cntrl.busy.val(), $uut)?;
-        $uut.$cntrl.cmd_address.next = ($addr).into();
+        $uut.$cntrl.cmd_address.next = ($addr as u32).to_bits();
         $uut.$cntrl.write_not_read.next = false;
         $uut.$cntrl.cmd_strobe.next = true;
         wait_clock_cycle!($sim, clock, $uut);
@@ -138,23 +138,13 @@ fn test_unit_writes() {
     sim.add_testbench(move |mut sim: Sim<TestSDRAMDevice>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        sdram_basic_write!(sim, x, cntrl, 0, &[0xDEAD_u16, 0xBEEF, 0xCAFE, 0xBABE]);
-        sdram_basic_write!(sim, x, cntrl, 4, &[0x1234_u16, 0xABCD, 0x5678, 0xEFFE]);
+        sdram_basic_write!(sim, x, cntrl, 0, &[0xDEAD, 0xBEEF, 0xCAFE, 0xBABE]);
+        sdram_basic_write!(sim, x, cntrl, 4, &[0x1234, 0xABCD, 0x5678, 0xEFFE]);
         let read = sdram_basic_read!(sim, x, cntrl, 2, 4);
         wait_clock_cycles!(sim, clock, x, 10);
-        sim_assert_eq!(
-            sim,
-            read,
-            [0xCAFE_u16, 0xBABE_u16, 0x1234_u16, 0xABCD_u16],
-            x
-        );
+        sim_assert_eq!(sim, read, [0xCAFE, 0xBABE, 0x1234, 0xABCD], x);
         let read = sdram_basic_read!(sim, x, cntrl, 4, 4);
-        sim_assert_eq!(
-            sim,
-            read,
-            [0x1234_u16, 0xABCD_u16, 0x5678_u16, 0xEFFE_u16],
-            x
-        );
+        sim_assert_eq!(sim, read, [0x1234, 0xABCD, 0x5678, 0xEFFE], x);
         for (ndx, val) in send.iter().enumerate() {
             sdram_basic_write!(sim, x, cntrl, ndx * 4 + 8, val);
         }

@@ -1,14 +1,24 @@
+use crate::core::bits::LiteralType;
 use std::cmp::Ordering;
 use std::num::Wrapping;
 
 pub type ShortType = u32;
-
 pub const SHORT_BITS: usize = 32;
 
 #[derive(Clone, Debug, Copy, Hash)]
 pub struct ShortBitVec<const N: usize>(ShortType);
 
+#[test]
+fn test_max_legal_calc() {
+    let k = ShortBitVec::<16>::max_legal();
+    assert_eq!(k, 65535);
+}
+
 impl<const N: usize> ShortBitVec<N> {
+    pub fn max_legal() -> u64 {
+        (1_u64 << N) - 1
+    }
+
     pub fn short(&self) -> ShortType {
         self.0
     }
@@ -75,19 +85,13 @@ impl<const N: usize> From<ShortBitVec<N>> for ShortType {
     }
 }
 
-impl<const N: usize> From<ShortBitVec<N>> for usize {
-    #[inline(always)]
-    fn from(t: ShortBitVec<N>) -> usize {
-        t.0 as usize
-    }
-}
-
 impl<const N: usize> std::ops::Add<ShortBitVec<N>> for ShortBitVec<N> {
     type Output = ShortBitVec<N>;
 
     #[inline(always)]
     fn add(self, rhs: ShortBitVec<N>) -> Self::Output {
-        (Wrapping(self.0) + Wrapping(rhs.0)).0.into()
+        let tmp = (Wrapping(self.0) + Wrapping(rhs.0)).0;
+        (tmp & ShortBitVec::<N>::bit_mask()).into()
     }
 }
 
@@ -152,12 +156,12 @@ impl<const N: usize> std::cmp::PartialOrd for ShortBitVec<N> {
     }
 }
 
-impl<const N: usize> std::ops::Shr<usize> for ShortBitVec<N> {
+impl<const N: usize> std::ops::Shr<LiteralType> for ShortBitVec<N> {
     type Output = ShortBitVec<N>;
 
     #[inline(always)]
-    fn shr(self, rhs: usize) -> Self::Output {
-        (Wrapping(self.0) >> rhs).0.into()
+    fn shr(self, rhs: LiteralType) -> Self::Output {
+        (Wrapping(self.0) >> (rhs as usize)).0.into()
     }
 }
 
@@ -166,17 +170,17 @@ impl<const M: usize, const N: usize> std::ops::Shr<ShortBitVec<M>> for ShortBitV
 
     #[inline(always)]
     fn shr(self, rhs: ShortBitVec<M>) -> Self::Output {
-        let r: usize = rhs.into();
+        let r = rhs.short() as LiteralType;
         self >> r
     }
 }
 
-impl<const N: usize> std::ops::Shl<usize> for ShortBitVec<N> {
+impl<const N: usize> std::ops::Shl<LiteralType> for ShortBitVec<N> {
     type Output = ShortBitVec<N>;
 
     #[inline(always)]
-    fn shl(self, rhs: usize) -> Self::Output {
-        (Wrapping(self.0) << rhs).0.into()
+    fn shl(self, rhs: LiteralType) -> Self::Output {
+        (Wrapping(self.0) << (rhs as usize)).0.into()
     }
 }
 
@@ -185,7 +189,7 @@ impl<const M: usize, const N: usize> std::ops::Shl<ShortBitVec<M>> for ShortBitV
 
     #[inline(always)]
     fn shl(self, rhs: ShortBitVec<M>) -> Self::Output {
-        let r: usize = rhs.into();
+        let r: LiteralType = rhs.short() as LiteralType;
         self << r
     }
 }

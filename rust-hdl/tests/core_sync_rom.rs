@@ -10,7 +10,7 @@ struct SyncROMTest {
 impl SyncROMTest {
     pub fn new() -> SyncROMTest {
         let mut rom = BTreeMap::new();
-        for i in 0_u32..16 {
+        for i in 0..16 {
             rom.insert(Bits::<4>::from(i), Bits::<4>::from(15 - i));
         }
         SyncROMTest {

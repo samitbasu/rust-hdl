@@ -31,8 +31,8 @@ impl<const W: usize, const D: usize> Default for MOSIWidePort<W, D> {
             accum: Default::default(),
             state: Default::default(),
             address_active: Default::default(),
-            offset: Constant::new(D.into()),
-            modulo: Constant::new((W / D - 1).into()),
+            offset: Constant::new(D.to_bits()),
+            modulo: Constant::new((W / D - 1).to_bits()),
             count: Default::default(),
             strobe: Default::default(),
         }

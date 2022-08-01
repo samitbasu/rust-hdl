@@ -105,7 +105,7 @@ fn test_ping_works() {
         let mut x = sim.init()?;
         for iter in 0..10 {
             let word = hls_host_get_word!(sim, bidi_clock, x, host_to_pc);
-            sim_assert!(sim, word == 0x0167_u16 + iter, x);
+            sim_assert!(sim, word == 0x0167 + iter, x);
         }
         sim.done(x)
     });
@@ -145,7 +145,7 @@ fn test_write_command_works() {
         for iter in 0..10 {
             for ndx in 0..(iter + 1) {
                 x = sim.watch(|x| x.port.strobe_out.val(), x)?;
-                sim_assert!(sim, x.port.port_out.val() == (0x7870_u32 + ndx), x);
+                sim_assert!(sim, x.port.port_out.val() == (0x7870 + ndx), x);
                 wait_clock_cycle!(sim, sys_clock, x);
             }
         }
@@ -180,7 +180,7 @@ fn test_read_command_works() {
             let vals = hls_host_get_words!(sim, bidi_clock, x, host_to_pc, (iter + 1));
             println!("{:x?}", vals);
             for ndx in 0..(iter + 1) {
-                sim_assert!(sim, vals[ndx as usize] == 0xBEE0_u16 + ndx, x);
+                sim_assert!(sim, vals[ndx as usize] == 0xBEE0 + ndx, x);
             }
             wait_clock_cycles!(sim, bidi_clock, x, 5);
         }
@@ -192,7 +192,7 @@ fn test_read_command_works() {
         for iter in 0..10 {
             wait_clock_cycles!(sim, sys_clock, x, 10);
             for ndx in 0..(iter + 1) {
-                x.iport.port_in.next = (0xBEE0_u16 + ndx).into();
+                x.iport.port_in.next = (0xBEE0 + ndx).into();
                 x.iport.ready_in.next = true;
                 x = sim.watch(|x| x.iport.strobe_out.val(), x)?;
                 wait_clock_cycle!(sim, sys_clock, x);
@@ -227,18 +227,18 @@ fn test_stream_command_works() {
         wait_clock_cycles!(sim, bidi_clock, x, 5);
         // A stream command looks like 0x05XX, where XX is the address to stream from
         // Write the command
-        hls_host_put_word!(sim, bidi_clock, x, pc_to_host, 0x0502_u16);
+        hls_host_put_word!(sim, bidi_clock, x, pc_to_host, 0x0502);
         let vals = hls_host_get_words!(sim, bidi_clock, x, host_to_pc, 100);
         // Wait until we have collected 100 items
-        for iter in 0_u16..100 {
-            sim_assert!(sim, vals[iter as usize] == 0xBAB0_u16 + iter, x);
+        for iter in 0..100 {
+            sim_assert_eq!(sim, vals[iter as usize], 0xBAB0 + iter, x);
         }
         // Send a stop command (anything non-zero)
-        hls_host_put_word!(sim, bidi_clock, x, pc_to_host, 0x0502_u16);
+        hls_host_put_word!(sim, bidi_clock, x, pc_to_host, 0x0502);
         hls_host_drain!(sim, bidi_clock, x, host_to_pc);
-        hls_host_ping!(sim, bidi_clock, x, pc_to_host, 0xFF_u8);
+        hls_host_ping!(sim, bidi_clock, x, pc_to_host, 0xFF);
         let ping = hls_host_get_word!(sim, bidi_clock, x, host_to_pc);
-        sim_assert!(sim, ping == 0x01FF_u16, x);
+        sim_assert_eq!(sim, ping, 0x01FF, x);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<HostTest>| {

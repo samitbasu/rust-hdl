@@ -174,7 +174,7 @@ impl<const N: usize> Logic for SPISlave<N> {
             .register_out
             .q
             .val()
-            .get_bit(self.pointer.q.val().into());
+            .get_bit(self.pointer.q.val().index());
         self.boot_delay.d.next = self.boot_delay.q.val() + 1;
         match self.state.q.val() {
             SPISlaveState::Boot => {

@@ -91,18 +91,11 @@ fn test_spi_works() {
         wait_clock_cycles!(sim, bidi_clock, x, 20);
         wait_clock_true!(sim, bidi_clock, x);
         // Write the outgoing word
-        hls_host_write!(
-            sim,
-            bidi_clock,
-            x,
-            pc_to_host,
-            0,
-            [0_u16, 0, 0xDEAD_u16, 0xBEEF]
-        );
+        hls_host_write!(sim, bidi_clock, x, pc_to_host, 0, [0, 0, 0, 0xBEEF]);
         // Write the transaction length
-        hls_host_write!(sim, bidi_clock, x, pc_to_host, 2, [32_u16]);
+        hls_host_write!(sim, bidi_clock, x, pc_to_host, 2, [32]);
         // Write a start to start the transaction
-        hls_host_write!(sim, bidi_clock, x, pc_to_host, 3, [0_u16]);
+        hls_host_write!(sim, bidi_clock, x, pc_to_host, 3, [0]);
         // Read back the results
         hls_host_issue_read!(sim, bidi_clock, x, pc_to_host, 1, 4);
         let ret = hls_host_get_words!(sim, bidi_clock, x, host_to_pc, 4);

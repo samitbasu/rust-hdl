@@ -51,10 +51,10 @@ impl<const D: usize, const A: usize, const N: usize> RouterROM<D, A, N> {
         for (ndx, count) in address_count.iter().enumerate() {
             assert_ne!(*count, 0);
             for addr in 0..*count {
-                let address: Bits<A> = (offset + addr).into();
-                let node: Bits<8> = ndx.into();
+                let address: Bits<A> = (offset + addr).to_bits();
+                let node: Bits<8> = ndx.to_bits();
                 node_rom.insert(address, node);
-                let virtual_address: Bits<A> = addr.into();
+                let virtual_address: Bits<A> = addr.to_bits();
                 base_rom.insert(address, virtual_address);
             }
             offset = offset + count;

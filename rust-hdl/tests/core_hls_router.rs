@@ -211,13 +211,13 @@ fn test_router_test_setup_works() {
         x.clock.next = !x.clock.val()
     });
     let dataset = [
-        0xBEAF_u16, 0xDEED, 0xCAFE, 0xBABE, 0x1234, 0x5678, 0x900B, 0xB001, 0xDEAD, 0xBEEF, 0x5EA1,
+        0xBEAF, 0xDEED, 0xCAFE, 0xBABE, 0x1234, 0x5678, 0x900B, 0xB001, 0xDEAD, 0xBEEF, 0x5EA1,
         0x5AFE, 0xAAAA, 0x5A13, 0x8675,
     ];
     sim.add_testbench(move |mut sim: Sim<RouterTestSetup>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for address in 0_u8..15 {
+        for address in 0..15 {
             // Sweep the address space...
             x.upstream.address.next = address.into();
             x.upstream.from_controller.next = dataset[address as usize].into();

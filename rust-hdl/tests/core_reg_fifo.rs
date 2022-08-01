@@ -32,7 +32,7 @@ fn test_register_fifo_works() {
     uut.connect_all();
     let mut sim = Simulation::new();
     let rdata = (0..256)
-        .map(|_| Bits::<16>::from(rand::random::<u16>()))
+        .map(|_| rand::random::<u16>().to_bits())
         .collect::<Vec<_>>();
     let rdata_read = rdata.clone();
     sim.add_clock(5, |x: &mut Box<RegFIFOTest>| x.clock.next = !x.clock.val());

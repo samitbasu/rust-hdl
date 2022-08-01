@@ -22,9 +22,9 @@ impl<const P: usize> Logic for AlchitryCuPWM<P> {
         self.rom.address.next = self.counter.q.val();
         self.pwm.threshold.next = self.rom.data.val();
         self.strobe.enable.next = true;
-        self.leds.next = 0x00_u8.into();
+        self.leds.next = 0x00.into();
         if self.pwm.active.val() {
-            self.leds.next = 0xFF_u8.into();
+            self.leds.next = 0xFF.into();
         }
         self.counter.d.next = self.counter.q.val() + self.strobe.strobe.val();
     }
@@ -32,8 +32,8 @@ impl<const P: usize> Logic for AlchitryCuPWM<P> {
 
 impl<const P: usize> AlchitryCuPWM<P> {
     fn new(clock_freq: u64) -> Self {
-        let rom = (0..256_u32)
-            .map(|x| (Bits::<8>::from(x), snore(x)))
+        let rom = (0..256)
+            .map(|x| (x.to_bits(), snore(x)))
             .collect::<BTreeMap<_, _>>();
         Self {
             pwm: PulseWidthModulator::default(),

@@ -42,7 +42,7 @@ impl I2CTestTarget {
             phy: Default::default(),
             mem: Default::default(),
             ptr: Default::default(),
-            address: Constant::new(address.into()),
+            address: Constant::new(address.to_bits()),
             outgoing: Default::default(),
             save: Default::default(),
             state: Default::default(),

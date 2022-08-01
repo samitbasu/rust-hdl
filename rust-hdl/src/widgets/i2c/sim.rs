@@ -4,7 +4,7 @@ macro_rules! i2c_begin_write {
         $uut = $sim.watch(|x| !x.controller.busy.val(), $uut)?;
         wait_clock_true!($sim, $clock, $uut);
         $uut.controller.cmd.next = I2CControllerCmd::BeginWrite;
-        $uut.controller.write_data_in.next = $addr.into();
+        $uut.controller.write_data_in.next = ($addr as u32).to_bits();
         $uut.controller.run.next = true;
         wait_clock_cycle!($sim, $clock, $uut);
         $uut.controller.run.next = false;
@@ -18,7 +18,7 @@ macro_rules! i2c_begin_read {
         $uut = $sim.watch(|x| !x.controller.busy.val(), $uut)?;
         wait_clock_true!($sim, $clock, $uut);
         $uut.controller.cmd.next = I2CControllerCmd::BeginRead;
-        $uut.controller.write_data_in.next = $addr.into();
+        $uut.controller.write_data_in.next = ($addr as u32).to_bits();
         $uut.controller.run.next = true;
         wait_clock_cycle!($sim, $clock, $uut);
         $uut.controller.run.next = false;
@@ -46,7 +46,7 @@ macro_rules! i2c_write {
         $uut = $sim.watch(|x| !x.controller.busy.val(), $uut)?;
         wait_clock_true!($sim, $clock, $uut);
         $uut.controller.cmd.next = I2CControllerCmd::Write;
-        $uut.controller.write_data_in.next = $val.into();
+        $uut.controller.write_data_in.next = ($val as u32).to_bits();
         $uut.controller.run.next = true;
         wait_clock_cycle!($sim, $clock, $uut);
         $uut.controller.run.next = false;

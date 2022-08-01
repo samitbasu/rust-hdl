@@ -17,9 +17,9 @@ impl Logic for AlchitryCuPulser {
     fn update(&mut self) {
         self.pulser.enable.next = true;
         clock!(self, clock, pulser);
-        self.leds.next = 0x00_u32.into();
+        self.leds.next = 0x00.into();
         if self.pulser.pulse.val() {
-            self.leds.next = 0xAA_u32.into();
+            self.leds.next = 0xAA.into();
         }
     }
 }
@@ -27,7 +27,7 @@ impl Logic for AlchitryCuPulser {
 impl Default for AlchitryCuPulser {
     fn default() -> Self {
         let pulser = Pulser::new(
-            rust_hdl::bsp::alchitry_cu::pins::CLOCK_SPEED_100MHZ,
+            rust_hdl::bsp::alchitry_cu::pins::CLOCK_SPEED_100MHZ.into(),
             1.0,
             Duration::from_millis(250),
         );

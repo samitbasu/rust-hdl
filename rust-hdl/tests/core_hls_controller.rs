@@ -93,13 +93,13 @@ fn test_ping_works() {
         for iter in 0..10 {
             wait_clock_cycles!(sim, clock, x, 5);
             // A ping is 0x01XX, where XX is the code returned by the controller
-            x.from_cpu.data.next = (0x0167_u16 + iter).into();
+            x.from_cpu.data.next = (0x0167 + iter).into();
             x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu.write.next = false;
             wait_clock_cycles!(sim, clock, x, 5);
             // Insert a NOOP
-            x.from_cpu.data.next = 0_u16.into();
+            x.from_cpu.data.next = 0.into();
             x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu.write.next = false;
@@ -112,7 +112,7 @@ fn test_ping_works() {
         wait_clock_true!(sim, clock, x);
         for iter in 0..10 {
             x = sim.watch(|x| !x.to_cpu.empty.val(), x)?;
-            sim_assert!(sim, x.to_cpu.data.val() == (0x0167_u16 + iter), x);
+            sim_assert!(sim, x.to_cpu.data.val() == (0x0167 + iter), x);
             x.to_cpu.read.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.to_cpu.read.next = false;
@@ -144,7 +144,7 @@ fn test_write_command_works() {
             // followed by count data elements.
             // Write the command
             x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
-            x.from_cpu.data.next = 0x0300_u16.into();
+            x.from_cpu.data.next = 0x0300.into();
             x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu.write.next = false;
@@ -157,14 +157,14 @@ fn test_write_command_works() {
             // Then the data elements
             for ndx in 0..(iter + 1) {
                 x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
-                x.from_cpu.data.next = (0x7870_u16 + ndx).into();
+                x.from_cpu.data.next = (0x7870 + ndx).into();
                 x.from_cpu.write.next = true;
                 wait_clock_cycle!(sim, clock, x);
                 x.from_cpu.write.next = false;
             }
             // Insert a NOOPd
             x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
-            x.from_cpu.data.next = 0_u16.into();
+            x.from_cpu.data.next = 0.into();
             x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu.write.next = false;
@@ -178,7 +178,7 @@ fn test_write_command_works() {
         for iter in 0..10 {
             for ndx in 0..(iter + 1) {
                 x = sim.watch(|x| x.port.strobe_out.val(), x)?;
-                sim_assert!(sim, x.port.port_out.val() == (0x7870_u32 + ndx), x);
+                sim_assert!(sim, x.port.port_out.val() == (0x7870 + ndx), x);
                 wait_clock_cycle!(sim, clock, x);
             }
         }
@@ -208,7 +208,7 @@ fn test_read_command_works() {
             // A read command looks like 0x02XXYYYY, where XX is the address, YYYY is the count
             // Write the command
             x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
-            x.from_cpu.data.next = 0x0201_u16.into();
+            x.from_cpu.data.next = 0x0201.into();
             x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu.write.next = false;
@@ -221,21 +221,21 @@ fn test_read_command_works() {
             // Then wait for the data elements to come back to the CPU
             for ndx in 0..(iter + 1) {
                 x = sim.watch(|x| !x.to_cpu.empty.val(), x)?;
-                sim_assert!(sim, x.to_cpu.data.val() == 0xBEE0_u16 + ndx, x);
+                sim_assert_eq!(sim, x.to_cpu.data.val(), 0xBEE0 + ndx, x);
                 x.to_cpu.read.next = true;
                 wait_clock_cycle!(sim, clock, x);
                 x.to_cpu.read.next = false;
             }
             // Wait 1 clock cycle, and then issue a POLL command
             wait_clock_cycle!(sim, clock, x);
-            x.from_cpu.data.next = 0x0401_u16.into();
+            x.from_cpu.data.next = 0x0401.into();
             x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu.write.next = false;
             // Read the result of the poll back
             x = sim.watch(|x| !x.to_cpu.empty.val(), x)?;
             // Port should always be ready
-            sim_assert!(sim, x.to_cpu.data.val() == 0xFF01_u16, x);
+            sim_assert_eq!(sim, x.to_cpu.data.val(), 0xFF01, x);
             x.to_cpu.read.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.to_cpu.read.next = false;
@@ -249,7 +249,7 @@ fn test_read_command_works() {
         for iter in 0..10 {
             wait_clock_cycles!(sim, clock, x, 10);
             for ndx in 0..(iter + 1) {
-                x.iport.port_in.next = (0xBEE0_u16 + ndx).into();
+                x.iport.port_in.next = (0xBEE0 + ndx).into();
                 x.iport.ready_in.next = true;
                 x = sim.watch(|x| x.iport.strobe_out.val(), x)?;
                 wait_clock_cycle!(sim, clock, x);
@@ -280,21 +280,21 @@ fn test_stream_command_works() {
         // A stream command looks like 0x05XX, where XX is the address to stream from
         // Write the command
         x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
-        x.from_cpu.data.next = 0x0501_u16.into();
+        x.from_cpu.data.next = 0x0501.into();
         x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.from_cpu.write.next = false;
         // Wait until we have collected 100 items
         for iter in 0..100 {
             x = sim.watch(|x| !x.to_cpu.empty.val(), x)?;
-            sim_assert!(sim, x.to_cpu.data.val() == 0xBAB0_u16 + iter, x);
+            sim_assert!(sim, x.to_cpu.data.val() == 0xBAB0 + iter, x);
             x.to_cpu.read.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.to_cpu.read.next = false;
         }
         // Send a stop command (anything non-zero)
         x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
-        x.from_cpu.data.next = 0x0501_u16.into();
+        x.from_cpu.data.next = 0x0501.into();
         x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.from_cpu.write.next = false;
@@ -307,13 +307,13 @@ fn test_stream_command_works() {
         }
         // Send a ping
         x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
-        x.from_cpu.data.next = 0x01FF_u16.into();
+        x.from_cpu.data.next = 0x01FF.into();
         x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.from_cpu.write.next = false;
         // Wait for it to return
         x = sim.watch(|x| !x.to_cpu.empty.val(), x)?;
-        sim_assert!(sim, x.to_cpu.data.val() == 0x01FF_u16, x);
+        sim_assert!(sim, x.to_cpu.data.val() == 0x01FF, x);
         wait_clock_cycles!(sim, clock, x, 10);
         sim.done(x)
     });
@@ -321,7 +321,7 @@ fn test_stream_command_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for ndx in 0..100 {
-            x.iport.port_in.next = (0xBAB0_u16 + ndx).into();
+            x.iport.port_in.next = (0xBAB0 + ndx).into();
             x.iport.ready_in.next = true;
             x = sim.watch(|x| x.iport.strobe_out.val(), x)?;
             wait_clock_cycle!(sim, clock, x);

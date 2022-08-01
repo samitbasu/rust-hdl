@@ -106,7 +106,7 @@ fn test_check_timing() {
                 green: Default::default(),
                 counter: Default::default(),
                 state: Default::default(),
-                max_count: Constant::new(563_u16.into()),
+                max_count: Constant::new(563.into()),
             }
         }
     }

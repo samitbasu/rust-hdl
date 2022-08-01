@@ -25,10 +25,10 @@ impl Default for BusTest {
     fn default() -> Self {
         let dlen = 256;
         let data1 = (0..dlen)
-            .map(|_| Bits::<8>::from(rand::thread_rng().gen::<u8>()))
+            .map(|_| rand::thread_rng().gen::<u8>().to_bits())
             .collect::<Vec<_>>();
         let data2 = (0..dlen)
-            .map(|_| Bits::<8>::from(rand::thread_rng().gen::<u8>()))
+            .map(|_| rand::thread_rng().gen::<u8>().to_bits())
             .collect::<Vec<_>>();
 
         Self {

@@ -26,13 +26,13 @@ fn test_soc_chip_works() {
         for iter in 0..10 {
             wait_clock_cycles!(sim, clock, x, 20);
             // A ping is 0x01XX, where XX is the code returned by the controller
-            x.from_cpu.data.next = (0x0167_u16 + iter).into();
+            x.from_cpu.data.next = (0x0167 + iter).into();
             x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu.write.next = false;
             wait_clock_cycles!(sim, clock, x, 5);
             // Insert a NOOP
-            x.from_cpu.data.next = 0_u16.into();
+            x.from_cpu.data.next = 0.into();
             x.from_cpu.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.from_cpu.write.next = false;
@@ -45,7 +45,7 @@ fn test_soc_chip_works() {
         wait_clock_true!(sim, clock, x);
         for iter in 0..10 {
             x = sim.watch(|x| !x.to_cpu.empty.val(), x)?;
-            sim_assert!(sim, x.to_cpu.data.val() == (0x0167_u16 + iter), x);
+            sim_assert_eq!(sim, x.to_cpu.data.val(), (0x0167 + iter), x);
             x.to_cpu.read.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.to_cpu.read.next = false;
@@ -69,7 +69,7 @@ fn test_soc_chip_read_write_works() {
     sim.add_clock(4, |x: &mut Box<SoCTestChip>| {
         x.sys_clock.next = !x.sys_clock.val()
     });
-    let data_in = [0xDEAD_u16, 0xBEEF_u16, 0xCAFE_u16, 0xBABE_u16];
+    let data_in = [0xDEAD, 0xBEEF, 0xCAFE, 0xBABE];
     sim.add_testbench(move |mut sim: Sim<SoCTestChip>| {
         let mut x = sim.init()?;
         // Send 10 pings
@@ -78,12 +78,12 @@ fn test_soc_chip_read_write_works() {
         wait_clock_cycles!(sim, clock, x, 20);
         x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
         // Write the 4 data elements to port 0x00
-        x.from_cpu.data.next = 0x0300_u16.into();
+        x.from_cpu.data.next = 0x0300.into();
         x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.from_cpu.write.next = false;
         x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
-        x.from_cpu.data.next = 0x0004_u16.into();
+        x.from_cpu.data.next = 0x0004.into();
         x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.from_cpu.write.next = false;
@@ -96,12 +96,12 @@ fn test_soc_chip_read_write_works() {
         }
         x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
         // Read the 4 data elements from port 0x01
-        x.from_cpu.data.next = 0x0201_u16.into();
+        x.from_cpu.data.next = 0x0201.into();
         x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.from_cpu.write.next = false;
         x = sim.watch(|x| !x.from_cpu.full.val(), x)?;
-        x.from_cpu.data.next = 0x0004_u16.into();
+        x.from_cpu.data.next = 0x0004.into();
         x.from_cpu.write.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.from_cpu.write.next = false;

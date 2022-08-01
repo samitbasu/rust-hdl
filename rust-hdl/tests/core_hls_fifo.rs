@@ -29,7 +29,7 @@ fn test_hls_fifo_works() {
     uut.fifo.bus_read.data.connect();
     uut.connect_all();
     let rdata = (0..128)
-        .map(|_| Bits::<8>::from(rand::random::<u8>()))
+        .map(|_| rand::random::<u8>().to_bits())
         .collect::<Vec<_>>();
     let data = rdata.clone();
     let mut sim = Simulation::new();
@@ -117,7 +117,7 @@ impl FIFOTestFixture {
 #[test]
 fn test_feeder_works() {
     let data = (0..256)
-        .map(|_| Bits::<8>::from(rand::thread_rng().gen::<u8>()))
+        .map(|_| rand::thread_rng().gen::<u8>().to_bits())
         .collect::<Vec<_>>();
     let mut uut = FIFOTestFixture::new(&data);
     uut.feeder.start.connect();
@@ -192,7 +192,7 @@ impl FIFOTestFixtureAsync {
 #[test]
 fn test_feeder_async_works() {
     let data = (0..256)
-        .map(|_| Bits::<8>::from(rand::thread_rng().gen::<u8>()))
+        .map(|_| rand::thread_rng().gen::<u8>().to_bits())
         .collect::<Vec<_>>();
     let mut uut = FIFOTestFixtureAsync::new(&data);
     uut.clock_read.connect();

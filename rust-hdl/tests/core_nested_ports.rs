@@ -66,7 +66,7 @@ fn test_write_modules_nested_ports() {
                 self.bus.cmd.underflow.next = self.widget_a.bus.cmd.underflow.val();
                 self.bus.cmd.almost_empty.next = self.widget_a.bus.cmd.almost_empty.val();
                 self.bus.cmd.empty.next = self.widget_a.bus.cmd.empty.val();
-                self.bus.cmd.output.next = self.widget_a.bus.cmd.output.val() + 1_u32;
+                self.bus.cmd.output.next = self.widget_a.bus.cmd.output.val() + 1;
                 self.widget_a.bus.cmd.read.next = self.bus.cmd.read.val();
 
                 self.bus.data.underflow.next = self.widget_a.bus.data.underflow.val();

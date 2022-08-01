@@ -45,7 +45,7 @@ fn test_reducer_works() {
     sim.add_testbench(move |mut sim: Sim<ReducerTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for datum in [0xDEADBEEF_u32, 0xCAFEBABE] {
+        for datum in [0xDEADBEEF, 0xCAFEBABE] {
             x = sim.watch(|x| !x.fifo_in.full.val(), x)?;
             x.fifo_in.data_in.next = datum.into();
             x.fifo_in.write.next = true;
@@ -58,7 +58,7 @@ fn test_reducer_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for datum in [
-            0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
+            0xD, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
         ] {
             x = sim.watch(|x| !x.fifo_out.empty.val(), x)?;
             sim_assert!(sim, x.fifo_out.data_out.val() == Bits::<4>::from(datum), x);
@@ -83,7 +83,7 @@ fn test_reducer_works_least_sig_word_first() {
     sim.add_testbench(move |mut sim: Sim<ReducerTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for datum in [0xFEEBDAED_u32, 0xEBABEFAC] {
+        for datum in [0xFEEBDAED, 0xEBABEFAC] {
             x = sim.watch(|x| !x.fifo_in.full.val(), x)?;
             x.fifo_in.data_in.next = datum.into();
             x.fifo_in.write.next = true;
@@ -96,7 +96,7 @@ fn test_reducer_works_least_sig_word_first() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for datum in [
-            0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
+            0xD, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
         ] {
             x = sim.watch(|x| !x.fifo_out.empty.val(), x)?;
             sim_assert!(sim, x.fifo_out.data_out.val() == Bits::<4>::from(datum), x);
@@ -146,7 +146,7 @@ fn test_slim_works() {
     sim.add_testbench(move |mut sim: Sim<SlimTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for datum in [0xDEADBEEF_u32, 0xCAFEBABE] {
+        for datum in [0xDEADBEEF, 0xCAFEBABE] {
             x = sim.watch(|x| !x.fifo.full.val(), x)?;
             x.fifo.data_in.next = datum.into();
             x.fifo.write.next = true;
@@ -159,7 +159,7 @@ fn test_slim_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for datum in [
-            0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
+            0xD, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
         ] {
             x = sim.watch(|x| !x.fifo.empty.val(), x)?;
             sim_assert!(sim, x.fifo.data_out.val() == Bits::<4>::from(datum), x);

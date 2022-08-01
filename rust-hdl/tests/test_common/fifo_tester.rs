@@ -39,7 +39,7 @@ impl<T: Synth, const N: usize> LazyFIFOFeeder<T, N> {
             index: Default::default(),
             data_rom: data.to_vec().into_iter().into(),
             sleep_rom: sleeps.to_vec().into_iter().into(),
-            data_len: Constant::new(data.len().into()),
+            data_len: Constant::new(data.len().to_bits()),
         }
     }
 }
@@ -124,7 +124,7 @@ impl<T: Synth, const N: usize> LazyFIFOReader<T, N> {
             index: Default::default(),
             data_rom: data.to_vec().into_iter().into(),
             sleep_rom: sleeps.to_vec().into_iter().into(),
-            data_len: Constant::new(data.len().into()),
+            data_len: Constant::new(data.len().to_bits()),
         }
     }
 }
@@ -181,9 +181,9 @@ impl<T: Synth, const N: usize> Logic for LazyFIFOReader<T, N> {
 
 pub fn bursty_rand() -> Bits<32> {
     if rand::thread_rng().gen::<f64>() < 0.9 {
-        Bits::from(0_u32)
+        Bits::from(0)
     } else {
-        Bits::from((rand::thread_rng().gen::<f64>() * 40.0) as u32)
+        ((rand::thread_rng().gen::<f64>() * 40.0) as u32).to_bits()
     }
 }
 

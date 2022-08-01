@@ -59,11 +59,11 @@ impl<const N: usize> Logic for Strobe<N> {
         // Connect the counter clock to my clock
         dff_setup!(self, clock, counter);
         if self.enable.val() {
-            self.counter.d.next = self.counter.q.val() + 1_u32;
+            self.counter.d.next = self.counter.q.val() + 1;
         }
         self.strobe.next = self.enable.val() & (self.counter.q.val() == self.threshold.val());
         if self.strobe.val() {
-            self.counter.d.next = 1_u32.into();
+            self.counter.d.next = 1.into();
         }
     }
 }

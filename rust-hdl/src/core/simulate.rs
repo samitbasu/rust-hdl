@@ -26,6 +26,7 @@ pub enum SimError {
     SimHalted,
     FailedToConverge,
     Check(CheckError),
+    SimPanic,
 }
 
 impl From<CheckError> for SimError {
@@ -61,6 +62,11 @@ struct Message<T> {
     circuit: Box<T>,
 }
 
+enum MessageOrPanic<T> {
+    Message(Message<T>),
+    Panic,
+}
+
 struct Worker<T> {
     id: usize,
     channel_to_worker: Sender<Message<T>>,
@@ -71,8 +77,8 @@ pub type CustomLogicFn<T> = Box<dyn Fn(&mut T) -> ()>;
 
 pub struct Simulation<T> {
     workers: Vec<Worker<T>>,
-    recv: Receiver<Message<T>>,
-    channel_to_sim: Sender<Message<T>>,
+    recv: Receiver<MessageOrPanic<T>>,
+    channel_to_sim: Sender<MessageOrPanic<T>>,
     time: u64,
     testbenches: Vec<JoinHandle<Result<()>>>,
     custom_logic: Vec<CustomLogicFn<T>>,
@@ -80,7 +86,7 @@ pub struct Simulation<T> {
 
 pub struct Sim<T> {
     time: u64,
-    to_sim: Sender<Message<T>>,
+    to_sim: Sender<MessageOrPanic<T>>,
     from_sim: Receiver<Message<T>>,
 }
 
@@ -105,7 +111,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
     }
     pub fn add_clock<F>(&mut self, interval: u64, clock_fn: F)
     where
-        F: Fn(&mut Box<T>) -> () + Send + 'static,
+        F: Fn(&mut Box<T>) -> () + Send + 'static + std::panic::RefUnwindSafe,
     {
         self.add_testbench(move |mut ep: Sim<T>| {
             let mut x = ep.init()?;
@@ -117,7 +123,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
     }
     pub fn add_phased_clock<F>(&mut self, interval: u64, phase_delay: u64, clock_fn: F)
     where
-        F: Fn(&mut Box<T>) -> () + Send + 'static,
+        F: Fn(&mut Box<T>) -> () + Send + 'static + std::panic::RefUnwindSafe,
     {
         self.add_testbench(move |mut ep: Sim<T>| {
             let mut x = ep.init()?;
@@ -130,11 +136,20 @@ impl<T: Send + 'static + Block> Simulation<T> {
     }
     pub fn add_testbench<F>(&mut self, testbench: F)
     where
-        F: Fn(Sim<T>) -> Result<()> + Send + 'static,
+        F: Fn(Sim<T>) -> Result<()> + Send + 'static + std::panic::RefUnwindSafe,
     {
         let ep = self.endpoint();
-        self.testbenches
-            .push(std::thread::spawn(move || testbench(ep)));
+        self.testbenches.push(std::thread::spawn(move || {
+            let ep_panic = ep.to_sim.clone();
+            let result = std::panic::catch_unwind(|| testbench(ep));
+            match result {
+                Ok(x) => x,
+                Err(e) => {
+                    ep_panic.send(MessageOrPanic::Panic).unwrap();
+                    Err(SimError::SimPanic)
+                }
+            }
+        }));
     }
     pub fn add_custom_logic<F>(&mut self, logic: F)
     where
@@ -163,7 +178,13 @@ impl<T: Send + 'static + Block> Simulation<T> {
             kind: TriggerType::Time(self.time),
             circuit: x,
         })?;
-        let mut x = self.recv.recv()?;
+        let x = self.recv.recv()?;
+        let mut x = match x {
+            MessageOrPanic::Message(x) => x,
+            MessageOrPanic::Panic => {
+                return Err(SimError::SimPanic);
+            }
+        };
         worker.kind = x.kind;
         // Update the circuit
         let mut converged = false;
@@ -233,13 +254,6 @@ impl<T: Send + 'static + Block> Simulation<T> {
         for handle in std::mem::take(&mut self.testbenches) {
             let _ = handle.join().unwrap();
         }
-    }
-    pub fn install_panic_handler() {
-        let orig_hook = std::panic::take_hook();
-        std::panic::set_hook(Box::new(move |panic_info| {
-            orig_hook(panic_info);
-            std::process::exit(1);
-        }))
     }
     pub fn run(&mut self, mut x: Box<T>, max_time: u64) -> Result<()> {
         check_connected(x.as_mut())?;
@@ -315,10 +329,10 @@ impl<T> Sim<T> {
     where
         S: Fn(&T) -> bool + Send + 'static,
     {
-        self.to_sim.send(Message {
+        self.to_sim.send(MessageOrPanic::Message(Message {
             kind: TriggerType::Function(Box::new(check)),
             circuit: x,
-        })?;
+        }))?;
         let t = self.from_sim.recv()?;
         if let TriggerType::Time(t0) = t.kind {
             self.time = t0;
@@ -326,10 +340,10 @@ impl<T> Sim<T> {
         Ok(t.circuit)
     }
     pub fn clock(&mut self, delta: u64, x: Box<T>) -> Result<Box<T>> {
-        self.to_sim.send(Message {
+        self.to_sim.send(MessageOrPanic::Message(Message {
             kind: TriggerType::Clock(delta + self.time),
             circuit: x,
-        })?;
+        }))?;
         let t = self.from_sim.recv()?;
         if let TriggerType::Time(t0) = t.kind {
             self.time = t0;
@@ -337,10 +351,10 @@ impl<T> Sim<T> {
         Ok(t.circuit)
     }
     pub fn wait(&mut self, delta: u64, x: Box<T>) -> Result<Box<T>> {
-        self.to_sim.send(Message {
+        self.to_sim.send(MessageOrPanic::Message(Message {
             kind: TriggerType::Time(delta + self.time),
             circuit: x,
-        })?;
+        }))?;
         let t = self.from_sim.recv()?;
         if let TriggerType::Time(t0) = t.kind {
             self.time = t0;
@@ -348,17 +362,17 @@ impl<T> Sim<T> {
         Ok(t.circuit)
     }
     pub fn done(&self, x: Box<T>) -> Result<()> {
-        self.to_sim.send(Message {
+        self.to_sim.send(MessageOrPanic::Message(Message {
             kind: TriggerType::Never,
             circuit: x,
-        })?;
+        }))?;
         Ok(())
     }
     pub fn halt(&self, x: Box<T>) -> Result<()> {
-        self.to_sim.send(Message {
+        self.to_sim.send(MessageOrPanic::Message(Message {
             kind: TriggerType::Halt,
             circuit: x,
-        })?;
+        }))?;
         Err(SimError::SimHalted)
     }
     pub fn time(&self) -> u64 {

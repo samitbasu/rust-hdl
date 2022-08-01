@@ -1,3 +1,4 @@
+use crate::core::bits::LiteralType;
 use crate::core::prelude::*;
 use crate::hls::bus::{SoCBusController, SoCBusResponder};
 use crate::hls::HLSNamedPorts;
@@ -50,8 +51,9 @@ impl<const D: usize, const A: usize, const N: usize> Router<D, A, N> {
         for (ndx, count) in address_count.iter().enumerate() {
             assert_ne!(*count, 0);
             node_start_address[ndx] = Constant::<Bits<A>>::new(offset.into());
-            node_end_address[ndx] = Constant::<Bits<A>>::new((offset + count).into());
-            offset = offset + count;
+            node_end_address[ndx] =
+                Constant::<Bits<A>>::new((offset + (*count as LiteralType)).into());
+            offset = offset + (*count) as LiteralType;
         }
         Self {
             upstream: Default::default(),
@@ -87,7 +89,7 @@ impl<const D: usize, const A: usize, const N: usize> Logic for Router<D, A, N> {
                 & (self.upstream.address.val() < self.node_end_address[i].val())
                 & self.upstream.address_strobe.val()
             {
-                self.active.d.next = i.into();
+                self.active.d.next = i.to_bits();
                 self.virtual_address.d.next =
                     self.upstream.address.val() - self.node_start_address[i].val();
             }

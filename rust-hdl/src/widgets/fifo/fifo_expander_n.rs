@@ -56,7 +56,7 @@ impl<const DN: usize, const DW: usize> Logic for FIFOExpanderN<DN, DW> {
                 self.data_store.d.next = (self.data_store.q.val() >> self.offset.val())
                     | (bit_cast::<DW, DN>(self.data_in.val()) << self.placement.val());
             }
-            self.load_count.d.next = self.load_count.q.val() + 1_u32;
+            self.load_count.d.next = self.load_count.q.val() + 1;
         }
         // The output FIFO always sees the data store shifted with the input or-ed in
         if self.msw_first.val() {
@@ -69,7 +69,7 @@ impl<const DN: usize, const DW: usize> Logic for FIFOExpanderN<DN, DW> {
         self.write.next = self.will_write.val();
         self.read.next = self.will_consume.val();
         if self.will_write.val() {
-            self.load_count.d.next = 0_u32.into();
+            self.load_count.d.next = 0.into();
         }
     }
 }
@@ -92,9 +92,9 @@ impl<const DN: usize, const DW: usize> FIFOExpanderN<DN, DW> {
             will_write: Default::default(),
             will_consume: Default::default(),
             data_store: Default::default(),
-            offset: Constant::new(DN.into()),
-            ratio: Constant::new((DW / DN - 1).into()),
-            placement: Constant::new((DN * (DW / DN - 1)).into()),
+            offset: Constant::new(DN.to_bits()),
+            ratio: Constant::new((DW / DN - 1).to_bits()),
+            placement: Constant::new((DN * (DW / DN - 1)).to_bits()),
             msw_first: Constant::new(match order {
                 WordOrder::LeastSignificantFirst => false,
                 WordOrder::MostSignificantFirst => true,

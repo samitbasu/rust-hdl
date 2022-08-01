@@ -22,7 +22,7 @@ impl Logic for PWMTest {
     fn update(&mut self) {
         clock!(self, clock, pwm);
         self.pwm.enable.next = true;
-        self.pwm.threshold.next = 32_u32.into();
+        self.pwm.threshold.next = 32.into();
     }
 }
 

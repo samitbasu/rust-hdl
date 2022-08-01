@@ -81,8 +81,8 @@ const AD7193_REG_INITS: [u64; 8] = [0x40, 0x80060, 0x117, 0x0, 0xa2, 0x0, 0x8000
 impl AD7193Simulator {
     pub fn new(config: AD7193Config) -> Self {
         assert!(config.spi.clock_speed > 10 * config.spi.speed_hz);
-        let reg_width_rom = AD7193_REG_WIDTHS.iter().map(|x| Bits::<5>::from(*x)).into();
-        let reg_ram = AD7193_REG_INITS.iter().map(|x| Bits::<24>::from(*x)).into();
+        let reg_width_rom = AD7193_REG_WIDTHS.iter().map(|x| x.to_bits()).into();
+        let reg_ram = AD7193_REG_INITS.iter().map(|x| x.to_bits()).into();
         Self {
             wires: Default::default(),
             clock: Default::default(),
@@ -160,7 +160,7 @@ impl Logic for AD7193Simulator {
             AD7193State::WriteCmd => {
                 self.spi_slave.continued_transaction.next = true;
                 self.spi_slave.bits.next = bit_cast::<16, 5>(self.reg_width_rom.data.val());
-                self.spi_slave.data_outbound.next = 0xFFFF_FFFF_u32.into();
+                self.spi_slave.data_outbound.next = 0xFFFF_FFFF_u64.to_bits();
                 self.spi_slave.start_send.next = true;
                 self.state.d.next = AD7193State::DoWrite;
             }
@@ -171,7 +171,7 @@ impl Logic for AD7193Simulator {
                     self.reg_ram.write_enable.next = true;
                     self.reg_ram.write_address.next = self.reg_write_index.q.val();
                     self.state.d.next = AD7193State::WaitSlaveIdle;
-                    if (self.reg_write_index.q.val() == Bits::<3>::from(1))
+                    if (self.reg_write_index.q.val() == 1)
                         & self.spi_slave.data_inbound.val().get_bit(21)
                     {
                         self.state.d.next = AD7193State::SingleConversion;
@@ -247,13 +247,13 @@ fn reg_read(
     x: Box<Test7193>,
     sim: &mut Sim<Test7193>,
 ) -> Result<(Bits<64>, Box<Test7193>), SimError> {
-    let cmd = (((1 << 6) | (reg_index << 3)) << 24) as u64;
+    let cmd = (((1 << 6) | (reg_index << 3)) << 24).into();
     let result = do_spi_txn(32, cmd, false, x, sim)?;
     let width = AD7193_REG_WIDTHS[reg_index as usize];
     let reg_val = if width == 8 {
-        (result.0 >> 16_u32) & 0xFF_u32
+        (result.0 >> 16) & 0xFF
     } else {
-        result.0 & 0xFFFFFF_usize
+        result.0 & 0xFFFFFF
     };
     Ok((reg_val, result.1))
 }
@@ -265,7 +265,7 @@ fn reg_write(
     x: Box<Test7193>,
     sim: &mut Sim<Test7193>,
 ) -> Result<Box<Test7193>, SimError> {
-    let mut cmd = (((0 << 6) | (reg_index << 3)) << 24) as u64;
+    let mut cmd = (((0 << 6) | (reg_index << 3)) << 24).into();
     if AD7193_REG_WIDTHS[reg_index as usize] == 8 {
         cmd = cmd | reg_value << 16;
     } else {
@@ -284,8 +284,8 @@ fn do_spi_txn(
     sim: &mut Sim<Test7193>,
 ) -> Result<(Bits<64>, Box<Test7193>), SimError> {
     wait_clock_true!(sim, clock, x);
-    x.master.data_outbound.next = value.into();
-    x.master.bits_outbound.next = bits.into();
+    x.master.data_outbound.next = value.to_bits();
+    x.master.bits_outbound.next = bits.to_bits();
     x.master.continued_transaction.next = continued;
     x.master.start_send.next = true;
     wait_clock_cycle!(sim, clock, x);
@@ -328,7 +328,7 @@ fn test_reg_reads() {
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Do the first read to initialize the chip
-        let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, &mut sim)?;
+        let result = do_spi_txn(32, 0xFFFFFFFF, false, x, &mut sim)?;
         x = result.1;
         for ndx in 0..8 {
             println!("Reading register index {}", ndx);
@@ -358,7 +358,7 @@ fn test_reg_writes() {
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Initialize the chip...
-        let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, &mut sim)?;
+        let result = do_spi_txn(32, 0xFFFFFFFF, false, x, &mut sim)?;
         x = result.1;
         for ndx in 0..8 {
             let result = reg_read(ndx, x, &mut sim)?;
@@ -393,7 +393,7 @@ fn test_single_conversion() {
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Initialize the chip...
-        let result = do_spi_txn(32, 0xFFFFFFFF_u64, false, x, &mut sim)?;
+        let result = do_spi_txn(32, 0xFFFFFFFF, false, x, &mut sim)?;
         x = result.1;
         for n in 0..3 {
             wait_clock_cycle!(sim, clock, x, 100);
@@ -406,7 +406,7 @@ fn test_single_conversion() {
             let result = reg_read(3, x, &mut sim)?;
             println!("Conversion {} -> {:x}", n, result.0);
             x = result.1;
-            sim_assert!(sim, result.0 == Bits::<64>::from((n * 0x100) as u32), x);
+            sim_assert!(sim, result.0 == Bits::<64>::from(n * 0x100), x);
             println!("Conversion {} completed", n);
         }
         sim.done(x)

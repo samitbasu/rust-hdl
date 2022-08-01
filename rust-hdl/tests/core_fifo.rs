@@ -40,7 +40,7 @@ fn test_sync_vec() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock1, x);
         for i in 0..150 {
-            x.sender.sig_in.next = (i as u32).into();
+            x.sender.sig_in.next = i.into();
             x.sender.send.next = true;
             wait_clock_cycle!(sim, clock1, x);
             x.sender.send.next = false;
@@ -52,7 +52,7 @@ fn test_sync_vec() {
     sim.add_testbench(move |mut sim: Sim<SyncVecTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock2, x);
-        for i in 0_u32..150_u32 {
+        for i in 0..150 {
             x = sim.watch(|x| x.recv.update.val(), x)?;
             sim_assert!(sim, x.recv.sig_out.val().eq(&i), x);
             wait_clock_cycle!(sim, clock2, x);
@@ -89,7 +89,7 @@ fn test_vector_synchronizer() {
         let mut x = sim.init()?;
         x = sim.watch(|x| x.uut.clock_in.val().clk, x)?;
         for i in 0..150 {
-            x.uut.sig_in.next = (i as u32).into();
+            x.uut.sig_in.next = i.into();
             x.uut.send.next = true;
             x = sim.watch(|x| !x.uut.clock_in.val().clk, x)?;
             x = sim.watch(|x| x.uut.clock_in.val().clk, x)?;
@@ -102,7 +102,7 @@ fn test_vector_synchronizer() {
     sim.add_testbench(move |mut sim: Sim<TestCircuit>| {
         let mut x = sim.init()?;
         x = sim.watch(|x| x.uut.clock_out.val().clk, x)?;
-        for i in 0_u32..150_u32 {
+        for i in 0..150 {
             x = sim.watch(|x| x.uut.update.val(), x)?;
             sim_assert!(sim, x.uut.sig_out.val().eq(&i), x);
             x = sim.watch(|x| !x.uut.clock_out.val().clk, x)?;
@@ -146,21 +146,21 @@ fn test_sync_fifo_read_behavior_bug() {
     sim.add_testbench(move |mut sim: Sim<SynchronousFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..8 {
+        for counter in 0..8 {
             x.fifo.data_in.next = counter.into();
             x.fifo.write.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.fifo.write.next = false;
         }
         wait_clock_cycle!(sim, clock, x);
-        for counter in 0_u32..6 {
+        for counter in 0..6 {
             sim_assert!(sim, x.fifo.data_out.val() == counter, x);
             x.fifo.read.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.fifo.read.next = false;
         }
         wait_clock_cycle!(sim, clock, x, 2);
-        for counter in 6_u32..8 {
+        for counter in 6..8 {
             sim_assert!(sim, x.fifo.data_out.val() == counter, x);
             x.fifo.read.next = true;
             wait_clock_cycle!(sim, clock, x);
@@ -199,8 +199,8 @@ fn test_almost_empty_is_accurate_in_large_fifo() {
     sim.add_testbench(move |mut sim: Sim<BigFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..1024_u32 {
-            x.fifo.data_in.next = counter.into();
+        for counter in 0..1024 {
+            x.fifo.data_in.next = (counter % 0xFF).into();
             x.fifo.write.next = true;
             wait_clock_cycle!(sim, clock, x);
         }
@@ -209,10 +209,10 @@ fn test_almost_empty_is_accurate_in_large_fifo() {
         sim.done(x)?;
         Ok(())
     });
-    sim.run_traced(
+    sim.run_to_file(
         Box::new(uut),
         50_000,
-        std::fs::File::create(vcd_path!("fifo_big_almost_empty.vcd")).unwrap(),
+        &vcd_path!("fifo_big_almost_empty.vcd"),
     )
     .unwrap();
 }
@@ -231,7 +231,7 @@ fn test_almost_empty_is_accurate_synchronous_fifo() {
     sim.add_testbench(move |mut sim: Sim<SynchronousFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for counter in 0_u32..4_u32 {
+        for counter in 0..4 {
             x.fifo.data_in.next = counter.into();
             x.fifo.write.next = true;
             sim_assert!(sim, x.fifo.almost_empty.val(), x);
@@ -240,7 +240,7 @@ fn test_almost_empty_is_accurate_synchronous_fifo() {
         }
         wait_clock_cycle!(sim, clock, x);
         sim_assert!(sim, !x.fifo.almost_empty.val(), x);
-        let mut drain = 0_u32;
+        let mut drain = 0;
         while !x.fifo.empty.val() {
             drain += 1;
             x.fifo.read.next = true;
@@ -269,7 +269,7 @@ fn test_fifo_can_be_filled_synchronous_fifo() {
     yosys_validate("fifo_3", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     let rdata = (0..16)
-        .map(|_| Bits::<16>::from(rand::random::<u16>()))
+        .map(|_| rand::random::<u16>().to_bits())
         .collect::<Vec<_>>();
     sim.add_clock(5, |x: &mut Box<SynchronousFIFOTest>| {
         x.clock.next = !x.clock.val()
@@ -313,7 +313,7 @@ fn test_fifo_works_synchronous_fifo() {
     yosys_validate("fifo_4", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     let rdata = (0..1024)
-        .map(|_| Bits::<16>::from(rand::random::<u16>()))
+        .map(|_| rand::random::<u16>().to_bits())
         .collect::<Vec<_>>();
     let rdata_read = rdata.clone();
     sim.add_clock(5, |x: &mut Box<SynchronousFIFOTest>| {
@@ -398,7 +398,7 @@ fn test_fifo_works_asynchronous_fifo() {
     yosys_validate("fifo_5", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     let rdata = (0..1024)
-        .map(|_| Bits::<16>::from(rand::random::<u16>()))
+        .map(|_| rand::random::<u16>().to_bits())
         .collect::<Vec<_>>();
     let rdata_read = rdata.clone();
     sim.add_clock(5, |x: &mut Box<AsynchronousFIFOTest>| {
@@ -487,7 +487,7 @@ fn test_almost_empty_is_accurate_in_large_async_fifo() {
     sim.add_testbench(move |mut sim: Sim<AsyncBigFIFOTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, write_clock, x);
-        for counter in 0_u32..1024_u32 {
+        for counter in 0..1024 {
             x.fifo.data_in.next = counter.into();
             x.fifo.write.next = true;
             wait_clock_cycle!(sim, write_clock, x);
@@ -539,7 +539,7 @@ fn test_fifo_reducer_works() {
     yosys_validate("fifo_5b", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     let rdata = (0..256)
-        .map(|_| Bits::<16>::from(rand::random::<u16>()))
+        .map(|_| rand::random::<u16>().to_bits())
         .collect::<Vec<_>>();
     let mut rdata_read = vec![];
     for x in &rdata {

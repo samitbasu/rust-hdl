@@ -47,7 +47,7 @@ fn test_ram_works() {
     yosys_validate("ram", &generate_verilog(&uut)).unwrap();
     let mut sim = Simulation::new();
     let rdata = (0..32)
-        .map(|_| Bits::<16>::from(rand::random::<u16>()))
+        .map(|_| rand::random::<u16>().to_bits())
         .collect::<Vec<_>>();
     sim.add_clock(5, |x: &mut Box<RAMTest>| x.clock.next = !x.clock.val());
     sim.add_testbench(move |mut sim: Sim<RAMTest>| {
@@ -55,15 +55,15 @@ fn test_ram_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for sample in rdata.iter().enumerate() {
-            x.ram.write_address.next = (sample.0 as u32).into();
-            x.ram.write_data.next = (*sample.1).into();
+            x.ram.write_address.next = sample.0.to_bits();
+            x.ram.write_data.next = *sample.1;
             x.ram.write_enable.next = true;
             wait_clock_cycle!(sim, clock, x);
         }
         x.ram.write_enable.next = false.into();
         wait_clock_cycle!(sim, clock, x);
         for sample in rdata.iter().enumerate() {
-            x.ram.read_address.next = (sample.0 as u32).into();
+            x.ram.read_address.next = sample.0.to_bits();
             wait_clock_cycle!(sim, clock, x);
             assert_eq!(x.ram.read_data.val(), *sample.1);
         }

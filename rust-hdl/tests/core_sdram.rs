@@ -82,9 +82,9 @@ fn test_unit_boots() {
 macro_rules! sdram_basic_write {
     ($sim: ident, $uut: ident, $cntrl: ident, $addr: expr, $data: expr) => {
         $uut = $sim.watch(|x| !x.$cntrl.busy.val(), $uut)?;
-        $uut.$cntrl.cmd_address.next = ($addr).into();
+        $uut.$cntrl.cmd_address.next = ($addr).to_bits();
         $uut.$cntrl.write_not_read.next = true;
-        $uut.$cntrl.data_in.next = ($data).into();
+        $uut.$cntrl.data_in.next = ($data).to_bits();
         $uut.$cntrl.cmd_strobe.next = true;
         wait_clock_cycle!($sim, clock, $uut);
         $uut.$cntrl.cmd_strobe.next = false;
@@ -98,7 +98,7 @@ macro_rules! sdram_basic_write {
 macro_rules! sdram_basic_read {
     ($sim: ident, $uut: ident, $cntrl: ident, $addr: expr) => {{
         $uut = $sim.watch(|x| !x.$cntrl.busy.val(), $uut)?;
-        $uut.$cntrl.cmd_address.next = ($addr).into();
+        $uut.$cntrl.cmd_address.next = ($addr).to_bits();
         $uut.$cntrl.write_not_read.next = false;
         $uut.$cntrl.cmd_strobe.next = true;
         wait_clock_cycle!($sim, clock, $uut);
@@ -125,12 +125,12 @@ fn test_unit_writes() {
     sim.add_testbench(move |mut sim: Sim<TestSDRAMDevice>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        sdram_basic_write!(sim, x, cntrl, 0_usize, 0xDEAD_BEEF_CAFE_BABE_u64);
-        sdram_basic_write!(sim, x, cntrl, 4_usize, 0x1234_ABCD_5678_EFFE_u64);
-        let read = sdram_basic_read!(sim, x, cntrl, 2_usize);
+        sdram_basic_write!(sim, x, cntrl, 0_u32, 0xDEAD_BEEF_CAFE_BABE_u64);
+        sdram_basic_write!(sim, x, cntrl, 4_u32, 0x1234_ABCD_5678_EFFE_u64);
+        let read = sdram_basic_read!(sim, x, cntrl, 2_u32);
         wait_clock_cycles!(sim, clock, x, 10);
         sim_assert_eq!(sim, read, 0x5678_EFFE_DEAD_BEEF_u64, x);
-        let read = sdram_basic_read!(sim, x, cntrl, 4_usize);
+        let read = sdram_basic_read!(sim, x, cntrl, 4_u32);
         sim_assert_eq!(sim, read, 0x1234_ABCD_5678_EFFE_u64, x);
         for (ndx, val) in send.iter().enumerate() {
             sdram_basic_write!(sim, x, cntrl, ndx * 4 + 8, *val);

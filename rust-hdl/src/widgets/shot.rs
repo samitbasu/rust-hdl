@@ -37,7 +37,7 @@ impl<const N: usize> Logic for Shot<N> {
     fn update(&mut self) {
         dff_setup!(self, clock, counter, state);
         if self.state.q.val() {
-            self.counter.d.next = self.counter.q.val() + 1_u32;
+            self.counter.d.next = self.counter.q.val() + 1;
         }
         self.fired.next = false;
         if self.state.q.val() && (self.counter.q.val() == self.duration.val()) {
@@ -47,7 +47,7 @@ impl<const N: usize> Logic for Shot<N> {
         self.active.next = self.state.q.val();
         if self.trigger.val() {
             self.state.d.next = true;
-            self.counter.d.next = 0_u32.into();
+            self.counter.d.next = 0.into();
         }
     }
 }

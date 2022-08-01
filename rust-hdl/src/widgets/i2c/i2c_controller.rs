@@ -354,9 +354,9 @@ fn test_i2c_controller_operation() {
             i2c_begin_read!(sim, clock, x, test.address);
             sim_assert!(sim, x.controller.ack.val() & !x.controller.nack.val(), x);
             let byte = i2c_read!(sim, clock, x);
-            sim_assert!(sim, byte == test.val_msb, x);
+            sim_assert_eq!(sim, byte, test.val_msb.to_bits::<8>(), x);
             let byte = i2c_read_last!(sim, clock, x);
-            sim_assert!(sim, byte == test.val_lsb, x);
+            sim_assert_eq!(sim, byte, test.val_lsb.to_bits::<8>(), x);
             i2c_end_transmission!(sim, clock, x);
         }
         sim.done(x)

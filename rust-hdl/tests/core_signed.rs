@@ -16,7 +16,7 @@ impl Default for CircuitSigned {
     fn default() -> Self {
         Self {
             x: Default::default(),
-            y: Constant::new(Signed::from(-4935_i32)),
+            y: Constant::new(Signed::from(-4935)),
         }
     }
 }

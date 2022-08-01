@@ -21,9 +21,9 @@ impl Logic for AlchitryCuPulserPLL {
         self.pll.clock_in.next = self.clock.val();
         self.pulser.enable.next = self.pll.locked.val();
         self.pulser.clock.next = self.pll.clock_out.val();
-        self.leds.next = 0x00_u8.into();
+        self.leds.next = 0x00.into();
         if self.pulser.pulse.val() {
-            self.leds.next = 0xAA_u8.into();
+            self.leds.next = 0xAA.into();
         }
     }
 }

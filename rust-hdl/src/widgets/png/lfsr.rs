@@ -25,10 +25,10 @@ impl Default for LFSRSimple {
             strobe: Default::default(),
             num: Default::default(),
             t: Default::default(),
-            x: DFFWithInit::new((SEED & 0xFFFF_FFFF_u128).into()),
-            y: DFFWithInit::new(((SEED >> 32) & 0xFFFF_FFFF_u128).into()),
-            z: DFFWithInit::new(((SEED >> 64) & 0xFFFF_FFFF_u128).into()),
-            w: DFFWithInit::new(((SEED >> 96) & 0xFFFF_FFFF_u128).into()),
+            x: DFFWithInit::new((SEED & 0xFFFF_FFFF_u128).to_bits()),
+            y: DFFWithInit::new(((SEED >> 32) & 0xFFFF_FFFF_u128).to_bits()),
+            z: DFFWithInit::new(((SEED >> 64) & 0xFFFF_FFFF_u128).to_bits()),
+            w: DFFWithInit::new(((SEED >> 96) & 0xFFFF_FFFF_u128).to_bits()),
         }
     }
 }

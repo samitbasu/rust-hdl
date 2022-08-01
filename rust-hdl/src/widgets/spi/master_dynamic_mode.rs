@@ -190,8 +190,8 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
                         .register_out
                         .q
                         .val()
-                        .get_bit(self.pointerm1.val().into()); // Fetch the corresponding bit out of the register
-                    self.pointer.d.next = self.pointerm1.val().into(); // Decrement the pointer
+                        .get_bit(self.pointerm1.val().index()); // Fetch the corresponding bit out of the register
+                    self.pointer.d.next = self.pointerm1.val(); // Decrement the pointer
                     self.state.d.next = SPIState::MActive; // Move to the hold mclock low state
                     self.clock_state.d.next = self.cpol_flop.q.val() ^ self.cpha_flop.q.val();
                 } else {
@@ -207,7 +207,7 @@ impl<const N: usize> Logic for SPIMasterDynamicMode<N> {
             }
             SPIState::SampleMISO => {
                 self.register_in.d.next = self.register_in.q.val().replace_bit(
-                    self.pointer.q.val().into(),
+                    self.pointer.q.val().index(),
                     self.miso_synchronizer.sig_out.val(),
                 );
                 self.clock_state.d.next = !self.clock_state.q.val();

@@ -140,7 +140,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                         if self.sdram.address.val().get_bit(10) != true {
                             self.state.d.next = MasterState::Error;
                         } else {
-                            self.counter.d.next = 0_u32.into();
+                            self.counter.d.next = 0.into();
                             self.state.d.next = MasterState::Precharge;
                         }
                     }
@@ -202,7 +202,7 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> Logic
                 if (self.cas_latency.q.val() > 3) | (self.cas_latency.q.val() == 0) {
                     self.state.d.next = MasterState::Error;
                 }
-                if self.op_mode.q.val() != 0_u32 {
+                if self.op_mode.q.val() != 0 {
                     self.state.d.next = MasterState::Error;
                 }
             }
@@ -246,10 +246,12 @@ impl<const R: usize, const C: usize, const A: usize, const D: usize> SDRAMSimula
             burst_len: Default::default(),
             op_mode: Default::default(),
             banks: array_init::array_init(|_| MemoryBank::new(timings)),
-            boot_delay: Constant::new(boot_delay.into()),
-            t_rp: Constant::new(precharge_delay.into()),
-            t_rrd: Constant::new(bank_bank_delay.into()),
-            load_mode_timing: Constant::new((timings.load_mode_command_timing_clocks - 1).into()),
+            boot_delay: Constant::new(boot_delay.to_bits()),
+            t_rp: Constant::new(precharge_delay.to_bits()),
+            t_rrd: Constant::new(bank_bank_delay.to_bits()),
+            load_mode_timing: Constant::new(
+                (timings.load_mode_command_timing_clocks - 1).to_bits(),
+            ),
             banks_busy: Default::default(),
             decode: Default::default(),
         }
@@ -323,8 +325,8 @@ macro_rules! sdram_cmd {
 macro_rules! sdram_activate {
     ($sim: ident, $clock: ident, $uut: ident, $bank: expr, $row: expr) => {
         sdram_cmd!($uut, SDRAMCommand::Active);
-        $uut.sdram.address.next = ($row as u32).into();
-        $uut.sdram.bank.next = ($bank as u32).into();
+        $uut.sdram.address.next = ($row as u32).to_bits();
+        $uut.sdram.bank.next = ($bank as u32).to_bits();
         wait_clock_cycle!($sim, $clock, $uut);
         sdram_cmd!($uut, SDRAMCommand::NOP);
     };
@@ -334,15 +336,15 @@ macro_rules! sdram_activate {
 macro_rules! sdram_write {
     ($sim: ident, $clock: ident, $uut: ident, $bank: expr, $addr: expr, $data: expr) => {
         sdram_cmd!($uut, SDRAMCommand::Write);
-        $uut.sdram.bank.next = ($bank as u32).into();
+        $uut.sdram.bank.next = ($bank as u32).to_bits();
         $uut.sdram.write_enable.next = true;
-        $uut.sdram.write_data.next = ($data[0] as u32).into();
-        $uut.sdram.address.next = ($addr as u32).into();
+        $uut.sdram.write_data.next = ($data[0] as u32).to_bits();
+        $uut.sdram.address.next = ($addr as u32).to_bits();
         wait_clock_cycle!($sim, $clock, $uut);
         for i in 1..($data).len() {
             sdram_cmd!($uut, SDRAMCommand::NOP);
-            $uut.sdram.write_data.next = ($data[i] as u32).into();
-            $uut.sdram.address.next = 0_u32.into();
+            $uut.sdram.write_data.next = ($data[i] as u32).to_bits();
+            $uut.sdram.address.next = 0.into();
             wait_clock_cycle!($sim, $clock, $uut);
         }
         $uut.sdram.write_enable.next = false;
@@ -353,14 +355,18 @@ macro_rules! sdram_write {
 macro_rules! sdram_read {
     ($sim: ident, $clock: ident, $uut: ident, $bank: expr, $addr: expr, $data: expr) => {
         sdram_cmd!($uut, SDRAMCommand::Read);
-        $uut.sdram.bank.next = ($bank as u32).into();
-        $uut.sdram.address.next = ($addr as u32).into();
+        $uut.sdram.bank.next = ($bank as u32).to_bits();
+        $uut.sdram.address.next = ($addr as u32).to_bits();
         wait_clock_cycle!($sim, $clock, $uut);
         sdram_cmd!($uut, SDRAMCommand::NOP);
         wait_clock_cycles!($sim, $clock, $uut, 2); // Programmed CAS delay - 1
         for datum in $data {
             sdram_cmd!($uut, SDRAMCommand::NOP);
-            sim_assert!($sim, $uut.sdram.read_data.val() == (datum as u32), $uut);
+            sim_assert!(
+                $sim,
+                $uut.sdram.read_data.val() == (datum as u32).to_bits(),
+                $uut
+            );
             wait_clock_cycle!($sim, $clock, $uut);
         }
     };
@@ -370,14 +376,18 @@ macro_rules! sdram_read {
 macro_rules! sdram_reada {
     ($sim: ident, $clock: ident, $uut: ident, $bank: expr, $addr: expr, $data: expr) => {
         sdram_cmd!($uut, SDRAMCommand::Read);
-        $uut.sdram.bank.next = ($bank as u32).into();
-        $uut.sdram.address.next = ($addr as u32 | 1024_u32).into(); // Signal autoprecharge
+        $uut.sdram.bank.next = ($bank as u32).to_bits();
+        $uut.sdram.address.next = ($addr as u32 | 1024_u32).to_bits(); // Signal autoprecharge
         wait_clock_cycle!($sim, $clock, $uut);
         sdram_cmd!($uut, SDRAMCommand::NOP);
         wait_clock_cycles!($sim, $clock, $uut, 2); // Programmed CAS delay
         for datum in $data {
             sdram_cmd!($uut, SDRAMCommand::NOP);
-            sim_assert!($sim, $uut.sdram.read_data.val() == (datum as u32), $uut);
+            sim_assert!(
+                $sim,
+                $uut.sdram.read_data.val() == (datum as u32).to_bits(),
+                $uut
+            );
             wait_clock_cycle!($sim, $clock, $uut);
         }
     };
@@ -387,8 +397,8 @@ macro_rules! sdram_reada {
 macro_rules! sdram_precharge_one {
     ($sim: ident, $clock: ident, $uut: ident, $bank: expr) => {
         sdram_cmd!($uut, SDRAMCommand::Precharge);
-        $uut.sdram.bank.next = ($bank as u32).into();
-        $uut.sdram.address.next = (0 as u32).into();
+        $uut.sdram.bank.next = ($bank as u32).to_bits();
+        $uut.sdram.address.next = 0.into();
         wait_clock_cycle!($sim, $clock, $uut);
         sdram_cmd!($uut, SDRAMCommand::NOP);
     };
@@ -398,8 +408,8 @@ macro_rules! sdram_precharge_one {
 macro_rules! sdram_refresh {
     ($sim: ident, $clock: ident, $uut: ident, $timings: expr) => {
         sdram_cmd!($uut, SDRAMCommand::AutoRefresh);
-        $uut.sdram.bank.next = (0 as u32).into();
-        $uut.sdram.address.next = (0 as u32).into();
+        $uut.sdram.bank.next = 0.into();
+        $uut.sdram.address.next = 0.into();
         wait_clock_cycle!($sim, $clock, $uut);
         sdram_cmd!($uut, SDRAMCommand::NOP);
         wait_clock_cycles!($sim, $clock, $uut, $timings.t_rfc());
@@ -450,7 +460,7 @@ fn test_sdram_init_works() {
         wait_clock_cycles!(sim, clock, x, 16);
         sdram_boot!(sim, clock, x, timings);
         sdram_cmd!(x, SDRAMCommand::LoadModeRegister);
-        x.sdram.address.next = 0b000_0_00_011_0_011_u32.into();
+        x.sdram.address.next = 0b000_0_00_011_0_011.into();
         wait_clock_cycle!(sim, clock, x);
         sdram_cmd!(x, SDRAMCommand::NOP);
         wait_clock_cycles!(sim, clock, x, 5);

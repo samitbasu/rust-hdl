@@ -202,7 +202,7 @@ fn test_wide_port_test_works() {
         wait_clock_cycle!(sim, clock, x);
         x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
-        for val in [0xDEAD_u16, 0xBEEF_u16, 0xCAFE_u16, 0x1234_u16] {
+        for val in [0xDEAD, 0xBEEF, 0xCAFE, 0x1234] {
             x.bus.strobe.next = true;
             x.bus.from_controller.next = val.into();
             wait_clock_cycle!(sim, clock, x);
@@ -215,8 +215,7 @@ fn test_wide_port_test_works() {
         x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         for val in [
-            0xBABE_u16, 0x5EA1_u16, 0xFACE_u16, 0xABCD_u16, 0xBABA_u16, 0xCECE_u16, 0x4321_u16,
-            0x89AB_u16,
+            0xBABE, 0x5EA1, 0xFACE, 0xABCD, 0xBABA, 0xCECE, 0x4321, 0x89AB,
         ] {
             x.bus.strobe.next = true;
             x.bus.from_controller.next = val.into();
@@ -229,16 +228,16 @@ fn test_wide_port_test_works() {
     sim.add_testbench(move |mut sim: Sim<MOSIWidePortTest>| {
         let mut x = sim.init()?;
         x = sim.watch(|x| x.port_a.strobe_out.val(), x)?;
-        sim_assert!(sim, x.port_a.port_out.val() == 0xDEADBEEFCAFE1234_u64, x);
+        sim_assert!(sim, x.port_a.port_out.val() == 0xDEADBEEFCAFE1234, x);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<MOSIWidePortTest>| {
         let mut x = sim.init()?;
         x = sim.watch(|x| x.port_b.strobe_out.val(), x)?;
-        sim_assert!(sim, x.port_b.port_out.val() == 0xBABE5EA1FACEABCD_u64, x);
+        sim_assert!(sim, x.port_b.port_out.val() == 0xBABE5EA1FACEABCD, x);
         wait_clock_cycle!(sim, clock, x);
         x = sim.watch(|x| x.port_b.strobe_out.val(), x)?;
-        sim_assert!(sim, x.port_b.port_out.val() == 0xBABACECE432189AB_u64, x);
+        sim_assert!(sim, x.port_b.port_out.val() == 0xBABACECE432189AB, x);
         wait_clock_cycle!(sim, clock, x);
         sim.done(x)
     });
@@ -299,7 +298,7 @@ fn test_mosi_port_fifo_works() {
     uut.port_a.fifo_bus.link_connect_dest();
     uut.connect_all();
     let mut sim = Simulation::new();
-    let vals = [0xDEAD_u16, 0xBEEF_u16, 0xBABE_u16, 0xCAFE_u16];
+    let vals = [0xDEAD, 0xBEEF, 0xBABE, 0xCAFE];
     sim.add_clock(5, |x: &mut Box<MOSIPortFIFOTest>| {
         x.clock.next = !x.clock.val()
     });

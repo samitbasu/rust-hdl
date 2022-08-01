@@ -1,12 +1,47 @@
 use super::bits::Bits;
-use crate::core::bits::bit_cast;
+use crate::core::bits::{bit_cast, LiteralType, LITERAL_BITS};
 use num_bigint::{BigInt, Sign};
 use num_traits::cast::ToPrimitive;
 use std::fmt::{Debug, Formatter, LowerHex, UpperHex};
 use std::num::Wrapping;
 
+pub type SignedLiteralType = i64;
+pub const SIGNED_LITERAL_BITS: usize = 64;
+
 #[derive(Clone, Debug, Copy, PartialEq, Default)]
 pub struct Signed<const N: usize>(Bits<N>);
+
+pub trait ToSignedBits {
+    fn to_signed_bits<const N: usize>(self) -> Signed<N>;
+}
+
+impl ToSignedBits for i8 {
+    fn to_signed_bits<const N: usize>(self) -> Signed<N> {
+        assert!(N <= 8);
+        (self as SignedLiteralType).into()
+    }
+}
+
+impl ToSignedBits for i16 {
+    fn to_signed_bits<const N: usize>(self) -> Signed<N> {
+        assert!(N <= 16);
+        (self as SignedLiteralType).into()
+    }
+}
+
+impl ToSignedBits for i32 {
+    fn to_signed_bits<const N: usize>(self) -> Signed<N> {
+        assert!(N <= 32);
+        (self as SignedLiteralType).into()
+    }
+}
+
+impl ToSignedBits for i64 {
+    fn to_signed_bits<const N: usize>(self) -> Signed<N> {
+        assert!(N <= 64);
+        (self as SignedLiteralType).into()
+    }
+}
 
 impl<const N: usize> LowerHex for Signed<N> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -62,11 +97,11 @@ impl<const N: usize> Signed<N> {
 impl<const N: usize> From<BigInt> for Signed<N> {
     fn from(x: BigInt) -> Self {
         assert!(x.bits() <= N as u64);
-        if N <= 32 {
+        if N <= LITERAL_BITS {
             if x.sign() == Sign::Minus {
-                -Signed(Bits::from((-x).to_u32().unwrap()))
+                -Signed(Bits::from((-x).to_u64().unwrap()))
             } else {
-                Signed(Bits::from(x.to_u32().unwrap()))
+                Signed(Bits::from(x.to_u64().unwrap()))
             }
         } else {
             if x.sign() == Sign::Minus {
@@ -83,7 +118,7 @@ impl<const N: usize> std::ops::Neg for Signed<N> {
 
     fn neg(self) -> Self::Output {
         Signed(match self.0 {
-            Bits::Short(x) => Bits::Short((Wrapping(0_u32) - Wrapping(x.short())).0.into()),
+            Bits::Short(x) => Bits::Short((Wrapping(0) - Wrapping(x.short())).0.into()),
             Bits::Long(x) => {
                 let mut val = [false; N];
                 for ndx in 0..N {
@@ -119,17 +154,17 @@ impl std::ops::Mul<Signed<16>> for Signed<16> {
     }
 }
 
-impl<const N: usize> From<i32> for Signed<N> {
-    fn from(x: i32) -> Self {
+impl<const N: usize> From<SignedLiteralType> for Signed<N> {
+    fn from(x: SignedLiteralType) -> Self {
         if x > 0 {
-            Self(Bits::from(x as u32))
+            Self(Bits::from(x as LiteralType))
         } else {
-            -Self(Bits::from((-x) as u32))
+            -Self(Bits::from((-x) as LiteralType))
         }
     }
 }
 
-pub fn signed<const N: usize>(x: i32) -> Signed<N> {
+pub fn signed<const N: usize>(x: SignedLiteralType) -> Signed<N> {
     let t: Signed<N> = x.into();
     t
 }
@@ -218,9 +253,9 @@ mod tests {
     fn time_adds_bitvec() {
         let now = std::time::Instant::now();
         for _iter in 0..10 {
-            let mut q = Bits::<40>::from(0_u32);
+            let mut q = Bits::<40>::from(0);
             for _i in 0..1_000_000 {
-                q = q + 1_usize;
+                q = q + 1;
             }
         }
         let elapsed = std::time::Instant::now() - now;
@@ -231,9 +266,9 @@ mod tests {
     fn time_adds_bitvec_small() {
         let now = std::time::Instant::now();
         for _iter in 0..10 {
-            let mut q = Bits::<16>::from(0_u32);
+            let mut q = Bits::<16>::from(0);
             for _i in 0..1_000_000 {
-                q = q + 1_usize;
+                q = q + 1;
             }
         }
         let elapsed = std::time::Instant::now() - now;

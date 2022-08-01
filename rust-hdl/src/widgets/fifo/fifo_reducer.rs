@@ -42,7 +42,7 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Default
             can_write: Default::default(),
             will_run: Default::default(),
             data_to_write: Default::default(),
-            offset: Constant::new(DN.into()),
+            offset: Constant::new(DN.to_bits()),
             reverse: Constant::new(REVERSE),
         }
     }
@@ -61,7 +61,7 @@ impl<const DW: usize, const DN: usize, const REVERSE: bool> Logic for FIFOReduce
         self.will_run.next = self.data_available.val() && self.can_write.val();
         // If data is available we select which piece of the input based on the loaded flag
         if self.reverse.val() ^ self.loaded.q.val() {
-            self.data_to_write.next = self.data_in.val().get_bits::<DN>(self.offset.val().into());
+            self.data_to_write.next = self.data_in.val().get_bits::<DN>(self.offset.val().index());
         } else {
             self.data_to_write.next = self.data_in.val().get_bits::<DN>(0);
         }

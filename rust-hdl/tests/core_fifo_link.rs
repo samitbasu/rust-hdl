@@ -33,7 +33,7 @@ impl Logic for FIFOBridgeTest {
 impl Default for FIFOBridgeTest {
     fn default() -> Self {
         let data1 = (0..256)
-            .map(|_| Bits::<8>::from(rand::thread_rng().gen::<u8>()))
+            .map(|_| rand::thread_rng().gen::<u8>().to_bits())
             .collect::<Vec<_>>();
         let data2 = data1.clone();
         Self {

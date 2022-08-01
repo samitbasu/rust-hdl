@@ -37,7 +37,7 @@ impl Logic for ReducerTestFixture {
 impl Default for ReducerTestFixture {
     fn default() -> Self {
         let data1 = (0..256)
-            .map(|_| Bits::<16>::from(rand::thread_rng().gen::<u16>()))
+            .map(|_| rand::thread_rng().gen::<u16>().to_bits())
             .collect::<Vec<_>>();
         let mut data2 = vec![];
         for x in &data1 {
@@ -133,7 +133,7 @@ impl Logic for ExpanderTestFixture {
 impl Default for ExpanderTestFixture {
     fn default() -> Self {
         let data1 = (0..256)
-            .map(|_| Bits::<16>::from(rand::thread_rng().gen::<u16>()))
+            .map(|_| rand::thread_rng().gen::<u16>().to_bits())
             .collect::<Vec<_>>();
         let mut data2 = vec![];
         for x in &data1 {

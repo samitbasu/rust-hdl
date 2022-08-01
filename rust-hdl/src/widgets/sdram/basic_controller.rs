@@ -112,14 +112,14 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
             data_out: Default::default(),
             data_valid: Default::default(),
             error: Default::default(),
-            boot_delay: Constant::new((timings.t_boot() + 50).into()),
-            t_rp: Constant::new((timings.t_rp()).into()),
-            t_rfc: Constant::new((timings.t_rfc()).into()),
-            t_refresh_max: Constant::new((timings.t_refresh_max() * 9 / 10).into()),
-            t_rcd: Constant::new((timings.t_rcd()).into()),
-            t_wr: Constant::new((timings.t_wr()).into()),
-            max_transfer_size: Constant::new({ L / D }.into()),
-            mode_register: Constant::new(mode_register.into()),
+            boot_delay: Constant::new((timings.t_boot() + 50).to_bits()),
+            t_rp: Constant::new((timings.t_rp()).to_bits()),
+            t_rfc: Constant::new((timings.t_rfc()).to_bits()),
+            t_refresh_max: Constant::new((timings.t_refresh_max() * 9 / 10).to_bits()),
+            t_rcd: Constant::new((timings.t_rcd()).to_bits()),
+            t_wr: Constant::new((timings.t_wr()).to_bits()),
+            max_transfer_size: Constant::new({ L / D }.to_bits()),
+            mode_register: Constant::new(mode_register.to_bits()),
             /*
              * For a registered buffer, we need to add 2 cycles to the cas delay
              * - we add 1 on the send side because we add 1 on the send side and
@@ -131,7 +131,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
                     OutputBuffer::DelayOne => cas_delay + 1,
                     OutputBuffer::DelayTwo => cas_delay + 2,
                 }
-                .into(),
+                .to_bits(),
             ),
             state: Default::default(),
             reg_data_write: Default::default(),
@@ -146,10 +146,10 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize>
             addr_row: Default::default(),
             addr_col: Default::default(),
             write_pending: Default::default(),
-            row_bits: Constant::new(R.into()),
-            col_bits: Constant::new(C.into()),
-            data_bits: Constant::new(D.into()),
-            data_shift_in: Constant::new({ L - D }.into()),
+            row_bits: Constant::new(R.to_bits()),
+            col_bits: Constant::new(C.to_bits()),
+            data_bits: Constant::new(D.to_bits()),
+            data_shift_in: Constant::new({ L - D }.to_bits()),
             read_pending: Default::default(),
             data_out_counter: Default::default(),
             read_ready: Default::default(),
@@ -272,7 +272,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
                 self.sdram.address.next = self.addr_row.val();
                 self.state.d.next = State::ReadActivate;
                 self.read_pending.d.next = false;
-                self.data_out_counter.d.next = 0_u8.into();
+                self.data_out_counter.d.next = 0.into();
             }
             State::IssueWrite => {
                 self.cmd.next = SDRAMCommand::Active;
@@ -319,7 +319,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
                 self.sdram.write_enable.next = true;
                 if self.delay_counter.q.val() == self.t_wr.val() {
                     self.cmd.next = SDRAMCommand::Precharge;
-                    self.sdram.address.next = 0xFFFF_u32.into();
+                    self.sdram.address.next = 0xFFFF.into();
                     self.delay_counter.d.next = 0.into();
                     self.state.d.next = State::Precharge;
                 }

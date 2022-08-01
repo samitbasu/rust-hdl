@@ -134,7 +134,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
         self.data_inbound.next = self.register_in.q.val();
         self.transfer_done.next = self.done_flop.q.val();
         self.done_flop.d.next = false;
-        self.pointerm1.next = self.pointer.q.val() - 1_u32;
+        self.pointerm1.next = self.pointer.q.val() - 1;
         self.busy.next = true;
         // The main state machine
         match self.state.q.val() {
@@ -169,7 +169,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
                         .register_out
                         .q
                         .val()
-                        .get_bit(self.pointerm1.val().into()); // Fetch the corresponding bit out of the register
+                        .get_bit(self.pointerm1.val().index()); // Fetch the corresponding bit out of the register
                     self.pointer.d.next = self.pointerm1.val().into(); // Decrement the pointer
                     self.state.d.next = SPIState::MActive; // Move to the hold mclock low state
                     self.clock_state.d.next = self.cpol.val() ^ self.cpha.val();
@@ -186,7 +186,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
             }
             SPIState::SampleMISO => {
                 self.register_in.d.next = self.register_in.q.val().replace_bit(
-                    self.pointer.q.val().into(),
+                    self.pointer.q.val().index(),
                     self.miso_synchronizer.sig_out.val(),
                 );
                 self.clock_state.d.next = !self.clock_state.q.val();

@@ -548,7 +548,7 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
                 Box::new(#target))
             }))
         }
-        "val" | "into" | "index" => {
+        "val" | "into" | "index" | "to_bits" => {
             let receiver = method.receiver.as_ref();
             hdl_compute(receiver)
         }

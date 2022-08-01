@@ -47,10 +47,10 @@ impl<const DW: usize, const DN: usize> Logic for FIFOReducerN<DW, DN> {
                 .data_store
                 .q
                 .val()
-                .get_bits::<DN>(self.select.val().into())
+                .get_bits::<DN>(self.select.val().index())
         } else {
             // Otherwise, it comes directly from the read interface
-            self.data_out.next = self.data_in.val().get_bits::<DN>(self.select.val().into());
+            self.data_out.next = self.data_in.val().get_bits::<DN>(self.select.val().index());
         }
         // If we will write, then the data store should be right shifted.
         if self.will_write.val() {
@@ -98,12 +98,12 @@ impl<const DW: usize, const DN: usize> FIFOReducerN<DW, DN> {
             will_consume: Default::default(),
             data_store: Default::default(),
             msw_first: Constant::new(msw_first),
-            ratio: Constant::new((DW / DN - 1).into()),
-            offset: Constant::new(DN.into()),
+            ratio: Constant::new((DW / DN - 1).to_bits()),
+            offset: Constant::new(DN.to_bits()),
             select: if !msw_first {
                 Constant::new(0.into())
             } else {
-                Constant::new((DW - DN).into())
+                Constant::new((DW - DN).to_bits())
             },
         }
     }

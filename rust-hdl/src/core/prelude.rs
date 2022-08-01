@@ -8,6 +8,7 @@ pub use crate::core::atom::{Atom, AtomKind};
 pub use crate::core::bits::bit_cast;
 pub use crate::core::bits::bits;
 pub use crate::core::bits::clog2;
+pub use crate::core::bits::ToBits;
 pub use crate::core::bits::{Bit, Bits};
 pub use crate::core::block;
 pub use crate::core::block::Block;
@@ -30,6 +31,7 @@ pub use crate::core::named_path::NamedPath;
 pub use crate::core::probe;
 pub use crate::core::probe::Probe;
 pub use crate::core::signal::Signal;
+pub use crate::core::signed::ToSignedBits;
 pub use crate::core::signed::{
     signed, signed_bit_cast, signed_cast, unsigned_bit_cast, unsigned_cast, Signed,
 };

@@ -46,7 +46,7 @@ fn test_expander_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for datum in [
-            0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
+            0xD, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
         ] {
             x = sim.watch(|x| !x.fifo_in.full.val(), x)?;
             x.fifo_in.data_in.next = datum.into();
@@ -59,7 +59,7 @@ fn test_expander_works() {
     sim.add_testbench(move |mut sim: Sim<ExpanderTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for datum in [0xDEADBEEF_u32, 0xCAFEBABE] {
+        for datum in [0xDEADBEEF, 0xCAFEBABE] {
             x = sim.watch(|x| !x.fifo_out.empty.val(), x)?;
             sim_assert!(sim, x.fifo_out.data_out.val() == Bits::<32>::from(datum), x);
             x.fifo_out.read.next = true;
@@ -89,7 +89,7 @@ fn test_expander_works_with_lsw_first() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for datum in [
-            0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
+            0xD, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
         ] {
             x = sim.watch(|x| !x.fifo_in.full.val(), x)?;
             x.fifo_in.data_in.next = datum.into();
@@ -102,7 +102,7 @@ fn test_expander_works_with_lsw_first() {
     sim.add_testbench(move |mut sim: Sim<ExpanderTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for datum in [0xFEEBDAED_u32, 0xEBABEFAC_u32] {
+        for datum in [0xFEEBDAED, 0xEBABEFAC] {
             x = sim.watch(|x| !x.fifo_out.empty.val(), x)?;
             sim_assert!(sim, x.fifo_out.data_out.val() == Bits::<32>::from(datum), x);
             x.fifo_out.read.next = true;
@@ -157,7 +157,7 @@ fn test_fatten_works() {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
         for datum in [
-            0xD_u32, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
+            0xD, 0xE, 0xA, 0xD, 0xB, 0xE, 0xE, 0xF, 0xC, 0xA, 0xF, 0xE, 0xB, 0xA, 0xB, 0xE,
         ] {
             x = sim.watch(|x| !x.fifo.full.val(), x)?;
             x.fifo.data_in.next = datum.into();
@@ -170,7 +170,7 @@ fn test_fatten_works() {
     sim.add_testbench(move |mut sim: Sim<FattenTest>| {
         let mut x = sim.init()?;
         wait_clock_true!(sim, clock, x);
-        for datum in [0xDEADBEEF_u32, 0xCAFEBABE] {
+        for datum in [0xDEADBEEF, 0xCAFEBABE] {
             x = sim.watch(|x| !x.fifo.empty.val(), x)?;
             sim_assert!(sim, x.fifo.data_out.val() == Bits::<32>::from(datum), x);
             x.fifo.read.next = true;

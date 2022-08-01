@@ -43,7 +43,7 @@ impl<const N: usize, const M: usize, const P: usize> Accum<N, M, P> {
             strobe_out: Default::default(),
             accum: DFF::default(),
             counter: DFF::default(),
-            max_count: Constant::new(count.into()),
+            max_count: Constant::new(count.to_bits()),
             data_out: Default::default(),
         }
     }

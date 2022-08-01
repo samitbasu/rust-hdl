@@ -81,7 +81,7 @@ impl ADS868XSimulator {
 
 #[test]
 fn test_indexing() {
-    let val: Bits<32> = 0b11000_00_101_001_100_00000000_00000000_u32.into();
+    let val: Bits<32> = 0b11000_00_101_001_100_00000000_00000000.into();
     assert_eq!(val.get_bits::<5>(27).index(), 0b11000);
     assert_eq!(val.get_bits::<9>(16).index(), 0b101_001_100);
 }
@@ -99,8 +99,8 @@ impl Logic for ADS868XSimulator {
         // Set default values
         self.spi_slave.start_send.next = false;
         self.spi_slave.continued_transaction.next = false;
-        self.spi_slave.bits.next = 0_u16.into();
-        self.spi_slave.data_outbound.next = 0_u64.into();
+        self.spi_slave.bits.next = 0.into();
+        self.spi_slave.data_outbound.next = 0.into();
         self.reg_ram.write_enable.next = false;
         self.reg_ram.write_data.next = 0.into();
         self.spi_slave.disabled.next = false;
@@ -110,7 +110,7 @@ impl Logic for ADS868XSimulator {
         self.reg_ram.write_address.next = bit_cast::<5, 9>(self.address.val() >> 1);
         self.reg_ram.read_address.next = 0.into();
         self.data_parity.next = self.conversion_counter.q.val().xor();
-        self.id_parity.next = (self.reg_ram.read_data.val() & 0x0FF_u32).xor();
+        self.id_parity.next = (self.reg_ram.read_data.val() & 0x0FF).xor();
         match self.state.q.val() {
             ADS868XState::Ready => {
                 if !self.spi_slave.busy.val() {
@@ -255,8 +255,8 @@ fn do_spi_txn(
     sim: &mut Sim<Test8689>,
 ) -> Result<(Bits<32>, Box<Test8689>), SimError> {
     wait_clock_true!(sim, clock, x);
-    x.master.data_outbound.next = value.into();
-    x.master.bits_outbound.next = bits.into();
+    x.master.data_outbound.next = value.to_bits();
+    x.master.bits_outbound.next = bits.to_bits();
     x.master.continued_transaction.next = continued;
     x.master.start_send.next = true;
     wait_clock_cycle!(sim, clock, x);
@@ -330,9 +330,9 @@ fn test_reg_writes() {
             let result = do_spi_txn(32, 0x00_00_00_00, false, x, &mut sim)?;
             x = result.1;
             println!("Reading is {:x}", result.0);
-            sim_assert_eq!(sim, (result.0 & 0xFFFF0000_u32), ((i + 2) << 16) as u32, x);
+            sim_assert_eq!(sim, (result.0 & 0xFFFF0000), ((i + 2) << 16), x);
             let parity_bit = result.0 & 0x100 != 0;
-            let data: Bits<32> = (result.0 & 0xFFFF0000_u32) >> 16;
+            let data: Bits<32> = (result.0 & 0xFFFF0000) >> 16;
             sim_assert_eq!(sim, data.xor(), parity_bit, x);
         }
         sim.done(x)

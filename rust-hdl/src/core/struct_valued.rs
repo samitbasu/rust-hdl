@@ -27,9 +27,9 @@ fn test_composite() {
     };
 
     let y: Bits<9> = x.into();
-    assert_eq!(y.get_bits::<{ CmdType::BITS }>(0), 1u32);
+    assert_eq!(y.get_bits::<{ CmdType::BITS }>(0), 1);
     assert_eq!(y.get_bits::<{ bool::BITS }>(2), true);
-    assert_eq!(y.get_bits::<6>(3), 35_u32);
+    assert_eq!(y.get_bits::<6>(3), 35);
     let _x = MIGCmd {
         cmd: CmdType::Write,
         active: false,
@@ -68,9 +68,9 @@ impl Default for TestBlock {
             g: Default::default(),
             h: Default::default(),
             vals: Constant::new(CoreConfig {
-                foo: 7_u16.into(),
-                bar: 32_u32.into(),
-                baz: 8_u16.into(),
+                foo: 7.into(),
+                bar: 32.into(),
+                baz: 8.into(),
             }),
         }
     }

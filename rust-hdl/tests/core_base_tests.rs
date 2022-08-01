@@ -175,11 +175,11 @@ mod tests {
         println!("Hello from TB 1");
         let mut x = ep.wait(0, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
-        x.x.next = 42_u32.into();
+        x.x.next = 42.into();
         let mut x = ep.wait(100, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
-        x.x.next = 100_u32.into();
-        let x = ep.watch(|m| m.x.val() == 89_u32, x)?;
+        x.x.next = 100.into();
+        let x = ep.watch(|m| m.x.val() == 89, x)?;
         println!("Hello from TB1 where x value is {:?}", x.x.next);
         let x = ep.wait(250, x)?;
         println!("Hello from TB 1 at time {}", ep.time());
@@ -194,7 +194,7 @@ mod tests {
         println!("Hello from TB 2");
         let mut x = ep.wait(125, x)?;
         println!("Hello from TB 2 at time {}", ep.time());
-        x.x.next = 89_u32.into();
+        x.x.next = 89.into();
         ep.done(x)?;
         println!("TB 2 done");
         Ok(())
@@ -214,7 +214,7 @@ mod tests {
                 "Hello from macro driven simple simluation at time {}",
                 ep.time()
             );
-            x.x.next = 89_u32.into();
+            x.x.next = 89.into();
             ep.done(x)
         });
         x.strobe.clock.connect();
