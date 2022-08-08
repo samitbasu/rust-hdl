@@ -46,6 +46,10 @@ pub struct SDRAMFIFOController<
     state: DFF<State>,
     line_to_word_ratio: Constant<Bits<A>>,
     fill: DFF<Bits<A>>,
+    fill_0: Constant<Bits<A>>,
+    fill_1: Constant<Bits<A>>,
+    fill_2: Constant<Bits<A>>,
+    fill_3: Constant<Bits<A>>,
 }
 
 impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usize>
@@ -55,6 +59,14 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
         assert_eq!((1 << C) % L, 0);
         assert_eq!(A, C + R + 2);
         assert!(L < 32);
+        let banks = 4; // Assume 4 banks
+                       // Number of total bits
+        let bit_count = R * C * D * 4;
+        // The number of bits in each entry
+        let entry_bits = L as usize * D;
+        let max_entries = bit_count / entry_bits;
+        // So the number of elements we want to mark with each LED is N/5
+        let entries_per_led = max_entries / 5;
         Self {
             clock: Default::default(),
             sdram: Default::default(),
@@ -80,6 +92,10 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
             state: Default::default(),
             line_to_word_ratio: Constant::new(L.to_bits()),
             fill: Default::default(),
+            fill_0: Constant::new((entries_per_led).to_bits()),
+            fill_1: Constant::new((entries_per_led * 2).to_bits()),
+            fill_2: Constant::new((entries_per_led * 3).to_bits()),
+            fill_3: Constant::new((entries_per_led * 4).to_bits()),
         }
     }
 }
@@ -179,23 +195,16 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
             }
         }
         self.status.next = 0.into();
-        // We have 512Mbits of memory.
-        // Each write is 128bits of data
-        // So the max fill is 4M of data
-        // To display this on an 8 bit display, we
-        // use a chunk size of 2^19.
-        //
-        //524288   1048576   1572864   2097152   2621440   3145728   3670016   4194304
-        if self.fill.q.val() > 838860 {
+        if self.fill.q.val() > self.fill_0.val() {
             self.status.next = self.status.val() | 1;
         }
-        if self.fill.q.val() > 1677721 {
+        if self.fill.q.val() > self.fill_1.val() {
             self.status.next = self.status.val() | 2;
         }
-        if self.fill.q.val() > 2516582 {
+        if self.fill.q.val() > self.fill_2.val() {
             self.status.next = self.status.val() | 4;
         }
-        if self.fill.q.val() > 3355443 {
+        if self.fill.q.val() > self.fill_3.val() {
             self.status.next = self.status.val() | 8;
         }
         if self.underflow.val() | self.overflow.val() {

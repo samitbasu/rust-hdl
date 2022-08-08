@@ -53,7 +53,7 @@ fn test_hls_sdram_fifo_works() {
     uut.connect_all();
     let mut sim = Simulation::new();
     let data = (0..256)
-        .map(|_| rand::thread_rng().gen::<u64>())
+        .map(|_| rand::thread_rng().gen::<u16>())
         .collect::<Vec<_>>();
     let data2 = data.clone();
     sim.add_clock(4000, |x: &mut Box<HLSSDRAMFIFOTest>| {

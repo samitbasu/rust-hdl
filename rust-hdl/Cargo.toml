@@ -25,4 +25,4 @@ embed-doc-image = "0.1.4"
 svg = "0.10.0"
 substring = "^1"
 anyhow = "^1"
-
+static_assertions = "^1"

@@ -11,8 +11,8 @@ pub struct MISOWidePort<const W: usize, const D: usize> {
     pub clock_out: Signal<Out, Clock>,
     accum: DFF<Bits<W>>,
     address_active: DFF<Bit>,
-    offset: Constant<Bits<W>>,
-    shift: Constant<Bits<W>>,
+    offset: Constant<Bits<16>>,
+    shift: Constant<Bits<16>>,
     modulo: Constant<Bits<8>>,
     count: DFF<Bits<8>>,
     ready: DFF<Bit>,
@@ -23,6 +23,7 @@ impl<const W: usize, const D: usize> Default for MISOWidePort<W, D> {
         assert!(W > D);
         assert_eq!(W % D, 0);
         assert!(W / D < 256);
+        assert!(W < 65536);
         Self {
             bus: Default::default(),
             port_in: Default::default(),
@@ -59,7 +60,7 @@ impl<const W: usize, const D: usize> Logic for MISOWidePort<W, D> {
                 self.accum.q.val().get_bits::<D>(self.shift.val().index());
             self.bus.ready.next = self.ready.q.val() & self.count.q.val().any();
             if self.bus.strobe.val() {
-                self.accum.d.next = self.accum.q.val() << self.offset.val();
+                self.accum.d.next = self.accum.q.val() << bit_cast::<W, 16>(self.offset.val());
                 self.count.d.next = self.count.q.val() - 1;
             }
         }

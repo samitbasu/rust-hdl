@@ -41,7 +41,7 @@ macro_rules! hls_fifo_read {
         wait_clock_true!($sim, $clock, $uut);
         for val in $data {
             $uut = $sim.watch(|x| !x.$($fifo).+.empty.val(), $uut)?;
-            sim_assert_eq!($sim, $uut.$($fifo).+.data.val(), *val, $uut);
+            sim_assert_eq!($sim, $uut.$($fifo).+.data.val(), (*val) as LiteralType, $uut);
             $uut.$($fifo).+.read.next = true;
             wait_clock_cycle!($sim, $clock, $uut);
             $uut.$($fifo).+.read.next = false;
@@ -55,7 +55,7 @@ macro_rules! hls_fifo_read_lazy {
         wait_clock_true!($sim, $clock, $uut);
         for val in $data {
             $uut = $sim.watch(|x| !x.$($fifo).+.empty.val(), $uut)?;
-            sim_assert_eq!($sim, $uut.$($fifo).+.data.val(), *val, $uut);
+            sim_assert_eq!($sim, $uut.$($fifo).+.data.val(), (*val) as LiteralType, $uut);
             $uut.$($fifo).+.read.next = true;
             wait_clock_cycle!($sim, $clock, $uut);
             $uut.$($fifo).+.read.next = false;

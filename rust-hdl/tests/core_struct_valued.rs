@@ -106,8 +106,8 @@ fn test_struct_pack() {
             5 => MIGCommand::Refresh,
             _ => panic!("Unexpected random enum value"),
         };
-        let burst_length = rand::thread_rng().gen::<u8>().to_bits();
-        let byte_address = rand::thread_rng().gen::<u32>().to_bits();
+        let burst_length = bit_cast::<6, 8>(rand::thread_rng().gen::<u8>().to_bits::<8>());
+        let byte_address = bit_cast::<30, 32>(rand::thread_rng().gen::<u32>().to_bits::<32>());
         let x = MIGStruct {
             instruction,
             burst_length,

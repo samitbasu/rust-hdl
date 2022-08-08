@@ -8,6 +8,7 @@ pub use crate::core::atom::{Atom, AtomKind};
 pub use crate::core::bits::bit_cast;
 pub use crate::core::bits::bits;
 pub use crate::core::bits::clog2;
+pub use crate::core::bits::LiteralType;
 pub use crate::core::bits::ToBits;
 pub use crate::core::bits::{Bit, Bits};
 pub use crate::core::block;

@@ -3,6 +3,7 @@ use crate::core::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
 use crate::core::synth::VCDValue;
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
+use static_assertions::const_assert;
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
 use std::hash::Hasher;
@@ -171,18 +172,7 @@ fn test_clog2_is_correct() {
 /// ```
 ///
 /// Here, we compare the value of `z` with `0xFFFF-0x20+1` which is the 2-s complement
-/// representation of `-0x20`.  You can work with signed integer values to make it slightly
-/// easier to perform the calculations.  In those cases, RustHDL will automatically sign extend
-/// the value to make it operate as expected:
-///
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(0x40);
-/// let y: Bits<16> = bits(0x60);
-/// let z = x - y;
-/// let i : i16 = z.into();
-/// assert_eq!(i, -0x20);
-/// ```
+/// representation of `-0x20`.
 ///
 /// You can also put the literal on the left side of the subtraction expression, as expected.  The
 /// bitwidth of the computation will be driven by the width of the [Bits] in the expression.
@@ -201,8 +191,8 @@ fn test_clog2_is_correct() {
 ///
 /// ```
 /// # use  rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(0xDEAD_BEEF);
-/// let y: Bits<16> = bits(0xFFFF_0000);
+/// let x: Bits<32> = bits(0xDEAD_BEEF);
+/// let y: Bits<32> = bits(0xFFFF_0000);
 /// let z = x & y;
 /// assert_eq!(z, bits(0xDEAD_0000));
 /// ```
@@ -210,7 +200,7 @@ fn test_clog2_is_correct() {
 /// Of course, you can also use a literal value in the `and` operation.
 /// ```
 /// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(0xDEAD_BEEF);
+/// let x: Bits<32> = bits(0xDEAD_BEEF);
 /// let z = x & 0x0000_FFFF;
 /// assert_eq!(z, bits(0xBEEF))
 /// ```
@@ -218,7 +208,7 @@ fn test_clog2_is_correct() {
 /// and similarly, the literal can appear on the left of the `and` expression.
 /// ```
 /// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(0xCAFE_BEEF);
+/// let x: Bits<32> = bits(0xCAFE_BEEF);
 /// let z = 0xFFFF_0000 & x;
 /// assert_eq!(z, bits(0xCAFE_0000));
 /// ```
@@ -240,8 +230,8 @@ fn test_clog2_is_correct() {
 ///
 /// ```
 /// # use rust_hdl::core::prelude::*;
-/// let x : Bits<16> = bits(0xBEEF_0000);
-/// let y : Bits<16> = bits(0x0000_CAFE);
+/// let x : Bits<32> = bits(0xBEEF_0000);
+/// let y : Bits<32> = bits(0x0000_CAFE);
 /// let z = x | y;
 /// assert_eq!(z, bits(0xBEEF_CAFE));
 /// ```
@@ -249,7 +239,7 @@ fn test_clog2_is_correct() {
 /// You can also use literals
 /// ```
 /// # use rust_hdl::core::prelude::*;
-/// let x : Bits<16> = bits(0xBEEF_0000);
+/// let x : Bits<32> = bits(0xBEEF_0000);
 /// let z = x | 0x0000_CAFE;
 /// assert_eq!(z, bits(0xBEEF_CAFE));
 /// ```
@@ -263,8 +253,8 @@ fn test_clog2_is_correct() {
 ///
 /// ```
 /// # use rust_hdl::core::prelude::*;
-/// let x : Bits<16> = bits(0xCAFE_BABE);
-/// let y : Bits<16> = bits(0xFF00_00FF);
+/// let x : Bits<32> = bits(0xCAFE_BABE);
+/// let y : Bits<32> = bits(0xFF00_00FF);
 /// let z = y ^ x;
 /// let w = z ^ y; // XOR applied twice is a null-op
 /// assert_eq!(w, x);
@@ -330,16 +320,6 @@ fn test_clog2_is_correct() {
 /// let y = x < 135;  // Converts the 135 to a Bits<16> and then compares
 /// assert!(y)
 /// ```
-///
-/// The signed-unsigned problem shows up in this case for example:
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(52);
-/// let y = x > -15;
-/// assert!(!y); // In unsigned comparisons, -15 > 52!
-/// ```
-/// This occurs because of the conversion of -15 to an unsigned 16 bit value prior to the
-/// comparison.
 ///
 /// ## Shift Left
 ///
@@ -932,7 +912,7 @@ impl Into<bool> for Bits<1> {
 /// edition Rust:
 /// ```
 /// # use rust_hdl::core::prelude::*;
-/// let x: Bits<128> = 0xDEADBEEF_CAFEBABE_1234ABCD_00005EA1.into();
+/// let x: Bits<128> = 0xDEADBEEF_CAFEBABE_1234ABCD_00005EA1_u128.to_bits();
 /// ```
 /// From a safety perspective, RustHDL will panic if the argument is too large to fit
 /// into the bit vector.  Thus, this example will panic, since the literal cannot be
@@ -971,7 +951,7 @@ impl<const N: usize> From<Wrapping<LiteralType>> for Bits<N> {
 ///```
 ///# use rust_hdl::core::prelude::*;
 /// let x: Bits<16> = 0xDEAD.into();
-/// let y: u128 = x.into();
+/// let y: u128 = x.to_u128();
 /// assert_eq!(y, 0xDEAD);
 ///```
 ///The following will panic even through the literal value stored in the 256 bit vector
@@ -979,7 +959,7 @@ impl<const N: usize> From<Wrapping<LiteralType>> for Bits<N> {
 ///```should_panic
 ///# use rust_hdl::core::prelude::*;
 ///let x : Bits<256> = 42.into();
-///let y: u128 = x.into(); // Panics!
+///let y: u128 = x.to_u128(); // Panics!
 /// ```
 impl<const N: usize> From<Bits<N>> for LiteralType {
     fn from(x: Bits<N>) -> Self {

@@ -334,7 +334,8 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize> Logic
                 self.sdram.write_enable.next = true;
                 if self.delay_counter.q.val() == self.t_wr.val() {
                     self.cmd.next = SDRAMCommand::Precharge;
-                    self.sdram.address.next = 0xFFFF.into();
+                    // 13 bits is 0001_1111_1111_1111 0x1FFF or
+                    self.sdram.address.next = 0x1FFF.into();
                     self.delay_counter.d.next = 0.into();
                     self.state.d.next = State::Precharge;
                 }

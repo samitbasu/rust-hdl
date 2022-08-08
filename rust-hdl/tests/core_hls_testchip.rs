@@ -107,7 +107,7 @@ fn test_soc_chip_read_write_works() {
         x.from_cpu.write.next = false;
         for datum in data_in.clone() {
             x = sim.watch(|x| !x.to_cpu.empty.val(), x)?;
-            sim_assert!(sim, x.to_cpu.data.val() == (datum << 1), x);
+            sim_assert_eq!(sim, x.to_cpu.data.val(), ((datum << 1) & 0xFFFF), x);
             x.to_cpu.read.next = true;
             wait_clock_cycle!(sim, clock, x);
             x.to_cpu.read.next = false;

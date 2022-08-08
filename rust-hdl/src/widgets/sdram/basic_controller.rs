@@ -319,7 +319,7 @@ impl<const R: usize, const C: usize, const L: usize, const D: usize> Logic
                 self.sdram.write_enable.next = true;
                 if self.delay_counter.q.val() == self.t_wr.val() {
                     self.cmd.next = SDRAMCommand::Precharge;
-                    self.sdram.address.next = 0xFFFF.into();
+                    self.sdram.address.next = 0x1FFF.into();
                     self.delay_counter.d.next = 0.into();
                     self.state.d.next = State::Precharge;
                 }
