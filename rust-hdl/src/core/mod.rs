@@ -22,7 +22,7 @@ pub mod path_tools;
 pub mod prelude;
 pub mod probe;
 #[doc(hidden)]
-pub mod shortbitvec;
+pub mod short_bit_vec;
 pub mod signal;
 pub mod signed;
 pub mod simulate;

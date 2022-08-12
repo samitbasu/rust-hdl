@@ -23,6 +23,10 @@ impl<const N: usize> ShortBitVec<N> {
         self.0
     }
 
+    pub fn to_u128(&self) -> u128 {
+        self.0 as u128
+    }
+
     #[inline(always)]
     pub fn replace_bit(&self, index: usize, val: bool) -> Self {
         assert!(index < N);

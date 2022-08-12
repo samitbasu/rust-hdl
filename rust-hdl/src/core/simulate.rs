@@ -144,7 +144,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
             let result = std::panic::catch_unwind(|| testbench(ep));
             match result {
                 Ok(x) => x,
-                Err(e) => {
+                Err(_e) => {
                     ep_panic.send(MessageOrPanic::Panic).unwrap();
                     Err(SimError::SimPanic)
                 }

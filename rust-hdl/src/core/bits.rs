@@ -1,9 +1,8 @@
 use crate::core::bitvec::BitVec;
-use crate::core::shortbitvec::{ShortBitVec, ShortType, SHORT_BITS};
+use crate::core::short_bit_vec::{ShortBitVec, ShortType, SHORT_BITS};
 use crate::core::synth::VCDValue;
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
-use static_assertions::const_assert;
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
 use std::hash::Hasher;
@@ -13,7 +12,37 @@ use std::num::Wrapping;
 // The short value must be less than 2^N
 // N <= SHORT_BITS --> Short repr, otherwise Long repr
 
+/// The [LiteralType] is used to set the type for literals that appear in RustHDL
+/// expressions.  Because of how Rust's type inference currently works, an expression
+/// like
+/// ```
+/// # use rust_hdl::core::prelude::*;
+///
+/// let x: Bits<32> = 0xDEADBEEF.into();
+/// let y : Bits<32> = x + 1;
+/// ```
+/// only works if Rust can unambiguously assign a type to the literal (either `DEADBEEF` or `1`).
+/// In earlier versions of RustHDL, this required adding a suffix to the literal like `0xDEADBEEF_u32`,
+/// but those suffixes in turn littered the code and made it difficult to read.  Now, only one type
+/// of literal is supported [LiteralType], which is an alias for [u64].  As such, any un-suffixed
+/// number is assumed to be at most a 64 bit integer.  This does not limit you in any way from
+/// using suffixed literals.  You can express, for example, up to 128 bit constants using standard
+/// Rust notation, and using the [to_bits] trait to convert it to a [Bits] type.
+/// ```
+/// # use rust_hdl::core::prelude::*;
+///
+/// let x: Bits<128> = 0xDEADBEEF_CAFE_1234_u128.to_bits();  // Works!
+/// ```
+/// However, the following will fail, since the [From] trait is only implemented on [LiteralType]
+/// to make the conversion unambiguous.
+/// ```compile_fail
+/// # use rust_hdl::core::prelude::*;
+///
+/// let x: Bits<128> = 0xDEADBEEF_CAFE_1234_u128.into();  // Fails to compile, since conversion from [u128] is not defined
+/// ```
 pub type LiteralType = u64;
+/// [LITERAL_BITS] is set to the number of bits in the [LiteralType].  I.e., it is guaranteed that
+/// the number of bits in [LiteralType] is [LITERAL_BITS].
 pub const LITERAL_BITS: usize = 64;
 
 /// Compute the minimum number of bits to represent a container with t items.
@@ -32,7 +61,7 @@ pub const LITERAL_BITS: usize = 64;
 /// the signal that holds the count.
 ///
 /// ```rust, compile_fail
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl::core::prelude::*;
 ///
 /// #[derive(LogicBlock, Default)]
 /// struct CountToN<const N: usize> {
@@ -391,6 +420,66 @@ impl<const N: usize> From<BigUint> for Bits<N> {
     }
 }
 
+/// Convert from a [Bits] to a [BigUint].
+/// ```
+/// # use rust_hdl::core::prelude::*;
+/// # use num_bigint::BigUint;
+/// let x : Bits<128> = 0xDEAD_BEEF_CAFE_BABE_1234_5678_u128.to_bits();
+/// let y : BigUint = x.into();
+/// println!("y = {:x}", y); // Prints 0xDEAD_BEEF_CAFE_BABE_1234_5678
+/// ```
+impl<const N: usize> From<Bits<N>> for BigUint {
+    fn from(y: Bits<N>) -> Self {
+        let mut x = BigUint::default();
+        for i in 0..N {
+            x.set_bit(i as u64, y.get_bit(i));
+        }
+        x
+    }
+}
+
+
+#[cfg(test)]
+fn random_bits<const N: usize>() -> Bits<N> {
+    use rand::random;
+    let mut x = Bits::default();
+    for bit in 0..N {
+        if random::<bool>() {
+            x = x.replace_bit(bit, true);
+        }
+    }
+    x
+}
+
+#[test]
+fn test_biguint_roundtrip() {
+    use seq_macro::seq;
+    use rand::random;
+
+    seq!(N in 5..150 {
+        for _iters in 0..10 {
+            let y: Bits<N> = random_bits();
+            let z: BigUint = y.into();
+            let h: Bits<N> = z.into();
+            assert_eq!(h, y);
+        }
+    });
+    seq!(N in 5..150 {
+        for _iters in 0..10 {
+            let bits = (0..N).map(|_| if random::<bool>() {
+                b"1"[0]
+            } else {
+                b"0"[0]
+            }).collect::<Vec<u8>>();
+            let y = BigUint::parse_bytes(&bits, 2).unwrap();
+            let z : Bits<N> = y.clone().into();
+            let h : BigUint = z.into();
+            assert_eq!(h, y);
+        }
+    });
+}
+
+
 #[test]
 fn test_cast_from_biguint() {
     let x = BigUint::parse_bytes(b"1011000101", 2).unwrap();
@@ -499,7 +588,17 @@ pub fn bits<const N: usize>(x: LiteralType) -> Bits<N> {
     t
 }
 
+/// The [ToBits] trait is used to provide a way to convert Rust standard unsigned
+/// types (currently `u8, u16, u32, u64, u128`) into [Bits] of different lengths.
+/// Note that RustHDL will panic if you attempt to convert an unsigned type into
+/// a [Bits] that is too small to hold the value.
 pub trait ToBits {
+    /// Convert the underlying type to a [Bits] of the specified size.  Invoked
+    /// using
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<4> = 0xF_u8.to_bits();
+    ///```
     fn to_bits<const N: usize>(self) -> Bits<N>;
 }
 
@@ -535,7 +634,6 @@ impl ToBits for usize {
 
 impl ToBits for u128 {
     fn to_bits<const N: usize>(self) -> Bits<N> {
-        assert!(N <= 128);
         Bits::<N>::from(BigUint::from(self))
     }
 }
@@ -838,28 +936,105 @@ impl<const N: usize> Bits<N> {
         N
     }
 
+    /// Convert [Bits] to an [u8].
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<6> = 12.into();
+    /// let y = x.to_u8();
+    /// assert_eq!(y, 12_u8);
+    /// ```
+    /// Note that this will panic if the width of the
+    /// bitvector is larger than 8 bits.
+    /// ```should_panic
+    /// # use rust_hdl::core::prelude::*;
+    /// let x: Bits<12> = 0xADE.into();
+    /// let y = x.to_u8(); // Panics - too many bits
+    /// ```
     pub fn to_u8(self) -> u8 {
-        assert!(N <= 8);
+        assert!(N <= 8, "Cannot convert Bits::<{}> to u8 - too many bits", N);
         let x: LiteralType = self.into();
         x as u8
     }
 
+    /// Convert [Bits] to an [u16].
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<12> = 12.into();
+    /// let y = x.to_u16();
+    /// assert_eq!(y, 12_u16);
+    /// ```
+    /// Note that this will panic if the width of the
+    /// bitvector is larger than 16 bits.
+    /// ```should_panic
+    /// # use rust_hdl::core::prelude::*;
+    /// let x: Bits<20> = 0xADE.into();
+    /// let y = x.to_u16(); // Panics - too many bits
+    /// ```
     pub fn to_u16(self) -> u16 {
-        assert!(N <= 16);
+        assert!(N <= 16, "Cannot convert Bits::<{}> to u16 - too many bits", N);
         let x: LiteralType = self.into();
         x as u16
     }
 
+    /// Convert [Bits] to an [u32].
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<24> = 12.into();
+    /// let y = x.to_u32();
+    /// assert_eq!(y, 12_u32);
+    /// ```
+    /// Note that this will panic if the width of the
+    /// bitvector is larger than 32 bits.
+    /// ```should_panic
+    /// # use rust_hdl::core::prelude::*;
+    /// let x: Bits<40> = 0xADE.into();
+    /// let y = x.to_u32(); // Panics - too many bits
+    /// ```
     pub fn to_u32(self) -> u32 {
-        assert!(N <= 32);
+        assert!(N <= 32, "Cannot convert Bits::<{}> to u32 - too many bits", N);
         let x: LiteralType = self.into();
         x as u32
     }
 
+    /// Convert [Bits] to an [u64].
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<40> = 12.into();
+    /// let y = x.to_u64();
+    /// assert_eq!(y, 12_u64);
+    /// ```
+    /// Note that this will panic if the width of the
+    /// bitvector is larger than 64 bits.
+    /// ```should_panic
+    /// # use rust_hdl::core::prelude::*;
+    /// let x: Bits<80> = 0xADE.into();
+    /// let y = x.to_u64(); // Panics - too many bits
+    /// ```
     pub fn to_u64(self) -> u64 {
-        assert!(N <= 64);
+        assert!(N <= 64, "Cannot convert Bits::<{}> to u64 - too many bits", N);
         let x: LiteralType = self.into();
         x as u64
+    }
+
+    /// Convert [Bits] to an [u128].
+    /// ```
+    /// # use rust_hdl::core::prelude::*;
+    /// let x : Bits<80> = 12.into();
+    /// let y = x.to_u128();
+    /// assert_eq!(y, 12_u128);
+    /// ```
+    /// Note that this will panic if the width of the
+    /// bitvector is larger than 128 bits.
+    /// ```should_panic
+    /// # use rust_hdl::core::prelude::*;
+    /// let x: Bits<140> = 0xADE.into();
+    /// let y = x.to_u128(); // Panics - too many bits
+    /// ```
+    pub fn to_u128(self) -> u128 {
+        match self {
+            Bits::Short(x) => x.to_u128(),
+            Bits::Long(x) => x.to_u128(),
+        }
     }
 }
 
@@ -896,14 +1071,15 @@ impl Into<bool> for Bits<1> {
     }
 }
 
-/// Convert from [u128] to [Bits].  Because of some restrictions on
+/// Convert from [LiteralType] to [Bits].  Because of some restrictions on
 /// how Rust's type inference works, when you work with unsized
 /// literals (e.g., `x = 3`), there must either be a unique integer type
 /// that can fit the expression, or it will default to `i32`.  Unfortunately,
 /// in general, [Bits] are used to represent unsigned types.  The upshot
 /// of all this is that RustHDL selects one unsigned integer type to represent
-/// literals.  Although not idea, RustHDL uses a `u128` to represent literals
-/// so as to make HDL expressions as close to Verilog or VHDL.
+/// literals.  Although not ideal, RustHDL uses a [LiteralType] (currently 'u64') to represent literals
+/// so as to make HDL expressions close to Verilog or VHDL.  This choice should not affect
+/// any hardware implementation, as hardware registers need to be of [Bits] type.
 /// ```
 /// # use rust_hdl::core::prelude::*;
 /// let x: Bits<16> = 0xDEAD.into(); // This is interpreteed as a 128 bit constant by Rust
@@ -1080,7 +1256,7 @@ impl<const N: usize> Ord for Bits<N> {
 }
 
 #[doc(hidden)]
-impl<const N: usize> std::cmp::PartialOrd<Bits<N>> for LiteralType {
+impl<const N: usize> PartialOrd<Bits<N>> for LiteralType {
     fn partial_cmp(&self, other: &Bits<N>) -> Option<Ordering> {
         let self_as_bits: Bits<N> = (*self).into();
         self_as_bits.partial_cmp(other)
@@ -1088,7 +1264,7 @@ impl<const N: usize> std::cmp::PartialOrd<Bits<N>> for LiteralType {
 }
 
 #[doc(hidden)]
-impl<const N: usize> std::cmp::PartialOrd<LiteralType> for Bits<N> {
+impl<const N: usize> PartialOrd<LiteralType> for Bits<N> {
     fn partial_cmp(&self, other: &LiteralType) -> Option<Ordering> {
         let other_as_bits: Bits<N> = (*other).into();
         self.partial_cmp(&other_as_bits)
@@ -1130,7 +1306,7 @@ impl<const N: usize> PartialEq<Bits<N>> for Bits<N> {
 }
 
 #[doc(hidden)]
-impl<const N: usize> std::cmp::PartialEq<LiteralType> for Bits<N> {
+impl<const N: usize> PartialEq<LiteralType> for Bits<N> {
     fn eq(&self, other: &LiteralType) -> bool {
         let other_as_bits: Bits<N> = (*other).into();
         self.eq(&other_as_bits)
@@ -1138,7 +1314,7 @@ impl<const N: usize> std::cmp::PartialEq<LiteralType> for Bits<N> {
 }
 
 #[doc(hidden)]
-impl<const N: usize> std::cmp::PartialEq<Bits<N>> for LiteralType {
+impl<const N: usize> PartialEq<Bits<N>> for LiteralType {
     fn eq(&self, other: &Bits<N>) -> bool {
         let self_as_bits: Bits<N> = (*self).into();
         self_as_bits.eq(other)
@@ -1190,13 +1366,18 @@ impl<const N: usize> std::ops::Add<bool> for Bits<N> {
 mod tests {
     use crate::core::bits::{LiteralType, ToBits};
     use std::num::Wrapping;
-
+    use num_bigint::BigUint;
+    use seq_macro::seq;
     use super::{bit_cast, clog2, Bits};
+    use crate::core::bits::random_bits;
+    use num_traits::One;
 
     #[test]
     fn test_get_bits_section() {
-        let x: Bits<40> = 0xDAD_BEEF_CA.into();
-        let y = x.get_bits::<32>(8);
+        let x: Bits<40> = 0xD_ADBE_EFCA.into();
+        let y = x.get_bits::<32>(8).to_u32();
+        let answer = 0xDAD_BEEF;
+        assert_eq!(y, answer);
     }
 
     #[test]
@@ -1344,12 +1525,6 @@ mod tests {
         assert_ne!(a, c)
     }
     #[test]
-    fn all_works() {
-        let a: Bits<48> = 0xFFFF_FFFF_FFFF.into();
-        assert!(a.all());
-        assert!(a.any());
-    }
-    #[test]
     fn mask_works() {
         let a: Bits<48> = 0xFFFF_FFFF_FFFF.into();
         let b = Bits::<48>::mask();
@@ -1415,6 +1590,7 @@ mod tests {
         c.set_bits(16, b);
         assert_eq!(c, 0xdead_cade_babe);
     }
+
     #[test]
     fn test_constants_and_bits() {
         let a: Bits<16> = 0xdead.into();
@@ -1432,35 +1608,280 @@ mod tests {
         assert_eq!(a.len(), 8);
         assert_eq!(clog2(1024), 10);
     }
+
     #[test]
     fn test_clog2_inline() {
         const A_WIDTH: usize = clog2(1000);
         let a: Bits<A_WIDTH> = 1023.into();
         assert_eq!(a.len(), 10);
     }
+
     #[test]
     fn test_default() {
         const N: usize = 128;
         let a = Bits::<N>::default();
         assert_eq!(a, 0);
     }
+
     #[test]
-    fn test_compare() {
-        let a: Bits<16> = 35.into();
-        let b: Bits<16> = 100.into();
-        assert_ne!(a, b);
-        assert!(a < b);
-        assert!(b > a);
+    fn test_get_bits() {
+        fn get_bits_test<const N: usize, const M: usize>() {
+            for offset in 0_usize..N {
+                let y: Bits<N> = random_bits();
+                let z = y.get_bits::<M>(offset);
+                let yb: BigUint = y.into();
+                let yb = (yb >> offset) & ((BigUint::one() << M) - BigUint::one());
+                let zb: BigUint = z.into();
+                assert_eq!(zb, yb);
+            }
+        }
+        seq!(N in 0..16 {
+            get_bits_test::<8, N>();
+        });
+        seq!(N in 0..64 {
+            get_bits_test::<32, N>();
+        });
+        seq!(N in 0..65 {
+            get_bits_test::<64, N>();
+        });
+        seq!(N in 0..300 {
+            get_bits_test::<256, N>();
+        });
+        seq!(N in 0..150 {
+            get_bits_test::<125, N>();
+        });
     }
+
     #[test]
-    fn test_compare_long() {
-        let a: Bits<160> = 35.into();
-        let b: Bits<160> = 100.into();
-        assert_ne!(a, b);
-        assert!(a < b);
-        assert!(b > a);
+    fn test_bitcast() {
+        fn bitcast_test<const N: usize, const M: usize>() {
+            let y : Bits<N> = random_bits();
+            let z = bit_cast::<M, N>(y);
+            let yb : BigUint = y.into();
+            let zb = yb & ((BigUint::one() << M) - BigUint::one());
+            let zc : BigUint = z.into();
+            assert_eq!(zb, zc);
+        }
+        fn bitcast_test_set<const M: usize>() {
+            bitcast_test::<M, 1>();
+            bitcast_test::<M, 8>();
+            bitcast_test::<M, 16>();
+            bitcast_test::<M, 32>();
+            bitcast_test::<M, 64>();
+            bitcast_test::<M, 128>();
+            bitcast_test::<M, 256>();
+        }
+        bitcast_test_set::<1>();
+        bitcast_test_set::<8>();
+        bitcast_test_set::<16>();
+        bitcast_test_set::<32>();
+        bitcast_test_set::<64>();
+        bitcast_test_set::<128>();
+        bitcast_test_set::<256>();
     }
+
+    #[test]
+    fn test_any() {
+        seq!(N in 1..150 {
+            for _rep in 0..10 {
+                let y: Bits<N> = random_bits();
+                let z : BigUint = y.into();
+                let y_any = y.any();
+                let z_any = z.count_ones() != 0;
+                assert_eq!(y_any, z_any)
+            }
+            let y = Bits::<N>::default();
+            assert_eq!(y.any(), false);
+        });
+    }
+
+
+    #[test]
+    fn test_all() {
+        seq!(N in 1..150 {
+            for _rep in 0..10 {
+                let y: Bits<N> = random_bits();
+                let z : BigUint = y.into();
+                let y_all = y.all();
+                let z_all = z.count_ones() == N as u64;
+                assert_eq!(y_all, z_all)
+            }
+            let y = Bits::<N>::mask();
+            assert_eq!(y.all(), true);
+        });
+    }
+
+
+    #[test]
+    fn test_shl() {
+        seq!(N in 1..150 {
+            for l in 0..N {
+                let y: Bits<N> = random_bits();
+                let z: Bits<N> = y << l;
+                let y1 : BigUint = y.into();
+                let mask : BigUint = (BigUint::one() << N) - BigUint::one();
+                let z1 = (y1 << l) & mask;
+                let convert : BigUint = z.into();
+                assert_eq!(z1, convert)
+            }
+        });
+    }
+
+    #[test]
+    fn test_shr() {
+        seq!(N in 1..150 {
+            for l in 0..N {
+                let y: Bits<N> = random_bits();
+                let z: Bits<N> = y >> l;
+                let y1 : BigUint = y.into();
+                let mask : BigUint = (BigUint::one() << N) - BigUint::one();
+                let z1 = (y1 >> l) & mask;
+                let convert : BigUint = z.into();
+                assert_eq!(z1, convert)
+            }
+        });
+    }
+
+    macro_rules! test_op_with_values {
+        ($func: ident) => {
+            seq!(N in 1..150 {
+                for _iters in 0..10 {
+                    let y: Bits<N> = random_bits();
+                    let z: Bits<N> = random_bits();
+                    let v1_as_bint : BigUint = y.into();
+                    let v2_as_bint : BigUint = z.into();
+                    let mask : BigUint = (BigUint::one() << N) - BigUint::one();
+                    let (lib_answer, biguint_answer) = $func(y, z, v1_as_bint, v2_as_bint, mask);
+                    let convert : BigUint = lib_answer.into();
+                    assert_eq!(biguint_answer, convert)
+                }
+            });
+        }
+    }
+
+    #[test]
+    fn test_add() {
+        fn add<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint, mask: BigUint)
+                               -> (Bits<N>, BigUint) {
+            (y+z, (y1+z1) & mask)
+        }
+        test_op_with_values!(add);
+    }
+
+    #[test]
+    fn test_sub() {
+        fn sub<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint, mask: BigUint)
+                               -> (Bits<N>, BigUint) {
+            if z1 <= y1 {
+                (y-z, (y1-z1))
+            } else {
+                (y-z, mask + BigUint::one() + y1 - z1)
+            }
+        }
+        test_op_with_values!(sub);
+    }
+
+    #[test]
+    fn test_bitor() {
+        fn bor<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint, mask: BigUint)
+                               -> (Bits<N>, BigUint) {
+            (y|z, (y1|z1) & mask)
+        }
+        test_op_with_values!(bor);
+    }
+
+    #[test]
+    fn test_bitand() {
+        fn band<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint, mask: BigUint)
+            -> (Bits<N>, BigUint) {
+            (y&z, (y1&z1) & mask)
+        }
+        test_op_with_values!(band);
+    }
+
+    #[test]
+    fn test_bitxor() {
+        fn bxor<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint, mask: BigUint)
+                                -> (Bits<N>, BigUint) {
+            (y^z, (y1^z1) & mask)
+        }
+        test_op_with_values!(bxor);
+    }
+
+    #[test]
+    fn test_not() {
+        fn not<const N: usize>(y: Bits<N>, _z: Bits<N>, y1: BigUint, _z1: BigUint, mask: BigUint)
+                                -> (Bits<N>, BigUint) {
+            (!y, (y1 ^ mask))
+        }
+        test_op_with_values!(not);
+    }
+
+    macro_rules! test_cmp_with_values {
+        ($func: ident) => {
+            seq!(N in 1..256 {
+                for _iters in 0..10 {
+                    let y: Bits<N> = random_bits();
+                    let z: Bits<N> = random_bits();
+                    let v1_as_bint : BigUint = y.into();
+                    let v2_as_bint : BigUint = z.into();
+                    let (lib_answer, biguint_answer) = $func(y, z, v1_as_bint, v2_as_bint);
+                    assert_eq!(lib_answer, biguint_answer)
+                }
+            });
+        }
+    }
+
+    #[test]
+    fn test_lt() {
+        fn lt<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint) -> (bool, bool) {
+            (y < z, y1 < z1)
+        }
+        test_cmp_with_values!(lt);
+    }
+
+    #[test]
+    fn test_le() {
+        fn le<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint) -> (bool, bool) {
+            (y <= z, y1 <= z1)
+        }
+        test_cmp_with_values!(le);
+    }
+
+    #[test]
+    fn test_eq() {
+        fn eq<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint) -> (bool, bool) {
+            (y == z, y1 == z1)
+        }
+        test_cmp_with_values!(eq);
+    }
+
+    #[test]
+    fn test_neq() {
+        fn neq<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint) -> (bool, bool) {
+            (y != z, y1 != z1)
+        }
+        test_cmp_with_values!(neq);
+    }
+
+    #[test]
+    fn test_ge() {
+        fn ge<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint) -> (bool, bool) {
+            (y >= z, y1 >= z1)
+        }
+        test_cmp_with_values!(ge);
+    }
+
+    #[test]
+    fn test_gt() {
+        fn gt<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint) -> (bool, bool) {
+            (y > z, y1 > z1)
+        }
+        test_cmp_with_values!(gt);
+    }
+
 }
+
 
 /// A type alias for a simple bool.  You can use them interchangeably.
 pub type Bit = bool;

@@ -10,6 +10,17 @@ impl<const N: usize> From<[bool; N]> for BitVec<N> {
 }
 
 impl<const N: usize> BitVec<N> {
+    pub fn to_u128(&self) -> u128 {
+        assert!(N <= 128);
+        let mut ret = 0_u128;
+        for i in 0..N {
+            if self.bits[N-1-i] {
+                ret = ret | (1 << (N-1-i));
+            }
+        }
+        ret
+    }
+
     pub fn all(&self) -> bool {
         for i in 0..N {
             if !self.bits[i] {
@@ -402,4 +413,5 @@ mod tests {
         assert!(a.all());
         assert!(a.any());
     }
+
 }
