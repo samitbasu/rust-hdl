@@ -1,0 +1,3 @@
+[workspace]
+
+members=["rust-hdl","rust-hdl-macros","rust-hdl-ok-core","rust-hdl-bsp-alchitry-cu","rust-hdl-fpga-support"]

@@ -21,3 +21,4 @@ pub mod spi;
 pub mod strobe;
 pub mod synchronizer;
 pub mod tristate;
+pub mod test_helpers;

@@ -237,7 +237,7 @@ use std::fmt::{Display, Formatter, LowerHex};
 /// will generate identical Verilog.  So it assumes they will be different
 /// and creates two different named instances.
 ///
-/// To see how that works, let's create a minimum example.  For fun, we will
+/// To see how that works, let's create a minimum example.  For test, we will
 /// use a single bit inverter.
 /// ```rust
 /// # use rust_hdl::core::prelude::*;

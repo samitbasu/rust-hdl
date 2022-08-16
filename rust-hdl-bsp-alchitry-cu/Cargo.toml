@@ -1,0 +1,10 @@
+[package]
+name = "rust-hdl-bsp-alchitry-cu"
+version = "0.2.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust-hdl = "0.30.0"
+rust-hdl-fpga-support = "0.1.0"

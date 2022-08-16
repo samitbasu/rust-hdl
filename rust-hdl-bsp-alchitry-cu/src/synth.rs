@@ -1,6 +1,6 @@
-use crate::core::check_error::check_all;
-use crate::core::prelude::*;
-use crate::toolchain::icestorm::generate_pcf;
+use rust_hdl::core::check_error::check_all;
+use rust_hdl::core::prelude::*;
+use rust_hdl::toolchain::icestorm::generate_pcf;
 use std::fs::{create_dir_all, remove_dir_all, File};
 use std::io::Write;
 use std::path::PathBuf;

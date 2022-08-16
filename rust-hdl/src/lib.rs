@@ -53,11 +53,18 @@
 
 #![warn(missing_docs)]
 
-pub mod bsp;
-pub mod core;
-pub mod device;
-pub mod docs;
-pub mod hls;
-pub mod sim;
 pub mod toolchain;
+
+/// The core RustHDL module.  Defines variable width bits, signals, logical blocks, etc.
+pub mod core;
+/// Tools for documenting RustHDL designs, including the generation of SVGs from simulation waveforms.
+pub mod docs;
+/// A series of High Level Synthesis blocks used to build System-on-Chip designs quickly.
+pub mod hls;
+/// Module that contains all code related to simulating RustHDL designs in Rust (i.e., without
+/// an external Verilog simulator).
+pub mod sim;
+/// A set of core widgets useful for FPGA based designs, all written in RustHDL.  This includes
+/// elements such as Digital Flip Flops, Block RAMs, ROMs, FIFOs, SDRAM controllers, SPI controllers
+/// I2C controllers, FIR filters, etc.
 pub mod widgets;
