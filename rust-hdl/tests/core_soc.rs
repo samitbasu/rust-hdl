@@ -1,7 +1,5 @@
 use rust_hdl::core::prelude::*;
-use test_common::soc::SoCTestChip;
-
-mod test_common;
+use rust_hdl::widgets::test_helpers::SoCTestChip;
 
 #[test]
 fn test_soc_test_chip_synthesizes() {

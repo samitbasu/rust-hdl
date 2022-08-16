@@ -1,7 +1,6 @@
 use rust_hdl::core::prelude::*;
 
-mod test_common;
-use test_common::soc::SoCTestChip;
+use rust_hdl::widgets::test_helpers::SoCTestChip;
 
 #[cfg(test)]
 fn make_test_chip() -> SoCTestChip {

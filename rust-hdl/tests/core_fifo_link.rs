@@ -1,4 +1,3 @@
-use crate::test_common::fifo_tester::{bursty_vec, LazyFIFOFeeder, LazyFIFOReader};
 use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::bus::{FIFOReadController, FIFOWriteResponder};
@@ -6,8 +5,7 @@ use rust_hdl::hls::fifo::SyncFIFO;
 use rust_hdl::hls::fifo_linker::FIFOLink;
 use rust_hdl::hls::prelude::*;
 use rust_hdl::widgets::prelude::*;
-
-mod test_common;
+use rust_hdl::widgets::test_helpers::{bursty_vec, LazyFIFOFeeder, LazyFIFOReader};
 
 #[derive(LogicBlock)]
 struct FIFOBridgeTest {

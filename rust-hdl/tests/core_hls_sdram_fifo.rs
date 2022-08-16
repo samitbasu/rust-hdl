@@ -1,5 +1,3 @@
-mod test_common;
-
 use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;

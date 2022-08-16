@@ -1,10 +1,9 @@
-use crate::test_common::fifo_tester;
-use crate::test_common::fifo_tester::{LazyFIFOFeeder, LazyFIFOReader};
 use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
+use rust_hdl::widgets::test_helpers;
+use rust_hdl::widgets::test_helpers::{LazyFIFOFeeder, LazyFIFOReader};
 
-mod test_common;
 
 #[derive(LogicBlock, Default)]
 struct HLSFIFOTest {
@@ -99,14 +98,14 @@ impl FIFOTestFixture {
             feeder: LazyFIFOFeeder::new(
                 data.clone(),
                 &(0..data.len())
-                    .map(|_| fifo_tester::bursty_rand())
+                    .map(|_| test_helpers::bursty_rand())
                     .collect::<Vec<_>>(),
             ),
             fifo: SyncFIFO::default(),
             reader: LazyFIFOReader::new(
                 data.clone(),
                 &(0..data.len())
-                    .map(|_| fifo_tester::bursty_rand())
+                    .map(|_| test_helpers::bursty_rand())
                     .collect::<Vec<_>>(),
             ),
             clock: Default::default(),
@@ -173,14 +172,14 @@ impl FIFOTestFixtureAsync {
             feeder: LazyFIFOFeeder::new(
                 data.clone(),
                 &(0..data.len())
-                    .map(|_| fifo_tester::bursty_rand())
+                    .map(|_| test_helpers::bursty_rand())
                     .collect::<Vec<_>>(),
             ),
             fifo: Default::default(),
             reader: LazyFIFOReader::new(
                 data.clone(),
                 &(0..data.len())
-                    .map(|_| fifo_tester::bursty_rand())
+                    .map(|_| test_helpers::bursty_rand())
                     .collect::<Vec<_>>(),
             ),
             clock_write: Default::default(),

@@ -2,9 +2,7 @@ use rand::Rng;
 use rust_hdl::core::prelude::*;
 use rust_hdl::hls::prelude::*;
 
-mod test_common;
-use crate::test_common::fifo_tester::bursty_vec;
-use test_common::fifo_tester::{LazyFIFOFeeder, LazyFIFOReader};
+use rust_hdl::widgets::test_helpers::{bursty_vec, LazyFIFOFeeder, LazyFIFOReader};
 
 #[derive(LogicBlock)]
 struct BusTest {
