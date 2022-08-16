@@ -1,4 +1,4 @@
-use crate::core::prelude::*;
+use rust_hdl::core::prelude::*;
 
 pub fn map_signal_type_to_lattice_string(k: &SignalType) -> &str {
     match k {

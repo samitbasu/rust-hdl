@@ -53,8 +53,6 @@
 
 #![warn(missing_docs)]
 
-pub mod toolchain;
-
 /// The core RustHDL module.  Defines variable width bits, signals, logical blocks, etc.
 pub mod core;
 /// Tools for documenting RustHDL designs, including the generation of SVGs from simulation waveforms.

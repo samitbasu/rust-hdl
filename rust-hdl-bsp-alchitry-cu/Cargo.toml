@@ -6,5 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl = "0.30.0"
-rust-hdl-fpga-support = "0.1.0"
+rust-hdl = {version="0.30.0", path="../rust-hdl"}
+rust-hdl-fpga-support = {version="0.1.0", path="../rust-hdl-fpga-support"}

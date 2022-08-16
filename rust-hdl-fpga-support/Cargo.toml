@@ -10,4 +10,6 @@ keywords = ["fpga", "verilog", "hardware"]
 authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
-rust-hdl = "0.30.0"
+rust-hdl = {version="0.30.0", path="../rust-hdl"}
+regex = {version="^1.6.0"}
+

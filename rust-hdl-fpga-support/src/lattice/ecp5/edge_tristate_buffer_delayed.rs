@@ -1,6 +1,5 @@
-use crate::core::prelude::*;
-use crate::dff_setup;
-use crate::widgets::prelude::{TristateBuffer, DFF};
+use rust_hdl::core::prelude::*;
+use rust_hdl::widgets::prelude::{TristateBuffer, DFF};
 
 #[derive(LogicBlock)]
 pub struct EdgeTristateBufferDelayed<T: Synth> {

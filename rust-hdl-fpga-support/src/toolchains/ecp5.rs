@@ -1,7 +1,7 @@
 // Covers the ECP5 via nextpnr, not via Diamond
-use crate::core::prelude::*;
-use crate::toolchain::map_signal_type_to_lattice_string;
+use rust_hdl::core::prelude::*;
 use std::collections::HashMap;
+use crate::toolchains::map_signal_type_to_lattice_string;
 
 #[derive(Default)]
 struct LPFGenerator {
