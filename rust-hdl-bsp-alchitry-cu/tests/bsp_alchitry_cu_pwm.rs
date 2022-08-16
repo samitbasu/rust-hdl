@@ -1,8 +1,8 @@
 use rust_hdl::core::prelude::*;
-mod test_common;
 use rust_hdl::widgets::prelude::*;
 use std::collections::BTreeMap;
-use test_common::snore;
+use rust_hdl::widgets::test_helpers::snore;
+use rust_hdl_bsp_alchitry_cu::{pins, synth};
 
 #[derive(LogicBlock)]
 pub struct AlchitryCuPWM<const P: usize> {
@@ -37,9 +37,9 @@ impl<const P: usize> AlchitryCuPWM<P> {
             .collect::<BTreeMap<_, _>>();
         Self {
             pwm: PulseWidthModulator::default(),
-            clock: rust_hdl::bsp::alchitry_cu::pins::clock(),
+            clock: pins::clock(),
             strobe: Strobe::new(clock_freq, 60.0),
-            leds: rust_hdl::bsp::alchitry_cu::pins::leds(),
+            leds: pins::leds(),
             rom: ROM::new(rom),
             counter: Default::default(),
         }
@@ -52,5 +52,5 @@ fn test_pwm_synthesizes() {
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("pwm_cu2", &vlog).unwrap();
-    rust_hdl::bsp::alchitry_cu::synth::generate_bitstream(uut, target_path!("alchitry_cu/pwm_cu2"));
+    synth::generate_bitstream(uut, target_path!("alchitry_cu/pwm_cu2"));
 }

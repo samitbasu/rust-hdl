@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
 use rust_hdl::core::prelude::*;
-mod test_common;
 use rust_hdl::widgets::prelude::*;
-use test_common::snore;
+use rust_hdl::widgets::test_helpers::snore;
+use rust_hdl_bsp_alchitry_cu::{pins, synth};
 
 #[derive(LogicBlock)]
 pub struct Fader {
@@ -83,8 +83,8 @@ impl<const P: usize> AlchitryCuPWMVec<P> {
             Fader::new(clock_frequency, 128),
         ];
         Self {
-            clock: rust_hdl::bsp::alchitry_cu::pins::clock(),
-            leds: rust_hdl::bsp::alchitry_cu::pins::leds(),
+            clock: pins::clock(),
+            leds: pins::leds(),
             local: Signal::default(),
             faders,
         }
@@ -97,5 +97,5 @@ fn test_pwm_vec_synthesizes() {
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("pwm_cu", &vlog).unwrap();
-    rust_hdl::bsp::alchitry_cu::synth::generate_bitstream(uut, target_path!("alchitry_cu/pwm_cu"));
+    synth::generate_bitstream(uut, target_path!("alchitry_cu/pwm_cu"));
 }
