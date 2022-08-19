@@ -14,4 +14,4 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
 rust-hdl = {version= "^0.34.0", path="../rust-hdl"}
-rust-hdl-fpga-support = {version= "^0.3.0", path="../rust-hdl-fpga-support"}
+rust-hdl-fpga-support = {version= "^0.4.0", path="../rust-hdl-fpga-support"}
