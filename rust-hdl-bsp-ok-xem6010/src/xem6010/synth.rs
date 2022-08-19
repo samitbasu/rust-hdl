@@ -48,7 +48,9 @@ impl Default for ISEOptions {
 pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, options: ISEOptions) {
     uut.connect_all();
     let verilog_text = filter_blackbox_directives(&generate_verilog(&uut));
-    let ucf_text = generate_ucf(&uut);
+    let ucf_text = generate_ucf(&uut) + ";
+CONFIG VCCAUX = \"3.3\"; // Required for Spartan-6
+";
     let dir = PathBuf::from(prefix);
     let out_file = dir.join("top.out");
     if out_file.exists() {
