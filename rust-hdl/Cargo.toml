@@ -10,7 +10,7 @@ keywords = ["fpga", "verilog", "hardware"]
 authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
-rust-hdl-macros = {version="^0.15.0", path="../rust-hdl-macros"}
+rust-hdl-macros = {version= "^0.16.0", path="../rust-hdl-macros"}
 crossbeam = "0.8.1"
 num-bigint = "0.4.0"
 num-traits = "0.2.14"
