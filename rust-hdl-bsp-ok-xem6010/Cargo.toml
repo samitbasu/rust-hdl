@@ -15,5 +15,5 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 rust-hdl = {path="../rust-hdl", version= "^0.34.0" }
 rust-hdl-fpga-support = {path="../rust-hdl-fpga-support", version= "^0.4.0" }
 rust-hdl-ok-core = {path="../rust-hdl-ok-core", version= "^0.5.0" }
-rust-hdl-ok-frontpanel-sys = {path="../rust-hdl-ok-frontpanel-sys", version= "^0.3.0" }
+rust-hdl-ok-frontpanel-sys = {path="../rust-hdl-ok-frontpanel-sys", version= "^0.4.0" }
 rand = {version="0.8.1"}
