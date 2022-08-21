@@ -350,7 +350,7 @@ fn test_reg_reads() {
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Do the first read to initialize the chip
-        let result = do_spi_txn(32, 0xFFFFFFFF, false, x, &mut sim)?;
+        let result = do_spi_txn(32, 0x00, false, x, &mut sim)?;
         x = result.1;
         let expected = ram_init_vec()
             .into_iter()
@@ -379,7 +379,7 @@ fn test_reg_writes() {
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
         // Do the first read to initialize the chip
-        let result = do_spi_txn(32, 0xFFFFFFFF, false, x, &mut sim)?;
+        let result = do_spi_txn(32, 0x00, false, x, &mut sim)?;
         x = result.1;
         let result = reg_write(5, 0xAF, x, &mut sim)?;
         x = result.1;
