@@ -52,7 +52,6 @@ impl Logic for OpalKellyPipeTest {
             self.accum.d.next = self.accum.q.val() + self.i_pipe.dataout.val();
         }
         self.o_wire.datain.next = self.accum.q.val();
-
     }
 }
 
@@ -134,7 +133,6 @@ impl Logic for OpalKellyPipeRAMTest {
         // Advance the address counters
         self.write_address.d.next = self.write_address.q.val() + self.i_pipe.write.val();
         self.read_address.d.next = self.read_address.q.val() + self.o_pipe.read.val();
-
     }
 }
 
@@ -197,7 +195,6 @@ impl Logic for OpalKellyPipeFIFOTest {
         self.o_pipe.datain.next = self.fifo.data_out.val();
         self.fifo.write.next = self.i_pipe.write.val();
         self.fifo.data_in.next = self.i_pipe.dataout.val();
-
     }
 }
 

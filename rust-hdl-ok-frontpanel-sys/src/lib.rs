@@ -39,7 +39,6 @@ fn test_new_works() {
     let _ = OkHandle::new();
 }
 
-
 impl OkHandle {
     pub fn new() -> OkHandle {
         OkHandle {

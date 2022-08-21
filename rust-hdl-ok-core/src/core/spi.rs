@@ -48,13 +48,7 @@ impl Logic for OKSPIMaster {
         // Link the wires
         SPIWiresMaster::link(&mut self.wires, &mut self.core.wires);
         clock!(self, clock, core);
-        dff_setup!(
-            self,
-            clock,
-            data_outbound,
-            output_register,
-            data_inbound
-        );
+        dff_setup!(self, clock, data_outbound, output_register, data_inbound);
         // Feed the clocks
         self.trigger_done.clk.next = self.clock.val();
         self.trigger_start.clk.next = self.clock.val();

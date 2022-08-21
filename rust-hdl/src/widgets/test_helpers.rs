@@ -1,14 +1,17 @@
-use std::collections::BTreeMap;
-use std::f64::consts::PI;
-use rand::Rng;
 use crate::core::prelude::*;
 use crate::hls::bridge::Bridge;
-use crate::hls::bus::{FIFOReadController, FIFOReadResponder, FIFOWriteController, FIFOWriteResponder, SoCBusController, SoCPortController};
+use crate::hls::bus::{
+    FIFOReadController, FIFOReadResponder, FIFOWriteController, FIFOWriteResponder,
+    SoCBusController, SoCPortController,
+};
 use crate::hls::controller::BaseController;
 use crate::hls::fifo::AsyncFIFO;
 use crate::hls::miso_port::MISOPort;
 use crate::hls::mosi_port::MOSIPort;
 use crate::widgets::prelude::*;
+use rand::Rng;
+use std::collections::BTreeMap;
+use std::f64::consts::PI;
 
 pub fn snore<const P: usize>(x: u32) -> Bits<P> {
     let amp = (f64::exp(f64::sin(((x as f64) - 128.0 / 2.) * PI / 128.0)) - 0.36787944) * 108.0;

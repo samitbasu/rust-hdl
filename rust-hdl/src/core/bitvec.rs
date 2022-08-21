@@ -14,8 +14,8 @@ impl<const N: usize> BitVec<N> {
         assert!(N <= 128);
         let mut ret = 0_u128;
         for i in 0..N {
-            if self.bits[N-1-i] {
-                ret = ret | (1 << (N-1-i));
+            if self.bits[N - 1 - i] {
+                ret = ret | (1 << (N - 1 - i));
             }
         }
         ret
@@ -413,5 +413,4 @@ mod tests {
         assert!(a.all());
         assert!(a.any());
     }
-
 }

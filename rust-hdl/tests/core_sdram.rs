@@ -74,7 +74,7 @@ fn test_unit_boots() {
         sim_assert!(sim, !x.dram.test_error.val(), x);
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 12_000_000, "base_sdram_boot.vcd")
+    sim.run_to_file(Box::new(uut), 12_000_000, &vcd_path!("base_sdram_boot.vcd"))
         .unwrap()
 }
 

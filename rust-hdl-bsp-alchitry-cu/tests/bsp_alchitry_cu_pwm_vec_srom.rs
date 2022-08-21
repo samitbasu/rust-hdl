@@ -60,8 +60,5 @@ fn test_pwm_vec_sync_rom_synthesizes() {
     uut.connect_all();
     let vlog = generate_verilog(&uut);
     yosys_validate("pwm_cu_srom", &vlog).unwrap();
-    synth::generate_bitstream(
-        uut,
-        target_path!("alchitry_cu/pwm_cu_srom"),
-    );
+    synth::generate_bitstream(uut, target_path!("alchitry_cu/pwm_cu_srom"));
 }

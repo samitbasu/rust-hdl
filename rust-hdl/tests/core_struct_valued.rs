@@ -81,7 +81,7 @@ fn test_mig_tester_vcd() {
         sim_assert!(sim, x.cmd_out.val().burst_length == 13, x);
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 1000, "mig_test.vcd")
+    sim.run_to_file(Box::new(uut), 1000, &vcd_path!("mig_test.vcd"))
         .unwrap();
 }
 

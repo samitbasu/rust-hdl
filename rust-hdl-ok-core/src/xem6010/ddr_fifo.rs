@@ -192,7 +192,7 @@ impl Logic for DDRFIFO {
             | (bit_cast::<8, 1>(self.mig.p0_rd.error.val().into()) << 3_usize)
             | (bit_cast::<8, 1>(self.mig.p0_rd.overflow.val().into()) << 4_usize)
             | (bit_cast::<8, 1>(self.have_data.val().into()) << 5_usize)
-            | (bit_cast::<8,1>(true.into()) << 7_usize);
+            | (bit_cast::<8, 1>(true.into()) << 7_usize);
     }
 }
 

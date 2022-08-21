@@ -1,8 +1,8 @@
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::prelude::*;
-use std::time::Duration;
 use rust_hdl_bsp_alchitry_cu::pins::CLOCK_SPEED_100MHZ;
 use rust_hdl_bsp_alchitry_cu::{pins, synth};
+use std::time::Duration;
 
 pub const MHZ100: u64 = 100_000_000;
 
@@ -27,11 +27,7 @@ impl Logic for AlchitryCuPulser {
 
 impl Default for AlchitryCuPulser {
     fn default() -> Self {
-        let pulser = Pulser::new(
-            CLOCK_SPEED_100MHZ.into(),
-            1.0,
-            Duration::from_millis(250),
-        );
+        let pulser = Pulser::new(CLOCK_SPEED_100MHZ.into(), 1.0, Duration::from_millis(250));
         Self {
             pulser,
             clock: pins::clock(),

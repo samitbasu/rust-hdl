@@ -416,12 +416,12 @@ pub fn check_timing<U: Block>(uut: &U) {
                 s.add_edge(*a_new, *b_new, *edge.weight());
             }
         }
-        println!("Number of elements in subgraph {}", remap.len());
+        /*        println!("Number of elements in subgraph {}", remap.len());
         std::fs::write(
             format!("sub_graph_{}.dot", subgraph),
             format!("{:?}", Dot::new(&s)),
         )
-        .unwrap();
+        .unwrap();*/
     }
     //std::fs::write("dag.dot", dot).unwrap();
 }

@@ -576,6 +576,6 @@ fn test_bank_write() {
         sim_assert!(sim, !x.error.val(), x);
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 1_000_000, "sdram_write.vcd")
+    sim.run_to_file(Box::new(uut), 1_000_000, &vcd_path!("sdram_write.vcd"))
         .unwrap();
 }

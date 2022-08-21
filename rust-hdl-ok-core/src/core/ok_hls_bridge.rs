@@ -62,13 +62,7 @@ impl<const A: usize> Logic for OpalKellyHLSBridge<A> {
     #[hdl_gen]
     fn update(&mut self) {
         // Clock the internal components
-        clock!(
-            self,
-            ti_clk,
-            controller,
-            pc_to_fpga_fifo,
-            fpga_to_pc_fifo
-        );
+        clock!(self, ti_clk, controller, pc_to_fpga_fifo, fpga_to_pc_fifo);
         dff_setup!(self, ti_clk, space_counter, word_counter, read_delay);
         // Link the FIFOs to the HLS controller
         FIFOReadController::<Bits<16>>::join(

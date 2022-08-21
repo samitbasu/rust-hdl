@@ -2,12 +2,11 @@ extern crate bindgen;
 
 use std::path::PathBuf;
 
-
 fn main() {
     println!("cargo:rustc-link-lib=dylib=okFrontPanel");
-    let root_path = PathBuf::from(
-        std::env::var("OK_FRONTPANEL_DIR")
-            .expect("Set OK_FRONTPANEL_DIR to absolute path of the FrontPanel/API directory on this system"));
+    let root_path = PathBuf::from(std::env::var("OK_FRONTPANEL_DIR").expect(
+        "Set OK_FRONTPANEL_DIR to absolute path of the FrontPanel/API directory on this system",
+    ));
     println!("cargo:rustc-link-lib=dylib=okFrontPanel");
     println!(
         "cargo:rustc-link-search=native={}",

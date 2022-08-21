@@ -138,6 +138,5 @@ endmodule
 fn test_edge_buffer_synthesizes() {
     let mut uut = EdgeTristateBufferDelayed::<Bits<8>>::new(10);
     uut.connect_all();
-    std::fs::write("edge_tristate_buffer.v", generate_verilog(&uut)).unwrap();
     yosys_validate("edge_tristate_buffer_delayed", &generate_verilog(&uut)).unwrap();
 }

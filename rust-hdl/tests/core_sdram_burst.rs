@@ -74,8 +74,12 @@ fn test_unit_boots() {
         sim_assert!(sim, !x.dram.test_error.val(), x);
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 12_000_000, "burst_sdram_boot.vcd")
-        .unwrap()
+    sim.run_to_file(
+        Box::new(uut),
+        12_000_000,
+        &vcd_path!("burst_sdram_boot.vcd"),
+    )
+    .unwrap()
 }
 
 #[macro_export]

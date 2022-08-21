@@ -60,6 +60,5 @@ fn test_sdram_fifo_synthesizes() {
     );
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    std::fs::write("sdram_fifo_hls.v", &vlog).unwrap();
     yosys_validate("sdram_fifo_hls", &vlog).unwrap();
 }

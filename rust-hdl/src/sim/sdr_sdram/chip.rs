@@ -522,6 +522,6 @@ fn test_sdram_init_works() {
         wait_clock_cycles!(sim, clock, x, 10);
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 200_000_000, "sdr_init.vcd")
+    sim.run_to_file(Box::new(uut), 200_000_000, &vcd_path!("sdr_init.vcd"))
         .unwrap()
 }

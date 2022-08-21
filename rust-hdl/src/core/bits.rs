@@ -1,3 +1,294 @@
+//! The [Bits] type is used to capture values with arbitrarily large (but known) bit length
+//!
+//! One significant difference between hardware design and software programming is the need
+//! (and indeed ability) to easily manipulate collections of bits that are of various lengths.
+//! While Rust has built in types to represent 8, 16, 32, 64, and 128 bits (at the time of this
+//! writing, anyway), it is difficult to represent a 5 bit type.  Or a 256 bit type.  Or indeed
+//! any bit length that differs from one of the supported values.
+//!
+//! In hardware design, the bit size is nearly always unusual, as bits occupy physical space,
+//! and as a result, as a logic designer, you will intentionally use the smallest number of
+//! bits needed to capture a value.  For example, if you are reading a single nibble at a
+//! time from a bus, this is clearly a 4 bit value, and storing it in a `u8` is a waste of
+//! space and resources.
+//!
+//! To model this behavior in RustHDL, we have the [Bits] type, which attempts to be as close
+//! as possible to a hardware bit vector.  The size must be known at compile time, and there is
+//! some internal optimization for short bitvectors being represented efficiently, but ideally
+//! you should be able to think of it as a bit of arbitrary length.  Note that the [Bits]
+//! type is `Copy`, which is quite important.  This means in your RustHDL code, you can freely
+//! copy and assign bitvectors without worrying about the borrow checker or trying to call
+//! `clone` in the midst of your HDL.
+//!
+//! For the most part, the [Bits] type is meant to act like a `u32` or `u128` type as far
+//! as your code is concerned.  But the emulation of built-in types is not perfect, and
+//! you may struggle with them a bit.
+//!
+//! # Operations
+//! Only a subset of operations are defined for [Bits].  These are the operations that can
+//! be synthesized in hardware without surprises (generally speaking).  In Rust, you can
+//! operate between [Bits] types and other [Bits] of the _same width_, or you can
+//! use integer literals.  *Be careful!* Especially when manipulating signed quantities.
+//!
+//! ## Addition
+//! You can perform wrapping addition using the `+` operator.
+//! Here are some simple examples of addition. First the version using a literal
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<200> = bits(0xDEAD_BEEE);
+//! let y: Bits<200> = x + 1;
+//! assert_eq!(y, bits(0xDEAD_BEEF));
+//! ```
+//!
+//! And now a second example that uses two [Bits] values
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<40> = bits(0xDEAD_0000);
+//! let y: Bits<40> = bits(0x0000_CAFE);
+//! let z = x + y;
+//! assert_eq!(z, bits(0xDEAD_CAFE));
+//! ```
+//!
+//! Note that the addition operator is _silently wrapping_.  In other words the carry
+//! bit is discarded silently (again - this is what hardware typically does).  So you
+//! may find this result surprising:
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<40> = bits(0xFF_FFFF_FFFF);
+//! let y = x + 1;
+//! assert_eq!(y, bits(0));
+//! ```
+//!
+//! In this case, the addition of 1 caused [x] to wrap to all zeros.  This is totally normal,
+//! and what one would expect from hardware addition (without a carry).  If you _need_ the
+//! carry bit, then the solution is to first cast to 1 higher bit, and then add, or alternately,
+//! to compute the carry directly.
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<40> = bits(0xFF_FFFF_FFFF);
+//! let y = bit_cast::<41, 40>(x) + 1;
+//! assert_eq!(y, bits(0x100_0000_0000));
+//! ```
+//!
+//! The order of the arguments does not matter.  The bit width of the calculation will be
+//! determined by the [Bits] width.
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x : Bits<25> = bits(0xCAFD);
+//! let y = 1 + x;
+//! assert_eq!(y, bits(0xCAFE));
+//! ```
+//!
+//! However, you cannot combine two different width [Bits] values in a single expression.
+//! ```compile_fail
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<20> = bits(0x1234);
+//! let y: Bits<21> = bits(0x5123);
+//! let z = x + y; // Won't compile!
+//! ```
+//!
+//! ## Subtraction
+//! Hardware subtraction is defined using 2-s complement representation for negative numbers.
+//! This is pretty much a universal standard for representing negative numbers in binary, and
+//! has the added advantage that a hardware subtractor can be built from an adder and some basic
+//! gates.  Subtraction operates much like the [Wrapping] class.  Note that overflow and underflow
+//! are _not_ detected in RustHDL (nor are they detected in most hardware implementations either).
+//!
+//! Here is a simple example with a literal and subtraction that does not cause udnerflow
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<40> = bits(0xDEAD_BEF0);
+//! let y = x - 1;
+//! assert_eq!(y, bits(0xDEAD_BEEF));
+//! ```
+//!
+//! When values underflow, the representation is still valid as a 2-s complement number.  For
+//! example,
+//!
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<16> = bits(0x40);
+//! let y: Bits<16> = bits(0x60);
+//! let z = x - y;
+//! assert_eq!(z, bits(0xFFFF-0x20+1));
+//! ```
+//!
+//! Here, we compare the value of `z` with `0xFFFF-0x20+1` which is the 2-s complement
+//! representation of `-0x20`.
+//!
+//! You can also put the literal on the left side of the subtraction expression, as expected.  The
+//! bitwidth of the computation will be driven by the width of the [Bits] in the expression.
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x = bits::<32>(0xBABE);
+//! let z = 0xB_BABE - x;
+//! assert_eq!(z, bits(0xB_0000));
+//! ```
+//!
+//! ## Bitwise And
+//!
+//! You can combine [Bits] using the and operator `&`.  In general, avoid using the shortcut
+//! logical operator `&&`, since this operator is really only defined for logical (scalar) values
+//! of type `bool`.
+//!
+//! ```
+//! # use  rust_hdl::core::prelude::*;
+//! let x: Bits<32> = bits(0xDEAD_BEEF);
+//! let y: Bits<32> = bits(0xFFFF_0000);
+//! let z = x & y;
+//! assert_eq!(z, bits(0xDEAD_0000));
+//! ```
+//!
+//! Of course, you can also use a literal value in the `and` operation.
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<32> = bits(0xDEAD_BEEF);
+//! let z = x & 0x0000_FFFF;
+//! assert_eq!(z, bits(0xBEEF))
+//! ```
+//!
+//! and similarly, the literal can appear on the left of the `and` expression.
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<32> = bits(0xCAFE_BEEF);
+//! let z = 0xFFFF_0000 & x;
+//! assert_eq!(z, bits(0xCAFE_0000));
+//! ```
+//!
+//! Just like all other binary operations, you cannot mix widths (unless one of the
+//! values is a literal).
+//! ```compile_fail
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<16> = bits(0xFEED_FACE);
+//! let y: Bits<17> = bits(0xABCE);
+//! let z = x & y; // Won't compile!
+//! ```
+//!
+//! ## Bitwise Or
+//!
+//! There is also a bitwise-OR operation using the `|` symbol.  Note that the logical OR
+//! (or shortcut OR) operator `||` is not supported for [Bits], as it is only defined for
+//! scalar boolean values.
+//!
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x : Bits<32> = bits(0xBEEF_0000);
+//! let y : Bits<32> = bits(0x0000_CAFE);
+//! let z = x | y;
+//! assert_eq!(z, bits(0xBEEF_CAFE));
+//! ```
+//!
+//! You can also use literals
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x : Bits<32> = bits(0xBEEF_0000);
+//! let z = x | 0x0000_CAFE;
+//! assert_eq!(z, bits(0xBEEF_CAFE));
+//! ```
+//!
+//! The caveat about mixing [Bits] of different widths still applies.
+//!
+//! ## Bitwise Xor
+//!
+//! There is a bitwise-Xor operation using the `^` operator.  This will compute the
+//! bitwise exclusive OR of the two values.
+//!
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x : Bits<32> = bits(0xCAFE_BABE);
+//! let y : Bits<32> = bits(0xFF00_00FF);
+//! let z = y ^ x;
+//! let w = z ^ y; // XOR applied twice is a null-op
+//! assert_eq!(w, x);
+//! ```
+//!
+//! ## Bitwise comparison
+//!
+//! The equality operator `==` can compare two [Bits] for bit-wise equality.
+//!
+//!```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<16> = bits(0x5ea1);
+//! let y: Bits<16> = bits(0xbadb);
+//! assert_eq!(x == y, false)
+//!```
+//!
+//! Again, it is a compile time failure to attempt to compare [Bits] of different
+//! widths.
+//!
+//!```compile_fail
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<15> = bits(52);
+//! let y: Bits<16> = bits(32);
+//! let z = x == y; // Won't compile - bit widths must match
+//!```
+//!
+//! You can compare to literals, as they will automatically extended (or truncated) to match the
+//! bitwidth of the [Bits] value.
+//!
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x : Bits<16> = bits(32);
+//! let z = x == 32;
+//! let y = 32 == x;
+//! assert!(z);
+//! assert!(y);
+//! ```
+//!
+//! ## Unsigned comparison
+//!
+//! The [Bits] type only supports unsigned comparisons.  If you compare a [Bits] value
+//! to a signed integer, it will first convert the signed integer into 2s complement
+//! representation and then perform an unsigned comparison.  That is most likely _not_ what
+//! you want.  However, until there is full support for signed integer computations, that is
+//! the behavior you get.  Hardware signed comparisons require more circuitry and logic
+//! than unsigned comparisons, so the rationale is to not inadvertently bloat your hardware
+//! designs with sign-aware circuitry when you don't explicitly invoke it.  If you want signed
+//! values, use [Signed].
+//!
+//! Here are some simple examples.
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<16> = bits(52);
+//! let y: Bits<16> = bits(13);
+//! assert!(y < x)
+//! ```
+//!
+//! We can also compare with literals, which RustHDL will expand out to match the bit width
+//! of the [Bits] being compared to.
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<16> = bits(52);
+//! let y = x < 135;  // Converts the 135 to a Bits<16> and then compares
+//! assert!(y)
+//! ```
+//!
+//! ## Shift Left
+//!
+//! RustHDl supports left shift bit operations using the `<<` operator.
+//! Bits that shift off the left end of
+//! the bit vector (most significant bits).
+//!
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<16> = bits(0xDEAD);
+//! let y = x << 8;
+//! assert_eq!(y, bits(0xAD00));
+//! ```
+//!
+//! ## Shift Right
+//!
+//! Right shifting is also supported using the `>>` operator.
+//! Bits that shift off the right end of the
+//! the bit vector (least significant bits).
+//!
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<16> = bits(0xDEAD);
+//! let y = x >> 8;
+//! assert_eq!(y, bits(0x00DE));
+//! ```
+
 use crate::core::bitvec::BitVec;
 use crate::core::short_bit_vec::{ShortBitVec, ShortType, SHORT_BITS};
 use crate::core::synth::VCDValue;
@@ -85,296 +376,7 @@ fn test_clog2_is_correct() {
     assert_eq!(clog2(1024), 10);
 }
 
-/// The [Bits] type is used to capture values with arbitrarily large (but known) bit length
-///
-/// One significant difference between hardware design and software programming is the need
-/// (and indeed ability) to easily manipulate collections of bits that are of various lengths.
-/// While Rust has built in types to represent 8, 16, 32, 64, and 128 bits (at the time of this
-/// writing, anyway), it is difficult to represent a 5 bit type.  Or a 256 bit type.  Or indeed
-/// any bit length that differs from one of the supported values.
-///
-/// In hardware design, the bit size is nearly always unusual, as bits occupy physical space,
-/// and as a result, as a logic designer, you will intentionally use the smallest number of
-/// bits needed to capture a value.  For example, if you are reading a single nibble at a
-/// time from a bus, this is clearly a 4 bit value, and storing it in a `u8` is a waste of
-/// space and resources.
-///
-/// To model this behavior in RustHDL, we have the [Bits] type, which attempts to be as close
-/// as possible to a hardware bit vector.  The size must be known at compile time, and there is
-/// some internal optimization for short bitvectors being represented efficiently, but ideally
-/// you should be able to think of it as a bit of arbitrary length.  Note that the [Bits]
-/// type is `Copy`, which is quite important.  This means in your RustHDL code, you can freely
-/// copy and assign bitvectors without worrying about the borrow checker or trying to call
-/// `clone` in the midst of your HDL.
-///
-/// For the most part, the [Bits] type is meant to act like a `u32` or `u128` type as far
-/// as your code is concerned.  But the emulation of built-in types is not perfect, and
-/// you may struggle with them a bit.
-///
-/// # Operations
-/// Only a subset of operations are defined for [Bits].  These are the operations that can
-/// be synthesized in hardware without surprises (generally speaking).  In Rust, you can
-/// operate between [Bits] types and other [Bits] of the _same width_, or you can
-/// use integer literals.  *Be careful!* Especially when manipulating signed quantities.
-///
-/// ## Addition
-/// You can perform wrapping addition using the `+` operator.
-/// Here are some simple examples of addition. First the version using a literal
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<200> = bits(0xDEAD_BEEE);
-/// let y: Bits<200> = x + 1;
-/// assert_eq!(y, bits(0xDEAD_BEEF));
-/// ```
-///
-/// And now a second example that uses two [Bits] values
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<40> = bits(0xDEAD_0000);
-/// let y: Bits<40> = bits(0x0000_CAFE);
-/// let z = x + y;
-/// assert_eq!(z, bits(0xDEAD_CAFE));
-/// ```
-///
-/// Note that the addition operator is _silently wrapping_.  In other words the carry
-/// bit is discarded silently (again - this is what hardware typically does).  So you
-/// may find this result surprising:
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<40> = bits(0xFF_FFFF_FFFF);
-/// let y = x + 1;
-/// assert_eq!(y, bits(0));
-/// ```
-///
-/// In this case, the addition of 1 caused [x] to wrap to all zeros.  This is totally normal,
-/// and what one would expect from hardware addition (without a carry).  If you _need_ the
-/// carry bit, then the solution is to first cast to 1 higher bit, and then add, or alternately,
-/// to compute the carry directly.
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<40> = bits(0xFF_FFFF_FFFF);
-/// let y = bit_cast::<41, 40>(x) + 1;
-/// assert_eq!(y, bits(0x100_0000_0000));
-/// ```
-///
-/// The order of the arguments does not matter.  The bit width of the calculation will be
-/// determined by the [Bits] width.
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x : Bits<25> = bits(0xCAFD);
-/// let y = 1 + x;
-/// assert_eq!(y, bits(0xCAFE));
-/// ```
-///
-/// However, you cannot combine two different width [Bits] values in a single expression.
-/// ```compile_fail
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<20> = bits(0x1234);
-/// let y: Bits<21> = bits(0x5123);
-/// let z = x + y; // Won't compile!
-/// ```
-///
-/// ## Subtraction
-/// Hardware subtraction is defined using 2-s complement representation for negative numbers.
-/// This is pretty much a universal standard for representing negative numbers in binary, and
-/// has the added advantage that a hardware subtractor can be built from an adder and some basic
-/// gates.  Subtraction operates much like the [Wrapping] class.  Note that overflow and underflow
-/// are _not_ detected in RustHDL (nor are they detected in most hardware implementations either).
-///
-/// Here is a simple example with a literal and subtraction that does not cause udnerflow
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<40> = bits(0xDEAD_BEF0);
-/// let y = x - 1;
-/// assert_eq!(y, bits(0xDEAD_BEEF));
-/// ```
-///
-/// When values underflow, the representation is still valid as a 2-s complement number.  For
-/// example,
-///
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(0x40);
-/// let y: Bits<16> = bits(0x60);
-/// let z = x - y;
-/// assert_eq!(z, bits(0xFFFF-0x20+1));
-/// ```
-///
-/// Here, we compare the value of `z` with `0xFFFF-0x20+1` which is the 2-s complement
-/// representation of `-0x20`.
-///
-/// You can also put the literal on the left side of the subtraction expression, as expected.  The
-/// bitwidth of the computation will be driven by the width of the [Bits] in the expression.
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x = bits::<32>(0xBABE);
-/// let z = 0xB_BABE - x;
-/// assert_eq!(z, bits(0xB_0000));
-/// ```
-///
-/// ## Bitwise And
-///
-/// You can combine [Bits] using the and operator `&`.  In general, avoid using the shortcut
-/// logical operator `&&`, since this operator is really only defined for logical (scalar) values
-/// of type `bool`.
-///
-/// ```
-/// # use  rust_hdl::core::prelude::*;
-/// let x: Bits<32> = bits(0xDEAD_BEEF);
-/// let y: Bits<32> = bits(0xFFFF_0000);
-/// let z = x & y;
-/// assert_eq!(z, bits(0xDEAD_0000));
-/// ```
-///
-/// Of course, you can also use a literal value in the `and` operation.
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<32> = bits(0xDEAD_BEEF);
-/// let z = x & 0x0000_FFFF;
-/// assert_eq!(z, bits(0xBEEF))
-/// ```
-///
-/// and similarly, the literal can appear on the left of the `and` expression.
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<32> = bits(0xCAFE_BEEF);
-/// let z = 0xFFFF_0000 & x;
-/// assert_eq!(z, bits(0xCAFE_0000));
-/// ```
-///
-/// Just like all other binary operations, you cannot mix widths (unless one of the
-/// values is a literal).
-/// ```compile_fail
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(0xFEED_FACE);
-/// let y: Bits<17> = bits(0xABCE);
-/// let z = x & y; // Won't compile!
-/// ```
-///
-/// ## Bitwise Or
-///
-/// There is also a bitwise-OR operation using the `|` symbol.  Note that the logical OR
-/// (or shortcut OR) operator `||` is not supported for [Bits], as it is only defined for
-/// scalar boolean values.
-///
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x : Bits<32> = bits(0xBEEF_0000);
-/// let y : Bits<32> = bits(0x0000_CAFE);
-/// let z = x | y;
-/// assert_eq!(z, bits(0xBEEF_CAFE));
-/// ```
-///
-/// You can also use literals
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x : Bits<32> = bits(0xBEEF_0000);
-/// let z = x | 0x0000_CAFE;
-/// assert_eq!(z, bits(0xBEEF_CAFE));
-/// ```
-///
-/// The caveat about mixing [Bits] of different widths still applies.
-///
-/// ## Bitwise Xor
-///
-/// There is a bitwise-Xor operation using the `^` operator.  This will compute the
-/// bitwise exclusive OR of the two values.
-///
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x : Bits<32> = bits(0xCAFE_BABE);
-/// let y : Bits<32> = bits(0xFF00_00FF);
-/// let z = y ^ x;
-/// let w = z ^ y; // XOR applied twice is a null-op
-/// assert_eq!(w, x);
-/// ```
-///
-/// ## Bitwise comparison
-///
-/// The equality operator `==` can compare two [Bits] for bit-wise equality.
-///
-///```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(0x5ea1);
-/// let y: Bits<16> = bits(0xbadb);
-/// assert_eq!(x == y, false)
-///```
-///
-/// Again, it is a compile time failure to attempt to compare [Bits] of different
-/// widths.
-///
-///```compile_fail
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<15> = bits(52);
-/// let y: Bits<16> = bits(32);
-/// let z = x == y; // Won't compile - bit widths must match
-///```
-///
-/// You can compare to literals, as they will automatically extended (or truncated) to match the
-/// bitwidth of the [Bits] value.
-///
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x : Bits<16> = bits(32);
-/// let z = x == 32;
-/// let y = 32 == x;
-/// assert!(z);
-/// assert!(y);
-/// ```
-///
-/// ## Unsigned comparison
-///
-/// The [Bits] type only supports unsigned comparisons.  If you compare a [Bits] value
-/// to a signed integer, it will first convert the signed integer into 2s complement
-/// representation and then perform an unsigned comparison.  That is most likely _not_ what
-/// you want.  However, until there is full support for signed integer computations, that is
-/// the behavior you get.  Hardware signed comparisons require more circuitry and logic
-/// than unsigned comparisons, so the rationale is to not inadvertently bloat your hardware
-/// designs with sign-aware circuitry when you don't explicitly invoke it.  If you want signed
-/// values, use [Signed].
-///
-/// Here are some simple examples.
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(52);
-/// let y: Bits<16> = bits(13);
-/// assert!(y < x)
-/// ```
-///
-/// We can also compare with literals, which RustHDL will expand out to match the bit width
-/// of the [Bits] being compared to.
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(52);
-/// let y = x < 135;  // Converts the 135 to a Bits<16> and then compares
-/// assert!(y)
-/// ```
-///
-/// ## Shift Left
-///
-/// RustHDl supports left shift bit operations using the `<<` operator.
-/// Bits that shift off the left end of
-/// the bit vector (most significant bits).
-///
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(0xDEAD);
-/// let y = x << 8;
-/// assert_eq!(y, bits(0xAD00));
-/// ```
-///
-/// ## Shift Right
-///
-/// Right shifting is also supported using the `>>` operator.
-/// Bits that shift off the right end of the
-/// the bit vector (least significant bits).
-///
-/// ```
-/// # use rust_hdl::core::prelude::*;
-/// let x: Bits<16> = bits(0xDEAD);
-/// let y = x >> 8;
-/// assert_eq!(y, bits(0x00DE));
-/// ```
+/// The [Bits] type holds a bit array of size [N].
 #[derive(Clone, Debug, Copy)]
 pub enum Bits<const N: usize> {
     #[doc(hidden)]
@@ -438,7 +440,6 @@ impl<const N: usize> From<Bits<N>> for BigUint {
     }
 }
 
-
 #[cfg(test)]
 fn random_bits<const N: usize>() -> Bits<N> {
     use rand::random;
@@ -453,8 +454,8 @@ fn random_bits<const N: usize>() -> Bits<N> {
 
 #[test]
 fn test_biguint_roundtrip() {
-    use seq_macro::seq;
     use rand::random;
+    use seq_macro::seq;
 
     seq!(N in 5..150 {
         for _iters in 0..10 {
@@ -478,7 +479,6 @@ fn test_biguint_roundtrip() {
         }
     });
 }
-
 
 #[test]
 fn test_cast_from_biguint() {
@@ -971,7 +971,11 @@ impl<const N: usize> Bits<N> {
     /// let y = x.to_u16(); // Panics - too many bits
     /// ```
     pub fn to_u16(self) -> u16 {
-        assert!(N <= 16, "Cannot convert Bits::<{}> to u16 - too many bits", N);
+        assert!(
+            N <= 16,
+            "Cannot convert Bits::<{}> to u16 - too many bits",
+            N
+        );
         let x: LiteralType = self.into();
         x as u16
     }
@@ -991,7 +995,11 @@ impl<const N: usize> Bits<N> {
     /// let y = x.to_u32(); // Panics - too many bits
     /// ```
     pub fn to_u32(self) -> u32 {
-        assert!(N <= 32, "Cannot convert Bits::<{}> to u32 - too many bits", N);
+        assert!(
+            N <= 32,
+            "Cannot convert Bits::<{}> to u32 - too many bits",
+            N
+        );
         let x: LiteralType = self.into();
         x as u32
     }
@@ -1011,7 +1019,11 @@ impl<const N: usize> Bits<N> {
     /// let y = x.to_u64(); // Panics - too many bits
     /// ```
     pub fn to_u64(self) -> u64 {
-        assert!(N <= 64, "Cannot convert Bits::<{}> to u64 - too many bits", N);
+        assert!(
+            N <= 64,
+            "Cannot convert Bits::<{}> to u64 - too many bits",
+            N
+        );
         let x: LiteralType = self.into();
         x as u64
     }
@@ -1364,13 +1376,13 @@ impl<const N: usize> std::ops::Add<bool> for Bits<N> {
 
 #[cfg(test)]
 mod tests {
-    use crate::core::bits::{LiteralType, ToBits};
-    use std::num::Wrapping;
-    use num_bigint::BigUint;
-    use seq_macro::seq;
     use super::{bit_cast, clog2, Bits};
     use crate::core::bits::random_bits;
+    use crate::core::bits::{LiteralType, ToBits};
+    use num_bigint::BigUint;
     use num_traits::One;
+    use seq_macro::seq;
+    use std::num::Wrapping;
 
     #[test]
     fn test_get_bits_section() {
@@ -1655,11 +1667,11 @@ mod tests {
     #[test]
     fn test_bitcast() {
         fn bitcast_test<const N: usize, const M: usize>() {
-            let y : Bits<N> = random_bits();
+            let y: Bits<N> = random_bits();
             let z = bit_cast::<M, N>(y);
-            let yb : BigUint = y.into();
+            let yb: BigUint = y.into();
             let zb = yb & ((BigUint::one() << M) - BigUint::one());
-            let zc : BigUint = z.into();
+            let zc: BigUint = z.into();
             assert_eq!(zb, zc);
         }
         fn bitcast_test_set<const M: usize>() {
@@ -1695,7 +1707,6 @@ mod tests {
         });
     }
 
-
     #[test]
     fn test_all() {
         seq!(N in 1..150 {
@@ -1710,7 +1721,6 @@ mod tests {
             assert_eq!(y.all(), true);
         });
     }
-
 
     #[test]
     fn test_shl() {
@@ -1761,21 +1771,31 @@ mod tests {
 
     #[test]
     fn test_add() {
-        fn add<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint, mask: BigUint)
-                               -> (Bits<N>, BigUint) {
-            (y+z, (y1+z1) & mask)
+        fn add<const N: usize>(
+            y: Bits<N>,
+            z: Bits<N>,
+            y1: BigUint,
+            z1: BigUint,
+            mask: BigUint,
+        ) -> (Bits<N>, BigUint) {
+            (y + z, (y1 + z1) & mask)
         }
         test_op_with_values!(add);
     }
 
     #[test]
     fn test_sub() {
-        fn sub<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint, mask: BigUint)
-                               -> (Bits<N>, BigUint) {
+        fn sub<const N: usize>(
+            y: Bits<N>,
+            z: Bits<N>,
+            y1: BigUint,
+            z1: BigUint,
+            mask: BigUint,
+        ) -> (Bits<N>, BigUint) {
             if z1 <= y1 {
-                (y-z, (y1-z1))
+                (y - z, (y1 - z1))
             } else {
-                (y-z, mask + BigUint::one() + y1 - z1)
+                (y - z, mask + BigUint::one() + y1 - z1)
             }
         }
         test_op_with_values!(sub);
@@ -1783,35 +1803,55 @@ mod tests {
 
     #[test]
     fn test_bitor() {
-        fn bor<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint, mask: BigUint)
-                               -> (Bits<N>, BigUint) {
-            (y|z, (y1|z1) & mask)
+        fn bor<const N: usize>(
+            y: Bits<N>,
+            z: Bits<N>,
+            y1: BigUint,
+            z1: BigUint,
+            mask: BigUint,
+        ) -> (Bits<N>, BigUint) {
+            (y | z, (y1 | z1) & mask)
         }
         test_op_with_values!(bor);
     }
 
     #[test]
     fn test_bitand() {
-        fn band<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint, mask: BigUint)
-            -> (Bits<N>, BigUint) {
-            (y&z, (y1&z1) & mask)
+        fn band<const N: usize>(
+            y: Bits<N>,
+            z: Bits<N>,
+            y1: BigUint,
+            z1: BigUint,
+            mask: BigUint,
+        ) -> (Bits<N>, BigUint) {
+            (y & z, (y1 & z1) & mask)
         }
         test_op_with_values!(band);
     }
 
     #[test]
     fn test_bitxor() {
-        fn bxor<const N: usize>(y: Bits<N>, z: Bits<N>, y1: BigUint, z1: BigUint, mask: BigUint)
-                                -> (Bits<N>, BigUint) {
-            (y^z, (y1^z1) & mask)
+        fn bxor<const N: usize>(
+            y: Bits<N>,
+            z: Bits<N>,
+            y1: BigUint,
+            z1: BigUint,
+            mask: BigUint,
+        ) -> (Bits<N>, BigUint) {
+            (y ^ z, (y1 ^ z1) & mask)
         }
         test_op_with_values!(bxor);
     }
 
     #[test]
     fn test_not() {
-        fn not<const N: usize>(y: Bits<N>, _z: Bits<N>, y1: BigUint, _z1: BigUint, mask: BigUint)
-                                -> (Bits<N>, BigUint) {
+        fn not<const N: usize>(
+            y: Bits<N>,
+            _z: Bits<N>,
+            y1: BigUint,
+            _z1: BigUint,
+            mask: BigUint,
+        ) -> (Bits<N>, BigUint) {
             (!y, (y1 ^ mask))
         }
         test_op_with_values!(not);
@@ -1879,9 +1919,7 @@ mod tests {
         }
         test_cmp_with_values!(gt);
     }
-
 }
-
 
 /// A type alias for a simple bool.  You can use them interchangeably.
 pub type Bit = bool;

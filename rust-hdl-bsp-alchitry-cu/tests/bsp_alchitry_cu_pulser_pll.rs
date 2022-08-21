@@ -1,9 +1,9 @@
 use rust_hdl::core::prelude::*;
 use rust_hdl::widgets::pulser::Pulser;
-use std::time::Duration;
 use rust_hdl_bsp_alchitry_cu::pins;
 use rust_hdl_bsp_alchitry_cu::synth::generate_bitstream;
 use rust_hdl_fpga_support::lattice::ice40::ice_pll::ICE40PLLBlock;
+use std::time::Duration;
 
 const MHZ100: u64 = 100_000_000;
 const MHZ25: u64 = 25_000_000;

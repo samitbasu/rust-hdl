@@ -4,7 +4,6 @@ use rust_hdl::hls::prelude::*;
 use rust_hdl::widgets::test_helpers;
 use rust_hdl::widgets::test_helpers::{LazyFIFOFeeder, LazyFIFOReader};
 
-
 #[derive(LogicBlock, Default)]
 struct HLSFIFOTest {
     fifo: AsyncFIFO<Bits<8>, 3, 4, 1>,

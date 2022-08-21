@@ -230,6 +230,10 @@ impl<const N: usize> Logic for SPISlave<N> {
                 if self.capture_detector.edge_signal.val() {
                     self.state.d.next = SPISlaveState::Capture;
                 }
+                // Hangup condition.  CSEL should remain low for the entire transaction.
+                if self.csel_synchronizer.sig_out.val() == self.cs_off.val() {
+                    self.state.d.next = SPISlaveState::Idle;
+                }
             }
             SPISlaveState::Capture => {
                 self.register_in.d.next = (self.register_in.q.val() << 1)

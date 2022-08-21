@@ -338,7 +338,7 @@ fn test_reg_writes() {
         sim.done(x)
     });
     //    sim.run(Box::new(uut), 1_000_000).unwrap();
-    sim.run_to_file(Box::new(uut), 1_000_000, "ad868x.vcd")
+    sim.run_to_file(Box::new(uut), 1_000_000, &vcd_path!("ad868x.vcd"))
         .unwrap();
 }
 
