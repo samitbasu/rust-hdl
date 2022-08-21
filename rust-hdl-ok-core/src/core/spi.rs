@@ -64,31 +64,31 @@ impl Logic for OKSPIMaster {
             self.pipe_in.ok2.val() | self.pipe_out.ok2.val() | self.trigger_done.ok2.val();
         // Pipe in the SPI outbound register
         if self.pipe_in.write.val() {
-            self.data_outbound.d.next = (self.data_outbound.q.val() << 16_usize)
-                | bit_cast::<64, 16>(self.pipe_in.dataout.val());
+            self.data_outbound.d.next =
+                (self.data_outbound.q.val() << 16) | bit_cast::<64, 16>(self.pipe_in.dataout.val());
         }
         // Pipe from the SPI inbound register
         self.pipe_out.datain.next = self.output_register.q.val();
         if self.pipe_out.read.val() {
-            self.data_inbound.d.next = self.data_inbound.q.val() << 16_usize;
+            self.data_inbound.d.next = self.data_inbound.q.val() << 16;
         }
         // Trigger to start the transaction - 1 for normal, 2 for continued
         self.core.data_outbound.next = self.data_outbound.q.val();
         self.core.start_send.next = false;
         self.core.continued_transaction.next = false;
-        if self.trigger_start.trigger.val() == 1_u32 {
+        if self.trigger_start.trigger.val() == 1 {
             self.core.start_send.next = true;
             self.core.continued_transaction.next = false;
-        } else if self.trigger_start.trigger.val() == 2_u32 {
+        } else if self.trigger_start.trigger.val() == 2 {
             self.core.start_send.next = true;
             self.core.continued_transaction.next = true;
         }
         self.core.bits_outbound.next = self.bits.dataout.val();
         // Reflect transaction done back to the caller
-        self.trigger_done.trigger.next = 0_u32.into();
+        self.trigger_done.trigger.next = 0.into();
         if self.core.transfer_done.val() {
             self.data_inbound.d.next = self.core.data_inbound.val();
-            self.trigger_done.trigger.next = 1_u32.into();
+            self.trigger_done.trigger.next = 1.into();
         }
     }
 }
@@ -187,12 +187,12 @@ fn test_ok_spi_master_works() {
         let mut x = sim.init()?;
         wait_clock_cycle!(sim, clock, x, 20);
         wait_clock_true!(sim, clock, x);
-        x.slave.data_outbound.next = 0xcafebabe5ea15e5e_u64.into();
-        x.slave.bits.next = 64_u32.into();
+        x.slave.data_outbound.next = 0xcafebabe5ea15e5e.into();
+        x.slave.bits.next = 64.into();
         x.slave.start_send.next = true;
         wait_clock_cycle!(sim, clock, x);
         x.slave.start_send.next = false;
-        for sample in [0x1234_u16, 0x5678_u16, 0xdead_u16, 0xbeef_u16] {
+        for sample in [0x1234, 0x5678, 0xdead, 0xbeef] {
             x.core.pipe_in.dataout.next = sample.into();
             x.core.pipe_in.write.next = true;
             wait_clock_cycle!(sim, clock, x);
@@ -200,13 +200,13 @@ fn test_ok_spi_master_works() {
         }
         wait_clock_cycle!(sim, clock, x);
         sim_assert_eq!(sim, x.core.data_outbound.q.val(), 0x12345678deadbeef_u64, x);
-        x.core.bits.dataout.next = 64_u32.into();
-        x.core.trigger_start.trigger.next = 1_u32.into();
+        x.core.bits.dataout.next = 64.into();
+        x.core.trigger_start.trigger.next = 1.into();
         wait_clock_cycle!(sim, clock, x);
-        x.core.trigger_start.trigger.next = 0_u32.into();
+        x.core.trigger_start.trigger.next = 0.into();
         x = sim.watch(|x| x.slave.transfer_done.val(), x)?;
         sim_assert_eq!(sim, x.slave.data_inbound.val(), 0x12345678deadbeef_u64, x);
-        for sample in [0xcafe_u16, 0xbabe_u16, 0x5ea1_u16, 0x5e5e_u16] {
+        for sample in [0xcafe, 0xbabe, 0x5ea1, 0x5e5e] {
             x.core.pipe_out.read.next = true;
             wait_clock_cycle!(sim, clock, x);
             sim_assert!(sim, x.core.pipe_out.datain.val() == sample, x);

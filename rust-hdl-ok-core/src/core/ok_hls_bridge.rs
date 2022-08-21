@@ -89,18 +89,18 @@ impl<const A: usize> Logic for OpalKellyHLSBridge<A> {
             | self.space_avail.ok2.val();
         // Update the total number of words available in the FIFO
         if self.fpga_to_pc_fifo.bus_write.write.val() & !self.fpga_to_pc_fifo.bus_read.read.val() {
-            self.word_counter.d.next = self.word_counter.q.val() + 1_usize;
+            self.word_counter.d.next = self.word_counter.q.val() + 1;
         } else if self.fpga_to_pc_fifo.bus_read.read.val()
             & !self.fpga_to_pc_fifo.bus_write.write.val()
         {
-            self.word_counter.d.next = self.word_counter.q.val() - 1_usize;
+            self.word_counter.d.next = self.word_counter.q.val() - 1;
         }
         if self.pc_to_fpga_fifo.bus_write.write.val() & !self.pc_to_fpga_fifo.bus_read.read.val() {
-            self.space_counter.d.next = self.space_counter.q.val() - 1_usize;
+            self.space_counter.d.next = self.space_counter.q.val() - 1;
         } else if self.pc_to_fpga_fifo.bus_read.read.val()
             & !self.pc_to_fpga_fifo.bus_write.write.val()
         {
-            self.space_counter.d.next = self.space_counter.q.val() + 1_usize;
+            self.space_counter.d.next = self.space_counter.q.val() + 1;
         }
         // Reflect the word counter out to the wire
         self.words_avail.datain.next = self.word_counter.q.val();
@@ -112,12 +112,12 @@ impl<const A: usize> Logic for OpalKellyHLSBridge<A> {
         self.pc_to_fpga_fifo.bus_write.data.next = self.pipe_in.dataout.val();
         // The stream control ties the pipe ready signals to either true (no stream control)
         // or false (stream control based on FIFO level).
-        if self.block_flow_control.dataout.val().get_bit(0_usize) {
+        if self.block_flow_control.dataout.val().get_bit(0) {
             self.pipe_out.ready.next = !self.fpga_to_pc_fifo.bus_read.almost_empty.val();
         } else {
             self.pipe_out.ready.next = true;
         }
-        if self.block_flow_control.dataout.val().get_bit(1_usize) {
+        if self.block_flow_control.dataout.val().get_bit(1) {
             self.pipe_in.ready.next = !self.pc_to_fpga_fifo.bus_write.almost_full.val();
         } else {
             self.pipe_in.ready.next = true;
@@ -139,7 +139,7 @@ impl<const A: usize> OpalKellyHLSBridge<A> {
             pipe_out: BTPipeOut::new(config.pipe_out),
             words_avail: WireOut::new(config.words_avail),
             space_avail: WireOut::new(config.space_avail),
-            space_counter: DFFWithInit::new((1_usize << 12).into()),
+            space_counter: DFFWithInit::new((1 << 12).into()),
             word_counter: Default::default(),
             read_delay: Default::default(),
             block_flow_control: WireIn::new(config.block_flow_control),

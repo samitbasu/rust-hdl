@@ -292,7 +292,7 @@ use std::fmt::{Display, Formatter, LowerHex};
 /// The problem arises when you use a [BlackBox] Verilog declaration.
 /// In particular, RustHDL does not wrap your declaration (the Verilog is
 /// just copied to the output), so it does not know that two different
-/// instances of the same blockbox IP may represent different things.
+/// instances of the same blackbox IP may represent different things.
 /// A classic case is in the case of a parameterized blackbox IP core.
 /// In that case, it is up to you to rename the different IP cores so that
 /// they do not conflict.  A better way around this is to use the [Wrapper]

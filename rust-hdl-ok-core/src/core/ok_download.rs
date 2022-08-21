@@ -34,12 +34,12 @@ impl Logic for OpalKellyDownloadFIFO {
         self.fifo.data_in.next = self.data_in.val();
         self.fifo.write.next = self.data_write.val();
         self.data_full.next = self.fifo.full.val();
-        self.status_wire.datain.next = bits::<16>(0xAD00_u128)
-            | (bit_cast::<16, 1>(self.fifo.overflow.val().into()) << 4_u32)
-            | (bit_cast::<16, 1>(self.fifo.full.val().into()) << 3_u32)
-            | (bit_cast::<16, 1>(self.fifo.almost_empty.val().into()) << 2_u32)
-            | (bit_cast::<16, 1>(self.fifo.empty.val().into()) << 1_u32)
-            | (bit_cast::<16, 1>(self.fifo.underflow.val().into()) << 0_u32);
+        self.status_wire.datain.next = bits::<16>(0xAD00)
+            | (bit_cast::<16, 1>(self.fifo.overflow.val().into()) << 4)
+            | (bit_cast::<16, 1>(self.fifo.full.val().into()) << 3)
+            | (bit_cast::<16, 1>(self.fifo.almost_empty.val().into()) << 2)
+            | (bit_cast::<16, 1>(self.fifo.empty.val().into()) << 1)
+            | (bit_cast::<16, 1>(self.fifo.underflow.val().into()) << 0);
     }
 }
 

@@ -1,54 +1,95 @@
 //! Write FPGA Firmware using Rust
 //!
-//! This crate allows you to write FPGA firmware using Rust!  There
-//! are a number of advantages to writing firmware in Rust vs.
-//! other approaches:
-//! - Safe - have Rust check the validity of your firmware with
+//! `rust-hdl` is a crate that allows you to write FPGA firmware using Rust!
+//! Specifically, `rust-hdl` compiles a subset of Rust down to Verilog so that
+//! you can synthesize firmware for your FPGA using standard tools.  It also
+//! provides tools for simulation, verification, and analysis along with strongly
+//! typed interfaces for making sure your design works before heading to the bench.
+//!
+//! ## Features
+//! * Safe - have Rust check the validity of your firmware with
 //! strongly typed interfaces at **compile** time, as well as at
 //! run time, synthesis, and on the device.
-//! - Fast - Run simulations of your designs straight from your
-//! rust code, with pretty good simulation performance.
-//! - Readable - RustHDL outputs Verilog code for synthesis and
+//! * Fast - Run simulations of your designs straight from your
+//! Rust code, with pretty good simulation performance.
+//! * Readable - RustHDL outputs Verilog code for synthesis and
 //! implementation, and goes through some effort to make sure that
 //! code is readable and understandable, in case you need to resolve
 //! timing issues or other conflicts.
-//! - Reusable - RustHDL supports templated firmware for parametric
+//! * Reusable - RustHDL supports templated firmware for parametric
 //! use, as well as a simple composition model based on structs.
-//! - Batteries Included - RustHDL includes a set of basic firmware
+//! * Batteries Included - RustHDL includes a set of basic firmware
 //! widgets that provide FIFOs, RAMs and ROMs, Flip flops, SPI components,
 //! PWMs etc, so you can get started quickly.
-//! - Free - Although you can use RustHDL to wrap existing IP cores,
-//! all of the RustHDL code and firmware is open source and free to use.
+//! * Free - Although you can use RustHDL to wrap existing IP cores,
+//! all of the RustHDL code and firmware is open source and free to use (as in speech and beer).
 //!
-//! This crate is the top level crate, and provides a single installation
-//! point for a number of the component crates that make up RustHDL.
-//! These crates are focused on different types of functionality, and provide
-//! a different subset of the functionality of RustHDL.  Here are the
-//! component crates
-//! - Core - this crate provides the core functionality of RustHDL.  It includes
-//! the base data types and traits needed to construct and simulate firmware.
-//! - Macros - this crate provides the procedural macro support that allows you
-//! to use the Rust syntax to write firmware.
-//! - Widgets - this crate provides a set of basic firmware widgets that can be
-//! used to compose designs.  These are all written in Rust, and do not require
-//! third party IP cores.
-//! - Yosys-Synth - this crate provides access to `yosys`, which is used as the
-//! synthesis and validation tool for RustHDL.  Generated Verilog can be checked
-//! using `yosys` for correctness.
-//! - Toolchain - There are several toolchain crates that cover different toolchain
-//! options for RustHDL.  You can use your own toolchain as well.  Toolchain
-//! support is very complicated, and currently, only ISE, Vivado, IceStorm and
-//! Project Trellis are known to work.
-//! - Board Support Package - the BSP crates provide details specific to a single
-//! board type.  These crates provide details about clock inputs, output pins
-//! and synthesis flags needed to generate downloadable firmware.
-//! - Sim Chips - a few "simulated chips" - RustHDL simplified models for some
-//! physical chips that might prove useful for testing your firmware against.
-//! These don't provide the equivalent functionality as the real chip, but
-//! give you a way to test your firmware in a completely simulated environment.
-//! - OK Core - Wrappers for the OpalKelly FrontPanel firmware components. If
-//! you used devices from OpalKelly, this may prove useful to you.
-//! - Test - some various test infrastructure firmware and tools for testing.
+//! ## Quickstart
+//!
+//! The definitive example in FPGA firmware land is a simple LED blinker.  This typically
+//! involves a clock that is fed to the FPGA with a pre-defined frequency, and an output
+//! signal that can control an LED.  Because we don't know what FPGA we are using, we will
+//! do this in simulation first.  We want a blink that is 250 msec long every second, and
+//! our clock speed is (a comically slow) 10kHz.  Here is a minimal working Blinky! example:
+//!
+//! ```
+//! use std::time::Duration;
+//! use rust_hdl::core::prelude::*;
+//! use rust_hdl::docs::vcd2svg::vcd_to_svg;
+//! use rust_hdl::widgets::prelude::*;
+//!
+//! const CLOCK_SPEED_HZ : u64 = 10_000;
+//!
+//!
+//! #[derive(LogicBlock)]
+//! struct Blinky {
+//!     pub clock: Signal<In, Clock>,
+//!     pulser: Pulser,
+//!     pub led: Signal<Out, Bit>,
+//! }
+//!
+//! impl Default for Blinky {
+//!    fn default() -> Self {
+//!        Self {
+//!          clock: Default::default(),
+//!          pulser: Pulser::new(CLOCK_SPEED_HZ, 1.0, Duration::from_millis(250)),
+//!          led: Default::default(),
+//!        }
+//!     }
+//! }
+//!
+//! impl Logic for Blinky {
+//!     #[hdl_gen]
+//!     fn update(&mut self) {
+//!        self.pulser.clock.next = self.clock.val();
+//!        self.pulser.enable.next = true.into();
+//!        self.led.next = self.pulser.pulse.val();
+//!     }
+//! }
+//!
+//! fn main() {
+//!     let mut sim = simple_sim!(Blinky, clock, CLOCK_SPEED_HZ, ep, {
+//!         let mut x = ep.init()?;
+//!         wait_clock_cycles!(ep, clock, x, 4*CLOCK_SPEED_HZ);
+//!         ep.done(x)
+//!     });
+//!
+//!     let mut uut = Blinky::default();
+//!     uut.connect_all();
+//!     sim.run_to_file(Box::new(uut), 5 * SIMULATION_TIME_ONE_SECOND, "blinky.vcd").unwrap();
+//!     vcd_to_svg("/tmp/blinky.vcd","images/blinky_all.svg",&["uut.clock", "uut.led"], 0, 4_000_000_000_000).unwrap();
+//!     vcd_to_svg("/tmp/blinky.vcd","images/blinky_pulse.svg",&["uut.clock", "uut.led"], 900_000_000_000, 1_500_000_000_000).unwrap();
+//! }
+//! ```
+//!
+//! Running the above (a release run is highly recommended) will generate a `vcd` file (which is
+//! a trace file for FPGAs and hardware in general).  You can open this using e.g., `gtkwave`.
+//! If you have, for example, an Alchitry Cu board you can generate a bitstream for this exampling
+//! with a single call.  It's a little more involved, so we will cover that in the detailed
+//! documentation.  It will also render that `vcd` file into an `svg` you can view with an ordinary
+//! web browser.  This is the end result
+//!
+//! ![](images/blinky_all.svg)
 //!
 
 #![warn(missing_docs)]

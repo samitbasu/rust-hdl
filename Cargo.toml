@@ -1,3 +1,9 @@
 [workspace]
 
-members=["rust-hdl","rust-hdl-macros","rust-hdl-ok-core","rust-hdl-bsp-alchitry-cu","rust-hdl-fpga-support"]
+members=["rust-hdl",
+    "rust-hdl-macros",
+    "rust-hdl-ok-core",
+    "rust-hdl-bsp-alchitry-cu",
+    "rust-hdl-bsp-ok-xem6010",
+    "rust-hdl-bsp-ok-xem7010",
+    "rust-hdl-fpga-support"]

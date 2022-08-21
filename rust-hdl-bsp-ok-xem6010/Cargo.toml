@@ -1,0 +1,19 @@
+[package]
+name = "rust-hdl-bsp-ok-xem6010"
+version = "0.4.0"
+edition = "2021"
+license = "MIT"
+description = "Support crate for RustHDL - provides Board Support Package for the OpalKelly XEM6010 FPGA module (Spartan-6 based)"
+homepage = "https://rusthdl.org"
+repository = "https://github.com/SmithsDigitalForge/rust-hdl"
+keywords = ["fpga", "verilog", "hardware"]
+authors = ["Samit Basu <samit.basu@smiths.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust-hdl = {path="../rust-hdl", version= "^0.34.0" }
+rust-hdl-fpga-support = {path="../rust-hdl-fpga-support", version= "^0.4.0" }
+rust-hdl-ok-core = {path="../rust-hdl-ok-core", version= "^0.6.0" }
+rust-hdl-ok-frontpanel-sys = {path="../rust-hdl-ok-frontpanel-sys", version= "^0.4.0" }
+rand = {version="0.8.1"}

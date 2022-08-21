@@ -155,7 +155,4 @@ pub fn generate_ucf<U: Block>(uut: &U) -> String {
         }
     }
     ucf_uniq.join(";\n")
-        + ";
-CONFIG VCCAUX = \"3.3\"; // Required for Spartan-6
-"
 }
