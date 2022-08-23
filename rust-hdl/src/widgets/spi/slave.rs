@@ -93,6 +93,10 @@ impl<const N: usize> SPISlave<N> {
     ///
     /// See [ADS868XSimulator] for an example of how a [SPISlave] can be used.
     pub fn new(config: SPIConfig) -> Self {
+        // Because the synchronizers introduce a 2 clock delay, in the non-phased
+        // modes, we need to be able to react quickly enough to capture the first
+        // data edge.  Short of a new design, I have added this clock speed constraint.
+        assert!(config.cpha | (config.clock_speed >= 40 * config.speed_hz));
         Self {
             clock: Default::default(),
             wires: Default::default(),

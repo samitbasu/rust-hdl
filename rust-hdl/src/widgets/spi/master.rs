@@ -1,7 +1,7 @@
 use crate::core::prelude::*;
 use crate::dff_setup;
 use crate::widgets::dff::DFF;
-use crate::widgets::prelude::{BitSynchronizer, DFFWithInit, Strobe};
+use crate::widgets::prelude::{DFFWithInit, Strobe};
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum SPIState {
@@ -63,7 +63,6 @@ pub struct SPIMaster<const N: usize> {
     done_flop: DFF<Bit>,
     msel_flop: DFFWithInit<Bit>,
     mosi_flop: DFF<Bit>,
-    miso_synchronizer: BitSynchronizer,
     continued_save: DFF<Bit>,
     cs_off: Constant<Bit>,
     mosi_off: Constant<Bit>,
@@ -94,7 +93,6 @@ impl<const N: usize> SPIMaster<N> {
             done_flop: Default::default(),
             msel_flop: DFFWithInit::new(config.cs_off),
             mosi_flop: Default::default(),
-            miso_synchronizer: Default::default(),
             continued_save: Default::default(),
             cs_off: Constant::new(config.cs_off),
             mosi_off: Constant::new(config.mosi_off),
@@ -121,11 +119,9 @@ impl<const N: usize> Logic for SPIMaster<N> {
             mosi_flop,
             continued_save
         );
-        clock!(self, clock, strobe, miso_synchronizer);
+        clock!(self, clock, strobe);
         // Activate the baud strobe
         self.strobe.enable.next = true;
-        // Connect the MISO synchronizer to the input line
-        self.miso_synchronizer.sig_in.next = self.wires.miso.val();
         // Connect the rest of the SPI lines to the flops
         self.wires.mclk.next = self.clock_state.q.val();
         self.wires.mosi.next = self.mosi_flop.q.val();
@@ -170,7 +166,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
                         .q
                         .val()
                         .get_bit(self.pointerm1.val().index()); // Fetch the corresponding bit out of the register
-                    self.pointer.d.next = self.pointerm1.val().into(); // Decrement the pointer
+                    self.pointer.d.next = self.pointerm1.val(); // Decrement the pointer
                     self.state.d.next = SPIState::MActive; // Move to the hold mclock low state
                     self.clock_state.d.next = self.cpol.val() ^ self.cpha.val();
                 } else {
@@ -187,7 +183,7 @@ impl<const N: usize> Logic for SPIMaster<N> {
             SPIState::SampleMISO => {
                 self.register_in.d.next = self.register_in.q.val().replace_bit(
                     self.pointer.q.val().index(),
-                    self.miso_synchronizer.sig_out.val(),
+                    self.wires.miso.val(),
                 );
                 self.clock_state.d.next = !self.clock_state.q.val();
                 self.state.d.next = SPIState::MIdle;

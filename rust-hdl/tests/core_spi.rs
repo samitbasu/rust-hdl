@@ -92,55 +92,95 @@ impl Logic for SPITestPair {
 }
 
 #[cfg(test)]
-fn mk_spi_config(flags: [bool; 3]) -> SPIConfig {
+fn mk_spi_config(flags: [bool; 4]) -> SPIConfig {
     SPIConfig {
         clock_speed: 48_000_000,
         cs_off: flags[0],
-        mosi_off: false,
-        speed_hz: 1_000_000,
-        cpha: flags[1],
-        cpol: flags[2],
+        mosi_off: flags[1],
+        speed_hz: 1_200_000,
+        cpha: flags[2],
+        cpol: flags[3],
     }
 }
 
 #[test]
-fn test_spi_xchange_mode_000() {
-    test_spi_xchange(mk_spi_config([false, false, false]), "000");
+fn test_spi_xchange_mode_0000() {
+    test_spi_xchange(mk_spi_config([false, false, false, false]), "0000");
 }
 
 #[test]
-fn test_spi_xchange_mode_001() {
-    test_spi_xchange(mk_spi_config([false, false, true]), "001");
+fn test_spi_xchange_mode_0001() {
+    test_spi_xchange(mk_spi_config([false, false, false, true]), "0001");
 }
 
 #[test]
-fn test_spi_xchange_mode_010() {
-    test_spi_xchange(mk_spi_config([false, true, false]), "010");
+fn test_spi_xchange_mode_0010() {
+    test_spi_xchange(mk_spi_config([false, false, true, false]), "0010");
 }
 
 #[test]
-fn test_spi_xchange_mode_011() {
-    test_spi_xchange(mk_spi_config([false, true, true]), "011");
+fn test_spi_xchange_mode_0011() {
+    test_spi_xchange(mk_spi_config([false, false, true, true]), "0011");
 }
 
 #[test]
-fn test_spi_xchange_mode_100() {
-    test_spi_xchange(mk_spi_config([true, false, false]), "100");
+fn test_spi_xchange_mode_0100() {
+    test_spi_xchange(mk_spi_config([false, true, false, false]), "0100");
 }
 
 #[test]
-fn test_spi_xchange_mode_101() {
-    test_spi_xchange(mk_spi_config([true, false, true]), "101");
+fn test_spi_xchange_mode_0101() {
+    test_spi_xchange(mk_spi_config([false, true, false, true]), "0101");
 }
 
 #[test]
-fn test_spi_xchange_mode_110() {
-    test_spi_xchange(mk_spi_config([true, true, false]), "110");
+fn test_spi_xchange_mode_0110() {
+    test_spi_xchange(mk_spi_config([false, true, true, false]), "0110");
 }
 
 #[test]
-fn test_spi_xchange_mode_111() {
-    test_spi_xchange(mk_spi_config([true, true, true]), "111");
+fn test_spi_xchange_mode_0111() {
+    test_spi_xchange(mk_spi_config([false, true, true, true]), "0111");
+}
+
+#[test]
+fn test_spi_xchange_mode_1000() {
+    test_spi_xchange(mk_spi_config([true, false, false, false]), "1000");
+}
+
+#[test]
+fn test_spi_xchange_mode_1001() {
+    test_spi_xchange(mk_spi_config([true, false, false, true]), "1001");
+}
+
+#[test]
+fn test_spi_xchange_mode_1010() {
+    test_spi_xchange(mk_spi_config([true, false, true, false]), "1010");
+}
+
+#[test]
+fn test_spi_xchange_mode_1011() {
+    test_spi_xchange(mk_spi_config([true, false, true, true]), "1011");
+}
+
+#[test]
+fn test_spi_xchange_mode_1100() {
+    test_spi_xchange(mk_spi_config([true, true, false, false]), "1100");
+}
+
+#[test]
+fn test_spi_xchange_mode_1101() {
+    test_spi_xchange(mk_spi_config([true, true, false, true]), "1101");
+}
+
+#[test]
+fn test_spi_xchange_mode_1110() {
+    test_spi_xchange(mk_spi_config([true, true, true, false]), "1110");
+}
+
+#[test]
+fn test_spi_xchange_mode_1111() {
+    test_spi_xchange(mk_spi_config([true, true, true, true]), "1111");
 }
 
 #[cfg(test)]
@@ -190,6 +230,6 @@ fn test_spi_xchange(config: SPIConfig, name: &str) {
         }
         sim.done(x)
     });
-    //    sim.run_to_file(Box::new(uut), 1_000_000, &vcd_path!(format!("spi_xfer_test_{}.vcd", name))).unwrap();
-    sim.run(Box::new(uut), 1_000_000).unwrap();
+    sim.run_to_file(Box::new(uut), 1_000_000, &vcd_path!(format!("spi_xfer_test_{}.vcd", name))).unwrap();
+    //sim.run(Box::new(uut), 1_000_000).unwrap();
 }
