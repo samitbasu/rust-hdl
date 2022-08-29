@@ -94,12 +94,10 @@ impl Probe for CheckInputsNotDriven {
         self.input_parameters.push(vec![]);
         self.path.push(name);
         self.namespace.reset();
-        println!("Start scope {}", name);
     }
 
     fn visit_start_namespace(&mut self, name: &str, _node: &dyn Block) {
         self.namespace.push(name);
-        println!("Start namespace {}", name);
     }
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
@@ -111,7 +109,6 @@ impl Probe for CheckInputsNotDriven {
         };
         match signal.kind() {
             AtomKind::InputParameter => {
-                println!("Input parameter {}", name);
                 self.input_parameters.last_mut().unwrap().push(name);
             }
             _ => {}
@@ -120,14 +117,11 @@ impl Probe for CheckInputsNotDriven {
 
     fn visit_end_namespace(&mut self, _name: &str, _node: &dyn Block) {
         self.namespace.pop();
-        println!("End namespace {}", _name);
     }
 
     fn visit_end_scope(&mut self, _name: &str, node: &dyn Block) {
         let written = get_write_list(node);
-        println!("Written: {:?}", written);
         let my_params = self.input_parameters.last().unwrap();
-        println!("Params: {:?}", self.input_parameters);
         for param in my_params {
             if written.contains(param) {
                 self.failures.push(PathedName {
@@ -138,7 +132,6 @@ impl Probe for CheckInputsNotDriven {
         }
         self.path.pop();
         self.input_parameters.pop();
-        println!("End scope {}", _name);
     }
 }
 

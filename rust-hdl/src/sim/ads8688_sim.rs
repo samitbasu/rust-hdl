@@ -151,6 +151,9 @@ impl Logic for ADS8688Simulator {
                                 self.spi_slave.start_send.next = true;
                                 self.state.d.next = State::DoWrite;
                             } else {
+                                self.spi_slave.continued_transaction.next = true;
+                                self.spi_slave.bits.next = 8.into();
+                                self.spi_slave.start_send.next = true;
                                 self.state.d.next = State::DoRead;
                             }
                         }
@@ -163,11 +166,13 @@ impl Logic for ADS8688Simulator {
                 }
             }
             State::DoRead => {
-                self.spi_slave.continued_transaction.next = true;
-                self.spi_slave.bits.next = 8.into();
-                self.spi_slave.data_outbound.next = bit_cast::<64, 8>(self.reg_ram.read_data.val());
-                self.spi_slave.start_send.next = true;
-                self.state.d.next = State::WaitSlaveIdle;
+                if self.spi_slave.transfer_done.val() {
+                    self.spi_slave.continued_transaction.next = true;
+                    self.spi_slave.bits.next = 8.into();
+                    self.spi_slave.data_outbound.next = bit_cast::<64, 8>(self.reg_ram.read_data.val());
+                    self.spi_slave.start_send.next = true;
+                    self.state.d.next = State::WaitSlaveIdle;
+                }
             }
             State::DoWrite => {
                 if self.spi_slave.transfer_done.val() {
@@ -310,8 +315,8 @@ fn reg_read(
     sim: &mut Sim<Test8688>,
 ) -> Result<(u8, Box<Test8688>), SimError> {
     // Shift the register index so that the lower 8 bits are free to hold the result
-    let cmd = (reg_index << 9).into();
-    let result = do_spi_txn(16, cmd, false, x, sim)?;
+    let cmd = (reg_index << 17).into();
+    let result = do_spi_txn(24, cmd, false, x, sim)?;
     let reg_val = (result.0 & 0xFF).get_bits::<8>(0).to_u8();
     Ok((reg_val, result.1))
 }
@@ -349,9 +354,6 @@ fn test_reg_reads() {
         let mut x = sim.init()?;
         // Wait for reset to complete
         wait_clock_cycles!(sim, clock, x, 20);
-        // Do the first read to initialize the chip
-        let result = do_spi_txn(32, 0x00, false, x, &mut sim)?;
-        x = result.1;
         let expected = ram_init_vec()
             .into_iter()
             .map(|x| x as LiteralType)
