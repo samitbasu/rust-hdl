@@ -13,5 +13,5 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl = {version= "^0.36.0", path="../rust-hdl"}
+rust-hdl = {version= "^0.37.0", path="../rust-hdl"}
 rust-hdl-fpga-support = {version= "^0.6.0", path="../rust-hdl-fpga-support"}
