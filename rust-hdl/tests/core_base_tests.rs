@@ -1,4 +1,5 @@
-use rust_hdl::core::check_error::{CheckError, LogicLoop};
+use rust_hdl::core::check_error::{CheckError, PathedName};
+use rust_hdl::core::prelude::SynthError::SynthesisFailed;
 use rust_hdl::core::prelude::*;
 
 #[allow(dead_code)]
@@ -340,6 +341,36 @@ fn test_local_logic() {
 }
 
 #[test]
+fn test_write_to_inputs_forbidden() {
+    #[derive(LogicBlock, Default)]
+    struct InputWriteTest {
+        pub in1: Signal<In, Bit>,
+        pub in2: Signal<In, Bit>,
+        pub out1: Signal<Out, Bit>,
+    }
+
+    impl Logic for InputWriteTest {
+        #[hdl_gen]
+        fn update(&mut self) {
+            self.in1.next = true;
+            self.out1.next = self.in1.val();
+        }
+    }
+
+    let mut uut = InputWriteTest::default();
+    uut.in1.connect();
+    uut.in2.connect();
+    uut.connect_all();
+    if let Err(CheckError::WritesToInputs(list)) = check_all(&uut) {
+        assert_eq!(list.len(), 1);
+        assert_eq!(list[0].path, "uut");
+        assert_eq!(list[0].name, "in1");
+    } else {
+        panic!("Write to input is undetected!");
+    }
+}
+
+#[test]
 fn test_local_logic_loop_detection() {
     #[derive(LogicBlock, Default)]
     struct LoopTest {
@@ -364,7 +395,7 @@ fn test_local_logic_loop_detection() {
     uut.connect_all();
     let e = check_all(&uut).expect_err("Loop should have been found");
     if let CheckError::LogicLoops(m) = e {
-        assert!(m.contains(&LogicLoop {
+        assert!(m.contains(&PathedName {
             path: "uut".to_string(),
             name: "foo".to_string()
         }))

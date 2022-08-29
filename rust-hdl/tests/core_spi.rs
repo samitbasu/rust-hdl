@@ -230,6 +230,11 @@ fn test_spi_xchange(config: SPIConfig, name: &str) {
         }
         sim.done(x)
     });
-    sim.run_to_file(Box::new(uut), 1_000_000, &vcd_path!(format!("spi_xfer_test_{}.vcd", name))).unwrap();
+    sim.run_to_file(
+        Box::new(uut),
+        1_000_000,
+        &vcd_path!(format!("spi_xfer_test_{}.vcd", name)),
+    )
+    .unwrap();
     //sim.run(Box::new(uut), 1_000_000).unwrap();
 }

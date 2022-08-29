@@ -19,7 +19,7 @@ use crate::core::prelude::*;
 /// // An example of a simple tristate 8-bit bus
 /// #[derive(LogicInterface, Default)]
 /// struct EightBitBus {
-///    bus: TristateBuffer<Bits<8>>,
+///    bus: Signal<InOut, Bits<8>>,
 /// }
 /// ```
 #[derive(LogicBlock, Default)]

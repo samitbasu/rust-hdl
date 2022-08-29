@@ -61,7 +61,7 @@ impl<const R: usize, const C: usize, const L: u32, const D: usize, const A: usiz
         assert!(L < 32);
         let banks = 4; // Assume 4 banks
                        // Number of total bits
-        let bit_count = R * C * D * 4;
+        let bit_count = R * C * D * banks;
         // The number of bits in each entry
         let entry_bits = L as usize * D;
         let max_entries = bit_count / entry_bits;

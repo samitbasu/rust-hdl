@@ -24,11 +24,54 @@
 //! as your code is concerned.  But the emulation of built-in types is not perfect, and
 //! you may struggle with them a bit.
 //!
+//! # Constructing [Bits]
+//! There are several ways to construct a [Bits] type.  It includes an implementation of
+//! the [Default](std::default::Default), trait, so if you need a zero value, you can use
+//! that form:
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<50> = Default::default();
+//! ```
+//! This will construct a length 50 bit vector that is initialized to all `0`.
+//!
+//! You can also convert from literals into bit vectors using the [From] and [Into] traits,
+//! provided the literals are of the `u64` type.
+//!
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<50> = 0xBEEF.into();
+//! ```
+//!
+//! In some cases, Rust complains about literals, and you may need to provide a suffix:
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<50> = 0xDEAD_BEEF_u64.into();
+//! ```
+//! However, in most cases, you can leave literals suffix-free, and Rust will automatically
+//! determine the type from the context.
+//!
+//! You can construct a larger constant using the [bits] function.  If you have a literal of up to
+//! 128 bits, it provides a functional form
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<200> = bits(0xDEAD_BEEE); // Works for up to 128 bit constants.
+//! ```
+//!
+//! There is also the [ToBits] trait, which is implemented on the basic unsigned integer types.
+//! This trait allows you to handily convert from different integer values
+//!
+//! ```
+//! # use rust_hdl::core::prelude::*;
+//! let x: Bits<10> = 32_u8.to_bits();
+//! ```
+//!
+//!
 //! # Operations
 //! Only a subset of operations are defined for [Bits].  These are the operations that can
 //! be synthesized in hardware without surprises (generally speaking).  In Rust, you can
 //! operate between [Bits] types and other [Bits] of the _same width_, or you can
-//! use integer literals.  *Be careful!* Especially when manipulating signed quantities.
+//! use integer literals.  *Be careful!* Especially when manipulating signed quantities.  Use the
+//! [Signed](crate::core::signed::Signed) type for those.
 //!
 //! ## Addition
 //! You can perform wrapping addition using the `+` operator.

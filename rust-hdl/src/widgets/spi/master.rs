@@ -181,10 +181,11 @@ impl<const N: usize> Logic for SPIMaster<N> {
                 }
             }
             SPIState::SampleMISO => {
-                self.register_in.d.next = self.register_in.q.val().replace_bit(
-                    self.pointer.q.val().index(),
-                    self.wires.miso.val(),
-                );
+                self.register_in.d.next = self
+                    .register_in
+                    .q
+                    .val()
+                    .replace_bit(self.pointer.q.val().index(), self.wires.miso.val());
                 self.clock_state.d.next = !self.clock_state.q.val();
                 self.state.d.next = SPIState::MIdle;
             }

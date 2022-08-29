@@ -7,7 +7,6 @@ struct MOSIPortTest {
     bridge: Bridge<16, 2, 2>,
     port_a: MOSIPort<16>,
     port_b: MOSIPort<16>,
-    clock: Signal<In, Clock>,
 }
 
 impl Default for MOSIPortTest {
@@ -17,7 +16,6 @@ impl Default for MOSIPortTest {
             bridge: Bridge::new(["port_a", "port_b"]),
             port_a: Default::default(),
             port_b: Default::default(),
-            clock: Default::default(),
         }
     }
 }
@@ -25,7 +23,6 @@ impl Default for MOSIPortTest {
 impl Logic for MOSIPortTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.bus.clock.next = self.clock.val();
         SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
         SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.port_b.bus);
@@ -48,30 +45,32 @@ fn test_port_test_works() {
     uut.port_b.ready.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Box<MOSIPortTest>| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<MOSIPortTest>| {
+        x.bus.clock.next = !x.bus.clock.val()
+    });
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
-        wait_clock_cycles!(sim, clock, x, 10);
-        wait_clock_true!(sim, clock, x);
+        wait_clock_cycles!(sim, bus.clock, x, 10);
+        wait_clock_true!(sim, bus.clock, x);
         x.bus.address.next = 1.into();
         x.bus.from_controller.next = 0xDEAD.into();
         x.bus.address_strobe.next = true;
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         x.bus.strobe.next = true;
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         x.bus.strobe.next = false;
         x.bus.address.next = 0.into();
         x.bus.from_controller.next = 0xBEEF.into();
         x.bus.address_strobe.next = true;
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         x.bus.strobe.next = true;
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         x.bus.strobe.next = false;
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
@@ -103,33 +102,35 @@ fn test_port_pipeline() {
     uut.port_b.ready.connect();
     uut.connect_all();
     let mut sim = Simulation::new();
-    sim.add_clock(5, |x: &mut Box<MOSIPortTest>| x.clock.next = !x.clock.val());
+    sim.add_clock(5, |x: &mut Box<MOSIPortTest>| {
+        x.bus.clock.next = !x.bus.clock.val()
+    });
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
-        wait_clock_cycles!(sim, clock, x, 10);
-        wait_clock_true!(sim, clock, x);
+        wait_clock_cycles!(sim, bus.clock, x, 10);
+        wait_clock_true!(sim, bus.clock, x);
         x.bus.address.next = 1.into();
         x.bus.address_strobe.next = true;
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         for val in [0xDEAD, 0xBEEF, 0xBABE, 0xCAFE] {
             x.bus.from_controller.next = val.into();
             x.bus.strobe.next = true;
-            wait_clock_cycle!(sim, clock, x);
+            wait_clock_cycle!(sim, bus.clock, x);
         }
         x.bus.strobe.next = false;
-        wait_clock_cycles!(sim, clock, x, 10);
+        wait_clock_cycles!(sim, bus.clock, x, 10);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortTest>| {
         let mut x = sim.init()?;
-        wait_clock_cycles!(sim, clock, x, 10);
+        wait_clock_cycles!(sim, bus.clock, x, 10);
         x.port_b.ready.next = true;
         for val in [0xDEAD, 0xBEEF, 0xBABE, 0xCAFE] {
             x = sim.watch(|x| x.port_b.strobe_out.val(), x)?;
             sim_assert!(sim, x.port_b.port_out.val() == val, x);
-            wait_clock_cycle!(sim, clock, x);
+            wait_clock_cycle!(sim, bus.clock, x);
         }
         sim.done(x)
     });
@@ -147,7 +148,6 @@ struct MOSIWidePortTest {
     bridge: Bridge<16, 2, 2>,
     port_a: MOSIWidePort<64, 16>,
     port_b: MOSIWidePort<64, 16>,
-    clock: Signal<In, Clock>,
 }
 
 impl Default for MOSIWidePortTest {
@@ -157,7 +157,6 @@ impl Default for MOSIWidePortTest {
             bridge: Bridge::new(["port_a", "port_b"]),
             port_a: Default::default(),
             port_b: Default::default(),
-            clock: Default::default(),
         }
     }
 }
@@ -171,7 +170,6 @@ impl HLSNamedPorts for MOSIWidePortTest {
 impl Logic for MOSIWidePortTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.bus.clock.next = self.clock.val();
         SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
         SoCPortController::<16>::join(&mut self.bridge.nodes[1], &mut self.port_b.bus);
@@ -192,26 +190,26 @@ fn test_wide_port_test_works() {
     uut.connect_all();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<MOSIWidePortTest>| {
-        x.clock.next = !x.clock.val()
+        x.bus.clock.next = !x.bus.clock.val()
     });
     sim.add_testbench(move |mut sim: Sim<MOSIWidePortTest>| {
         let mut x = sim.init()?;
-        wait_clock_true!(sim, clock, x);
+        wait_clock_true!(sim, bus.clock, x);
         x.bus.address.next = 0.into();
         x.bus.address_strobe.next = true;
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         for val in [0xDEAD, 0xBEEF, 0xCAFE, 0x1234] {
             x.bus.strobe.next = true;
             x.bus.from_controller.next = val.into();
-            wait_clock_cycle!(sim, clock, x);
+            wait_clock_cycle!(sim, bus.clock, x);
         }
         x.bus.strobe.next = false;
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         x.bus.address.next = 1.into();
         x.bus.address_strobe.next = true;
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         x.bus.address_strobe.next = false;
         x = sim.watch(|x| x.bus.ready.val(), x)?;
         for val in [
@@ -219,10 +217,10 @@ fn test_wide_port_test_works() {
         ] {
             x.bus.strobe.next = true;
             x.bus.from_controller.next = val.into();
-            wait_clock_cycle!(sim, clock, x);
+            wait_clock_cycle!(sim, bus.clock, x);
         }
         x.bus.strobe.next = false;
-        wait_clock_cycles!(sim, clock, x, 10);
+        wait_clock_cycles!(sim, bus.clock, x, 10);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<MOSIWidePortTest>| {
@@ -235,10 +233,10 @@ fn test_wide_port_test_works() {
         let mut x = sim.init()?;
         x = sim.watch(|x| x.port_b.strobe_out.val(), x)?;
         sim_assert!(sim, x.port_b.port_out.val() == 0xBABE5EA1FACEABCD, x);
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         x = sim.watch(|x| x.port_b.strobe_out.val(), x)?;
         sim_assert!(sim, x.port_b.port_out.val() == 0xBABACECE432189AB, x);
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         sim.done(x)
     });
     sim.run_traced(
@@ -254,7 +252,6 @@ struct MOSIPortFIFOTest {
     bus: SoCBusController<16, 2>,
     bridge: Bridge<16, 2, 1>,
     port_a: MOSIFIFOPort<16, 4, 5, 1>,
-    clock: Signal<In, Clock>,
 }
 
 impl Default for MOSIPortFIFOTest {
@@ -263,7 +260,6 @@ impl Default for MOSIPortFIFOTest {
             bus: Default::default(),
             bridge: Bridge::new(["port_a"]),
             port_a: Default::default(),
-            clock: Default::default(),
         }
     }
 }
@@ -277,7 +273,6 @@ impl HLSNamedPorts for MOSIPortFIFOTest {
 impl Logic for MOSIPortFIFOTest {
     #[hdl_gen]
     fn update(&mut self) {
-        self.bus.clock.next = self.clock.val();
         SoCBusController::<16, 2>::join(&mut self.bus, &mut self.bridge.upstream);
         SoCPortController::<16>::join(&mut self.bridge.nodes[0], &mut self.port_a.bus);
     }
@@ -300,28 +295,28 @@ fn test_mosi_port_fifo_works() {
     let mut sim = Simulation::new();
     let vals = [0xDEAD, 0xBEEF, 0xBABE, 0xCAFE];
     sim.add_clock(5, |x: &mut Box<MOSIPortFIFOTest>| {
-        x.clock.next = !x.clock.val()
+        x.bus.clock.next = !x.bus.clock.val()
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortFIFOTest>| {
         let mut x = sim.init()?;
-        wait_clock_true!(sim, clock, x);
+        wait_clock_true!(sim, bus.clock, x);
         x.bus.address.next = 0.into();
         x.bus.address_strobe.next = true;
-        wait_clock_cycle!(sim, clock, x);
+        wait_clock_cycle!(sim, bus.clock, x);
         x.bus.address_strobe.next = false;
         for val in vals.clone() {
             x = sim.watch(|x| x.bus.ready.val(), x)?;
             x.bus.from_controller.next = val.into();
             x.bus.strobe.next = true;
-            wait_clock_cycle!(sim, clock, x);
+            wait_clock_cycle!(sim, bus.clock, x);
             x.bus.strobe.next = false;
         }
-        wait_clock_cycles!(sim, clock, x, 100);
+        wait_clock_cycles!(sim, bus.clock, x, 100);
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<MOSIPortFIFOTest>| {
         let mut x = sim.init()?;
-        hls_fifo_read!(sim, clock, x, port_a.fifo_bus, &vals.clone());
+        hls_fifo_read!(sim, bus.clock, x, port_a.fifo_bus, &vals.clone());
         sim.done(x)
     });
     sim.run_traced(

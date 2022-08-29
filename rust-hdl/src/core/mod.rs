@@ -10,6 +10,7 @@ pub mod check_connected;
 pub mod check_error;
 pub mod check_logic_loops;
 pub mod check_timing;
+pub mod check_write_inputs;
 pub mod clock;
 pub mod code_writer;
 pub mod constant;

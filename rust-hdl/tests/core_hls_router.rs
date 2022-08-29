@@ -157,7 +157,6 @@ struct RouterTestSetup {
     pub upstream: SoCBusResponder<16, 8>,
     router: Router<16, 8, 3>,
     dev_a: [RouterTestDevice; 3],
-    clock: Signal<In, Clock>,
 }
 
 impl Default for RouterTestSetup {
@@ -168,7 +167,6 @@ impl Default for RouterTestSetup {
             upstream: Default::default(),
             router: Router::new(names, [&dev_a[0], &dev_a[1], &dev_a[2]]),
             dev_a,
-            clock: Default::default(),
         }
     }
 }
@@ -180,7 +178,6 @@ impl Logic for RouterTestSetup {
         for i in 0..3 {
             SoCBusController::<16, 8>::join(&mut self.router.nodes[i], &mut self.dev_a[i].upstream);
         }
-        self.upstream.clock.next = self.clock.val();
     }
 }
 
@@ -200,6 +197,7 @@ fn make_router_test_setup() -> RouterTestSetup {
 fn test_router_test_setup_synthesizes() {
     let uut = make_router_test_setup();
     let vlog = generate_verilog(&uut);
+    println!("{}", vlog);
     yosys_validate("router_test_setup", &vlog).unwrap();
 }
 
@@ -208,7 +206,7 @@ fn test_router_test_setup_works() {
     let uut = make_router_test_setup();
     let mut sim = Simulation::new();
     sim.add_clock(5, |x: &mut Box<RouterTestSetup>| {
-        x.clock.next = !x.clock.val()
+        x.upstream.clock.next = !x.upstream.clock.val()
     });
     let dataset = [
         0xBEAF, 0xDEED, 0xCAFE, 0xBABE, 0x1234, 0x5678, 0x900B, 0xB001, 0xDEAD, 0xBEEF, 0x5EA1,
@@ -216,25 +214,25 @@ fn test_router_test_setup_works() {
     ];
     sim.add_testbench(move |mut sim: Sim<RouterTestSetup>| {
         let mut x = sim.init()?;
-        wait_clock_true!(sim, clock, x);
+        wait_clock_true!(sim, upstream.clock, x);
         for address in 0..15 {
             // Sweep the address space...
             x.upstream.address.next = address.into();
             x.upstream.from_controller.next = dataset[address as usize].into();
             x.upstream.address_strobe.next = true;
-            wait_clock_cycle!(sim, clock, x);
+            wait_clock_cycle!(sim, upstream.clock, x);
             x.upstream.address_strobe.next = false;
             x = sim.watch(|x| x.upstream.ready.val(), x)?;
             x.upstream.strobe.next = true;
-            wait_clock_cycle!(sim, clock, x);
+            wait_clock_cycle!(sim, upstream.clock, x);
             x.upstream.strobe.next = false;
-            wait_clock_cycle!(sim, clock, x);
+            wait_clock_cycle!(sim, upstream.clock, x);
         }
         sim.done(x)
     });
     sim.add_testbench(move |mut sim: Sim<RouterTestSetup>| {
         let mut x = sim.init()?;
-        wait_clock_true!(sim, clock, x);
+        wait_clock_true!(sim, upstream.clock, x);
         for dev in 0..3 {
             for node in 0..5 {
                 x = sim.watch(
@@ -261,13 +259,13 @@ fn test_router_test_setup_works() {
                     dataset[dev * 5 + node],
                     x.dev_a[dev.clone()].mosi_ports[node.clone()].port_out.val()
                 );
-                sim_assert!(
+                sim_assert_eq!(
                     sim,
-                    x.dev_a[dev.clone()].mosi_ports[node.clone()].port_out.val()
-                        == dataset[dev * 5 + node],
+                    x.dev_a[dev.clone()].mosi_ports[node.clone()].port_out.val(),
+                    dataset[dev * 5 + node],
                     x
                 );
-                wait_clock_cycle!(sim, clock, x);
+                wait_clock_cycle!(sim, upstream.clock, x);
             }
         }
         sim.done(x)

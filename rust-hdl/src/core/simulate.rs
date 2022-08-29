@@ -3,7 +3,7 @@ use crossbeam::channel::{RecvError, SendError};
 
 use crate::core::block::Block;
 use crate::core::check_connected::check_connected;
-use crate::core::check_error::CheckError;
+use crate::core::check_error::{check_all, CheckError};
 use crate::core::check_logic_loops::check_logic_loops;
 use crate::core::vcd_probe::{write_vcd_change, write_vcd_dump, write_vcd_header};
 use std::io::Write;
@@ -256,8 +256,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
         }
     }
     pub fn run(&mut self, mut x: Box<T>, max_time: u64) -> Result<()> {
-        check_connected(x.as_mut())?;
-        check_logic_loops(x.as_mut())?;
+        check_all(x.as_mut())?;
         // First initialize the workers.
         for id in 0..self.workers.len() {
             x = self.dispatch(id, x)?;
@@ -289,8 +288,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
         result
     }
     pub fn run_traced<W: Write>(&mut self, mut x: Box<T>, max_time: u64, trace: W) -> Result<()> {
-        check_connected(x.as_mut())?;
-        check_logic_loops(x.as_mut())?;
+        check_all(x.as_mut())?;
         let mut vcd = write_vcd_header(trace, x.as_ref());
         // First initialize the workers.
         for id in 0..self.workers.len() {

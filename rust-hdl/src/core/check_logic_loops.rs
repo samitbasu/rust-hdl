@@ -1,7 +1,7 @@
 use crate::core::ast::{Verilog, VerilogExpression};
 use crate::core::atom::{Atom, AtomKind};
 use crate::core::block::Block;
-use crate::core::check_error::{CheckError, LogicLoop, LoopMap};
+use crate::core::check_error::{CheckError, PathedName, PathedNameList};
 use crate::core::named_path::NamedPath;
 use crate::core::probe::Probe;
 use crate::core::verilog_visitor::VerilogVisitor;
@@ -91,14 +91,14 @@ fn get_logic_loop_candidates(uut: &dyn Block) -> Vec<String> {
 struct LocalVars {
     path: NamedPath,
     names: Vec<HashSet<String>>,
-    loops: LoopMap,
+    loops: PathedNameList,
 }
 
 impl LocalVars {
     fn update_loops(&mut self, candidates: &[String]) {
         for candidate in candidates {
             if self.names.last().unwrap().contains(candidate) {
-                self.loops.push(LogicLoop {
+                self.loops.push(PathedName {
                     path: self.path.to_string(),
                     name: candidate.to_string(),
                 })
