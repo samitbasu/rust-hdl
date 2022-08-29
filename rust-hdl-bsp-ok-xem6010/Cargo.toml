@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-bsp-ok-xem6010"
-version = "0.5.2"
+version = "0.6.0"
 edition = "2021"
 license = "MIT"
 description = "Support crate for RustHDL - provides Board Support Package for the OpalKelly XEM6010 FPGA module (Spartan-6 based)"
