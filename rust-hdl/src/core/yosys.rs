@@ -13,7 +13,6 @@ pub enum SynthError {
     IOError(std::io::Error),
     WireHasNoDriver(Vec<String>),
     MissingModule(Vec<String>),
-    WritingToAnInputWire(Vec<String>),
 }
 
 impl From<std::io::Error> for SynthError {
@@ -70,12 +69,6 @@ pub fn yosys_validate(prefix: &str, translation: &str) -> Result<(), SynthError>
         return Err(SynthError::LatchingWriteToSignal(capture(
             &stdout,
             r#"Latch inferred for signal (\S*)"#,
-        )));
-    }
-    if stdout.contains("is assigned in a block") {
-        return Err(SynthError::WritingToAnInputWire(capture(
-            &stdout,
-            r#"wire (\S*) is assigned in a block"#,
         )));
     }
     if stdout.contains("is used but has no driver") {
