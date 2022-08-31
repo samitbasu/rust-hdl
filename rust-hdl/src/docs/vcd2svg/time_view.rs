@@ -1,6 +1,6 @@
 use crate::docs::vcd2svg::interval::Interval;
 use crate::docs::vcd2svg::renderable::Renderable;
-use crate::docs::vcd2svg::timed_value::TimedValue;
+use crate::docs::vcd2svg::timed_value::{SignalType, TimedValue};
 use substring::Substring;
 
 #[derive(Clone, Debug)]
@@ -14,10 +14,7 @@ impl TimeView {
     pub fn map(&self, time: u64) -> f64 {
         (self.start_time.max(time).min(self.end_time) - self.start_time) as f64 * self.pixel_scale
     }
-    pub fn intervals<T: PartialEq + Clone + Renderable>(
-        &self,
-        vals: &[TimedValue<T>],
-    ) -> Vec<Interval<T>> {
+    pub fn intervals<T: SignalType>(&self, vals: &[TimedValue<T>]) -> Vec<Interval<T>> {
         vals.windows(2)
             .map(|x| {
                 let end_x = self.map(x[1].time);

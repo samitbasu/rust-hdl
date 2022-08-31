@@ -169,7 +169,8 @@ impl Logic for ADS8688Simulator {
                 if self.spi_slave.transfer_done.val() {
                     self.spi_slave.continued_transaction.next = true;
                     self.spi_slave.bits.next = 8.into();
-                    self.spi_slave.data_outbound.next = bit_cast::<64, 8>(self.reg_ram.read_data.val());
+                    self.spi_slave.data_outbound.next =
+                        bit_cast::<64, 8>(self.reg_ram.read_data.val());
                     self.spi_slave.start_send.next = true;
                     self.state.d.next = State::WaitSlaveIdle;
                 }
@@ -474,7 +475,7 @@ fn test_pipelined_conversion() {
         // Loop over the channels.  For each one, initiate a command to select
         // the next channel, and capture the current value as the previous
         // channel conversion.
-        let mut conversion = 0.into();
+        let mut conversion;
         for ndx in 1..8 {
             let cmd = (0xC0 + (ndx << 2)) << 16;
             (conversion, x) = do_spi_txn(24, cmd, false, x, &mut sim)?;

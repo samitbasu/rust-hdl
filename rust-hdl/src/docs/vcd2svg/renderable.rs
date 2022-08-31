@@ -16,3 +16,13 @@ impl Renderable for String {
         self.clone()
     }
 }
+
+impl Renderable for bool {
+    fn render(&self) -> String {
+        if *self {
+            "1".to_string()
+        } else {
+            "0".to_string()
+        }
+    }
+}

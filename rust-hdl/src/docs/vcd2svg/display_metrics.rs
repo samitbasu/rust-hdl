@@ -1,6 +1,6 @@
 use crate::docs::vcd2svg::renderable::Renderable;
 use crate::docs::vcd2svg::time_view::TimeView;
-use crate::docs::vcd2svg::timed_value::{changes, TimedValue};
+use crate::docs::vcd2svg::timed_value::{changes, SignalType, TimedValue};
 use crate::docs::vcd2svg::utils::{line, rect, time_label};
 use crate::docs::vcd2svg::vcd_style::VCDStyle;
 use svg::node::element::path::Data;
@@ -280,7 +280,7 @@ impl DisplayMetrics {
         ))
     }
 
-    pub(crate) fn vector_signal_plot<T: PartialEq + Clone + Renderable>(
+    pub(crate) fn vector_signal_plot<T: SignalType>(
         &self,
         index: usize,
         values: &[TimedValue<T>],

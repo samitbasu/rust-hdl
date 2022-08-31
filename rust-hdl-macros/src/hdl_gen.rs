@@ -272,7 +272,6 @@ fn hdl_compute(m: &syn::Expr) -> Result<TS> {
         Expr::Call(call) => hdl_call(call),
         Expr::MethodCall(method) => hdl_method(method),
         Expr::Lit(lit) => hdl_literal(lit),
-        Expr::Cast(cast) => hdl_cast(&cast),
         Expr::Index(_ndx) => {
             let ndx_expanded = common::fixup_ident(quote!(#m).to_string());
             Ok(quote!(ast::VerilogExpression::Signal(#ndx_expanded.to_string())))
@@ -339,14 +338,6 @@ fn hdl_literal(lit: &syn::ExprLit) -> Result<TS> {
     }))
 }
 
-fn hdl_cast(cast: &syn::ExprCast) -> Result<TS> {
-    let expr = hdl_compute(cast.expr.as_ref())?;
-    let dtype = cast.ty.as_ref();
-    Ok(quote!({
-       ast::VerilogExpression::Cast(Box::new(#expr), #dtype::bits())
-    }))
-}
-
 fn hdl_join_or_link(call: &syn::ExprCall, name: &str) -> Result<TS> {
     if let Expr::Path(p) = &call.func.as_ref() {
         let mut call_path = p.path.clone();
@@ -389,11 +380,6 @@ fn hdl_call(call: &syn::ExprCall) -> Result<TS> {
         || funcname.starts_with("Bits")
     {
         hdl_compute(&call.args[0])
-    } else if funcname.starts_with("all_true") {
-        let arg = hdl_compute(&call.args[0])?;
-        Ok(quote!({
-        ast::VerilogExpression::Unary(ast::VerilogOpUnary::All, Box::new(#arg))
-        }))
     } else if squash(&funcname).contains("::join") {
         hdl_join_or_link(call, "join")
     } else if squash(&funcname).contains("::link") {

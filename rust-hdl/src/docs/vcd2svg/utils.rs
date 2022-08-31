@@ -42,7 +42,7 @@ pub fn value_to_bigint(v: &[Value]) -> Result<BigInt, anyhow::Error> {
             Err(e) => Err(e),
         })
         .collect::<Result<Vec<_>, _>>()?;
-    Ok(BigInt::from_radix_le(Sign::Plus, &bits, 2).unwrap())
+    Ok(BigInt::from_radix_be(Sign::Plus, &bits, 2).unwrap())
 }
 
 pub fn value_to_bool(v: &Value) -> Result<bool, anyhow::Error> {
