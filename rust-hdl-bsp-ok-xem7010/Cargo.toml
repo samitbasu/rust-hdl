@@ -13,7 +13,7 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
 rust-hdl = {path="../rust-hdl", version= "^0.38.0" }
-rust-hdl-fpga-support = {path="../rust-hdl-fpga-support", version= "^0.7.0" }
+rust-hdl-fpga-support = {path="../rust-hdl-fpga-support", version= "^0.8.0" }
 rust-hdl-ok-core = {path="../rust-hdl-ok-core", version= "^0.9.0" }
 rust-hdl-ok-frontpanel-sys = {path="../rust-hdl-ok-frontpanel-sys", version= "^0.7.0" }
 rand = {version="0.8.1"}
