@@ -403,3 +403,20 @@ fn test_local_logic_loop_detection() {
         panic!("Error mismatch on loop detector")
     }
 }
+
+#[test]
+fn not_example() {
+    #[derive(LogicBlock)]
+    struct Foo {
+        pub sig1: Signal<In, Bit>,
+        pub sig2: Signal<Out, Bit>,
+    }
+
+    impl Logic for Foo {
+        #[hdl_gen]
+        fn update(&mut self) {
+            // Pretend to be a NOT gate!
+            self.sig2.next = !self.sig1.val();
+        }
+    }
+}
