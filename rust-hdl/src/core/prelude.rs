@@ -36,6 +36,7 @@ pub use crate::core::signed::ToSignedBits;
 pub use crate::core::signed::{
     signed, signed_bit_cast, signed_cast, unsigned_bit_cast, unsigned_cast, Signed,
 };
+pub use crate::core::simulate::sim_time;
 pub use crate::core::simulate::simulate;
 pub use crate::core::simulate::SIMULATION_TIME_ONE_SECOND;
 pub use crate::core::simulate::{Sim, SimError, Simulation};
