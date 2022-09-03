@@ -1977,7 +1977,7 @@
 //! ```
 //!
 
-use crate::docs::vcd2svg::vcd_to_svg;
+#![warn(missing_docs)]
 
 ///! The core RustHDL module.  Defines variable width bits, signals, logical blocks, etc.
 pub mod core;

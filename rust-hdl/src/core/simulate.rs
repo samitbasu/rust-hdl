@@ -2,13 +2,20 @@ use crossbeam::channel::{bounded, Receiver, Sender};
 use crossbeam::channel::{RecvError, SendError};
 
 use crate::core::block::Block;
-use crate::core::check_connected::check_connected;
 use crate::core::check_error::{check_all, CheckError};
-use crate::core::check_logic_loops::check_logic_loops;
 use crate::core::vcd_probe::{write_vcd_change, write_vcd_dump, write_vcd_header};
 use std::io::Write;
 use std::thread::JoinHandle;
 
+/// Update changes to a circuit until it stabilizes
+///
+/// # Arguments
+///
+/// * `uut` - reference to the circuit - must implement the [Block] trait
+/// * `max_iters` - the maximum number of iterations to try and stabilize the circuit
+///
+/// Returns `true` if the circuit stabilizes, and `false` if not.  Generally you won't
+/// need this function directly.
 pub fn simulate<B: Block>(uut: &mut B, max_iters: usize) -> bool {
     for _ in 0..max_iters {
         uut.update_all();
@@ -20,12 +27,19 @@ pub fn simulate<B: Block>(uut: &mut B, max_iters: usize) -> bool {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+/// The error type returned by a simulation
 pub enum SimError {
+    /// The simulation terminated prematurely (i.e., something went wrong)
     SimTerminated,
+    /// The simulation reached the maximum allowed time for the simulation
     MaxTimeReached,
+    /// The simulation halted - usually this means an assertion failed
     SimHalted,
+    /// The circuit failed to converge.  This means the logic has some issue (like an oscillation).
     FailedToConverge,
+    /// Something went wrong with the circuit check (either a missing connection or other issue, like a latching write).
     Check(CheckError),
+    /// The simulation panicked.  This usually means `.unwrap` was called on a result in the testbench.
     SimPanic,
 }
 
@@ -47,6 +61,7 @@ impl<T> From<SendError<T>> for SimError {
     }
 }
 
+/// Result type used by the simulation routines.
 pub type Result<T> = std::result::Result<T, SimError>;
 
 enum TriggerType<T> {
@@ -73,8 +88,13 @@ struct Worker<T> {
     kind: TriggerType<T>,
 }
 
+/// The [CustomLogicFn] is a boxed function that can be used to implement
+/// things (like tri-state buffers or open collector shared busses) that
+/// are otherwise difficult or impossible to model.
 pub type CustomLogicFn<T> = Box<dyn Fn(&mut T) -> ()>;
 
+/// This type represents a simulation over a circuit `T`.   To simulate
+/// a circuit, you will need to construct one of these structs.
 pub struct Simulation<T> {
     workers: Vec<Worker<T>>,
     recv: Receiver<MessageOrPanic<T>>,
@@ -84,6 +104,9 @@ pub struct Simulation<T> {
     custom_logic: Vec<CustomLogicFn<T>>,
 }
 
+/// The `Sim` struct is used to communicate with a simulation.  Every testbench
+/// will be provided with a copy of this struct, and will use it to communicate
+/// with the core simulation.
 pub struct Sim<T> {
     time: u64,
     to_sim: Sender<MessageOrPanic<T>>,
@@ -97,7 +120,14 @@ struct NextTime {
     halted: bool,
 }
 
+impl<T: Send + 'static + Block> Default for Simulation<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T: Send + 'static + Block> Simulation<T> {
+    /// Construct a simulation struct
     pub fn new() -> Simulation<T> {
         let (send, recv) = bounded(0);
         Self {
@@ -109,6 +139,33 @@ impl<T: Send + 'static + Block> Simulation<T> {
             custom_logic: vec![],
         }
     }
+    /// Add a clock function to the simulation
+    ///
+    /// # Arguments
+    ///
+    /// * `interval` - the number of picoseconds between calls to the clock closure
+    /// * `clock_fn` - a closure to change the clock state of the circuit
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use rust_hdl::prelude::*;
+    ///
+    /// #[derive(LogicBlock)]
+    /// struct Foo {
+    ///    pub clock: Signal<In, Clock>
+    /// }
+    ///
+    /// impl Logic for Foo {
+    ///   #[hdl_gen]
+    ///   fn update(&mut self) {
+    ///   }
+    /// }
+    ///
+    /// let mut sim = Simulation::default();
+    /// sim.add_clock(5, |x| x.clock = !x.clock); // Toggles the clock every 5 picoseconds.
+    /// ```
+    ///
     pub fn add_clock<F>(&mut self, interval: u64, clock_fn: F)
     where
         F: Fn(&mut Box<T>) -> () + Send + 'static + std::panic::RefUnwindSafe,
@@ -121,6 +178,39 @@ impl<T: Send + 'static + Block> Simulation<T> {
             }
         });
     }
+    /// Add a phased clock to the simulation
+    ///
+    /// Sometimes you will need to control the phasing of a clock so that it starts at some
+    /// non-zero time. This method allows you to add a clock to a simulation and control the
+    /// initial delay.
+    ///
+    /// # Arguments
+    ///
+    /// * `interval` - the delay in picoseconds between the clock function being called
+    /// * `phase_delay` - the number of picoseconds to wait before the clock starts being toggled
+    /// * `clock_fn` - the function that toggles the actual clock.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use rust_hdl::prelude::*;
+    ///
+    /// #[derive(LogicBlock)]
+    /// struct Foo {
+    ///    pub clock: Signal<In, Clock>
+    /// }
+    ///
+    /// impl Logic for Foo {
+    ///   #[hdl_gen]
+    ///   fn update(&mut self) {
+    ///   }
+    /// }
+    ///
+    /// let mut sim = Simulation::default();
+    /// // Toggles every 5 picoseconds, starting after 15 picoseconds
+    /// sim.add_phased_clock(5, 15, |x| x.clock = !x.clock);
+    /// ```
+    ///
     pub fn add_phased_clock<F>(&mut self, interval: u64, phase_delay: u64, clock_fn: F)
     where
         F: Fn(&mut Box<T>) -> () + Send + 'static + std::panic::RefUnwindSafe,
@@ -134,6 +224,16 @@ impl<T: Send + 'static + Block> Simulation<T> {
             }
         });
     }
+    /// Add a testbench to the simulation
+    ///
+    /// # Arguments
+    ///
+    /// * `testbench` - a testbench function that will be executed through the
+    /// simulation.  Needs to return a simulation [Result], be [Send] and
+    /// [RefUnwindSafe] (no FFI).
+    ///
+    /// # Example
+    ///
     pub fn add_testbench<F>(&mut self, testbench: F)
     where
         F: Fn(Sim<T>) -> Result<()> + Send + 'static + std::panic::RefUnwindSafe,
