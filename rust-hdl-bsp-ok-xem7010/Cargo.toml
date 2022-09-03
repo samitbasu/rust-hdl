@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-bsp-ok-xem7010"
-version = "0.8.0"
+version = "0.8.1"
 edition = "2021"
 license = "MIT"
 description = "Support crate for RustHDL - provides Board Support Package for the OpalKelly XEM7010 module (Artix-7 based)"
