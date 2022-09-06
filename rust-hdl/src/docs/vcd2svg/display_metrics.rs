@@ -145,7 +145,6 @@ impl DisplayMetrics {
     }
 
     fn timescale_major_tick(&self, major: u64) -> Option<Path> {
-        dbg!(self.major_x0(major));
         if let Some(x0) = self.major_x0(major) {
             Some(line(
                 x0,
@@ -243,10 +242,8 @@ impl DisplayMetrics {
     pub(crate) fn timescale(&self, mut document: SVG) -> SVG {
         let first_major_tick =
             (self.min_time as f64 / self.compute_major_tick_delta_t() as f64).floor() as u64;
-        dbg!(first_major_tick);
         let last_major_tick =
             (self.max_time as f64 / self.compute_major_tick_delta_t() as f64).ceil() as u64;
-        dbg!(last_major_tick);
         let delt = self.compute_major_tick_delta_t();
         for major in first_major_tick..=last_major_tick {
             if let Some(major_line) = self.timescale_major_gridline(major) {

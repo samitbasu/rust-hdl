@@ -162,8 +162,8 @@ impl<T: Send + 'static + Block> Simulation<T> {
     ///   }
     /// }
     ///
-    /// let mut sim = Simulation::default();
-    /// sim.add_clock(5, |x| x.clock = !x.clock); // Toggles the clock every 5 picoseconds.
+    /// let mut sim : Simulation<Foo> = Default::default();
+    /// sim.add_clock(5, |x| x.clock.next = !x.clock.val()); // Toggles the clock every 5 picoseconds.
     /// ```
     ///
     pub fn add_clock<F>(&mut self, interval: u64, clock_fn: F)
@@ -206,9 +206,9 @@ impl<T: Send + 'static + Block> Simulation<T> {
     ///   }
     /// }
     ///
-    /// let mut sim = Simulation::default();
+    /// let mut sim : Simulation<Foo> = Default::default();
     /// // Toggles every 5 picoseconds, starting after 15 picoseconds
-    /// sim.add_phased_clock(5, 15, |x| x.clock = !x.clock);
+    /// sim.add_phased_clock(5, 15, |x| x.clock.next = !x.clock.val());
     /// ```
     ///
     pub fn add_phased_clock<F>(&mut self, interval: u64, phase_delay: u64, clock_fn: F)

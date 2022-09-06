@@ -50,9 +50,7 @@
 //!
 //! ```
 //! use std::time::Duration;
-//! use rust_hdl::core::prelude::*;
-//! use rust_hdl::docs::vcd2svg::vcd_to_svg;
-//! use rust_hdl::widgets::prelude::*;
+//! use rust_hdl::prelude::*;
 //!
 //! const CLOCK_SPEED_HZ : u64 = 10_000;
 //!
