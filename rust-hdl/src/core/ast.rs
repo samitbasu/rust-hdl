@@ -299,7 +299,9 @@ use std::fmt::{Display, Formatter, LowerHex};
 /// variant, since that is easier to use in most cases.
 #[derive(Debug, Clone)]
 pub struct BlackBox {
+    /// The Verilog code to create the black box in your firmware
     pub code: String,
+    /// The name of the black box IP module.
     pub name: String,
 }
 
@@ -551,10 +553,17 @@ pub struct BlackBox {
 ///
 #[derive(Debug, Clone)]
 pub struct Wrapper {
+    /// The Verilog code to instantiate the black box core, and connect
+    /// its inputs to the argument of the current LogicBlock kernel.
     pub code: String,
+    /// Blackbox core declarations needed by some synthesis tools (like yosys)
     pub cores: String,
 }
 
+
+/// The [Verilog] type is used to represent the Verilog translation of a
+/// RustHDL kernel.  You will only need it if implementing blackbox cores
+/// or wrapping external Verilog code.
 #[derive(Debug, Clone)]
 pub enum Verilog {
     /// Use [Empty] when you do not want a module represented in Verilog at all

@@ -2,7 +2,6 @@ use crate::core::ast::{Verilog, VerilogExpression};
 use crate::core::atom::{Atom, AtomKind};
 use crate::core::block::Block;
 use crate::core::check_error::{CheckError, PathedName, PathedNameList};
-use crate::core::prelude::SimError::Check;
 use crate::core::prelude::{NamedPath, VerilogVisitor};
 use crate::core::probe::Probe;
 use std::collections::HashSet;
@@ -135,6 +134,29 @@ impl Probe for CheckInputsNotDriven {
     }
 }
 
+
+/// Check a circuit to make sure that `Signal`s of type `In` are 
+/// not written by the HDL kernel.  In RustHDL, you are not allowed
+/// to write to input signals from within a module.
+/// ```rust
+/// use rust_hdl::prelude::*;
+/// use rust_hdl::core::check_write_inputs::check_inputs_not_written;
+/// 
+/// #[derive(LogicBlock, Default)]
+/// struct BadGuy {
+///    pub in1: Signal<In, Bit>,
+/// }
+/// 
+/// impl Logic for BadGuy {
+///    #[hdl_gen]
+///    fn update(&mut self) {
+///       self.in1.next = false; // <-- rustc is OK with this, but RustHDL is not.
+///    }
+/// }
+/// 
+/// let mut uut = BadGuy::default(); uut.connect_all();
+/// assert!(check_inputs_not_written(&uut).is_err());
+/// ```
 pub fn check_inputs_not_written(uut: &dyn Block) -> Result<(), CheckError> {
     let mut visitor = CheckInputsNotDriven::default();
     uut.accept("uut", &mut visitor);

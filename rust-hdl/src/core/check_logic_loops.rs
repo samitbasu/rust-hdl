@@ -14,7 +14,7 @@ enum Mode {
     Write,
 }
 
-pub struct VerilogLogicLoopDetector {
+struct VerilogLogicLoopDetector {
     local_vars_written: HashSet<String>,
     mode: Mode,
     violations: Vec<String>,
@@ -139,6 +139,32 @@ impl Probe for LocalVars {
     }
 }
 
+/// Check a circuit for logical loops.  Logic loops are circular 
+/// dependencies in the logic that are neither simulateable nor
+/// synthesizable.  For example
+/// ```rust
+/// use rust_hdl::prelude::*;
+/// use rust_hdl::core::check_logic_loops::check_logic_loops;
+/// 
+/// #[derive(LogicBlock, Default)]
+/// struct Circle {
+///    in1: Signal<In, Bit>,
+///    loc: Signal<Local, Bit>,
+///    out: Signal<Out, Bit>,
+/// }
+/// 
+/// impl Logic for Circle {
+///     #[hdl_gen]
+///     fn update(&mut self) {
+///         self.loc.next = self.out.val();
+///         self.out.next = self.loc.val();  // <-- head scratcher...
+///     }
+/// }
+/// 
+/// let mut uut = Circle::default(); uut.connect_all();
+/// assert!(check_logic_loops(&uut).is_err());
+/// ```
+/// 
 pub fn check_logic_loops(uut: &dyn Block) -> Result<(), CheckError> {
     let mut visitor = LocalVars::default();
     uut.accept("uut", &mut visitor);

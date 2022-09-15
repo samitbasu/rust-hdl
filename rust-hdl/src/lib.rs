@@ -1983,6 +1983,7 @@ pub mod core;
 pub mod docs;
 ///! A series of High Level Synthesis blocks used to build System-on-Chip designs quickly.
 pub mod hls;
+///! Prelude module defines common symbols to make importing RustHDL easier.
 pub mod prelude;
 ///! Module that contains all code related to simulating RustHDL designs in Rust (i.e., without
 ///! an external Verilog simulator).

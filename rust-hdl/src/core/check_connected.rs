@@ -1,6 +1,6 @@
 use crate::core::atom::Atom;
 use crate::core::block::Block;
-use crate::core::check_error::{CheckError, OpenConnection, OpenMap};
+use crate::core::check_error::{CheckError, PathedName, OpenMap};
 use crate::core::named_path::NamedPath;
 use crate::core::probe::Probe;
 
@@ -26,7 +26,7 @@ impl Probe for CheckConnected {
         if !(signal.connected() | is_top_scope) {
             self.failures.insert(
                 signal.id(),
-                OpenConnection {
+                PathedName {
                     path: self.path.to_string(),
                     name: name.to_string(),
                 },
@@ -43,6 +43,30 @@ impl Probe for CheckConnected {
     }
 }
 
+
+/// Check to see if a circuit is properly connected (no undriven inputs, or
+/// multiply-driven outputs).  You can call this directly on a circuit of yours
+/// if you want to check that it is correctly connected internally.  
+/// ```rust
+/// use rust_hdl::prelude::*;
+/// 
+/// #[derive(LogicBlock, Default)]
+/// struct Broken {
+///     pub I: Signal<In, Bit>,
+///     pub O: Signal<Out, Bit>,
+/// }
+/// 
+/// impl Logic for Broken {
+///    #[hdl_gen]
+///    fn update(&mut self) {
+///       // Purposely left blank... circuit is broken!
+///    }
+/// }
+/// 
+/// let mut uut = TopWrap::new(Broken::default()); // <- we use TopWrap since we want Broken to not be the top
+/// uut.connect_all();
+/// assert!(check_connected(&uut).is_err())
+/// ```
 pub fn check_connected(uut: &dyn Block) -> Result<(), CheckError> {
     let mut visitor = CheckConnected::default();
     uut.accept("uut", &mut visitor);

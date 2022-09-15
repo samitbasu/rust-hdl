@@ -1,4 +1,4 @@
-pub struct CodeWriter {
+pub(crate) struct CodeWriter {
     lines: Vec<(usize, String)>,
     // Each line consists of an indent level and a string of text
     indent: usize,
@@ -7,7 +7,7 @@ pub struct CodeWriter {
 }
 
 impl CodeWriter {
-    pub fn new() -> CodeWriter {
+    pub(crate) fn new() -> CodeWriter {
         CodeWriter {
             lines: vec![],
             indent: 0,
@@ -15,23 +15,23 @@ impl CodeWriter {
         }
     }
 
-    pub fn push(&mut self) {
+    pub(crate) fn push(&mut self) {
         self.indent += 1
     }
 
-    pub fn pop(&mut self) {
+    pub(crate) fn pop(&mut self) {
         self.indent -= 1
     }
 
-    pub fn next(&mut self) {
+    pub(crate) fn next(&mut self) {
         self.add_line("")
     }
 
-    pub fn add_line<S: AsRef<str>>(&mut self, val: S) {
+    pub(crate) fn add_line<S: AsRef<str>>(&mut self, val: S) {
         self.lines.push((self.indent, String::from(val.as_ref())))
     }
 
-    pub fn add<S: AsRef<str>>(&mut self, val: S) {
+    pub(crate) fn add<S: AsRef<str>>(&mut self, val: S) {
         let temp = String::from(val.as_ref());
         let pieces = temp.split_terminator("\n");
         for piece in pieces {
@@ -39,16 +39,16 @@ impl CodeWriter {
         }
     }
 
-    pub fn write<S: AsRef<str>>(&mut self, val: S) {
+    pub(crate) fn write<S: AsRef<str>>(&mut self, val: S) {
         self.buffer += val.as_ref()
     }
 
-    pub fn writeln<S: AsRef<str>>(&mut self, val: S) {
+    pub(crate) fn writeln<S: AsRef<str>>(&mut self, val: S) {
         self.write(val);
         self.flush();
     }
 
-    pub fn flush(&mut self) {
+    pub(crate) fn flush(&mut self) {
         let line = self.buffer.clone();
         self.add(&line);
         self.buffer.clear()
