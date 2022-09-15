@@ -371,6 +371,30 @@ fn test_write_to_inputs_forbidden() {
 }
 
 #[test]
+fn test_undriven_outputs_forbidden() {
+    #[derive(LogicBlock, Default)]
+    struct OutputUndrivenTest {
+        pub in1: Signal<In, Bit>,
+        pub out1: Signal<Out, Bit>,
+        pub out2: Signal<Out, Bit>,
+    }
+
+    impl Logic for OutputUndrivenTest {
+        #[hdl_gen]
+        fn update(&mut self) {
+            self.out1.next = self.in1.val();
+        }
+    }
+
+    let mut uut = OutputUndrivenTest::default(); uut.connect_all();
+    if let Err(CheckError::OpenSignal(map)) = check_all(&uut) {
+        assert!(map.iter().any(|x| x.1.path == "uut" && x.1.name == "out2"));
+    } else {
+        panic!("Undriven signal undetected!");
+    }
+}
+
+#[test]
 fn test_local_logic_loop_detection() {
     #[derive(LogicBlock, Default)]
     struct LoopTest {

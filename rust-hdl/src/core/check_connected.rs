@@ -1,4 +1,5 @@
 use crate::core::atom::Atom;
+use crate::core::atom::AtomKind;
 use crate::core::block::Block;
 use crate::core::check_error::{CheckError, PathedName, OpenMap};
 use crate::core::named_path::NamedPath;
@@ -23,7 +24,9 @@ impl Probe for CheckConnected {
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
         let is_top_scope = self.path.to_string().eq("uut");
-        if !(signal.connected() | is_top_scope) {
+        if !(signal.connected() | (is_top_scope & 
+            [AtomKind::InputParameter, AtomKind::InOutParameter].contains(&signal.kind())
+        )) {
             self.failures.insert(
                 signal.id(),
                 PathedName {

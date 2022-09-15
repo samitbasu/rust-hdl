@@ -23,10 +23,6 @@ impl CodeWriter {
         self.indent -= 1
     }
 
-    pub(crate) fn next(&mut self) {
-        self.add_line("")
-    }
-
     pub(crate) fn add_line<S: AsRef<str>>(&mut self, val: S) {
         self.lines.push((self.indent, String::from(val.as_ref())))
     }

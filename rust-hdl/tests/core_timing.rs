@@ -152,5 +152,5 @@ fn test_check_timing() {
     //    uut.data.link_connect_dest();
     //    uut.iface.link_connect_dest();
     dut.connect_all();
-    check_connected(&dut);
+    let _ = check_connected(&dut);
 }
