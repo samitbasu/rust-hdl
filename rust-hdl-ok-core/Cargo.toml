@@ -12,7 +12,7 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl = {version= "^0.38.0", path="../rust-hdl"}
+rust-hdl = {version= "^0.39.0", path="../rust-hdl"}
 rust-hdl-fpga-support = {version= "^0.8.0", path="../rust-hdl-fpga-support"}
 rust-hdl-ok-frontpanel-sys = {version= "0.8.0", path="../rust-hdl-ok-frontpanel-sys"}
 regex = "1.5.4"
