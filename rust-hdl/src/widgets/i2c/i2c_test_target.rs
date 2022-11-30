@@ -17,10 +17,8 @@ enum State {
 // The memory is 16 bits wide, and there are 16 addresses.
 #[derive(LogicBlock)]
 pub struct I2CTestTarget {
-    // The I2C data line.  Must have an external pullup
-    pub sda: Signal<InOut, Bit>,
-    // The I2C Clock line.  Must have an external pullup
-    pub scl: Signal<InOut, Bit>,
+    // The I2C data lines must have external pullups.
+    pub i2c: I2CBusDriver,
     pub clock: Signal<In, Clock>,
     phy: I2CTarget,
     mem: RAM<Bits<16>, 4>,
@@ -36,8 +34,7 @@ impl I2CTestTarget {
     pub fn new(address: u8) -> Self {
         assert_eq!(address & 0x80, 0, "I2C addresses must be 7 bits");
         Self {
-            sda: Default::default(),
-            scl: Default::default(),
+            i2c: Default::default(),
             clock: Default::default(),
             phy: Default::default(),
             mem: Default::default(),
@@ -54,8 +51,7 @@ impl I2CTestTarget {
 impl Logic for I2CTestTarget {
     #[hdl_gen]
     fn update(&mut self) {
-        Signal::<InOut, Bit>::link(&mut self.sda, &mut self.phy.sda);
-        Signal::<InOut, Bit>::link(&mut self.scl, &mut self.phy.scl);
+        I2CBusDriver::link(&mut self.i2c, &mut self.phy.i2c);
         // Clock internal logic
         clock!(self, clock, phy);
         self.mem.read_clock.next = self.clock.val();

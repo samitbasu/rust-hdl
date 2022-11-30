@@ -23,7 +23,6 @@ pub use crate::widgets::fifo::sync_fifo::SynchronousFIFO;
 pub use crate::widgets::i2c::i2c_driver::I2CConfig;
 pub use crate::widgets::i2c::i2c_target::I2CTarget;
 pub use crate::widgets::mac_fir::MultiplyAccumulateSymmetricFiniteImpulseResponseFilter;
-pub use crate::widgets::open_drain::OpenDrainBuffer;
 pub use crate::widgets::png::lfsr::LFSRSimple;
 pub use crate::widgets::pulser::Pulser;
 pub use crate::widgets::pwm::PulseWidthModulator;
@@ -51,3 +50,5 @@ pub use crate::widgets::tristate::TristateBuffer;
 pub use crate::{
     i2c_begin_read, i2c_begin_write, i2c_end_transmission, i2c_read, i2c_read_last, i2c_write,
 };
+pub use crate::widgets::open_drain::*;
+pub use crate::widgets::i2c::i2c_bus::*;

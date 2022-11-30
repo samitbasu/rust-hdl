@@ -28,10 +28,7 @@ enum State {
 
 #[derive(LogicBlock)]
 pub struct I2CController {
-    // The I2C data line.  Must have an external pullup
-    pub sda: Signal<InOut, Bit>,
-    // The I2C clock line.  Must have an external pullup
-    pub scl: Signal<InOut, Bit>,
+    pub i2c: I2CBusDriver,
     pub clock: Signal<In, Clock>,
     pub cmd: Signal<In, I2CControllerCmd>,
     pub run: Signal<In, Bit>,
@@ -54,8 +51,7 @@ pub struct I2CController {
 impl I2CController {
     pub fn new(config: I2CConfig) -> Self {
         Self {
-            sda: Default::default(),
-            scl: Default::default(),
+            i2c: Default::default(),
             clock: Default::default(),
             cmd: Default::default(),
             run: Default::default(),
@@ -80,8 +76,7 @@ impl I2CController {
 impl Logic for I2CController {
     #[hdl_gen]
     fn update(&mut self) {
-        Signal::<InOut, Bit>::link(&mut self.sda, &mut self.driver.sda);
-        Signal::<InOut, Bit>::link(&mut self.scl, &mut self.driver.scl);
+        I2CBusDriver::link(&mut self.i2c, &mut self.driver.i2c);
         clock!(self, clock, driver);
         dff_setup!(self, clock, counter, read_data, write_data, state, started, last_read);
         self.driver.run.next = false;
@@ -238,32 +233,33 @@ fn test_i2c_controller_synthesizes() {
     yosys_validate("i2ccontroller", &vlog).unwrap()
 }
 
+// TODO - this probably needs some clean up
 #[derive(LogicBlock)]
 struct I2CControllerTest {
     clock: Signal<In, Clock>,
     controller: I2CController,
     target_1: I2CTestTarget,
     target_2: I2CTestTarget,
-    pullup_sda: TristateBuffer<Bit>,
-    pullup_scl: TristateBuffer<Bit>,
+    bus_sda: Signal<Local, Bit>,
+    bus_scl: Signal<Local, Bit>,
 }
 
 impl Logic for I2CControllerTest {
     #[hdl_gen]
     fn update(&mut self) {
         clock!(self, clock, controller, target_1, target_2);
-        Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.controller.scl);
-        Signal::<InOut, Bit>::join(&mut self.pullup_sda.bus, &mut self.controller.sda);
-        Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.target_1.scl);
-        Signal::<InOut, Bit>::join(&mut self.pullup_sda.bus, &mut self.target_1.sda);
-        Signal::<InOut, Bit>::join(&mut self.controller.sda, &mut self.target_1.sda);
-        Signal::<InOut, Bit>::join(&mut self.controller.scl, &mut self.target_1.scl);
-        Signal::<InOut, Bit>::join(&mut self.pullup_scl.bus, &mut self.target_2.scl);
-        Signal::<InOut, Bit>::join(&mut self.pullup_sda.bus, &mut self.target_2.sda);
-        Signal::<InOut, Bit>::join(&mut self.controller.sda, &mut self.target_2.sda);
-        Signal::<InOut, Bit>::join(&mut self.controller.scl, &mut self.target_2.scl);
-        self.pullup_scl.write_data.next = true;
-        self.pullup_sda.write_data.next = true;
+        self.bus_sda.next = !(self.controller.i2c.sda.drive_low.val()
+            | self.target_1.i2c.sda.drive_low.val()
+            | self.target_2.i2c.sda.drive_low.val());
+        self.bus_scl.next = !(self.controller.i2c.scl.drive_low.val()
+            | self.target_1.i2c.scl.drive_low.val()
+            | self.target_2.i2c.scl.drive_low.val());
+        self.controller.i2c.sda.line_state.next = self.bus_sda.val();
+        self.controller.i2c.scl.line_state.next = self.bus_scl.val();
+        self.target_1.i2c.sda.line_state.next = self.bus_sda.val();
+        self.target_2.i2c.sda.line_state.next = self.bus_sda.val();
+        self.target_1.i2c.scl.line_state.next = self.bus_scl.val();
+        self.target_2.i2c.scl.line_state.next = self.bus_scl.val();        
     }
 }
 
@@ -278,8 +274,8 @@ impl Default for I2CControllerTest {
             controller: I2CController::new(config),
             target_1: I2CTestTarget::new(0x53),
             target_2: I2CTestTarget::new(0x57),
-            pullup_sda: Default::default(),
-            pullup_scl: Default::default(),
+            bus_sda: Default::default(),
+            bus_scl: Default::default(),
         }
     }
 }
@@ -287,7 +283,6 @@ impl Default for I2CControllerTest {
 #[test]
 fn test_i2c_controller_operation() {
     use rand::Rng;
-
     struct TestCase {
         address: u8,
         reg_index: u8,
@@ -312,22 +307,15 @@ fn test_i2c_controller_operation() {
     uut.controller.cmd.connect();
     uut.controller.run.connect();
     uut.controller.write_data_in.connect();
-    uut.pullup_scl.write_enable.connect();
-    uut.pullup_sda.write_enable.connect();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
+    //println!("{}", vlog);
+    let foo = I2CBusDriver::default();
+    dbg!(I2CBusDriver::join_hdl("me", "foo", "bar"));
     yosys_validate("i2c_controller", &vlog).unwrap();
     let mut sim = Simulation::new();
     sim.add_clock(500_000, |x: &mut Box<I2CControllerTest>| {
         x.clock.next = !x.clock.val()
-    });
-    sim.add_custom_logic(|x| {
-        x.pullup_sda.write_enable.next = !x.controller.sda.is_driving_tristate()
-            & !x.target_1.sda.is_driving_tristate()
-            & !x.target_2.sda.is_driving_tristate();
-        x.pullup_scl.write_enable.next = !x.controller.scl.is_driving_tristate()
-            & !x.target_1.scl.is_driving_tristate()
-            & !x.target_2.scl.is_driving_tristate();
     });
     sim.add_testbench(move |mut sim: Sim<I2CControllerTest>| {
         let mut x = sim.init()?;

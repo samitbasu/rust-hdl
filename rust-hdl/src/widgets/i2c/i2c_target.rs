@@ -21,8 +21,7 @@ enum State {
 
 #[derive(LogicBlock, Default)]
 pub struct I2CTarget {
-    pub sda: Signal<InOut, Bit>,
-    pub scl: Signal<InOut, Bit>,
+    pub i2c: I2CBusDriver,
     pub clock: Signal<In, Clock>,
     pub from_bus: Signal<Out, Bits<8>>,
     pub bus_write: Signal<Out, Bit>,
@@ -34,8 +33,6 @@ pub struct I2CTarget {
     pub nack: Signal<Out, Bit>,
     pub write_ok: Signal<Out, Bit>,
     state: DFF<State>,
-    sda_driver: OpenDrainBuffer,
-    scl_driver: OpenDrainBuffer,
     scl_is_high: Signal<Local, Bit>,
     sda_is_high: Signal<Local, Bit>,
     sda_flop: DFF<Bit>,
@@ -49,15 +46,13 @@ pub struct I2CTarget {
 impl Logic for I2CTarget {
     #[hdl_gen]
     fn update(&mut self) {
-        Signal::<InOut, Bit>::link(&mut self.sda, &mut self.sda_driver.bus);
-        Signal::<InOut, Bit>::link(&mut self.scl, &mut self.scl_driver.bus);
         // Clock the internal structures
         dff_setup!(self, clock, state, sda_flop, read_bit, count, accum);
         // Latch prevention
-        self.scl_driver.enable.next = false;
-        self.sda_driver.enable.next = self.sda_flop.q.val();
-        self.sda_is_high.next = self.sda_driver.read_data.val();
-        self.scl_is_high.next = self.scl_driver.read_data.val();
+        self.i2c.scl.drive_low.next = false;
+        self.i2c.sda.drive_low.next = self.sda_flop.q.val();
+        self.sda_is_high.next = self.i2c.sda.line_state.val();
+        self.scl_is_high.next = self.i2c.scl.line_state.val();
         self.set_sda.next = false;
         self.clear_sda.next = false;
         self.from_bus.next = self.accum.q.val();

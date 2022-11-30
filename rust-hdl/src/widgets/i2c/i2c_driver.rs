@@ -38,8 +38,7 @@ enum State {
 // Implement the bit-bang I2C interface as reported on Wikipedia
 #[derive(LogicBlock)]
 pub struct I2CDriver {
-    pub sda: Signal<InOut, Bit>,
-    pub scl: Signal<InOut, Bit>,
+    pub i2c: I2CBusDriver,
     pub clock: Signal<In, Clock>,
     pub cmd: Signal<In, I2CDriverCmd>,
     pub run: Signal<In, Bit>,
@@ -49,8 +48,6 @@ pub struct I2CDriver {
     pub read_valid: Signal<Out, Bit>,
     state: DFF<State>,
     delay: Shot<32>,
-    sda_driver: OpenDrainBuffer,
-    scl_driver: OpenDrainBuffer,
     sda_is_high: Signal<Local, Bit>,
     scl_is_high: Signal<Local, Bit>,
     sda_flop: DFF<Bit>,
@@ -64,18 +61,16 @@ pub struct I2CDriver {
 impl Logic for I2CDriver {
     #[hdl_gen]
     fn update(&mut self) {
-        Signal::<InOut, Bit>::link(&mut self.sda, &mut self.sda_driver.bus);
-        Signal::<InOut, Bit>::link(&mut self.scl, &mut self.scl_driver.bus);
         dff_setup!(self, clock, state, sda_flop, scl_flop);
         clock!(self, clock, delay);
         // Latch avoidance and default conditions
         self.delay.trigger.next = false;
-        self.sda_driver.enable.next = self.sda_flop.q.val();
-        self.scl_driver.enable.next = self.scl_flop.q.val();
+        self.i2c.sda.drive_low.next = self.sda_flop.q.val();
+        self.i2c.scl.drive_low.next = self.scl_flop.q.val();
         self.error.next = false;
         // Helpers to make the code more readable
-        self.sda_is_high.next = self.sda_driver.read_data.val();
-        self.scl_is_high.next = self.scl_driver.read_data.val();
+        self.sda_is_high.next = self.i2c.sda.line_state.val();
+        self.scl_is_high.next = self.i2c.scl.line_state.val();
         self.set_scl.next = false;
         self.clear_scl.next = false;
         self.set_sda.next = false;
@@ -219,7 +214,7 @@ impl Logic for I2CDriver {
                     // if (read_SDA() == 0) {
                     //    arbitration_lost();
                     // }
-                    if !self.sda_driver.read_data.val() {
+                    if !self.i2c.sda.line_state.val() {
                         self.state.d.next = State::Error;
                     } else {
                         self.state.d.next = State::Idle;
@@ -251,15 +246,12 @@ impl Logic for I2CDriver {
 impl I2CDriver {
     pub fn new(config: I2CConfig) -> I2CDriver {
         I2CDriver {
-            sda: Default::default(),
-            scl: Default::default(),
+            i2c: Default::default(),
             clock: Default::default(),
             cmd: Default::default(),
             run: Default::default(),
             busy: Default::default(),
             delay: Shot::new(config.clock_speed_hz, config.delay_time),
-            sda_driver: Default::default(),
-            scl_driver: Default::default(),
             sda_is_high: Default::default(),
             state: Default::default(),
             error: Default::default(),

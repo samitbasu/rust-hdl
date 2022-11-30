@@ -84,7 +84,7 @@ fn get_link_hdl(fields: Vec<TS>, field_types: Vec<TS>) -> Result<TS> {
     Ok(quote! {
         fn link_hdl(my_name: &str, this: &str, that: &str) -> Vec<ast::VerilogLink> {
             let mut ret = vec![];
-            #(ret.extend(<#field_types>::link_hdl(#fields_as_strings, this, that));)*
+            #(ret.extend(<#field_types>::link_hdl(&format!("{}.{}", my_name, #fields_as_strings), this, that));)*
             ret
         }
     })
@@ -95,7 +95,7 @@ fn get_join_hdl(fields: Vec<TS>, field_types: Vec<TS>) -> Result<TS> {
     Ok(quote! {
         fn join_hdl(my_name: &str, this: &str, that: &str) -> Vec<ast::VerilogLink> {
             let mut ret = vec![];
-            #(ret.extend(<#field_types>::join_hdl(#fields_as_strings, this, that));)*
+            #(ret.extend(<#field_types>::join_hdl(&format!("{}.{}", my_name, #fields_as_strings), this, that));)*
             ret
         }
     })
