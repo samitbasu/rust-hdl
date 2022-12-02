@@ -52,3 +52,4 @@ pub use crate::{
 };
 pub use crate::widgets::open_drain::*;
 pub use crate::widgets::i2c::i2c_bus::*;
+pub use crate::widgets::i2c::i2c_test_target::*;

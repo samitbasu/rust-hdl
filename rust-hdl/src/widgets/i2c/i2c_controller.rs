@@ -4,6 +4,8 @@ use crate::widgets::i2c::i2c_test_target::I2CTestTarget;
 use crate::widgets::prelude::*;
 use std::time::Duration;
 
+use super::i2c_test_target::I2CTestBus;
+
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 pub enum I2CControllerCmd {
     Noop,
@@ -240,26 +242,16 @@ struct I2CControllerTest {
     controller: I2CController,
     target_1: I2CTestTarget,
     target_2: I2CTestTarget,
-    bus_sda: Signal<Local, Bit>,
-    bus_scl: Signal<Local, Bit>,
+    test_bus: I2CTestBus<3>,
 }
 
 impl Logic for I2CControllerTest {
     #[hdl_gen]
     fn update(&mut self) {
         clock!(self, clock, controller, target_1, target_2);
-        self.bus_sda.next = !(self.controller.i2c.sda.drive_low.val()
-            | self.target_1.i2c.sda.drive_low.val()
-            | self.target_2.i2c.sda.drive_low.val());
-        self.bus_scl.next = !(self.controller.i2c.scl.drive_low.val()
-            | self.target_1.i2c.scl.drive_low.val()
-            | self.target_2.i2c.scl.drive_low.val());
-        self.controller.i2c.sda.line_state.next = self.bus_sda.val();
-        self.controller.i2c.scl.line_state.next = self.bus_scl.val();
-        self.target_1.i2c.sda.line_state.next = self.bus_sda.val();
-        self.target_2.i2c.sda.line_state.next = self.bus_sda.val();
-        self.target_1.i2c.scl.line_state.next = self.bus_scl.val();
-        self.target_2.i2c.scl.line_state.next = self.bus_scl.val();        
+        I2CBusDriver::join(&mut self.controller.i2c, &mut self.test_bus.endpoints[0]);
+        I2CBusDriver::join(&mut self.target_1.i2c, &mut self.test_bus.endpoints[1]);
+        I2CBusDriver::join(&mut self.target_2.i2c, &mut self.test_bus.endpoints[2]);
     }
 }
 
@@ -274,8 +266,7 @@ impl Default for I2CControllerTest {
             controller: I2CController::new(config),
             target_1: I2CTestTarget::new(0x53),
             target_2: I2CTestTarget::new(0x57),
-            bus_sda: Default::default(),
-            bus_scl: Default::default(),
+            test_bus: Default::default(),
         }
     }
 }

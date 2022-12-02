@@ -1,5 +1,42 @@
+use array_init::array_init;
+
 use crate::core::prelude::*;
 use crate::widgets::prelude::*;
+
+
+#[derive(LogicBlock)]
+pub struct I2CTestBus<const N: usize> {
+    pub endpoints: [I2CBusReceiver; N],
+    pub sda_state: Signal<Local, Bit>,
+    pub scl_state: Signal<Local, Bit>,
+}
+
+impl<const N: usize> Default for I2CTestBus<N> {
+    fn default() -> Self {
+        Self {
+            endpoints: array_init(|_| Default::default() ),
+            sda_state: Default::default(),
+            scl_state: Default::default(),
+        }
+    }
+}
+
+impl<const N: usize> Logic for I2CTestBus<N> {
+    #[hdl_gen]
+    fn update(&mut self) {
+        self.sda_state.next = true;
+        self.scl_state.next = true;
+        for ndx in 0..N {
+            self.sda_state.next = self.sda_state.val() & !self.endpoints[ndx].sda.drive_low.val();
+            self.scl_state.next = self.scl_state.val() & !self.endpoints[ndx].scl.drive_low.val();
+        }
+        for ndx in 0..N {
+            self.endpoints[ndx].sda.line_state.next = self.sda_state.val();
+            self.endpoints[ndx].scl.line_state.next = self.scl_state.val();
+        }
+    }
+}
+
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum State {
