@@ -14,6 +14,6 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 [dependencies]
 rust-hdl = {version= "^0.40.0", path="../rust-hdl"}
 rust-hdl-fpga-support = {version= "^0.10.0", path="../rust-hdl-fpga-support"}
-rust-hdl-ok-frontpanel-sys = {version= "0.9.0", path="../rust-hdl-ok-frontpanel-sys"}
+rust-hdl-ok-frontpanel-sys = {version= "0.10.0", path="../rust-hdl-ok-frontpanel-sys"}
 regex = "1.5.4"
 rand = "0.8.5"
