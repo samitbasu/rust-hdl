@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-ok-core"
-version = "0.13.0"
+version = "0.13.1"
 edition = "2021"
 license = "MIT"
 description = "Generic support code for OpalKelly based FPGA modules that use the FrontPanel HDL interface"
