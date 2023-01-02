@@ -1,5 +1,4 @@
 use rust_hdl::core::prelude::*;
-use rust_hdl::core::signed::ToSignedBits;
 
 #[derive(LogicBlock)]
 struct CircuitSigned {

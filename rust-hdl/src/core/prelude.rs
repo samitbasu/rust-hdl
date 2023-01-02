@@ -45,7 +45,6 @@ pub use crate::core::synth::VCDValue;
 pub use crate::core::type_descriptor::{TypeDescriptor, TypeField, TypeKind};
 pub use crate::core::vcd_probe::{write_vcd_change, write_vcd_dump, write_vcd_header};
 pub use crate::core::verilog_gen::filter_blackbox_directives;
-pub use crate::core::verilog_gen::VerilogCodeGenerator;
 pub use crate::core::verilog_visitor::VerilogVisitor;
 pub use crate::core::yosys::*;
 pub use crate::dff_setup;

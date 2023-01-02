@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Copy, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub struct BitVec<const N: usize> {
     bits: [bool; N],
 }
@@ -15,7 +15,7 @@ impl<const N: usize> BitVec<N> {
         let mut ret = 0_u128;
         for i in 0..N {
             if self.bits[N - 1 - i] {
-                ret = ret | (1 << (N - 1 - i));
+                ret |= 1 << (N - 1 - i);
             }
         }
         ret
@@ -42,7 +42,7 @@ impl<const N: usize> BitVec<N> {
     pub fn xor(&self) -> bool {
         let mut ret = false;
         for i in 0..N {
-            ret = ret ^ self.bits[i];
+            ret ^= self.bits[i];
         }
         ret
     }
@@ -53,16 +53,16 @@ impl<const N: usize> BitVec<N> {
     }
 
     pub fn replace_bit(&self, ndx: usize, val: bool) -> BitVec<N> {
-        let mut t = self.bits.clone();
+        let mut t = self.bits;
         t[ndx] = val;
         BitVec { bits: t }
     }
 
     pub fn resize<const M: usize>(&self) -> BitVec<M> {
         let mut t = [false; M];
-        for i in 0..M.min(N) {
+        (0..M.min(N)).for_each(|i| {
             t[i] = self.bits[i];
-        }
+        });
         BitVec { bits: t }
     }
 }
@@ -72,9 +72,9 @@ impl<const N: usize> std::ops::Shr<usize> for BitVec<N> {
 
     fn shr(self, rhs: usize) -> Self::Output {
         let mut bits = [false; N];
-        for i in rhs..N {
+        (rhs..N).for_each(|i| {
             bits[i - rhs] = self.bits[i];
-        }
+        });
         Self { bits }
     }
 }
@@ -93,9 +93,9 @@ impl<const N: usize> std::ops::Shl<usize> for BitVec<N> {
 
     fn shl(self, rhs: usize) -> Self::Output {
         let mut bits = [false; N];
-        for i in rhs..N {
+        (rhs..N).for_each(|i| {
             bits[i] = self.bits[i - rhs];
-        }
+        });
         Self { bits }
     }
 }
@@ -138,9 +138,9 @@ impl<const N: usize> std::ops::Not for BitVec<N> {
 
     fn not(self) -> Self::Output {
         let mut bits = [false; N];
-        for i in 0..N {
+        (0..N).for_each(|i| {
             bits[i] = !self.bits[i];
-        }
+        });
         Self { bits }
     }
 }
@@ -161,13 +161,13 @@ impl<const N: usize> std::ops::Add<BitVec<N>> for BitVec<N> {
     fn add(self, rhs: BitVec<N>) -> Self::Output {
         let mut carry = false;
         let mut bits = [false; N];
-        for i in 0..N {
+        (0..N).for_each(|i| {
             let a = self.bits[i];
             let b = rhs.bits[i];
             let c_i = carry;
             bits[i] = a ^ b ^ c_i;
             carry = (a & b) | (b & c_i) | (a & c_i);
-        }
+        });
         Self { bits }
     }
 }
@@ -177,17 +177,6 @@ impl<const N: usize> std::ops::Sub<BitVec<N>> for BitVec<N> {
 
     fn sub(self, rhs: BitVec<N>) -> Self::Output {
         self + !rhs + 1_u32.into()
-    }
-}
-
-impl<const N: usize> std::cmp::PartialEq for BitVec<N> {
-    fn eq(&self, other: &Self) -> bool {
-        for i in 0..N {
-            if self.bits[i] != other.bits[i] {
-                return false;
-            }
-        }
-        true
     }
 }
 
@@ -213,9 +202,9 @@ impl<const N: usize> BitVec<N> {
         T: Fn(&bool, &bool) -> bool,
     {
         let mut bits = [false; N];
-        for i in 0..N {
+        (0..N).for_each(|i| {
             bits[i] = op(&self.bits[i], &rhs.bits[i]);
-        }
+        });
         Self { bits }
     }
 }
@@ -227,7 +216,7 @@ macro_rules! define_vec_from_uint {
                 let mut bits = [false; N];
                 for i in 0..N {
                     bits[i] = (x & 1) != 0;
-                    x = x >> 1;
+                    x >>= 1;
                 }
                 Self { bits }
             }
@@ -253,8 +242,8 @@ macro_rules! define_uint_from_vec {
             fn from(t: BitVec<N>) -> Self {
                 let mut x: $name = 0;
                 for i in 0..N {
-                    x = x << 1;
-                    x = x | if t.bits[N - 1 - i] { 1 } else { 0 }
+                    x <<= 1;
+                    x |= if t.bits[N - 1 - i] { 1 } else { 0 }
                 }
                 x
             }
@@ -270,14 +259,14 @@ macro_rules! define_int_from_vec {
                 let mut x: $name = 0;
                 if t.bits[N - 1] {
                     for i in 0..N {
-                        x = x << 1;
-                        x = x | if t.bits[N - 1 - i] { 0 } else { 1 }
+                        x <<= 1;
+                        x |= if t.bits[N - 1 - i] { 0 } else { 1 }
                     }
                     x = -x + 1
                 } else {
                     for i in 0..N {
-                        x = x << 1;
-                        x = x | if t.bits[N - 1 - i] { 1 } else { 0 }
+                        x <<= 1;
+                        x |= if t.bits[N - 1 - i] { 1 } else { 0 }
                     }
                 }
                 x

@@ -19,19 +19,16 @@ pub enum AtomKind {
 
 impl AtomKind {
     pub fn is_parameter(&self) -> bool {
-        match self {
+        matches!(
+            self,
             AtomKind::InputParameter
-            | AtomKind::OutputParameter
-            | AtomKind::InOutParameter
-            | AtomKind::OutputPassthrough => true,
-            _ => false,
-        }
+                | AtomKind::OutputParameter
+                | AtomKind::InOutParameter
+                | AtomKind::OutputPassthrough
+        )
     }
     pub fn is_stub(&self) -> bool {
-        match self {
-            AtomKind::StubInputSignal | AtomKind::StubOutputSignal => true,
-            _ => false,
-        }
+        matches!(self, AtomKind::StubInputSignal | AtomKind::StubOutputSignal)
     }
 }
 
@@ -49,19 +46,13 @@ pub trait Atom {
 }
 
 pub fn is_atom_an_enum(atom: &dyn Atom) -> bool {
-    match atom.descriptor().kind {
-        TypeKind::Enum(_) => true,
-        _ => false,
-    }
+    matches!(atom.descriptor().kind, TypeKind::Enum(_))
 }
 
 pub fn is_atom_signed(atom: &dyn Atom) -> bool {
-    match atom.descriptor().kind {
-        TypeKind::Signed(_) => true,
-        _ => false,
-    }
+    matches!(atom.descriptor().kind, TypeKind::Signed(_))
 }
 
 pub fn get_atom_typename(atom: &dyn Atom) -> String {
-    atom.descriptor().name.to_string()
+    atom.descriptor().name
 }

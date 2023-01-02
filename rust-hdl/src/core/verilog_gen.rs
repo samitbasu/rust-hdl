@@ -15,21 +15,14 @@ struct LoopVariable {
     value: usize,
 }
 
-pub struct VerilogCodeGenerator {
+#[derive(Default)]
+struct VerilogCodeGenerator {
     io: CodeWriter,
     loops: Vec<LoopVariable>,
     links: Vec<VerilogLink>,
 }
 
 impl VerilogCodeGenerator {
-    pub fn new() -> VerilogCodeGenerator {
-        Self {
-            io: CodeWriter::new(),
-            loops: vec![],
-            links: vec![],
-        }
-    }
-
     fn array_index_simplification(&self, a: &str) -> String {
         let re = Regex::new(r"\[([^\]]*)\]").unwrap();
         let mut context = evalexpr::HashMapContext::new();
@@ -84,13 +77,13 @@ impl ToString for VerilogCodeGenerator {
 }
 
 pub fn verilog_link_extraction(code: &VerilogBlock) -> Vec<VerilogLink> {
-    let mut gen = VerilogCodeGenerator::new();
+    let mut gen = VerilogCodeGenerator::default();
     gen.visit_block(code);
     gen.links
 }
 
 pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
-    let mut gen = VerilogCodeGenerator::new();
+    let mut gen = VerilogCodeGenerator::default();
     gen.visit_block(code);
     format!("always @(*) {}\n", gen.to_string())
 }

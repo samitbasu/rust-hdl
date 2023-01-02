@@ -17,9 +17,9 @@ pub(crate) fn get_impl_for_logic_struct(input: &syn::DeriveInput) -> Result<TS> 
     let mut prev_field = vec![];
     for ndx in 0..fields.len() {
         let mut previous_fields = vec![];
-        for prev in 0..ndx {
+        (0..ndx).for_each(|prev| {
             previous_fields.push(field_types[prev].clone());
-        }
+        });
         prev_field.push(quote!(#(+<#previous_fields>::BITS)*));
     }
     let (impl_generics, ty_generics, _where_clause) = &input.generics.split_for_impl();
