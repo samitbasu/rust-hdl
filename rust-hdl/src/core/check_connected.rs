@@ -1,7 +1,7 @@
 use crate::core::atom::Atom;
 use crate::core::atom::AtomKind;
 use crate::core::block::Block;
-use crate::core::check_error::{CheckError, PathedName, OpenMap};
+use crate::core::check_error::{CheckError, OpenMap, PathedName};
 use crate::core::named_path::NamedPath;
 use crate::core::probe::Probe;
 
@@ -24,15 +24,21 @@ impl Probe for CheckConnected {
 
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
         let is_top_scope = self.path.to_string().eq("uut");
-        if !(signal.connected() | (is_top_scope & 
-            [AtomKind::InputParameter, AtomKind::InOutParameter].contains(&signal.kind())
-        )) {
+        let signal_is_connected = signal.connected();
+        let signal_is_input =
+            [AtomKind::InputParameter, AtomKind::InOutParameter].contains(&signal.kind());
+        if !(signal_is_connected | (signal_is_input && is_top_scope)) {
+            dbg!(&signal.kind());
             self.failures.insert(
                 signal.id(),
-                PathedName {
+                dbg!(PathedName {
                     path: self.path.to_string(),
-                    name: name.to_string(),
-                },
+                    name: if self.namespace.is_empty() {
+                        name.to_string()
+                    } else {
+                        format!("{}${name}", self.namespace.to_string())
+                    }
+                }),
             );
         }
     }
@@ -46,26 +52,25 @@ impl Probe for CheckConnected {
     }
 }
 
-
 /// Check to see if a circuit is properly connected (no undriven inputs, or
 /// multiply-driven outputs).  You can call this directly on a circuit of yours
 /// if you want to check that it is correctly connected internally.  
 /// ```rust
 /// use rust_hdl::prelude::*;
-/// 
+///
 /// #[derive(LogicBlock, Default)]
 /// struct Broken {
 ///     pub I: Signal<In, Bit>,
 ///     pub O: Signal<Out, Bit>,
 /// }
-/// 
+///
 /// impl Logic for Broken {
 ///    #[hdl_gen]
 ///    fn update(&mut self) {
 ///       // Purposely left blank... circuit is broken!
 ///    }
 /// }
-/// 
+///
 /// let mut uut = TopWrap::new(Broken::default()); // <- we use TopWrap since we want Broken to not be the top
 /// uut.connect_all();
 /// assert!(check_connected(&uut).is_err())

@@ -61,14 +61,17 @@ impl<T: Synth> Signal<Out, T> {
     }
 }
 
-// Only the input signal gets connected in a JOIN
 impl<T: Synth> LogicJoin for Signal<In, T> {
     fn join_connect(&mut self) {
         self.connect();
     }
 }
 
-impl<T: Synth> LogicJoin for Signal<Out, T> {}
+impl<T: Synth> LogicJoin for Signal<Out, T> {
+    fn join_connect(&mut self) {
+        self.connect();
+    }
+}
 
 impl<T: Synth> LogicJoin for Signal<InOut, T> {
     fn join_connect(&mut self) {

@@ -17,7 +17,7 @@ pub struct VivadoOptions {
 impl Default for VivadoOptions {
     fn default() -> Self {
         Self {
-            vivado_path: env!("VIVADO_PATH", "Path to vivado").to_string(),
+            vivado_path: env!("VIVADO_PATH", "Path to vivado executable").to_string(),
             add_mig: true,
             assets: [
                 "okLibrary.v",
@@ -34,7 +34,7 @@ impl Default for VivadoOptions {
             .iter()
             .map(|x| {
                 format!(
-                    "{}/XEM7010-A50/Vivado-2016/{}",
+                    "{}/XEM7010-A50/Vivado-2021/{}",
                     env!("FP_PATH", "Path to FrontPanelHDL"),
                     x
                 )
@@ -177,7 +177,7 @@ r##"<?xml version='1.0' encoding='UTF-8'?>
     </Controller>
 </Project>
 "##).unwrap();
-    format!("create_ip  -vlnv xilinx.com:ip:mig_7series:4.1 -module_name mig7
+    format!("create_ip  -vlnv xilinx.com:ip:mig_7series:4.* -module_name mig7
 set_property -dict [list CONFIG.XML_INPUT_FILE {{ {mig_path} }} CONFIG.RESET_BOARD_INTERFACE {{Custom}} CONFIG.MIG_DONT_TOUCH_PARAM {{Custom}} CONFIG.BOARD_MIG_PARAM {{Custom}}] [get_ips mig7]
 generate_target {{instantiation_template}} [get_files mig7.xci]", mig_path=mig_path.canonicalize().unwrap().to_string_lossy())
 }

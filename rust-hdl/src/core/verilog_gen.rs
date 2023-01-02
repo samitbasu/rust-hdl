@@ -29,7 +29,7 @@ impl VerilogCodeGenerator {
         for lvar in &self.loops {
             let _ = context.set_value(lvar.variable.clone(), (lvar.value as i64).into());
         }
-        for x in re.captures(a) {
+        if let Some(x) = re.captures(a) {
             if x.len() == 2 {
                 if let Some(txt) = x.get(1) {
                     let arg = evalexpr::eval_with_context(txt.as_str(), &context).unwrap();
@@ -294,7 +294,7 @@ fn test_array_replacement() {
     let captures = re.captures(test);
     let mut context = evalexpr::HashMapContext::new();
     context.set_value("i".to_string(), 5.into()).unwrap();
-    for x in re.captures(test) {
+    if let Some(x) = re.captures(test) {
         println!("Match {:?}", x);
         if x.len() == 2 {
             if let Some(txt) = x.get(1) {

@@ -4,12 +4,13 @@ use rust_hdl::core::prelude::*;
 struct CircuitSigned {
     x: Signal<In, Signed<32>>,
     y: Constant<Signed<32>>,
+    z: Signal<Out, Signed<32>>,
 }
 
 impl Logic for CircuitSigned {
     #[hdl_gen]
     fn update(&mut self) {
-        self.x.next = self.x.val();
+        self.z.next = self.x.val() + self.y.val();
     }
 }
 
@@ -18,6 +19,7 @@ impl Default for CircuitSigned {
         Self {
             x: Default::default(),
             y: Constant::new(Signed::from(-4935)),
+            z: Default::default(),
         }
     }
 }

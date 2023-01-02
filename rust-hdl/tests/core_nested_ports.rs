@@ -98,13 +98,9 @@ fn test_write_modules_nested_ports() {
     defines.defines();
     let code = uut.hdl();
     let mut sig = SignalLister {};
-    let mut gen = VerilogCodeGenerator::new();
     if let rust_hdl::core::ast::Verilog::Combinatorial(q) = code {
         sig.visit_block(&q);
-        gen.visit_block(&q);
     }
-    println!("Code");
-    println!("{}", gen.to_string());
     let mut jnk = File::create(vcd_path!("test.vcd")).unwrap();
     let dev = write_vcd_header(&mut jnk, &uut);
     let _dev = write_vcd_dump(dev, &uut);
