@@ -457,9 +457,7 @@ impl<const N: usize> From<BigUint> for Bits<N> {
             x.to_u64().unwrap().into()
         } else {
             let mut ret = [false; N];
-            for i in 0..N {
-                ret[i] = x.bit(i as u64)
-            }
+            (0..N).for_each(|i| ret[i] = x.bit(i as u64));
             Bits::Long(ret.into())
         }
     }
@@ -745,10 +743,10 @@ pub fn bit_cast<const M: usize, const N: usize>(x: Bits<N>) -> Bits<M> {
 }
 
 #[doc(hidden)]
-impl<const N: usize> Into<VCDValue> for Bits<N> {
-    fn into(self) -> VCDValue {
+impl<const N: usize> From<Bits<N>> for VCDValue {
+    fn from(val: Bits<N>) -> Self {
         if N == 1 {
-            if self.get_bit(0) {
+            if val.get_bit(0) {
                 VCDValue::Single(vcd::Value::V1)
             } else {
                 VCDValue::Single(vcd::Value::V0)
@@ -756,7 +754,7 @@ impl<const N: usize> Into<VCDValue> for Bits<N> {
         } else {
             let mut x = vec![];
             for i in 0..N {
-                if self.get_bit(N - 1 - i) {
+                if val.get_bit(N - 1 - i) {
                     x.push(vcd::Value::V1)
                 } else {
                     x.push(vcd::Value::V0)
@@ -865,6 +863,12 @@ impl<const N: usize> Bits<N> {
     /// ```
     pub fn len(&self) -> usize {
         N
+    }
+
+    #[inline(always)]
+    /// Return true if this [Bits] contains no actual bits (i.e., N = 0).
+    pub fn is_empty(&self) -> bool {
+        N == 0
     }
 
     /// Compute the number of possible values that a [Bits]
@@ -1068,7 +1072,7 @@ impl<const N: usize> Bits<N> {
             N
         );
         let x: LiteralType = self.into();
-        x as u64
+        x
     }
 
     /// Convert [Bits] to an [u128].
@@ -1111,7 +1115,7 @@ impl From<bool> for Bits<1> {
     }
 }
 
-impl Into<bool> for Bits<1> {
+impl From<Bits<1>> for bool {
     #[inline(always)]
     /// Convenience method for converting a 1-bit
     /// width [Bits] value into a boolean value.
@@ -1121,8 +1125,8 @@ impl Into<bool> for Bits<1> {
     /// let y : bool = x.into();
     /// assert!(y)
     /// ```
-    fn into(self) -> bool {
-        self.get_bit(0)
+    fn from(val: Bits<1>) -> Self {
+        val.get_bit(0)
     }
 }
 
@@ -1619,7 +1623,7 @@ mod tests {
     fn test_bit_extract_long() {
         let a: Bits<48> = 0xdead_cafe_babe.into();
         let b: Bits<44> = a.get_bits(4);
-        assert_eq!(b, 0xdead_cafe_bab);
+        assert_eq!(b, 0x0dea_dcaf_ebab);
         let b: Bits<32> = a.get_bits(16);
         assert_eq!(b, 0xdead_cafe);
     }
@@ -1636,12 +1640,12 @@ mod tests {
     fn test_set_bits() {
         let a: Bits<16> = 0xdead.into();
         let b: Bits<4> = 0xf.into();
-        let mut c = a.clone();
+        let mut c = a;
         c.set_bits(4, b);
         assert_eq!(c, 0xdefd);
         let a: Bits<48> = 0xdead_cafe_babe.into();
         let b: Bits<8> = 0xde.into();
-        let mut c = a.clone();
+        let mut c = a;
         c.set_bits(16, b);
         assert_eq!(c, 0xdead_cade_babe);
     }
@@ -1746,7 +1750,7 @@ mod tests {
                 assert_eq!(y_any, z_any)
             }
             let y = Bits::<N>::default();
-            assert_eq!(y.any(), false);
+            assert!(!y.any());
         });
     }
 
@@ -1757,11 +1761,11 @@ mod tests {
                 let y: Bits<N> = random_bits();
                 let z : BigUint = y.into();
                 let y_all = y.all();
-                let z_all = z.count_ones() == N as u64;
+                let z_all = z.count_ones() == N;
                 assert_eq!(y_all, z_all)
             }
             let y = Bits::<N>::mask();
-            assert_eq!(y.all(), true);
+            assert!(y.all());
         });
     }
 

@@ -15,28 +15,21 @@ struct LoopVariable {
     value: usize,
 }
 
-pub struct VerilogCodeGenerator {
+#[derive(Default)]
+struct VerilogCodeGenerator {
     io: CodeWriter,
     loops: Vec<LoopVariable>,
     links: Vec<VerilogLink>,
 }
 
 impl VerilogCodeGenerator {
-    pub fn new() -> VerilogCodeGenerator {
-        Self {
-            io: CodeWriter::new(),
-            loops: vec![],
-            links: vec![],
-        }
-    }
-
     fn array_index_simplification(&self, a: &str) -> String {
         let re = Regex::new(r"\[([^\]]*)\]").unwrap();
         let mut context = evalexpr::HashMapContext::new();
         for lvar in &self.loops {
             let _ = context.set_value(lvar.variable.clone(), (lvar.value as i64).into());
         }
-        for x in re.captures(a) {
+        if let Some(x) = re.captures(a) {
             if x.len() == 2 {
                 if let Some(txt) = x.get(1) {
                     let arg = evalexpr::eval_with_context(txt.as_str(), &context).unwrap();
@@ -84,13 +77,13 @@ impl ToString for VerilogCodeGenerator {
 }
 
 pub fn verilog_link_extraction(code: &VerilogBlock) -> Vec<VerilogLink> {
-    let mut gen = VerilogCodeGenerator::new();
+    let mut gen = VerilogCodeGenerator::default();
     gen.visit_block(code);
     gen.links
 }
 
 pub fn verilog_combinatorial(code: &VerilogBlock) -> String {
-    let mut gen = VerilogCodeGenerator::new();
+    let mut gen = VerilogCodeGenerator::default();
     gen.visit_block(code);
     format!("always @(*) {}\n", gen.to_string())
 }
@@ -250,6 +243,18 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.write(format!(") & {}'h{:x}", bits, mask))
     }
 
+    fn visit_signed(&mut self, a: &VerilogExpression) {
+        self.io.write("$signed(");
+        self.visit_expression(a);
+        self.io.write(")");
+    }
+
+    fn visit_unsigned(&mut self, a: &VerilogExpression) {
+        self.io.write("$unsigned(");
+        self.visit_expression(a);
+        self.io.write(")");
+    }
+
     fn visit_index(&mut self, a: &VerilogExpression, b: &VerilogExpression) {
         self.visit_expression(a);
         self.io.write("[");
@@ -289,7 +294,7 @@ fn test_array_replacement() {
     let captures = re.captures(test);
     let mut context = evalexpr::HashMapContext::new();
     context.set_value("i".to_string(), 5.into()).unwrap();
-    for x in re.captures(test) {
+    if let Some(x) = re.captures(test) {
         println!("Match {:?}", x);
         if x.len() == 2 {
             if let Some(txt) = x.get(1) {

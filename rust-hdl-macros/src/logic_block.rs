@@ -9,7 +9,7 @@ pub(crate) fn get_impl_for_logic_block(input: &syn::DeriveInput) -> Result<TS> {
     let update_all = common::get_update_all(fields.clone())?;
     let has_changed = common::get_has_changed(fields.clone())?;
     let connect_all = common::get_connect_all(fields.clone())?;
-    let accept = get_accept(fields.clone())?;
+    let accept = get_accept(fields)?;
     let name = &input.ident;
     let (impl_generics, ty_generics, _where_clause) = &input.generics.split_for_impl();
     Ok(quote! {

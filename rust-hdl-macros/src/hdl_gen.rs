@@ -373,13 +373,16 @@ fn hdl_join_or_link(call: &syn::ExprCall, name: &str) -> Result<TS> {
 fn hdl_call(call: &syn::ExprCall) -> Result<TS> {
     let funcname = quote!(#call).to_string();
     if funcname.starts_with("bit_cast")
-        || funcname.starts_with("signed_bit_cast")
-        || funcname.starts_with("signed_cast")
-        || funcname.starts_with("unsigned_cast")
         || funcname.starts_with("bits")
         || funcname.starts_with("Bits")
     {
         hdl_compute(&call.args[0])
+    } else if funcname.starts_with("unsigned_cast") {
+        let target = hdl_compute(&call.args[0])?;
+        Ok(quote!({ast::VerilogExpression::Unsigned(Box::new(#target))}))
+    } else if funcname.starts_with("signed_bit_cast") || funcname.starts_with("signed_cast") {
+        let target = hdl_compute(&call.args[0])?;
+        Ok(quote!({ast::VerilogExpression::Signed(Box::new(#target))}))
     } else if squash(&funcname).contains("::join") {
         hdl_join_or_link(call, "join")
     } else if squash(&funcname).contains("::link") {
@@ -532,6 +535,12 @@ fn hdl_method(method: &syn::ExprMethodCall) -> Result<TS> {
             Ok(quote!({
                 ast::VerilogExpression::Unary(ast::VerilogOpUnary::Xor,
                 Box::new(#target))
+            }))
+        }
+        "to_signed_bits" => {
+            let target = hdl_compute(method.receiver.as_ref())?;
+            Ok(quote!({
+                ast::VerilogExpression::Signed(Box::new(#target))
             }))
         }
         "val" | "into" | "index" | "to_bits" => {

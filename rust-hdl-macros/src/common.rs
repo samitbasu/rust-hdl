@@ -27,7 +27,7 @@ pub(crate) fn get_field_types(input: &syn::DeriveInput) -> syn::Result<Vec<TS>> 
                         "Cannot use an HDL keyword here",
                     ));
                 }
-                if !qname_string.starts_with("_") {
+                if !qname_string.starts_with('_') {
                     let ty = &field.ty;
                     fields.push(quote!(#ty));
                 }
@@ -65,7 +65,7 @@ pub(crate) fn get_field_names(input: &syn::DeriveInput) -> syn::Result<Vec<TS>> 
                         "Cannot use an HDL keyword here",
                     ));
                 }
-                if !qname_string.starts_with("_") {
+                if !qname_string.starts_with('_') {
                     fields.push(qname);
                 }
             }
@@ -115,15 +115,14 @@ pub fn get_has_changed(fields: Vec<TS>) -> syn::Result<TS> {
 }
 
 pub fn squash(x: &str) -> String {
-    let y = x.to_string().replace(" ", "").replace("\n", "");
-    y
+    x.to_string().replace([' ', '\n'], "")
 }
 
 pub fn fixup_ident(x: String) -> String {
     let y = x
-        .replace(" ", "")
+        .replace(' ', "")
         .replace("self.", "")
-        .replace(".", "$")
+        .replace('.', "$")
         .replace("::", "$")
         .replace("&mut", "");
     assert_ne!(y, "config");

@@ -471,7 +471,7 @@ impl ModuleDefines {
     }
 
     pub fn defines(&self) -> String {
-        let mut io = CodeWriter::new();
+        let mut io = CodeWriter::default();
         self.details
             .iter()
             .filter(|x| x.0.len() != 0)

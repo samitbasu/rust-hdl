@@ -17,7 +17,7 @@ pub struct ISEOptions {
 impl Default for ISEOptions {
     fn default() -> Self {
         Self {
-            ise_path: env!("ISE_PATH", "Path to lin64 in 14.7/ISE_DS/ISE/bin/xtclsh").to_string(),
+            ise_path: env!("ISE_PATH", "Path to xtclsh in 14.7").to_string(),
             add_mig: true,
             assets: [
                 "okLibrary.v",

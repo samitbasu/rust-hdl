@@ -15,7 +15,7 @@ use petgraph::visit::NodeIndexable;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, Copy, PartialEq)]
-pub enum SignalNodeKind {
+enum SignalNodeKind {
     Normal,
     Bidirectional,
     Source,
@@ -23,7 +23,7 @@ pub enum SignalNodeKind {
 }
 
 #[derive(Clone, Debug, Copy, PartialEq)]
-pub enum SignalEdgeKind {
+enum SignalEdgeKind {
     Assign,
     Input,
     Clock,
@@ -34,13 +34,13 @@ pub enum SignalEdgeKind {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct SignalNode {
+struct SignalNode {
     pub name: String,
     pub kind: SignalNodeKind,
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct SignalGraph {
+struct SignalGraph {
     pub graph: Graph<SignalNode, SignalEdgeKind, Directed>,
 }
 
@@ -50,10 +50,10 @@ impl SignalGraph {
     }
     fn add_signal_node(&mut self, node: &SignalNode) -> NodeIndex {
         let index = self.graph.node_indices().find(|i| self.graph[*i].eq(node));
-        return match index {
+        match index {
             Some(n) => n,
             None => self.graph.add_node(node.clone()),
-        };
+        }
     }
     fn add_signal_edge(&mut self, from: &SignalNode, to: NodeIndex, kind: SignalEdgeKind) {
         let from_index = self.add_signal_node(from);
@@ -64,14 +64,14 @@ impl SignalGraph {
 }
 
 #[derive(Clone, Debug, Copy)]
-pub enum ExpressionMode {
+enum ExpressionMode {
     Write,
     Read,
 }
 
 type ReadScope = Vec<SignalNode>;
 
-pub struct TimingChecker {
+struct TimingChecker {
     path: NamedPath,
     namespace: NamedPath,
     mode: ExpressionMode,
@@ -120,11 +120,8 @@ impl TimingChecker {
         })
     }
     fn add_code(&mut self, module: &str, code: Verilog) {
-        match &code {
-            Verilog::Combinatorial(code) => {
-                self.visit_block(code);
-            }
-            _ => {}
+        if let Verilog::Combinatorial(code) = &code {
+            self.visit_block(code);
         }
     }
     fn add_write(&mut self, write_name: &str, kind: SignalNodeKind, edge: SignalEdgeKind) {
@@ -145,13 +142,13 @@ impl TimingChecker {
         let v1 = format!(
             "{}${}${}",
             self.path.to_string(),
-            x.other_name.replace("[", "$").replace("]", ""),
+            x.other_name.replace('[', "$").replace(']', ""),
             x.my_name
         );
         let v2 = format!(
             "{}${}${}",
             self.path.to_string(),
-            x.owner_name.replace("[", "$").replace("]", ""),
+            x.owner_name.replace('[', "$").replace(']', ""),
             x.my_name
         );
         (v1, v2)
@@ -290,7 +287,6 @@ impl Probe for TimingChecker {
     }
     fn visit_atom(&mut self, name: &str, signal: &dyn Atom) {
         let module_path = self.path.to_string();
-        let module_name = self.path.last();
         let namespace = self.namespace.flat("$");
         let name = if namespace.is_empty() {
             name.to_owned()
@@ -334,37 +330,34 @@ impl Probe for TimingChecker {
             _ => {}
         }
         let descriptor = &signal.descriptor();
-        match &descriptor.kind {
-            TypeKind::Enum(x) => {
-                for label in x {
-                    let label = label.replace("::", "$");
-                    let my_id = self.graph.add_signal_node(&SignalNode {
-                        name: format!("{}${}", module_path, label),
-                        kind: SignalNodeKind::Normal,
-                    });
-                    self.graph.add_signal_edge(
-                        &SignalNode {
-                            name: format!("const${}", label),
-                            kind: SignalNodeKind::Source,
-                        },
-                        my_id,
-                        SignalEdgeKind::Constant,
-                    );
-                    let my_id = self.graph.add_signal_node(&SignalNode {
-                        name: format!("{}${}", self.path.parent(), label),
-                        kind: SignalNodeKind::Normal,
-                    });
-                    self.graph.add_signal_edge(
-                        &SignalNode {
-                            name: format!("const${}", label),
-                            kind: SignalNodeKind::Source,
-                        },
-                        my_id,
-                        SignalEdgeKind::Constant,
-                    );
-                }
+        if let TypeKind::Enum(x) = &descriptor.kind {
+            for label in x {
+                let label = label.replace("::", "$");
+                let my_id = self.graph.add_signal_node(&SignalNode {
+                    name: format!("{}${}", module_path, label),
+                    kind: SignalNodeKind::Normal,
+                });
+                self.graph.add_signal_edge(
+                    &SignalNode {
+                        name: format!("const${}", label),
+                        kind: SignalNodeKind::Source,
+                    },
+                    my_id,
+                    SignalEdgeKind::Constant,
+                );
+                let my_id = self.graph.add_signal_node(&SignalNode {
+                    name: format!("{}${}", self.path.parent(), label),
+                    kind: SignalNodeKind::Normal,
+                });
+                self.graph.add_signal_edge(
+                    &SignalNode {
+                        name: format!("const${}", label),
+                        kind: SignalNodeKind::Source,
+                    },
+                    my_id,
+                    SignalEdgeKind::Constant,
+                );
             }
-            _ => {}
         }
     }
     fn visit_end_namespace(&mut self, _name: &str, _node: &dyn Block) {

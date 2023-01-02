@@ -25,10 +25,10 @@ pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
     let dir = PathBuf::from_str(prefix).unwrap();
     let _ = remove_dir_all(&dir);
     let _ = create_dir_all(&dir);
-    let mut v_file = File::create(dir.clone().join("top.v")).unwrap();
+    let mut v_file = File::create(dir.join("top.v")).unwrap();
     write!(v_file, "{}", verilog_text).unwrap();
-    let pcf_filename = format!("top.pcf");
-    let mut pcf_file = File::create(dir.clone().join(&pcf_filename)).unwrap();
+    let pcf_filename = "top.pcf".to_string();
+    let mut pcf_file = File::create(dir.join(pcf_filename)).unwrap();
     write!(pcf_file, "{}", pcf_text).unwrap();
     let output = Command::new("yosys")
         .current_dir(dir.clone())
@@ -39,7 +39,7 @@ pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
     save_stdout(output, &dir, "yosys_synth").unwrap();
     let output = Command::new("arachne-pnr")
         .current_dir(dir.clone())
-        .args(&[
+        .args([
             "-r", "-d", "8k", "-P", "cb132", "-p", "top.pcf", "-o", "top.txt", "top.blif",
         ])
         .output()
@@ -47,7 +47,7 @@ pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
     save_stdout(output, &dir, "arachne").unwrap();
     let output = Command::new("icepack")
         .current_dir(dir.clone())
-        .args(&["top.txt", "top.bin"])
+        .args(["top.txt", "top.bin"])
         .output()
         .unwrap();
     save_stdout(output, &dir, "icepack").unwrap();

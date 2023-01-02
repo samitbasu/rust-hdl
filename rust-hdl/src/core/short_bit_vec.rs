@@ -5,7 +5,7 @@ use std::num::Wrapping;
 pub type ShortType = u32;
 pub const SHORT_BITS: usize = 32;
 
-#[derive(Clone, Debug, Copy, Hash)]
+#[derive(Clone, Debug, Copy, PartialEq, Hash)]
 pub struct ShortBitVec<const N: usize>(ShortType);
 
 #[test]
@@ -143,13 +143,6 @@ impl<const N: usize> std::ops::Not for ShortBitVec<N> {
     #[inline(always)]
     fn not(self) -> Self::Output {
         (!self.0).into()
-    }
-}
-
-impl<const N: usize> std::cmp::PartialEq for ShortBitVec<N> {
-    #[inline(always)]
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
     }
 }
 

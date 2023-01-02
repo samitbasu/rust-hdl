@@ -1,3 +1,4 @@
+#[derive(Default)]
 pub(crate) struct CodeWriter {
     lines: Vec<(usize, String)>,
     // Each line consists of an indent level and a string of text
@@ -7,14 +8,6 @@ pub(crate) struct CodeWriter {
 }
 
 impl CodeWriter {
-    pub(crate) fn new() -> CodeWriter {
-        CodeWriter {
-            lines: vec![],
-            indent: 0,
-            buffer: String::new(),
-        }
-    }
-
     pub(crate) fn push(&mut self) {
         self.indent += 1
     }
@@ -29,9 +22,9 @@ impl CodeWriter {
 
     pub(crate) fn add<S: AsRef<str>>(&mut self, val: S) {
         let temp = String::from(val.as_ref());
-        let pieces = temp.split_terminator("\n");
+        let pieces = temp.split_terminator('\n');
         for piece in pieces {
-            self.add_line(&piece)
+            self.add_line(piece)
         }
     }
 
@@ -57,7 +50,7 @@ impl ToString for CodeWriter {
         for (indent, line) in &self.lines {
             buf += &"    ".repeat(*indent);
             buf += line;
-            buf += &"\n"
+            buf += "\n"
         }
         buf
     }

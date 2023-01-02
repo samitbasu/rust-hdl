@@ -91,6 +91,14 @@ pub trait VerilogVisitor {
         walk_cast(self, a, b);
     }
 
+    fn visit_signed(&mut self, a: &VerilogExpression) {
+        walk_signed(self, a);
+    }
+
+    fn visit_unsigned(&mut self, a: &VerilogExpression) {
+        walk_unsigned(self, a);
+    }
+
     fn visit_index(&mut self, a: &VerilogExpression, b: &VerilogExpression) {
         walk_index(self, a, b);
     }
@@ -163,6 +171,14 @@ pub fn walk_index<V: VerilogVisitor + ?Sized>(
 
 pub fn walk_cast<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &VerilogExpression, _b: &usize) {
     visitor.visit_expression(a)
+}
+
+pub fn walk_signed<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &VerilogExpression) {
+    visitor.visit_expression(a)
+}
+
+pub fn walk_unsigned<V: VerilogVisitor + ?Sized>(visitor: &mut V, a: &VerilogExpression) {
+    visitor.visit_expression(a);
 }
 
 pub fn walk_paren<V: VerilogVisitor + ?Sized>(visitor: &mut V, p: &VerilogExpression) {
@@ -331,6 +347,12 @@ pub fn walk_expression<V: VerilogVisitor + ?Sized>(visitor: &mut V, e: &VerilogE
         }
         VerilogExpression::IndexReplace(a, b, c) => {
             visitor.visit_index_replace(a, b, c);
+        }
+        VerilogExpression::Signed(a) => {
+            visitor.visit_signed(a);
+        }
+        VerilogExpression::Unsigned(a) => {
+            visitor.visit_unsigned(a);
         }
     }
 }

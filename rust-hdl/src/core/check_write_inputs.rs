@@ -106,11 +106,8 @@ impl Probe for CheckInputsNotDriven {
         } else {
             format!("{}${}", namespace, name)
         };
-        match signal.kind() {
-            AtomKind::InputParameter => {
-                self.input_parameters.last_mut().unwrap().push(name);
-            }
-            _ => {}
+        if let AtomKind::InputParameter = signal.kind() {
+            self.input_parameters.last_mut().unwrap().push(name);
         }
     }
 
@@ -134,26 +131,25 @@ impl Probe for CheckInputsNotDriven {
     }
 }
 
-
-/// Check a circuit to make sure that `Signal`s of type `In` are 
+/// Check a circuit to make sure that `Signal`s of type `In` are
 /// not written by the HDL kernel.  In RustHDL, you are not allowed
 /// to write to input signals from within a module.
 /// ```rust
 /// use rust_hdl::prelude::*;
 /// use rust_hdl::core::check_write_inputs::check_inputs_not_written;
-/// 
+///
 /// #[derive(LogicBlock, Default)]
 /// struct BadGuy {
 ///    pub in1: Signal<In, Bit>,
 /// }
-/// 
+///
 /// impl Logic for BadGuy {
 ///    #[hdl_gen]
 ///    fn update(&mut self) {
 ///       self.in1.next = false; // <-- rustc is OK with this, but RustHDL is not.
 ///    }
 /// }
-/// 
+///
 /// let mut uut = BadGuy::default(); uut.connect_all();
 /// assert!(check_inputs_not_written(&uut).is_err());
 /// ```

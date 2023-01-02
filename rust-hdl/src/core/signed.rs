@@ -154,6 +154,12 @@ impl std::ops::Mul<Signed<16>> for Signed<16> {
     }
 }
 
+impl<const N: usize> std::cmp::PartialOrd for Signed<N> {
+    fn partial_cmp(&self, other: &Signed<N>) -> Option<std::cmp::Ordering> {
+        self.bigint().partial_cmp(&other.bigint())
+    }
+}
+
 impl<const N: usize> From<SignedLiteralType> for Signed<N> {
     fn from(x: SignedLiteralType) -> Self {
         if x > 0 {

@@ -95,14 +95,14 @@ impl FIFOTestFixture {
     pub fn new(data: &[Bits<8>]) -> FIFOTestFixture {
         FIFOTestFixture {
             feeder: LazyFIFOFeeder::new(
-                data.clone(),
+                data,
                 &(0..data.len())
                     .map(|_| test_helpers::bursty_rand())
                     .collect::<Vec<_>>(),
             ),
             fifo: SyncFIFO::default(),
             reader: LazyFIFOReader::new(
-                data.clone(),
+                data,
                 &(0..data.len())
                     .map(|_| test_helpers::bursty_rand())
                     .collect::<Vec<_>>(),
@@ -169,14 +169,14 @@ impl FIFOTestFixtureAsync {
     pub fn new(data: &[Bits<8>]) -> FIFOTestFixtureAsync {
         Self {
             feeder: LazyFIFOFeeder::new(
-                data.clone(),
+                data,
                 &(0..data.len())
                     .map(|_| test_helpers::bursty_rand())
                     .collect::<Vec<_>>(),
             ),
             fifo: Default::default(),
             reader: LazyFIFOReader::new(
-                data.clone(),
+                data,
                 &(0..data.len())
                     .map(|_| test_helpers::bursty_rand())
                     .collect::<Vec<_>>(),
