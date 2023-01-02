@@ -250,6 +250,18 @@ impl VerilogVisitor for VerilogCodeGenerator {
         self.io.write(format!(") & {}'h{:x}", bits, mask))
     }
 
+    fn visit_signed(&mut self, a: &VerilogExpression) {
+        self.io.write("$signed(");
+        self.visit_expression(a);
+        self.io.write(")");
+    }
+
+    fn visit_unsigned(&mut self, a: &VerilogExpression) {
+        self.io.write("$unsigned(");
+        self.visit_expression(a);
+        self.io.write(")");
+    }
+
     fn visit_index(&mut self, a: &VerilogExpression, b: &VerilogExpression) {
         self.visit_expression(a);
         self.io.write("[");

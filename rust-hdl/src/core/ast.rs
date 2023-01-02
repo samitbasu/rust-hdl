@@ -560,7 +560,6 @@ pub struct Wrapper {
     pub cores: String,
 }
 
-
 /// The [Verilog] type is used to represent the Verilog translation of a
 /// RustHDL kernel.  You will only need it if implementing blackbox cores
 /// or wrapping external Verilog code.
@@ -769,6 +768,8 @@ pub enum VerilogExpression {
     Signal(String),
     Literal(VerilogLiteral),
     Cast(Box<VerilogExpression>, usize),
+    Signed(Box<VerilogExpression>),
+    Unsigned(Box<VerilogExpression>),
     Paren(Box<VerilogExpression>),
     Binary(Box<VerilogExpression>, VerilogOp, Box<VerilogExpression>),
     Unary(VerilogOpUnary, Box<VerilogExpression>),
