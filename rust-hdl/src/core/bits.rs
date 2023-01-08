@@ -1273,8 +1273,39 @@ op!(sub, Sub, -);
 op!(bitor, BitOr, |);
 op!(bitand, BitAnd, &);
 op!(bitxor, BitXor, ^);
-op!(shr, Shr, >>);
-op!(shl, Shl, <<);
+
+macro_rules! op_shift {
+    ($func: ident, $method: ident, $op: tt) => {
+        impl<const M: usize, const N: usize> std::ops::$method<Bits<M>> for Bits<N> {
+            type Output = Bits<N>;
+
+            #[inline(always)]
+            fn $func(self, rhs: Bits<M>) -> Self::Output {
+                self $op rhs.to_u64()
+            }
+        }
+
+        impl<const N: usize> std::ops::$method<LiteralType> for Bits<N> {
+            type Output = Bits<N>;
+
+            fn $func(self, rhs: LiteralType) -> Self::Output {
+                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
+        impl<const N: usize> std::ops::$method<Bits<N>> for LiteralType {
+            type Output = Bits<LITERAL_BITS>;
+
+            fn $func(self, rhs: Bits<N>) -> Self::Output {
+                binop(self.into(), bit_cast(rhs), |a, b| a $op b, |a, b| a $op b)
+            }
+        }
+
+    }
+}
+
+op_shift!(shr, Shr, >>);
+op_shift!(shl, Shl, <<);
 
 /// Construct a default [Bits] - i.e., a zero bit vector of length N.
 /// ```
@@ -1767,6 +1798,20 @@ mod tests {
             let y = Bits::<N>::mask();
             assert!(y.all());
         });
+    }
+
+    #[test]
+    fn test_shl_var_bitwidths() {
+        const N: usize = 32;
+        let y: Bits<N> = random_bits();
+        let z: Bits<6> = random_bits();
+        let r = y << z;
+        let y1: BigUint = y.into();
+        let mask: BigUint = (BigUint::one() << N) - BigUint::one();
+        let z1: u128 = z.to_u128();
+        let r1 = y1 << z1;
+        let convert: BigUint = r.into();
+        assert_eq!(convert, r1);
     }
 
     #[test]

@@ -41,7 +41,7 @@ pub(crate) fn get_impl_for_logic_struct(input: &syn::DeriveInput) -> Result<TS> 
             fn from(x: #name) -> Self {
                 Bits::<{<#name>::BITS}>::default()  #(|
                     (bit_cast::<{<#name>::BITS}, {<#field_types>::BITS}>(x.#fields.into())
-                    << (<#name>::default().#get_offset_names().to_bits()))
+                    << (<#name>::default().#get_offset_names()))
                 )*
             }
         }
