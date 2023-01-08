@@ -1,3 +1,6 @@
+use num_bigint::BigUint;
+use num_traits::{One, ToPrimitive};
+
 use crate::core::bits::LiteralType;
 use std::cmp::Ordering;
 use std::num::Wrapping;
@@ -158,7 +161,9 @@ impl<const N: usize> std::ops::Shr<LiteralType> for ShortBitVec<N> {
 
     #[inline(always)]
     fn shr(self, rhs: LiteralType) -> Self::Output {
-        (Wrapping(self.0) >> (rhs as usize)).0.into()
+        let x: BigUint = self.0.into();
+        let mask: BigUint = (BigUint::one() << N) - BigUint::one();
+        ShortBitVec::<N>(((x >> rhs) & mask).to_u32().unwrap())
     }
 }
 
@@ -177,7 +182,9 @@ impl<const N: usize> std::ops::Shl<LiteralType> for ShortBitVec<N> {
 
     #[inline(always)]
     fn shl(self, rhs: LiteralType) -> Self::Output {
-        (Wrapping(self.0) << (rhs as usize)).0.into()
+        let x: BigUint = self.0.into();
+        let mask: BigUint = (BigUint::one() << N) - BigUint::one();
+        ShortBitVec::<N>(((x << rhs) & mask).to_u32().unwrap())
     }
 }
 

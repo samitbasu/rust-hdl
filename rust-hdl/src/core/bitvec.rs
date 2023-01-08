@@ -1,3 +1,5 @@
+use crate::prelude::LiteralType;
+
 #[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub struct BitVec<const N: usize> {
     bits: [bool; N],
@@ -67,10 +69,11 @@ impl<const N: usize> BitVec<N> {
     }
 }
 
-impl<const N: usize> std::ops::Shr<usize> for BitVec<N> {
+impl<const N: usize> std::ops::Shr<LiteralType> for BitVec<N> {
     type Output = BitVec<N>;
 
-    fn shr(self, rhs: usize) -> Self::Output {
+    fn shr(self, rhs: LiteralType) -> Self::Output {
+        let rhs = rhs as usize;
         let mut bits = [false; N];
         (rhs..N).for_each(|i| {
             bits[i - rhs] = self.bits[i];
@@ -83,15 +86,16 @@ impl<const N: usize, const M: usize> std::ops::Shr<BitVec<M>> for BitVec<N> {
     type Output = BitVec<N>;
 
     fn shr(self, rhs: BitVec<M>) -> Self::Output {
-        let rhs_u32: usize = rhs.into();
-        self >> rhs_u32
+        let rhs: LiteralType = rhs.into();
+        self >> rhs
     }
 }
 
-impl<const N: usize> std::ops::Shl<usize> for BitVec<N> {
+impl<const N: usize> std::ops::Shl<LiteralType> for BitVec<N> {
     type Output = BitVec<N>;
 
-    fn shl(self, rhs: usize) -> Self::Output {
+    fn shl(self, rhs: LiteralType) -> Self::Output {
+        let rhs = rhs as usize;
         let mut bits = [false; N];
         (rhs..N).for_each(|i| {
             bits[i] = self.bits[i - rhs];
@@ -104,7 +108,7 @@ impl<const N: usize, const M: usize> std::ops::Shl<BitVec<M>> for BitVec<N> {
     type Output = BitVec<N>;
 
     fn shl(self, rhs: BitVec<M>) -> Self::Output {
-        let rhs: usize = rhs.into();
+        let rhs: LiteralType = rhs.into();
         self << rhs
     }
 }

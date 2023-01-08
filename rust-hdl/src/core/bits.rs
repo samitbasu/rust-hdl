@@ -1289,7 +1289,11 @@ macro_rules! op_shift {
             type Output = Bits<N>;
 
             fn $func(self, rhs: LiteralType) -> Self::Output {
-                binop(self, rhs.into(), |a, b| a $op b, |a, b| a $op b)
+                match self {
+                    Bits::Short(x) => Bits::Short(x $op rhs),
+                    Bits::Long(x) =>
+                        Bits::Long(x $op rhs),
+                }
             }
         }
 
@@ -1801,17 +1805,77 @@ mod tests {
     }
 
     #[test]
-    fn test_shl_var_bitwidths() {
-        const N: usize = 32;
-        let y: Bits<N> = random_bits();
-        let z: Bits<6> = random_bits();
+    fn test_shl_var_bitwidths_driver() {
+        fn test_shl_var_bitwidths<const N: usize, const M: usize>() {
+            for _iter in 0..100 {
+                let y: Bits<N> = random_bits();
+                let z: Bits<M> = random_bits();
+                let r = y << z;
+                let y1: BigUint = y.into();
+                let mask: BigUint = (BigUint::one() << N) - BigUint::one();
+                let z1: u128 = z.to_u128();
+                let r1 = (y1 << z1) & mask;
+                let convert: BigUint = r.into();
+                assert_eq!(convert, r1);
+            }
+        }
+        fn test_shl_var_bitwidths_set<const N: usize>() {
+            test_shl_var_bitwidths::<N, 1>();
+            test_shl_var_bitwidths::<N, 2>();
+            test_shl_var_bitwidths::<N, 4>();
+            test_shl_var_bitwidths::<N, 8>();
+            test_shl_var_bitwidths::<N, 16>();
+        }
+        test_shl_var_bitwidths_set::<1>();
+        test_shl_var_bitwidths_set::<2>();
+        test_shl_var_bitwidths_set::<4>();
+        test_shl_var_bitwidths_set::<8>();
+        test_shl_var_bitwidths_set::<16>();
+        test_shl_var_bitwidths_set::<32>();
+        test_shl_var_bitwidths_set::<64>();
+        test_shl_var_bitwidths_set::<128>();
+        test_shl_var_bitwidths_set::<256>();
+    }
+
+    #[test]
+    fn test_shr_var_bitwidths_driver() {
+        fn test_shr_var_bitwidths<const N: usize, const M: usize>() {
+            for _iter in 0..100 {
+                let y: Bits<N> = random_bits();
+                let z: Bits<M> = random_bits();
+                let r = y >> z;
+                let y1: BigUint = y.into();
+                let mask: BigUint = (BigUint::one() << N) - BigUint::one();
+                let z1: u128 = z.to_u128();
+                let r1 = (y1 >> z1) & mask;
+                let convert: BigUint = r.into();
+                assert_eq!(convert, r1);
+            }
+        }
+        fn test_shr_var_bitwidths_set<const N: usize>() {
+            test_shr_var_bitwidths::<N, 1>();
+            test_shr_var_bitwidths::<N, 2>();
+            test_shr_var_bitwidths::<N, 4>();
+            test_shr_var_bitwidths::<N, 8>();
+            test_shr_var_bitwidths::<N, 16>();
+        }
+        test_shr_var_bitwidths_set::<1>();
+        test_shr_var_bitwidths_set::<2>();
+        test_shr_var_bitwidths_set::<4>();
+        test_shr_var_bitwidths_set::<8>();
+        test_shr_var_bitwidths_set::<16>();
+        test_shr_var_bitwidths_set::<32>();
+        test_shr_var_bitwidths_set::<64>();
+        test_shr_var_bitwidths_set::<128>();
+        test_shr_var_bitwidths_set::<256>();
+    }
+
+    #[test]
+    fn test_shl_to_zero() {
+        let y: Bits<1> = 1.into();
+        let z: Bits<8> = 128.into();
         let r = y << z;
-        let y1: BigUint = y.into();
-        let mask: BigUint = (BigUint::one() << N) - BigUint::one();
-        let z1: u128 = z.to_u128();
-        let r1 = y1 << z1;
-        let convert: BigUint = r.into();
-        assert_eq!(convert, r1);
+        assert_eq!(r, 0);
     }
 
     #[test]
