@@ -10,5 +10,9 @@ fn test_opalkelly_xem_6010_synth_download32() {
     uut.hi.link_connect_dest();
     uut.connect_all();
     synth::synth_obj(uut, target_path!("xem_6010/download32"));
-    test_opalkelly_download32_runtime(target_path!("xem_6010/download32/top.bit")).unwrap();
+    test_opalkelly_download32_runtime(
+        target_path!("xem_6010/download32/top.bit"),
+        env!("XEM6010_SERIAL"),
+    )
+    .unwrap();
 }

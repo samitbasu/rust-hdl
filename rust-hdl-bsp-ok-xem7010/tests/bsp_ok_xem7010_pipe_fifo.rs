@@ -14,5 +14,9 @@ fn test_opalkelly_xem_7010_synth_pipe_fifo() {
     uut.hi.sig_aa.connect();
     uut.connect_all();
     XEM7010::synth(uut, target_path!("xem_7010/pipe_fifo"));
-    test_opalkelly_pipe_fifo_runtime(target_path!("xem_7010/pipe_fifo/top.bit")).unwrap();
+    test_opalkelly_pipe_fifo_runtime(
+        target_path!("xem_7010/pipe_fifo/top.bit"),
+        env!("XEM7010_SERIAL"),
+    )
+    .unwrap();
 }

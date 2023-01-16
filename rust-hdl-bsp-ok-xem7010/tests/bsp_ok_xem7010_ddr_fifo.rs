@@ -73,5 +73,9 @@ fn test_opalkelly_xem_7010_ddr_stress_synth() {
     uut.sys_clock_n.connect();
     uut.connect_all();
     XEM7010::synth(uut, target_path!("xem_7010/ddr_stress"));
-    test_opalkelly_ddr_stress_runtime(target_path!("xem_7010/ddr_stress/top.bit")).unwrap()
+    test_opalkelly_ddr_stress_runtime(
+        target_path!("xem_7010/ddr_stress/top.bit"),
+        env!("XEM7010_SERIAL"),
+    )
+    .unwrap()
 }

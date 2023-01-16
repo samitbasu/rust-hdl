@@ -39,8 +39,11 @@ impl Logic for OpalKellySPITest {
     }
 }
 
-pub fn test_opalkelly_spi_reg_read_runtime(bit_file: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_file)?;
+pub fn test_opalkelly_spi_reg_read_runtime(
+    bit_file: &str,
+    serial_number: &str,
+) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file, serial_number)?;
     ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();
     let expected = [0x40, 0x80060, 0x117, 0, 0xa2, 0, 0x800000, 0x5544d0];
     for reg in 0..8 {
@@ -52,8 +55,11 @@ pub fn test_opalkelly_spi_reg_read_runtime(bit_file: &str) -> Result<(), OkError
     Ok(())
 }
 
-pub fn test_opalkelly_spi_reg_write_runtime(bit_file: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_file)?;
+pub fn test_opalkelly_spi_reg_write_runtime(
+    bit_file: &str,
+    serial_number: &str,
+) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file, serial_number)?;
     ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();
     let expected = [0x40, 0x80060, 0x117, 0, 0xa2, 0, 0x800000, 0x5544d0];
     for reg in 0..8 {
@@ -68,8 +74,11 @@ pub fn test_opalkelly_spi_reg_write_runtime(bit_file: &str) -> Result<(), OkErro
     Ok(())
 }
 
-pub fn test_opalkelly_spi_single_conversion_runtime(bit_file: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_file)?;
+pub fn test_opalkelly_spi_single_conversion_runtime(
+    bit_file: &str,
+    serial_number: &str,
+) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file, serial_number)?;
     ok_do_spi_txn(&hnd, 64, 0xFFFFFFFFFFFFFFFF_u64, false).unwrap();
     sleep(Duration::from_millis(100));
     for i in 0..4 {

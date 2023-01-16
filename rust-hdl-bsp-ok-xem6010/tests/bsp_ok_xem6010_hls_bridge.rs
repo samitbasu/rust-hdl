@@ -86,7 +86,7 @@ fn test_ok_hls_bridge_test_synth() {
 
 fn test_ok_hls_runtime(bit_name: &str) -> Result<(), OkError> {
     use std::time::Instant;
-    let hnd = ok_test_prelude(bit_name)?;
+    let hnd = ok_test_prelude(bit_name, env!("XEM6010_SERIAL"))?;
     let config = OKHLSBridgeAddressConfig::default();
     let uut = OpalKellyHLSBridgeTest::default();
     println!("{:?}", uut.port_bridge.ports());

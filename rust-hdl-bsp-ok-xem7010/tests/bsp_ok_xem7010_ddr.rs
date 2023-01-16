@@ -85,7 +85,7 @@ fn test_synthesis_of_xem7010_ddr() {
 
 #[cfg(test)]
 fn test_opalkelly_xem_7010_ddr_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude(target_path!("xem_7010/ddr/top.bit"))?;
+    let hnd = ok_test_prelude(target_path!("xem_7010/ddr/top.bit"), env!("XEM7010_SERIAL"))?;
     hnd.reset_firmware(0);
     let test_size = 1024 * 1024 * 10;
     let data = (0..test_size)

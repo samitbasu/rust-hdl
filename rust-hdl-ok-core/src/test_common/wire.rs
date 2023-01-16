@@ -67,8 +67,8 @@ impl Logic for OpalKellyWireTest {
     }
 }
 
-pub fn test_opalkelly_xem_wire_runtime(filename: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(filename)?;
+pub fn test_opalkelly_xem_wire_runtime(filename: &str, serial_number: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(filename, serial_number)?;
     hnd.set_wire_in(0x00, 0x45);
     hnd.update_wire_ins();
     for i in 0..12 {

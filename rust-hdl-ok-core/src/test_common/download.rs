@@ -40,8 +40,11 @@ impl OpalKellyDownload32FIFOTest {
     }
 }
 
-pub fn test_opalkelly_download32_runtime(bit_file: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_file)?;
+pub fn test_opalkelly_download32_runtime(
+    bit_file: &str,
+    serial_number: &str,
+) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file, serial_number)?;
     // Read the data in 256*2 = 512 byte blocks
     let mut data = vec![0_u8; 1024 * 128];
     let mut last_val = 0;
@@ -95,8 +98,8 @@ impl OpalKellyDownloadFIFOTest {
     }
 }
 
-pub fn test_opalkelly_download_runtime(bit_file: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_file)?;
+pub fn test_opalkelly_download_runtime(bit_file: &str, serial_number: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file, serial_number)?;
     // Read the data in 256*2 = 512 byte blocks
     let mut data = vec![0_u8; 1024 * 512];
     hnd.read_from_block_pipe_out(0xA0, 256, &mut data).unwrap();

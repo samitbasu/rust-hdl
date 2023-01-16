@@ -62,8 +62,8 @@ fn sum_vec(t: &[u16]) -> u16 {
     ret.0
 }
 
-pub fn test_opalkelly_pipe_in_runtime(bit_name: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_name)?;
+pub fn test_opalkelly_pipe_in_runtime(bit_name: &str, serial_number: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_name, serial_number)?;
     let data = (0..1024 * 1024)
         .map(|_| rand::random::<u8>())
         .collect::<Vec<_>>();
@@ -132,8 +132,8 @@ impl Logic for OpalKellyPipeRAMTest {
     }
 }
 
-pub fn test_opalkelly_pipe_ram_runtime(bitfile: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bitfile)?;
+pub fn test_opalkelly_pipe_ram_runtime(bitfile: &str, serial_number: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bitfile, serial_number)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
     hnd.write_to_pipe_in(0x80, &data)?;
     let mut out = vec![0_u8; 512];
@@ -192,8 +192,11 @@ impl Logic for OpalKellyPipeFIFOTest {
     }
 }
 
-pub fn test_opalkelly_pipe_fifo_runtime(bit_file: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_file)?;
+pub fn test_opalkelly_pipe_fifo_runtime(
+    bit_file: &str,
+    serial_number: &str,
+) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file, serial_number)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
     let orig_data_16 = make_u16_buffer(&data);
     hnd.write_to_pipe_in(0x80, &data)?;
@@ -204,8 +207,11 @@ pub fn test_opalkelly_pipe_fifo_runtime(bit_file: &str) -> Result<(), OkError> {
     Ok(())
 }
 
-pub fn test_opalkelly_pipe_afifo_runtime(bit_file: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_file)?;
+pub fn test_opalkelly_pipe_afifo_runtime(
+    bit_file: &str,
+    serial_number: &str,
+) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file, serial_number)?;
     let data = (0..512).map(|_| rand::random::<u8>()).collect::<Vec<_>>();
     let orig_data_16 = make_u16_buffer(&data);
     hnd.write_to_pipe_in(0x80, &data)?;

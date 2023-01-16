@@ -11,5 +11,9 @@ fn test_opalkelly_xem_6010_synth_download() {
     uut.hi.link_connect_dest();
     uut.connect_all();
     xem6010::synth::synth_obj(uut, target_path!("xem_6010/download"));
-    test_opalkelly_download_runtime(target_path!("xem_6010/download/top.bit")).unwrap()
+    test_opalkelly_download_runtime(
+        target_path!("xem_6010/download/top.bit"),
+        env!("XEM6010_SERIAL"),
+    )
+    .unwrap()
 }

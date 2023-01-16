@@ -81,5 +81,9 @@ fn test_opalkelly_xem_6010_sdram_simulated_fifo_download() {
     let mut uut = SDRAMSimulatedFIFOTester::new::<XEM6010>();
     uut.connect_all();
     xem6010::synth::synth_obj(uut, target_path!("xem_6010/sdram_fifo_sim"));
-    test_opalkelly_download_runtime(target_path!("xem_6010/sdram_fifo_sim/top.bit")).unwrap()
+    test_opalkelly_download_runtime(
+        target_path!("xem_6010/sdram_fifo_sim/top.bit"),
+        env!("XEM6010_SERIAL"),
+    )
+    .unwrap()
 }

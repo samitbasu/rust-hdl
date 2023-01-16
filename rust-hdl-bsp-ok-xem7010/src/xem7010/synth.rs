@@ -33,7 +33,7 @@ impl Default for VivadoOptions {
             .iter()
             .map(|x| {
                 format!(
-                    "{}/XEM7010-A50/Vivado-2021/{}",
+                    "{}/XEM7010-A50/Vivado-2016/{}",
                     env!("FP_PATH", "Path to FrontPanelHDL"),
                     x
                 )

@@ -109,7 +109,7 @@ fn test_opalkelly_xem_6010_mig() {
 
 #[cfg(test)]
 fn test_opalkelly_xem_6010_mig_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude(target_path!("xem_6010/mig/top.bit"))?;
+    let hnd = ok_test_prelude(target_path!("xem_6010/mig/top.bit"), env!("XEM6010_SERIAL"))?;
     hnd.reset_firmware(0);
     let data = (64..(128 + 64)).collect::<Vec<u8>>();
     hnd.write_to_pipe_in(0x80, &data).unwrap();

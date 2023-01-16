@@ -17,5 +17,9 @@ fn test_opalkelly_xem_7010_synth_pipe() {
     uut.hi.link_connect_dest();
     uut.connect_all();
     XEM7010::synth(uut, target_path!("xem_7010/pipe_in"));
-    test_opalkelly_pipe_in_runtime(target_path!("xem_7010/pipe_in/top.bit")).unwrap();
+    test_opalkelly_pipe_in_runtime(
+        target_path!("xem_7010/pipe_in/top.bit"),
+        env!("XEM7010_SERIAL"),
+    )
+    .unwrap();
 }

@@ -3,8 +3,11 @@ use rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-pub fn test_opalkelly_ddr_stress_runtime(bit_file: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_file)?;
+pub fn test_opalkelly_ddr_stress_runtime(
+    bit_file: &str,
+    serial_number: &str,
+) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file, serial_number)?;
     hnd.reset_firmware(0);
     sleep(Duration::from_millis(100));
     hnd.set_wire_in(1, 1);

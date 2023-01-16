@@ -84,5 +84,9 @@ fn test_opalkelly_xem_7010_synth_pipe_afifo() {
     uut.fast_clock.connect();
     uut.connect_all();
     XEM7010::synth(uut, target_path!("xem_7010/pipe_afifo"));
-    test_opalkelly_pipe_afifo_runtime(target_path!("xem_7010/pipe_afifo/top.bit")).unwrap()
+    test_opalkelly_pipe_afifo_runtime(
+        target_path!("xem_7010/pipe_afifo/top.bit"),
+        env!("XEM7010_SERIAL"),
+    )
+    .unwrap()
 }

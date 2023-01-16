@@ -11,5 +11,9 @@ fn test_opalkelly_xem_6010_synth_pipe_fifo() {
     let mut uut = OpalKellyPipeFIFOTest::new::<XEM6010>();
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/pipe_fifo"));
-    test_opalkelly_pipe_fifo_runtime(target_path!("xem_6010/pipe_fifo/top.bit")).unwrap();
+    test_opalkelly_pipe_fifo_runtime(
+        target_path!("xem_6010/pipe_fifo/top.bit"),
+        env!("XEM6010_SERIAL"),
+    )
+    .unwrap();
 }

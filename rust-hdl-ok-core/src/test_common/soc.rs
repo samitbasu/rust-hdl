@@ -44,8 +44,8 @@ fn read_array(hnd: &OkHandle, address: u8, len: usize) -> Result<Vec<u16>, OkErr
     Ok(make_u16_buffer(&data))
 }
 
-pub fn test_opalkelly_soc_hello(bit_name: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_name)?;
+pub fn test_opalkelly_soc_hello(bit_name: &str, serial_number: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_name, serial_number)?;
     for iter in 0..100 {
         println!("Iteration {}", iter);
         send_ping(&hnd, 0x67)?;

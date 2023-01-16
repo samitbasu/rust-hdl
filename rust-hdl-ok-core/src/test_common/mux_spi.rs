@@ -47,8 +47,8 @@ impl OpalKellySPIMuxTest {
     }
 }
 
-pub fn test_opalkelly_mux_spi_runtime(bit_file: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_file)?;
+pub fn test_opalkelly_mux_spi_runtime(bit_file: &str, serial_number: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_file, serial_number)?;
     for addr in 0..8 {
         hnd.set_wire_in(3, addr);
         hnd.update_wire_ins();

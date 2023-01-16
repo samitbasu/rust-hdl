@@ -70,5 +70,9 @@ fn test_opalkelly_xem_6010_synth_ddr_stress() {
     uut.raw_sys_clock.connect();
     uut.connect_all();
     xem6010::synth::synth_obj(uut, target_path!("xem_6010/ddr_stress"));
-    ddr::test_opalkelly_ddr_stress_runtime(target_path!("xem_6010/ddr_stress/top.bit")).unwrap()
+    ddr::test_opalkelly_ddr_stress_runtime(
+        target_path!("xem_6010/ddr_stress/top.bit"),
+        env!("XEM6010_SERIAL"),
+    )
+    .unwrap()
 }

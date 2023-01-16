@@ -7,9 +7,9 @@ use crate::core::prelude::*;
 use rust_hdl_ok_frontpanel_sys::{OkError, OkHandle};
 use rust_hdl_sim::prelude::AD7193_REG_WIDTHS;
 
-pub fn ok_test_prelude(filename: &str) -> Result<OkHandle, OkError> {
+pub fn ok_test_prelude(filename: &str, serial_number: &str) -> Result<OkHandle, OkError> {
     let hnd = OkHandle::new();
-    hnd.open()?;
+    hnd.open_with_serial(serial_number)?;
     hnd.reset_fpga()?;
     let model = hnd.get_board_model();
     let serial = hnd.get_serial_number();

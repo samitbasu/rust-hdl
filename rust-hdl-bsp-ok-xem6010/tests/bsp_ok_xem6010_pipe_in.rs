@@ -8,5 +8,9 @@ fn test_opalkelly_xem_6010_synth_pipe() {
     let mut uut = OpalKellyPipeTest::new::<XEM6010>();
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/pipe_in"));
-    test_opalkelly_pipe_in_runtime(target_path!("xem_6010/pipe_in/top.bit")).unwrap();
+    test_opalkelly_pipe_in_runtime(
+        target_path!("xem_6010/pipe_in/top.bit"),
+        env!("XEM6010_SERIAL"),
+    )
+    .unwrap();
 }

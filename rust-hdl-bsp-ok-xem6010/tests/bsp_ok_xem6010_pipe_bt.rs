@@ -99,7 +99,10 @@ fn test_opalkelly_xem_6010_synth_btpipe() {
 
 #[cfg(test)]
 fn test_opalkelly_xem_6010_btpipe_runtime() -> Result<(), OkError> {
-    let hnd = ok_test_prelude(target_path!("xem_6010/btpipe/top.bit"))?;
+    let hnd = ok_test_prelude(
+        target_path!("xem_6010/btpipe/top.bit"),
+        env!("XEM6010_SERIAL"),
+    )?;
     // Read the data in 256*2 = 512 byte blocks
     let mut data = vec![0_u8; 1024 * 128];
     hnd.read_from_block_pipe_out(0xA0, 256, &mut data).unwrap();

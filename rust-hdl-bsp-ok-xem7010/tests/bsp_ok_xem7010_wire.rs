@@ -9,5 +9,9 @@ fn test_opalkelly_xem_7010_synth_wire() {
     uut.hi.link_connect_dest();
     uut.connect_all();
     XEM7010::synth(uut, target_path!("xem_7010/wire"));
-    test_opalkelly_xem_wire_runtime(target_path!("xem_7010/wire/top.bit")).unwrap();
+    test_opalkelly_xem_wire_runtime(
+        target_path!("xem_7010/wire/top.bit"),
+        env!("XEM7010_SERIAL"),
+    )
+    .unwrap();
 }

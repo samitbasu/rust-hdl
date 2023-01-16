@@ -56,5 +56,9 @@ fn test_opalkelly_xem_6010_soc() {
     uut.sys_clock.connect();
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/soc_hello"));
-    test_opalkelly_soc_hello(target_path!("xem_6010/soc_hello/top.bit")).unwrap();
+    test_opalkelly_soc_hello(
+        target_path!("xem_6010/soc_hello/top.bit"),
+        env!("XEM6010_SERIAL"),
+    )
+    .unwrap();
 }

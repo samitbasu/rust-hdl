@@ -72,8 +72,8 @@ pub fn make_i16_buffer(data: &[u8]) -> Vec<i16> {
     make_u16_buffer(data).iter().map(|x| *x as i16).collect()
 }
 
-pub fn test_opalkelly_fir_runtime(bit_name: &str) -> Result<(), OkError> {
-    let hnd = ok_test_prelude(bit_name)?;
+pub fn test_opalkelly_fir_runtime(bit_name: &str, serial_number: &str) -> Result<(), OkError> {
+    let hnd = ok_test_prelude(bit_name, serial_number)?;
     let mut data = [0_u8; 256];
     data[128] = 0xFF;
     data[129] = 0xFF;

@@ -10,5 +10,6 @@ fn test_opalkelly_xem_6010_fir() {
     uut.hi.link_connect_dest();
     uut.connect_all();
     XEM6010::synth(uut, target_path!("xem_6010/fir"));
-    test_opalkelly_fir_runtime(target_path!("xem_6010/fir/top.bit")).unwrap();
+    test_opalkelly_fir_runtime(target_path!("xem_6010/fir/top.bit"), env!("XEM6010_SERIAL"))
+        .unwrap();
 }

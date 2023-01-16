@@ -9,5 +9,9 @@ fn test_opalkelly_xem_7010_mux_spi() {
     uut.hi.link_connect_dest();
     uut.connect_all();
     XEM7010::synth(uut, target_path!("xem_7010/mux_spi"));
-    test_opalkelly_mux_spi_runtime(target_path!("xem_7010/mux_spi/top.bit")).unwrap()
+    test_opalkelly_mux_spi_runtime(
+        target_path!("xem_7010/mux_spi/top.bit"),
+        env!("XEM7010_SERIAL"),
+    )
+    .unwrap()
 }
