@@ -1,8 +1,4 @@
-use evalexpr::Operator::Const;
-use rust_hdl::core::check_logic_loops::check_logic_loops;
-use rust_hdl::core::check_timing::check_timing;
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 
 #[test]
 fn test_check_timing() {

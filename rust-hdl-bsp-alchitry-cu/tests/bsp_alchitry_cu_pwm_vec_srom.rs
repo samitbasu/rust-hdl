@@ -1,6 +1,5 @@
 #[cfg(test)]
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::test_helpers::FaderWithSyncROM;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_alchitry_cu::{pins, synth};
 use rust_hdl_fpga_support::lattice::ice40::ice_pll::ICE40PLLBlock;
 

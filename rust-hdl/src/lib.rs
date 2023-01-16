@@ -142,7 +142,7 @@
 //! and behave like a `u32`.
 //!
 //! ```
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! let x: Bits<50> = Default::default();
 //! ```
 //! This will construct a length 50 bit vector that is initialized to all `0`.
@@ -151,13 +151,13 @@
 //! provided the literals are of the `u64` type.
 //!
 //! ```
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! let x: Bits<50> = 0xBEEF.into();
 //! ```
 //!
 //! In some cases, Rust complains about literals, and you may need to provide a suffix:
 //! ```
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! let x: Bits<50> = 0xDEAD_BEEF_u64.into();
 //! ```
 //! However, in most cases, you can leave literals suffix-free, and Rust will automatically
@@ -166,7 +166,7 @@
 //! You can construct a larger constant using the [bits] function.  If you have a literal of up to
 //! 128 bits, it provides a functional form
 //! ```
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! let x: Bits<200> = bits(0xDEAD_BEEE); // Works for up to 128 bit constants.
 //! ```
 //!
@@ -174,7 +174,7 @@
 //! This trait allows you to handily convert from different integer values
 //!
 //! ```
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! let x: Bits<10> = 32_u8.to_bits();
 //! ```
 //!
@@ -198,7 +198,7 @@
 //! These should feel natural when using RustHDL, as expressions follow Rust's rules (and not Verilog's).
 //! For example:
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! let x: Bits<32> = 0xDEAD_0000_u32.to_bits();
 //! let y: Bits<32> = 0x0000_BEEF_u32.to_bits();
 //! let z = x + y;
@@ -219,7 +219,7 @@
 //! signal as how you intend to use it in your logic.  For example, consider the following circuit:
 //!
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! pub struct My8BitAdder {
 //!    pub input_1: Signal<In, Bits<8>>,
@@ -251,9 +251,9 @@
 //! The definition of [Signal] also indicates how it should be used.  [Signal]'s cannot be
 //! assigned to using usual semantics.
 //! ```
-//! # use rust_hdl::core::constraint::PinConstraint;
-//! # use rust_hdl::core::direction::Direction;
-//! # use rust_hdl::core::synth::Synth;
+//! # use rust_hdl::constraint::PinConstraint;
+//! # use rust_hdl::direction::Direction;
+//! # use rust_hdl::synth::Synth;
 //!
 //! #[derive(Clone, Debug)]
 //! pub struct Signal<D: Direction, T: Synth> {
@@ -273,7 +273,7 @@
 //! and from `input_2.val()`, and write to `output.next`.  Like this:
 //!
 //! ```
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! pub struct My8BitAdder {
 //!    pub input_1: Signal<In, Bits<8>>,
@@ -296,7 +296,7 @@
 //! a logical block that looks like this:
 //!
 //! ```
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! pub struct OrStuff {
 //!    pub val1: Signal<In, Bit>,
@@ -313,7 +313,7 @@
 //! Hence, you can do something like this in the `update` method
 //!
 //! ```
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //!# pub struct OrStuff {
 //!#    pub val1: Signal<In, Bit>,
@@ -347,7 +347,7 @@
 //! RustHDL realizes it makes no sense.
 //!
 //! ```compile_fail
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!# pub struct OrStuff {
 //!#    pub val1: Signal<In, Bit>,
 //!#    pub val2: Signal<In, Bits<4>>,
@@ -376,7 +376,7 @@
 //! to an input signal being passed into the block.  The example panics because
 //!
 //!```should_panic
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! #[derive(LogicBlock, Default)]
 //! struct BadActor {
@@ -406,8 +406,8 @@
 //! Although you will rarely (if ever) need to implement the methods themselves, here is the
 //! full definition of the trait:
 //!```
-//! # use rust_hdl::core::prelude::*;
-//! # use rust_hdl::core::timing::TimingInfo;
+//! # use rust_hdl::prelude::*;
+//! # use rust_hdl::timing::TimingInfo;
 //!
 //! pub trait Logic {
 //!     fn update(&mut self);
@@ -437,7 +437,7 @@
 //! generated the remaining trait implementations:
 //! ```
 //! # use std::time::Duration;
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! # use rust_hdl::docs::vcd2svg::vcd_to_svg;
 //! # use rust_hdl::widgets::prelude::*;
 //!
@@ -497,7 +497,7 @@
 //! So this will _clearly_ fail to compile.
 //!
 //! ```compile_fail
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! struct Foo {
 //!  bar: Signal<Out, Bits<4>>
@@ -515,7 +515,7 @@
 //! takes `&mut self` as an argument. In almost all cases, you will write something like:
 //!
 //! ```
-//!# use rust_hdl::core::prelude::*;
+//!# use rust_hdl::prelude::*;
 //!
 //! struct Foo {}
 //!
@@ -532,7 +532,7 @@
 //!fail.  This is an example of valid Rust that is not allowed in an HDL kernel.
 //!
 //!```compile_fail
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! struct Foo {}
 //!
@@ -558,7 +558,7 @@
 //! In general, binary operations require that both arguments are of the same type (e.g. bitwidth) or one of the
 //! arguments will be a literal.
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! struct Foo {
 //!    pub sig1: Signal<In, Bits<4>>,
@@ -581,7 +581,7 @@
 //! The `!` operator will flip all of the bits in the bitvector.
 //! - Conditionals (`if`) are supported
 //!```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! struct Foo {
 //!     pub sig1: Signal<In, Bit>,
@@ -636,7 +636,7 @@
 //!     - `xor` - true if the number of ones in the bit vector is odd
 //!     - `val`, `into`, `index`, `to_bits` - ignored in HDL kernels
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! struct Foo {
 //!     pub sig1: Signal<In, Bits<8>>,
@@ -663,7 +663,7 @@
 //! version of RustHDL, but for now, the value of the `match` is ignored.
 //! Here is an example of a `match` for a state machine:
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! # use rust_hdl::widgets::prelude::*;
 //!
 //! #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -717,7 +717,7 @@
 //! A simple example to consider is a parameterizable mux.
 //!
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! // Mux from N separate signals, using A address bits
 //! // For fun, it's also generic over the width of the
@@ -752,7 +752,7 @@
 //! it easier to read.
 //!
 //! ```
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! # use rust_hdl::widgets::prelude::*;
 //!# #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 //!# enum SPIState {
@@ -925,7 +925,7 @@
 //! enums.
 //!  
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 //! enum State {
@@ -943,7 +943,7 @@
 //! example, and RustHDL will convert this into a 2 bit binary register.  
 //!
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! # use rust_hdl::widgets::prelude::*;
 //!
 //! #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -962,7 +962,7 @@
 //! Now imagine we add another state in the future to our state machine - say `Pending`:
 //!
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! # use rust_hdl::widgets::prelude::*;
 //!
 //! #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -988,7 +988,7 @@
 //! `State2` are separate types.  They cannot be assigned to one another.
 //!
 //! ```compile_fail
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 //! enum State1 {
@@ -1019,7 +1019,7 @@
 //! If for some reason, you needed to translate between enums, use a `match`:
 //!
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! # #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 //! # enum State1 {
@@ -1122,7 +1122,7 @@
 //! example, we could define a pair of `struct`s for the write interface of the FIFO
 //!
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! #[derive(LogicInterface)]     // <- Note the LogicInterface, not LogicBlock
 //! #[join = "MyFIFOWriteSender"] // <- Name of the "mating" interface
 //! struct MyFIFOWriteReceiver {
@@ -1154,7 +1154,7 @@
 //! rewrite our FIFO circuit and data producer to use our new interfaces.
 //!
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!#  #[derive(LogicInterface)]     // <- Note the LogicInterface, not LogicBlock
 //!#  #[join = "MyFIFOWriteSender"] // <- Name of the "mating" interface
 //!#  struct MyFIFOWriteReceiver {
@@ -1187,7 +1187,7 @@
 //! one is called `join`.  And it, well, joins the interfaces.
 //!
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!#  #[derive(LogicInterface)]     // <- Note the LogicInterface, not LogicBlock
 //!#  #[join = "MyFIFOWriteSender"] // <- Name of the "mating" interface
 //!#  struct MyFIFOWriteReceiver {
@@ -1236,7 +1236,7 @@
 //! other control logic.  So in fact, our `DataWidget` has an internal representation that looks
 //! like this
 //!```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! # use rust_hdl::widgets::prelude::*;
 //! # struct MyFIFOWriteSender{}
 //! struct DataWidget {
@@ -1257,7 +1257,7 @@
 //! paying attention to which signal is an input (for `DataWidget`), and which is an output.
 //!
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! # use rust_hdl::widgets::prelude::*;
 //!#  #[derive(LogicInterface)]     // <- Note the LogicInterface, not LogicBlock
 //!#  #[join = "MyFIFOWriteSender"] // <- Name of the "mating" interface
@@ -1302,7 +1302,7 @@
 //! inside of the circuit.  Hence, our interface can be `forwarded` or `linked` with a single line
 //! like so:
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //! # use rust_hdl::widgets::prelude::*;
 //!#  #[derive(LogicInterface)]     // <- Note the LogicInterface, not LogicBlock
 //!#  #[join = "MyFIFOWriteSender"] // <- Name of the "mating" interface
@@ -1341,7 +1341,7 @@
 //! As a parting note, you can make interfaces generic across types.  Here, for example
 //! is the FIFO interface used in the High Level Synthesis library in RustHDL:
 //! ```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!#[derive(Clone, Debug, Default, LogicInterface)]
 //! #[join = "FIFOWriteResponder"]
 //! pub struct FIFOWriteController<T: Synth> {
@@ -1925,7 +1925,7 @@
 //! complete example of a wrapped version of this for use in RustHDL.
 //!
 //!```rust
-//! # use rust_hdl::core::prelude::*;
+//! # use rust_hdl::prelude::*;
 //!
 //! #[derive(LogicBlock, Default)]
 //! pub struct ClockDriver {
@@ -1977,21 +1977,30 @@
 
 #![warn(missing_docs)]
 
-///! The core RustHDL module.  Defines variable width bits, signals, logical blocks, etc.
-pub mod core;
 ///! Tools for documenting RustHDL designs, including the generation of SVGs from simulation waveforms.
 pub mod docs;
 ///! A series of High Level Synthesis blocks used to build System-on-Chip designs quickly.
-pub mod hls;
+pub use rust_hdl_hls as hls;
 ///! Prelude module defines common symbols to make importing RustHDL easier.
 pub mod prelude;
+///! The core RustHDL module.  Defines variable width bits, signals, logical blocks, etc.
+pub use rust_hdl_core as core;
+///! A set of routines for dealing with FPGA specific pieces.  Either tools for synthesis, or
+/// logic circuits that are specific to an FPGA family.
+#[cfg(feature = "fpga")]
+pub use rust_hdl_fpga_support as fpga;
+///! Support for the OpalKelly devices (including HDL components and the FrontPanel API)
+#[cfg(feature = "ok")]
+pub use rust_hdl_ok_core as ok;
+#[cfg(feature = "ok")]
+pub use rust_hdl_ok_frontpanel_sys as frontpanel;
 ///! Module that contains all code related to simulating RustHDL designs in Rust (i.e., without
 ///! an external Verilog simulator).
-pub mod sim;
+pub use rust_hdl_sim as sim;
 ///! A set of core widgets useful for FPGA based designs, all written in RustHDL.  This includes
 ///! elements such as Digital Flip Flops, Block RAMs, ROMs, FIFOs, SDRAM controllers, SPI controllers
 ///! I2C controllers, FIR filters, etc.
-pub mod widgets;
+pub use rust_hdl_widgets as widgets;
 
 #[test]
 fn doc_sim() {
@@ -2075,8 +2084,7 @@ fn doc_sim() {
 
 #[test]
 fn doc_vlog() {
-    use crate::core::prelude::*;
-    use crate::widgets::prelude::*;
+    use crate::prelude::*;
 
     #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
     enum State {

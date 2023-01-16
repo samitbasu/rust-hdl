@@ -1,5 +1,5 @@
 use crate::toolchains::map_signal_type_to_xilinx_string;
-use rust_hdl::core::prelude::*;
+use rust_hdl_core::prelude::*;
 
 #[derive(Default)]
 struct XDCGenerator {

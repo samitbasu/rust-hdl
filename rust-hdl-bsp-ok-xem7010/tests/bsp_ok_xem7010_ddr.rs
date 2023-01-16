@@ -1,5 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem7010::xem7010::ddr_fifo7::DDR7FIFO;
 use rust_hdl_bsp_ok_xem7010::xem7010::mcb_if::MCBInterface4GDDR3;
 use rust_hdl_bsp_ok_xem7010::xem7010::pins::xem_7010_leds;

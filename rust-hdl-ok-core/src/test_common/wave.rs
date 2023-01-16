@@ -1,6 +1,6 @@
 use crate::core::prelude::*;
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::test_helpers::FaderWithSyncROM;
+use rust_hdl_core::prelude::*;
+use rust_hdl_hls::test_helpers::FaderWithSyncROM;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyWave {

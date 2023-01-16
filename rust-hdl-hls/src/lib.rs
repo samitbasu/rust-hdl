@@ -23,6 +23,7 @@ pub mod sdram_fifo;
 pub mod sim;
 pub mod spi;
 pub mod test_helpers;
+
 pub trait HLSNamedPorts {
     fn ports(&self) -> Vec<String>;
 }

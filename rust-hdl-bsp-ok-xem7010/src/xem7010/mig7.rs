@@ -1,5 +1,5 @@
 use super::mcb_if::MCBInterface4GDDR3;
-use rust_hdl::core::prelude::*;
+use rust_hdl::prelude::*;
 
 #[derive(LogicBlock, Default)]
 pub struct MemoryInterfaceGenerator7Series {

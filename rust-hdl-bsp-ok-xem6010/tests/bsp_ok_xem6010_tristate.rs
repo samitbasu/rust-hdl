@@ -1,8 +1,7 @@
 use rust_hdl_ok_core::core::ok_hi::OpalKellyHostInterface;
 use rust_hdl_ok_core::core::prelude::*;
 
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem6010::xem6010::XEM6010;
 
 #[derive(LogicBlock)]

@@ -1,4 +1,4 @@
-use rust_hdl::core::prelude::*;
+use rust_hdl::prelude::*;
 use std::fs::File;
 
 struct SignalLister {}

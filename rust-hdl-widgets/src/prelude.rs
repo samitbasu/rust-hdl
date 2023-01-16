@@ -28,6 +28,7 @@ pub use crate::ramrom::ram::RAM;
 pub use crate::ramrom::rom::ROM;
 pub use crate::ramrom::sync_rom::SyncROM;
 pub use crate::sdram::basic_controller::SDRAMBaseController;
+pub use crate::sdram::buffer::SDRAMOnChipBuffer;
 pub use crate::sdram::burst_controller::SDRAMBurstController;
 pub use crate::sdram::cmd::SDRAMCommand;
 pub use crate::sdram::fifo_sdram::SDRAMFIFOController;

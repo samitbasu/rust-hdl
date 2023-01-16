@@ -4,13 +4,11 @@ use rust_hdl_ok_core::core::ok_hls_bridge::{
 };
 use rust_hdl_ok_core::core::prelude::*;
 
-use rust_hdl::core::prelude::*;
-use rust_hdl::hls::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem6010::xem6010::XEM6010;
 use rust_hdl_ok_core::test_common::tools::ok_test_prelude;
 
-use rust_hdl_ok_frontpanel_sys::OkError;
+use rust_hdl_ok_core::frontpanel::OkError;
 
 #[derive(LogicBlock)]
 struct OpalKellyHLSBridgeTest {

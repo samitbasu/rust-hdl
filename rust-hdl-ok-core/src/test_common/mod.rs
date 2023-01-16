@@ -3,8 +3,8 @@
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
 
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl_core::prelude::*;
+use rust_hdl_widgets::prelude::*;
 
 pub mod blinky;
 

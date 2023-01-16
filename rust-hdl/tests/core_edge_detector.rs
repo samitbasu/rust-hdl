@@ -1,5 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 
 #[test]
 fn test_rising_edge_detector_works() {

@@ -3,8 +3,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-use rust_hdl::core::prelude::*;
-use rust_hdl_fpga_support::toolchains::ise::generate_ucf;
+use rust_hdl::prelude::*;
 use rust_hdl_ok_core::core::prelude::*;
 
 #[derive(Clone, Debug)]
@@ -48,7 +47,7 @@ impl Default for ISEOptions {
 pub fn generate_bitstream_xem_6010<U: Block>(mut uut: U, prefix: &str, options: ISEOptions) {
     uut.connect_all();
     let verilog_text = filter_blackbox_directives(&generate_verilog(&uut));
-    let ucf_text = generate_ucf(&uut)
+    let ucf_text = rust_hdl::fpga::toolchains::ise::generate_ucf(&uut)
         + ";
 CONFIG VCCAUX = \"3.3\"; // Required for Spartan-6
 ";
@@ -273,7 +272,7 @@ GENERATE
 pub fn synth_obj<U: Block>(uut: U, dir: &str) {
     let vlog = generate_verilog(&uut);
     find_ok_bus_collisions(&vlog);
-    let _ucf = rust_hdl_fpga_support::toolchains::ise::generate_ucf(&uut);
+    let _ucf = rust_hdl::fpga::toolchains::ise::generate_ucf(&uut);
     yosys_validate(dir, &vlog).unwrap();
     generate_bitstream_xem_6010(uut, dir, Default::default());
 }

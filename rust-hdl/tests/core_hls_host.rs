@@ -1,7 +1,5 @@
 use rand::Rng;
-use rust_hdl::core::check_timing::check_timing;
-use rust_hdl::core::prelude::*;
-use rust_hdl::hls::prelude::*;
+use rust_hdl::prelude::*;
 
 #[derive(LogicBlock)]
 struct HostTest {

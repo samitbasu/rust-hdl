@@ -1,5 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 
 struct Xorshift128State {
     x: [u32; 4],

@@ -1,5 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem7010::xem7010::download::OpalKellyDDRBackedDownloadFIFO7Series;
 use rust_hdl_bsp_ok_xem7010::xem7010::mcb_if::MCBInterface4GDDR3;
 use rust_hdl_bsp_ok_xem7010::xem7010::XEM7010;

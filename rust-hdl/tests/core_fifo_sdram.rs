@@ -1,6 +1,5 @@
 use rust_hdl::core::prelude::*;
 use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
-use rust_hdl::vcd_path;
 use rust_hdl::widgets::prelude::*;
 use rust_hdl::widgets::sdram::buffer::SDRAMOnChipBuffer;
 

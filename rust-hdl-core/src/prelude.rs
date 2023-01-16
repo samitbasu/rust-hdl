@@ -14,6 +14,7 @@ pub use crate::block;
 pub use crate::block::Block;
 pub use crate::check_connected::check_connected;
 pub use crate::check_error::check_all;
+pub use crate::check_timing::check_timing;
 pub use crate::clock;
 pub use crate::clock::freq_hz_to_period_femto;
 pub use crate::clock::Clock;

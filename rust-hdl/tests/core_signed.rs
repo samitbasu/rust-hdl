@@ -1,4 +1,4 @@
-use rust_hdl::core::prelude::*;
+use rust_hdl::prelude::*;
 
 #[derive(LogicBlock)]
 struct CircuitSigned {

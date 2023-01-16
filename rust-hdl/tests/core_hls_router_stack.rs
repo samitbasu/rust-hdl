@@ -1,6 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::hls::prelude::*;
-use rust_hdl::hls::router_rom::RouterROM;
+use rust_hdl::prelude::*;
 
 // Test the case of a stacked router configuration
 

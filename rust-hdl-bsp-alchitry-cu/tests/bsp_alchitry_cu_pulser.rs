@@ -1,5 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_alchitry_cu::pins::CLOCK_SPEED_100MHZ;
 use rust_hdl_bsp_alchitry_cu::{pins, synth};
 use std::time::Duration;

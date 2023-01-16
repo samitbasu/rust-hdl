@@ -1,4 +1,4 @@
-use rust_hdl::core::prelude::*;
+use rust_hdl_core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock, Default)]
 pub struct OutputDDR {

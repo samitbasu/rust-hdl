@@ -1,7 +1,3 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::hls::prelude::*;
-use rust_hdl::widgets::prelude::*;
-
 use {
     crate::test_common::tools::ok_test_prelude,
     rust_hdl_ok_frontpanel_sys::{make_u16_buffer, OkError, OkHandle},

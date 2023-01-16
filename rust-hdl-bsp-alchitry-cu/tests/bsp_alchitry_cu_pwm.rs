@@ -1,6 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
-use rust_hdl::widgets::test_helpers::snore;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_alchitry_cu::{pins, synth};
 use std::collections::BTreeMap;
 

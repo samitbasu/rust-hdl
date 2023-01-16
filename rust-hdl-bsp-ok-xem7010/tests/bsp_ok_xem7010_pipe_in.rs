@@ -1,4 +1,4 @@
-use rust_hdl::core::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem7010::xem7010::XEM7010;
 use rust_hdl_ok_core::core::prelude::*;
 use rust_hdl_ok_core::test_common::pipe::{test_opalkelly_pipe_in_runtime, OpalKellyPipeTest};

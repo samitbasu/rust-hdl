@@ -1,4 +1,4 @@
-use rust_hdl::core::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem6010::xem6010::{synth, XEM6010};
 use rust_hdl_ok_core::test_common::download::{
     test_opalkelly_download32_runtime, OpalKellyDownload32FIFOTest,

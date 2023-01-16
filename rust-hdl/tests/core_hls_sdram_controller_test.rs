@@ -1,10 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::hls::prelude::*;
-use rust_hdl::hls::sdram_controller::SDRAMController;
-use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
-use rust_hdl::widgets::prelude::*;
-use rust_hdl::widgets::sdram::buffer::SDRAMOnChipBuffer;
-use rust_hdl::widgets::sdram::SDRAMDriver;
+use rust_hdl::prelude::*;
 
 #[derive(LogicBlock)]
 struct HostSDRAMControllerTest {

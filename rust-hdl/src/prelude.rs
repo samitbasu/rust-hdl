@@ -1,5 +1,5 @@
-pub use crate::core::prelude::*;
 pub use crate::docs::vcd2svg::vcd_to_svg;
-pub use crate::hls::prelude::*;
-pub use crate::sim::prelude::*;
-pub use crate::widgets::prelude::*;
+pub use rust_hdl_core::prelude::*;
+pub use rust_hdl_hls::prelude::*;
+pub use rust_hdl_sim::prelude::*;
+pub use rust_hdl_widgets::prelude::*;

@@ -1,6 +1,6 @@
 use crate::core::prelude::*;
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl_core::prelude::*;
+use rust_hdl_widgets::prelude::*;
 use std::time::Duration;
 
 #[derive(LogicBlock)]

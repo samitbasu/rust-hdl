@@ -1,7 +1,7 @@
 use super::ok_pipe::BTPipeOut;
 use super::ok_wire::WireOut;
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl_core::prelude::*;
+use rust_hdl_widgets::prelude::*;
 
 declare_sync_fifo!(OKDLFIFO, Bits<16>, 8192, 256);
 

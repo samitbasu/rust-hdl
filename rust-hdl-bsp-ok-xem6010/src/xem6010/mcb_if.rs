@@ -1,4 +1,4 @@
-use rust_hdl::core::prelude::*;
+use rust_hdl::prelude::*;
 
 #[derive(Clone, LogicInterface, Default)]
 pub struct MCBInterface1GDDR2 {
@@ -126,7 +126,7 @@ fn test_dram_if_ucf() {
     let uut = DRAMIFTest5 {
         mcb_dram: MCBInterface1GDDR2::xem_6010(),
     };
-    let ucf = rust_hdl_fpga_support::toolchains::ise::generate_ucf(&uut);
+    let ucf = rust_hdl::fpga::toolchains::ise::generate_ucf(&uut);
     assert!(ucf.contains("mcb_dram$zio LOC=Y2"));
     assert!(ucf.contains("mcb_dram$rzq LOC=K7"));
     assert!(ucf.contains("mcb_dram$address<0> LOC=H2;"));

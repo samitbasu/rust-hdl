@@ -1,5 +1,5 @@
 use rand::Rng;
-use rust_hdl::core::prelude::*;
+use rust_hdl::prelude::*;
 
 // Create a test struxt
 #[derive(Clone, Copy, Debug, PartialEq, LogicState)]
@@ -89,7 +89,6 @@ fn test_mig_tester_vcd() {
 fn test_mig_tester_synthesizes() {
     let mut uut = MIGTester::default();
     uut.connect_all();
-    let vlog = generate_verilog(&uut);
     yosys_validate("mig_tester_struct", &generate_verilog(&uut)).unwrap();
 }
 

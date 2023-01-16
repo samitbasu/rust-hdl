@@ -1,7 +1,6 @@
 use super::ddr_fifo7::DDR7FIFO;
 use super::mcb_if::MCBInterface4GDDR3;
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_ok_core::core::prelude::*;
 
 #[derive(LogicBlock)]

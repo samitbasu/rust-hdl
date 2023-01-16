@@ -1,4 +1,4 @@
-use rust_hdl::core::prelude::*;
+use rust_hdl::prelude::*;
 
 pub struct Spartan6PLLSettings {
     pub clkin_period_ns: f64,

@@ -16,7 +16,7 @@
 //  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
 
-use rust_hdl::core::prelude::*;
+use rust_hdl_core::prelude::*;
 
 #[derive(Clone, Default, Debug)]
 struct ICE40PLLSettings {

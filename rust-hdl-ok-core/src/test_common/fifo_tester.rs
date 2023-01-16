@@ -1,7 +1,5 @@
 use rand::Rng;
-use rust_hdl::core::prelude::*;
-use rust_hdl::hls::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 
 #[derive(LogicState, Debug, Copy, Clone, PartialEq)]
 enum FIFOFeederState {

@@ -1,8 +1,8 @@
 use super::ok_pipe::{PipeIn, PipeOut};
 use super::ok_trigger::{TriggerIn, TriggerOut};
 use super::prelude::WireIn;
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl_core::prelude::*;
+use rust_hdl_widgets::prelude::*;
 
 #[derive(Copy, Clone, Debug)]
 pub struct OKSPIMasterAddressConfig {

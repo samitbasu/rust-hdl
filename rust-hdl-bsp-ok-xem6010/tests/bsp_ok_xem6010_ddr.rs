@@ -1,5 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem6010::xem6010;
 use rust_hdl_bsp_ok_xem6010::xem6010::mcb_if::MCBInterface1GDDR2;
 use rust_hdl_bsp_ok_xem6010::xem6010::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;

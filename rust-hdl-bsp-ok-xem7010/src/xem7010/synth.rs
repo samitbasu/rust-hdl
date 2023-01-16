@@ -3,8 +3,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
-use rust_hdl::core::prelude::*;
-use rust_hdl_fpga_support::toolchains::vivado::generate_xdc;
+use rust_hdl::prelude::*;
 use rust_hdl_ok_core::core::prelude::*;
 
 #[derive(Clone, Debug)]
@@ -185,7 +184,7 @@ generate_target {{instantiation_template}} [get_files mig7.xci]", mig_path=mig_p
 pub fn generate_bitstream_xem_7010<U: Block>(mut uut: U, prefix: &str, options: VivadoOptions) {
     uut.connect_all();
     let verilog_text = filter_blackbox_directives(&generate_verilog(&uut));
-    let xdc_text = generate_xdc(&uut);
+    let xdc_text = rust_hdl::fpga::toolchains::vivado::generate_xdc(&uut);
     let dir = PathBuf::from(prefix);
     let out_file = dir.join("top.out");
     if out_file.exists() {
@@ -280,7 +279,7 @@ exit
 pub fn synth_obj<U: Block>(uut: U, dir: &str) {
     let vlog = generate_verilog(&uut);
     find_ok_bus_collisions(&vlog);
-    let _xcd = rust_hdl_fpga_support::toolchains::vivado::generate_xdc(&uut);
+    let _xcd = rust_hdl::fpga::toolchains::vivado::generate_xdc(&uut);
     yosys_validate(dir, &vlog).unwrap();
     generate_bitstream_xem_7010(uut, dir, Default::default());
 }

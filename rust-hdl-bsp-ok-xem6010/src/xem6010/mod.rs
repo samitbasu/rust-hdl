@@ -1,8 +1,7 @@
 use std::time::Duration;
 
 use pins::*;
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_ok_core::core::prelude::*;
 
 pub mod ddr_fifo;
@@ -77,6 +76,6 @@ fn test_ok_host_synthesizable() {
     let mut uut = OKTest1::new();
     uut.connect_all();
     let vlog = generate_verilog(&uut);
-    let _ucf = rust_hdl_fpga_support::toolchains::ise::generate_ucf(&uut);
+    let _ucf = rust_hdl::fpga::toolchains::ise::generate_ucf(&uut);
     yosys_validate("vlog", &vlog).unwrap();
 }

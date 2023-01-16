@@ -1,4 +1,4 @@
-use rust_hdl::core::prelude::*;
+use rust_hdl::prelude::*;
 
 #[derive(Clone, LogicInterface, Default)]
 pub struct MCBInterface4GDDR3 {
@@ -155,7 +155,7 @@ impl MCBInterface4GDDR3 {
 #[test]
 fn test_dram7_if_xdc() {
     let uut = TopWrap::new(MCBInterface4GDDR3::xem_7010_constrained());
-    let xdc = rust_hdl_fpga_support::toolchains::vivado::generate_xdc(&uut);
+    let xdc = rust_hdl::fpga::toolchains::vivado::generate_xdc(&uut);
     assert!(xdc.contains("set_property PACKAGE_PIN AB1 [get_ports { uut$data_bus[0] }]"));
     assert!(xdc.contains("set_property PACKAGE_PIN Y4 [get_ports { uut$data_bus[1] }]"));
     assert!(xdc.contains("set_property PACKAGE_PIN AB2 [get_ports { uut$data_bus[2] }]"));

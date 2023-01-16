@@ -1,10 +1,5 @@
 use rand::Rng;
-use rust_hdl::core::prelude::*;
-use rust_hdl::hls::prelude::*;
-use rust_hdl::hls::sdram_fifo::SDRAMFIFO;
-use rust_hdl::sim::sdr_sdram::chip::SDRAMSimulator;
-use rust_hdl::widgets::prelude::{MemoryTimings, OutputBuffer};
-use rust_hdl::widgets::sdram::SDRAMDriver;
+use rust_hdl::prelude::*;
 
 #[derive(LogicBlock)]
 struct HLSSDRAMFIFOTest {

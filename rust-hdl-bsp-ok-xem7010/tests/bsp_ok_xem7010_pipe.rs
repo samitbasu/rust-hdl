@@ -1,5 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem7010::xem7010::pins::{
     xem_7010_leds, xem_7010_neg_clock, xem_7010_pos_clock,
 };

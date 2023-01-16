@@ -1,5 +1,4 @@
 use rust_hdl::core::check_error::{CheckError, PathedName};
-use rust_hdl::core::prelude::SynthError::SynthesisFailed;
 use rust_hdl::core::prelude::*;
 
 #[allow(dead_code)]
@@ -15,9 +14,7 @@ enum FooState {
 #[cfg(test)]
 #[allow(dead_code)]
 mod tests {
-    use rust_hdl::core::prelude::*;
-    use rust_hdl::simple_sim;
-    use rust_hdl::widgets::prelude::*;
+    use rust_hdl::prelude::*;
 
     #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
     enum MyState {
@@ -386,7 +383,8 @@ fn test_undriven_outputs_forbidden() {
         }
     }
 
-    let mut uut = OutputUndrivenTest::default(); uut.connect_all();
+    let mut uut = OutputUndrivenTest::default();
+    uut.connect_all();
     if let Err(CheckError::OpenSignal(map)) = check_all(&uut) {
         assert!(map.iter().any(|x| x.1.path == "uut" && x.1.name == "out2"));
     } else {

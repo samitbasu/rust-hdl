@@ -12,7 +12,6 @@ authors = ["Samit Basu <basu.samit@gmail.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl-macros = { version = "0.43.0", path = "../rust-hdl-macros" }
 rust-hdl-core = { version = "0.43.0", path = "../rust-hdl-core" }
 array-init = "2.0.0"
 

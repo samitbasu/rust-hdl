@@ -1,6 +1,5 @@
 use rand::Rng;
-use rust_hdl::core::prelude::*;
-use rust_hdl::widgets::prelude::*;
+use rust_hdl::prelude::*;
 
 #[derive(LogicBlock, Default)]
 struct RegFIFOTest {

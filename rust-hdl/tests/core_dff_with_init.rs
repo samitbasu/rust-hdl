@@ -1,7 +1,4 @@
-use rust_hdl::core::prelude::*;
-use rust_hdl::core::timing::TimingInfo;
-use rust_hdl::dff_setup;
-use rust_hdl::widgets::prelude::DFFWithInit;
+use rust_hdl::prelude::*;
 
 #[derive(LogicBlock)]
 struct DFFWithNonzeroInit {
