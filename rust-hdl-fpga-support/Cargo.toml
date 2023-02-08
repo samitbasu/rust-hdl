@@ -5,7 +5,7 @@ edition = "2021"
 license = "MIT"
 description = "Support crate for RustHDL - provides FPGA specific code"
 homepage = "https://rusthdl.org"
-repository = "https://github.com/SmithsDigitalForge/rust-hdl"
+repository = "https://github.com/samitbasu/rust-hdl"
 keywords = ["fpga", "verilog", "hardware"]
 authors = ["Samit Basu <samit.basu@smiths.com>"]
 
