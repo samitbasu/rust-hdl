@@ -19,7 +19,7 @@ You may want:
 
 - [API Documentation](https://docs.rs/rust-hdl/latest/rust_hdl/)
 - [GitHub](https://github.com/samitbasu/rust-hdl)
-- [Home Page](https://rusthdl.org)
+- [Home Page](https://github.com/samitbasu/rust-hdl)
 
 ### Features
 * Safe - have Rust check the validity of your firmware with
