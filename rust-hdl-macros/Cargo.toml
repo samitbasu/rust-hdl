@@ -4,8 +4,8 @@ version = "0.43.0"
 edition = "2018"
 license = "MIT"
 description = "Macro support for RustHDL"
-homepage = "https://rusthdl.org"
-repository = "https://github.com/SmithsDigitalForge/rust-hdl"
+homepage = "https://github.com/samitbasu/rust-hdl"
+repository = "https://github.com/samitbasu/rust-hdl"
 keywords = ["fpga", "verilog", "hardware"]
 authors = ["Samit Basu <samit.basu@smiths.com>"]
 
