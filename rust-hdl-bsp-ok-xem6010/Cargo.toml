@@ -4,8 +4,8 @@ version = "0.44.0"
 edition = "2021"
 license = "MIT"
 description = "Support crate for RustHDL - provides Board Support Package for the OpalKelly XEM6010 FPGA module (Spartan-6 based)"
-homepage = "https://rusthdl.org"
-repository = "https://github.com/SmithsDigitalForge/rust-hdl"
+homepage = "https://github.com/samitbasu/rust-hdl"
+repository = "https://github.com/samitbasu/rust-hdl"
 keywords = ["fpga", "verilog", "hardware"]
 authors = ["Samit Basu <samit.basu@smiths.com>"]
 

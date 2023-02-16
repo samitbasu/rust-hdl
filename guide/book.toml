@@ -7,4 +7,4 @@ author = "Samit Basu"
 description = "FPGA Programming with RustHDL"
 
 [output.html]
-git-repository-url = "https://github.com/rust-hdl/guide"
+git-repository-url = "https://github.com/samitbasu/rust-hdl/tree/main/guide"

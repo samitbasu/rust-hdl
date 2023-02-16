@@ -1,5 +1,8 @@
 # rust-hdl
 
+** Note!  This is still a live project.  Just taking a short break.  Back in a few weeks. **
+
+
 ** Write FPGA Firmware using Rust! **
 
 
@@ -18,8 +21,8 @@ then head over to standard synthesis tools to get files that program your FPGA.
 You may want:
 
 - [API Documentation](https://docs.rs/rust-hdl/latest/rust_hdl/)
-- [GitHub](https://github.com/SmithsDigitalForge/rust-hdl)
-- [Home Page](https://rusthdl.org)
+- [GitHub](https://github.com/samitbasu/rust-hdl)
+- [Home Page](https://github.com/samitbasu/rust-hdl)
 
 ### Features
 * Safe - have Rust check the validity of your firmware with
@@ -108,9 +111,9 @@ If you have, for example, an Alchitry Cu board you can generate a bitstream for 
 with a single call.  It's a little more involved, so we will cover that in the detailed
 documentation.  It will also render that `vcd` file into an `svg` you can view with an ordinary
 web browser.  This is the end result showing the entire simulation:
-![blinky_all](https://github.com/SmithsDigitalForge/rust-hdl/raw/main/rust-hdl/images/blinky_all.svg)
+![blinky_all](https://github.com/samitbasu/rust-hdl/raw/main/rust-hdl/images/blinky_all.svg)
 Here is a zoom in showing the pulse to the LED
-![blinky_pulse](https://github.com/SmithsDigitalForge/rust-hdl/raw/main/rust-hdl/images/blinky_pulse.svg)
+![blinky_pulse](https://github.com/samitbasu/rust-hdl/raw/main/rust-hdl/images/blinky_pulse.svg)
 
 The flow behind RustHDL is the following:
 
