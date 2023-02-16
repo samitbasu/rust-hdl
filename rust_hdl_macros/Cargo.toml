@@ -1,5 +1,5 @@
 [package]
-name = "rust-hdl-macros"
+name = "rust_hdl_macros"
 version = "0.44.0"
 edition = "2018"
 license = "MIT"

@@ -1,5 +1,5 @@
 [package]
-name = "rust-hdl-ok-frontpanel-sys"
+name = "rust_hdl_ok_frontpanel_sys"
 version = "0.44.0"
 edition = "2018"
 license = "MIT"

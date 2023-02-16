@@ -1,5 +1,5 @@
 [package]
-name = "rust-hdl-bsp-ok-xem6010"
+name = "rust_hdl_bsp_ok_xem6010"
 version = "0.44.0"
 edition = "2021"
 license = "MIT"
@@ -13,9 +13,9 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
 rust-hdl = { path = "../rust-hdl", version = "0.44.0", features = ["fpga"] }
-rust-hdl-ok-core = { path = "../rust-hdl-ok-core", version = "0.44.0" }
+rust_hdl_ok_core = { path = "../rust_hdl_ok_core", version = "0.44.0" }
 rand = { version = "0.8.1" }
 
 [dev-dependencies]
-rust-hdl-hls = { path = "../rust-hdl-hls", version = "0.44.0" }
-rust-hdl-sim = { path = "../rust-hdl-sim", version = "0.44.0" }
+rust_hdl_hls = { path = "../rust_hdl_hls", version = "0.44.0" }
+rust_hdl_sim = { path = "../rust_hdl_sim", version = "0.44.0" }

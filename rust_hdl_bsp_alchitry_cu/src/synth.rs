@@ -1,6 +1,6 @@
 use rust_hdl::core::check_error::check_all;
 use rust_hdl::core::prelude::*;
-use rust_hdl_fpga_support::toolchains::icestorm::generate_pcf;
+use rust_hdl::fpga::toolchains::icestorm::generate_pcf;
 use std::fs::{create_dir_all, remove_dir_all, File};
 use std::io::Write;
 use std::path::PathBuf;

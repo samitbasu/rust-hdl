@@ -1,5 +1,5 @@
 [package]
-name = "rust-hdl-bsp-alchitry-cu"
+name = "rust_hdl_bsp_alchitry_cu"
 version = "0.44.0"
 edition = "2021"
 license = "MIT"
@@ -13,5 +13,4 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl = { version = "0.44.0", path = "../rust-hdl" }
-rust-hdl-fpga-support = { version = "0.44.0", path = "../rust-hdl-fpga-support" }
+rust-hdl = { version = "0.44.0", path = "../rust-hdl", features = ["fpga"] }

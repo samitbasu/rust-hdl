@@ -1,7 +1,7 @@
+use rust_hdl::fpga::lattice::ice40::ice_pll::ICE40PLLBlock;
 use rust_hdl::prelude::*;
 use rust_hdl_bsp_alchitry_cu::pins;
 use rust_hdl_bsp_alchitry_cu::synth::generate_bitstream;
-use rust_hdl_fpga_support::lattice::ice40::ice_pll::ICE40PLLBlock;
 use std::time::Duration;
 
 const MHZ100: u64 = 100_000_000;

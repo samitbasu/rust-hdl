@@ -1,9 +1,9 @@
 [package]
-name = "rust-hdl-sim"
+name = "rust_hdl_hls"
 version = "0.44.0"
 edition = "2021"
 license = "MIT"
-description = "Write firmware for FPGAs in Rust - Simulation crate"
+description = "Write firmware for FPGAs in Rust - High Level Synthesis crate"
 homepage = "https://github.com/samitbasu/rust-hdl"
 repository = "https://github.com/samitbasu/rust-hdl"
 keywords = ["fpga", "verilog", "hardware"]
@@ -12,6 +12,7 @@ authors = ["Samit Basu <basu.samit@gmail.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl-core = { version = "0.44.0", path = "../rust-hdl-core" }
-rust-hdl-widgets = { version = "0.44.0", path = "../rust-hdl-widgets" }
+rust_hdl_core = { version = "0.44.0", path = "../rust_hdl_core" }
+rust_hdl_widgets = { version = "0.44.0", path = "../rust_hdl_widgets" }
 array-init = { version = "2.0.0" }
+rand = "0.8"
