@@ -143,8 +143,8 @@ impl Probe for LocalVars {
 /// dependencies in the logic that are neither simulateable nor
 /// synthesizable.  For example
 /// ```rust
-/// use rust_hdl_core::prelude::*;
-/// use rust_hdl_core::check_logic_loops::check_logic_loops;
+/// use rust_hdl_private_core::prelude::*;
+/// use rust_hdl_private_core::check_logic_loops::check_logic_loops;
 ///
 /// #[derive(LogicBlock, Default)]
 /// struct Circle {

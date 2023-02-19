@@ -48,7 +48,7 @@ impl From<bool> for Clock {
 ///
 /// For example:
 /// ```
-/// use rust_hdl_core::prelude::*;
+/// use rust_hdl_private_core::prelude::*;
 ///
 /// #[derive(LogicBlock)]
 /// pub struct Widget {

@@ -13,7 +13,7 @@ use rust_hdl_private_core::prelude::*;
 /// a single entity.
 ///
 /// ```rust
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// # use rust_hdl_widgets::prelude::*;
 ///
 /// // An example of a simple tristate 8-bit bus

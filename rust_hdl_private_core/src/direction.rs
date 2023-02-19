@@ -11,7 +11,7 @@ pub trait Direction: Clone {
 /// the value will be set by external components to the
 /// circuit.
 /// ```rust
-/// use rust_hdl_core::prelude::*;
+/// use rust_hdl_private_core::prelude::*;
 ///
 /// struct Foo {
 ///     pub x: Signal<In, Bit>,     // <--- This is a single bit input

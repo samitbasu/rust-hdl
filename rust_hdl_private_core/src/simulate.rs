@@ -149,7 +149,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
     /// # Example
     ///
     /// ```rust
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     ///
     /// #[derive(LogicBlock)]
     /// struct Foo {
@@ -193,7 +193,7 @@ impl<T: Send + 'static + Block> Simulation<T> {
     /// # Example
     ///
     /// ```rust
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     ///
     /// #[derive(LogicBlock)]
     /// struct Foo {

@@ -56,7 +56,7 @@ impl Probe for CheckConnected {
 /// multiply-driven outputs).  You can call this directly on a circuit of yours
 /// if you want to check that it is correctly connected internally.  
 /// ```rust
-/// use rust_hdl_core::prelude::*;
+/// use rust_hdl_private_core::prelude::*;
 ///
 /// #[derive(LogicBlock, Default)]
 /// struct Broken {

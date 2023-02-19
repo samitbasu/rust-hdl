@@ -29,7 +29,7 @@
 //! the [Default](std::default::Default), trait, so if you need a zero value, you can use
 //! that form:
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<50> = Default::default();
 //! ```
 //! This will construct a length 50 bit vector that is initialized to all `0`.
@@ -38,13 +38,13 @@
 //! provided the literals are of the `u64` type.
 //!
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<50> = 0xBEEF.into();
 //! ```
 //!
 //! In some cases, Rust complains about literals, and you may need to provide a suffix:
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<50> = 0xDEAD_BEEF_u64.into();
 //! ```
 //! However, in most cases, you can leave literals suffix-free, and Rust will automatically
@@ -53,7 +53,7 @@
 //! You can construct a larger constant using the [bits] function.  If you have a literal of up to
 //! 128 bits, it provides a functional form
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<200> = bits(0xDEAD_BEEE); // Works for up to 128 bit constants.
 //! ```
 //!
@@ -61,7 +61,7 @@
 //! This trait allows you to handily convert from different integer values
 //!
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<10> = 32_u8.to_bits();
 //! ```
 //!
@@ -77,7 +77,7 @@
 //! You can perform wrapping addition using the `+` operator.
 //! Here are some simple examples of addition. First the version using a literal
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<200> = bits(0xDEAD_BEEE);
 //! let y: Bits<200> = x + 1;
 //! assert_eq!(y, bits(0xDEAD_BEEF));
@@ -85,7 +85,7 @@
 //!
 //! And now a second example that uses two [Bits] values
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<40> = bits(0xDEAD_0000);
 //! let y: Bits<40> = bits(0x0000_CAFE);
 //! let z = x + y;
@@ -96,7 +96,7 @@
 //! bit is discarded silently (again - this is what hardware typically does).  So you
 //! may find this result surprising:
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<40> = bits(0xFF_FFFF_FFFF);
 //! let y = x + 1;
 //! assert_eq!(y, bits(0));
@@ -107,7 +107,7 @@
 //! carry bit, then the solution is to first cast to 1 higher bit, and then add, or alternately,
 //! to compute the carry directly.
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<40> = bits(0xFF_FFFF_FFFF);
 //! let y = bit_cast::<41, 40>(x) + 1;
 //! assert_eq!(y, bits(0x100_0000_0000));
@@ -116,7 +116,7 @@
 //! The order of the arguments does not matter.  The bit width of the calculation will be
 //! determined by the [Bits] width.
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x : Bits<25> = bits(0xCAFD);
 //! let y = 1 + x;
 //! assert_eq!(y, bits(0xCAFE));
@@ -124,7 +124,7 @@
 //!
 //! However, you cannot combine two different width [Bits] values in a single expression.
 //! ```compile_fail
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<20> = bits(0x1234);
 //! let y: Bits<21> = bits(0x5123);
 //! let z = x + y; // Won't compile!
@@ -139,7 +139,7 @@
 //!
 //! Here is a simple example with a literal and subtraction that does not cause udnerflow
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<40> = bits(0xDEAD_BEF0);
 //! let y = x - 1;
 //! assert_eq!(y, bits(0xDEAD_BEEF));
@@ -149,7 +149,7 @@
 //! example,
 //!
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<16> = bits(0x40);
 //! let y: Bits<16> = bits(0x60);
 //! let z = x - y;
@@ -162,7 +162,7 @@
 //! You can also put the literal on the left side of the subtraction expression, as expected.  The
 //! bitwidth of the computation will be driven by the width of the [Bits] in the expression.
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x = bits::<32>(0xBABE);
 //! let z = 0xB_BABE - x;
 //! assert_eq!(z, bits(0xB_0000));
@@ -175,7 +175,7 @@
 //! of type `bool`.
 //!
 //! ```
-//! # use  rust_hdl_core::prelude::*;
+//! # use  rust_hdl_private_core::prelude::*;
 //! let x: Bits<32> = bits(0xDEAD_BEEF);
 //! let y: Bits<32> = bits(0xFFFF_0000);
 //! let z = x & y;
@@ -184,7 +184,7 @@
 //!
 //! Of course, you can also use a literal value in the `and` operation.
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<32> = bits(0xDEAD_BEEF);
 //! let z = x & 0x0000_FFFF;
 //! assert_eq!(z, bits(0xBEEF))
@@ -192,7 +192,7 @@
 //!
 //! and similarly, the literal can appear on the left of the `and` expression.
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<32> = bits(0xCAFE_BEEF);
 //! let z = 0xFFFF_0000 & x;
 //! assert_eq!(z, bits(0xCAFE_0000));
@@ -201,7 +201,7 @@
 //! Just like all other binary operations, you cannot mix widths (unless one of the
 //! values is a literal).
 //! ```compile_fail
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<16> = bits(0xFEED_FACE);
 //! let y: Bits<17> = bits(0xABCE);
 //! let z = x & y; // Won't compile!
@@ -214,7 +214,7 @@
 //! scalar boolean values.
 //!
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x : Bits<32> = bits(0xBEEF_0000);
 //! let y : Bits<32> = bits(0x0000_CAFE);
 //! let z = x | y;
@@ -223,7 +223,7 @@
 //!
 //! You can also use literals
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x : Bits<32> = bits(0xBEEF_0000);
 //! let z = x | 0x0000_CAFE;
 //! assert_eq!(z, bits(0xBEEF_CAFE));
@@ -237,7 +237,7 @@
 //! bitwise exclusive OR of the two values.
 //!
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x : Bits<32> = bits(0xCAFE_BABE);
 //! let y : Bits<32> = bits(0xFF00_00FF);
 //! let z = y ^ x;
@@ -250,7 +250,7 @@
 //! The equality operator `==` can compare two [Bits] for bit-wise equality.
 //!
 //!```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<16> = bits(0x5ea1);
 //! let y: Bits<16> = bits(0xbadb);
 //! assert_eq!(x == y, false)
@@ -260,7 +260,7 @@
 //! widths.
 //!
 //!```compile_fail
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<15> = bits(52);
 //! let y: Bits<16> = bits(32);
 //! let z = x == y; // Won't compile - bit widths must match
@@ -270,7 +270,7 @@
 //! bitwidth of the [Bits] value.
 //!
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x : Bits<16> = bits(32);
 //! let z = x == 32;
 //! let y = 32 == x;
@@ -291,7 +291,7 @@
 //!
 //! Here are some simple examples.
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<16> = bits(52);
 //! let y: Bits<16> = bits(13);
 //! assert!(y < x)
@@ -300,7 +300,7 @@
 //! We can also compare with literals, which RustHDL will expand out to match the bit width
 //! of the [Bits] being compared to.
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<16> = bits(52);
 //! let y = x < 135;  // Converts the 135 to a Bits<16> and then compares
 //! assert!(y)
@@ -313,7 +313,7 @@
 //! the bit vector (most significant bits).
 //!
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<16> = bits(0xDEAD);
 //! let y = x << 8;
 //! assert_eq!(y, bits(0xAD00));
@@ -326,7 +326,7 @@
 //! the bit vector (least significant bits).
 //!
 //! ```
-//! # use rust_hdl_core::prelude::*;
+//! # use rust_hdl_private_core::prelude::*;
 //! let x: Bits<16> = bits(0xDEAD);
 //! let y = x >> 8;
 //! assert_eq!(y, bits(0x00DE));
@@ -350,7 +350,7 @@ use std::num::Wrapping;
 /// expressions.  Because of how Rust's type inference currently works, an expression
 /// like
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 ///
 /// let x: Bits<32> = 0xDEADBEEF.into();
 /// let y : Bits<32> = x + 1;
@@ -363,14 +363,14 @@ use std::num::Wrapping;
 /// using suffixed literals.  You can express, for example, up to 128 bit constants using standard
 /// Rust notation, and using the [to_bits] trait to convert it to a [Bits] type.
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 ///
 /// let x: Bits<128> = 0xDEADBEEF_CAFE_1234_u128.to_bits();  // Works!
 /// ```
 /// However, the following will fail, since the [From] trait is only implemented on [LiteralType]
 /// to make the conversion unambiguous.
 /// ```compile_fail
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 ///
 /// let x: Bits<128> = 0xDEADBEEF_CAFE_1234_u128.into();  // Fails to compile, since conversion from [u128] is not defined
 /// ```
@@ -395,7 +395,7 @@ pub const LITERAL_BITS: usize = 64;
 /// the signal that holds the count.
 ///
 /// ```rust, compile_fail
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 ///
 /// #[derive(LogicBlock, Default)]
 /// struct CountToN<const N: usize> {
@@ -432,7 +432,7 @@ pub enum Bits<const N: usize> {
 /// needed to represent the value are greater than the width of the [Bits].
 /// ```
 /// # use num_bigint::BigUint;
-/// # use rust_hdl_core::bits::Bits;
+/// # use rust_hdl_private_core::bits::Bits;
 /// let x = BigUint::parse_bytes(b"10111000101", 2).unwrap();
 /// let y : Bits<16> = x.into();
 /// println!("y = {:x}", y); // Prints y = 02c5
@@ -440,7 +440,7 @@ pub enum Bits<const N: usize> {
 /// The following will panic, because the value cannot be represented in the
 /// given number of bits.
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// # use num_bigint::BigUint;
 /// let x = BigUint::parse_bytes(b"10111000101", 2).unwrap();
 /// let y : Bits<12> = x.into(); // Panics
@@ -465,7 +465,7 @@ impl<const N: usize> From<BigUint> for Bits<N> {
 
 /// Convert from a [Bits] to a [BigUint].
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// # use num_bigint::BigUint;
 /// let x : Bits<128> = 0xDEAD_BEEF_CAFE_BABE_1234_5678_u128.to_bits();
 /// let y : BigUint = x.into();
@@ -532,7 +532,7 @@ fn test_cast_from_biguint() {
 
 /// Allows you to format a [Bits] as a binary string
 /// ```
-/// # use rust_hdl_core::bits::Bits;
+/// # use rust_hdl_private_core::bits::Bits;
 /// let y = Bits::<16>::from(0b1011_0100_0010_0000);
 /// println!("y = {:b}", y); // Prints y = 1011010000100000
 /// ```
@@ -558,7 +558,7 @@ fn test_print_as_binary() {
 
 /// Allows you to format a [Bits] as a lowercase hex string
 /// ```
-/// # use rust_hdl_core::bits::Bits;
+/// # use rust_hdl_private_core::bits::Bits;
 /// let y = Bits::<16>::from(0xcafe);
 /// println!("y = {:x}", y); // Prints y = cafe
 /// ```
@@ -584,7 +584,7 @@ fn test_print_as_lowercase_hex() {
 
 /// Allows you to format a [Bits] as an uppercase hex string
 /// ```
-/// # use rust_hdl_core::bits::Bits;
+/// # use rust_hdl_private_core::bits::Bits;
 /// let y = Bits::<16>::from(0xcafe);
 /// println!("y = {:X}", y); // Prints y = CAFE
 /// ```
@@ -614,13 +614,13 @@ fn test_print_as_uppercase_hex() {
 /// In those cases, the [bits] function can make construction slightly
 /// simpler.
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// let x : Bits<14> = bits(0xDEA);
 /// assert_eq!("0dea", format!("{:x}", x))
 /// ```
 /// In most cases, it's easier to use `into`:
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// let x: Bits<14> = 0xDEA.into();
 /// assert_eq!("0dea", format!("{:x}", x))
 /// ```
@@ -637,7 +637,7 @@ pub trait ToBits {
     /// Convert the underlying type to a [Bits] of the specified size.  Invoked
     /// using
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<4> = 0xF_u8.to_bits();
     ///```
     fn to_bits<const N: usize>(self) -> Bits<N>;
@@ -697,7 +697,7 @@ impl ToBits for u128 {
 /// First, an example of widening, in this case, an extra nibble is
 /// added to the most significant bits, and is set to zero.
 ///```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// let x : Bits<12> = bits(0xEAF);
 /// let y : Bits<16> = bit_cast(x); // M = 16, N = 12
 /// assert_eq!(y, bits::<16>(0x0EAF));
@@ -706,7 +706,7 @@ impl ToBits for u128 {
 /// In the second example, we downcast, this time, discarding the most
 /// significant nibble.
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// let x : Bits<16> = bits(0xDEAF);
 /// let y : Bits<12> = bit_cast(x); // M = 12, N = 16
 /// assert_eq!(y, bits::<12>(0xEAF));
@@ -779,7 +779,7 @@ impl<const N: usize> Bits<N> {
     /// This reduction operation is equivalent to a logical
     /// OR of all the bits in the vector.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<14> = bits(0xDEA);
     /// assert_eq!(x.any(), true);
     /// let y : Bits<14> = Bits::default();
@@ -798,7 +798,7 @@ impl<const N: usize> Bits<N> {
     /// operation is equivalent to a logical AND of all the bits
     /// in the vector.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<14> = bits(0xDEA);
     /// assert_eq!(x.all(), false);
     /// let y : Bits<14> = bits(0x3FFF);
@@ -817,7 +817,7 @@ impl<const N: usize> Bits<N> {
     /// the number of ones.  If the number is odd, the XOR will
     /// be true.  If even, it will be false.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x: Bits<12> = bits(0b1100_0100_1100);
     /// assert_eq!(x.xor(), true);
     /// let y: Bits<12> = bits(0b1100_0110_1100);
@@ -840,7 +840,7 @@ impl<const N: usize> Bits<N> {
     /// indexing into a register using some other register/value,
     /// the _length_ of the register is limited to a few billion bits.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x: Bits<12> = bits(0b1100_0100_1100);
     /// assert_eq!(x.index(), 0b1100_0100_1100_usize);
     /// ```
@@ -857,7 +857,7 @@ impl<const N: usize> Bits<N> {
     /// of limited use as a runtime function, but is there
     /// nonetheless.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<14> = Bits::default();
     /// assert_eq!(x.len(), 14);
     /// ```
@@ -878,7 +878,7 @@ impl<const N: usize> Bits<N> {
     /// A [Bits<256>] for example, cannot represent [count]
     /// on a normal 64 bit machine.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// assert_eq!(Bits::<16>::count(), 1 << 16);
     /// ```
     pub fn count() -> u128 {
@@ -890,7 +890,7 @@ impl<const N: usize> Bits<N> {
     /// cause a runtime panic if the [index] bit is out of range
     /// of the width of the bitvector.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<14> = bits(0b10110);
     /// assert_eq!(x.get_bit(0), false);
     /// assert_eq!(x.get_bit(1), true);
@@ -909,7 +909,7 @@ impl<const N: usize> Bits<N> {
     /// a new [Bits] with all bits except the designated one left
     /// alone.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x: Bits<16> = bits(0b1100_0000);
     /// let x = x.replace_bit(0, true);
     /// let x = x.replace_bit(7, false);
@@ -929,7 +929,7 @@ impl<const N: usize> Bits<N> {
     /// of the result must be fixed (the argument [M]), and only the offset
     /// can be computed.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x: Bits<40> = bits(0xDEAD_BEEF_CA);
     /// let y = x.get_bits::<32>(8);
     /// assert_eq!(y, bits(0xDEAD_BEEF))
@@ -943,7 +943,7 @@ impl<const N: usize> Bits<N> {
     /// Set a group of bits in a value.  This operation modifies the
     /// value in place.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let mut x: Bits<40> = bits(0xDEAD_BEEF_CA);
     /// x.set_bits::<16>(8, bits(0xCAFE));
     /// assert_eq!(x, bits(0xDEAD_CAFE_CA));
@@ -960,7 +960,7 @@ impl<const N: usize> Bits<N> {
     #[inline(always)]
     /// Returns a [Bits] value that contains [N] ones.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x = Bits::<40>::mask();
     /// assert_eq!(x, bits(0xFF_FFFF_FFFF));
     /// ```
@@ -976,7 +976,7 @@ impl<const N: usize> Bits<N> {
     /// Note that this is the number of bits allocated.
     /// It does not depend on the value at all.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// assert_eq!(Bits::<40>::width(), 40);
     /// ```
     pub const fn width() -> usize {
@@ -985,7 +985,7 @@ impl<const N: usize> Bits<N> {
 
     /// Convert [Bits] to an [u8].
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<6> = 12.into();
     /// let y = x.to_u8();
     /// assert_eq!(y, 12_u8);
@@ -993,7 +993,7 @@ impl<const N: usize> Bits<N> {
     /// Note that this will panic if the width of the
     /// bitvector is larger than 8 bits.
     /// ```should_panic
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x: Bits<12> = 0xADE.into();
     /// let y = x.to_u8(); // Panics - too many bits
     /// ```
@@ -1005,7 +1005,7 @@ impl<const N: usize> Bits<N> {
 
     /// Convert [Bits] to an [u16].
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<12> = 12.into();
     /// let y = x.to_u16();
     /// assert_eq!(y, 12_u16);
@@ -1013,7 +1013,7 @@ impl<const N: usize> Bits<N> {
     /// Note that this will panic if the width of the
     /// bitvector is larger than 16 bits.
     /// ```should_panic
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x: Bits<20> = 0xADE.into();
     /// let y = x.to_u16(); // Panics - too many bits
     /// ```
@@ -1029,7 +1029,7 @@ impl<const N: usize> Bits<N> {
 
     /// Convert [Bits] to an [u32].
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<24> = 12.into();
     /// let y = x.to_u32();
     /// assert_eq!(y, 12_u32);
@@ -1037,7 +1037,7 @@ impl<const N: usize> Bits<N> {
     /// Note that this will panic if the width of the
     /// bitvector is larger than 32 bits.
     /// ```should_panic
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x: Bits<40> = 0xADE.into();
     /// let y = x.to_u32(); // Panics - too many bits
     /// ```
@@ -1053,7 +1053,7 @@ impl<const N: usize> Bits<N> {
 
     /// Convert [Bits] to an [u64].
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<40> = 12.into();
     /// let y = x.to_u64();
     /// assert_eq!(y, 12_u64);
@@ -1061,7 +1061,7 @@ impl<const N: usize> Bits<N> {
     /// Note that this will panic if the width of the
     /// bitvector is larger than 64 bits.
     /// ```should_panic
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x: Bits<80> = 0xADE.into();
     /// let y = x.to_u64(); // Panics - too many bits
     /// ```
@@ -1077,7 +1077,7 @@ impl<const N: usize> Bits<N> {
 
     /// Convert [Bits] to an [u128].
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<80> = 12.into();
     /// let y = x.to_u128();
     /// assert_eq!(y, 12_u128);
@@ -1085,7 +1085,7 @@ impl<const N: usize> Bits<N> {
     /// Note that this will panic if the width of the
     /// bitvector is larger than 128 bits.
     /// ```should_panic
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x: Bits<140> = 0xADE.into();
     /// let y = x.to_u128(); // Panics - too many bits
     /// ```
@@ -1102,7 +1102,7 @@ impl From<bool> for Bits<1> {
     /// Convenience method that allows you to convert
     /// a boolean into a single bit-width [Bits].
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<1> = true.into();
     /// assert_eq!(x, bits(1))
     /// ```
@@ -1120,7 +1120,7 @@ impl From<Bits<1>> for bool {
     /// Convenience method for converting a 1-bit
     /// width [Bits] value into a boolean value.
     /// ```
-    /// # use rust_hdl_core::prelude::*;
+    /// # use rust_hdl_private_core::prelude::*;
     /// let x : Bits<1> = bits(1);
     /// let y : bool = x.into();
     /// assert!(y)
@@ -1140,20 +1140,20 @@ impl From<Bits<1>> for bool {
 /// so as to make HDL expressions close to Verilog or VHDL.  This choice should not affect
 /// any hardware implementation, as hardware registers need to be of [Bits] type.
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// let x: Bits<16> = 0xDEAD.into(); // This is interpreteed as a 128 bit constant by Rust
 /// ```
 /// This example is the largest bit width literal you can express using current
 /// edition Rust:
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// let x: Bits<128> = 0xDEADBEEF_CAFEBABE_1234ABCD_00005EA1_u128.to_bits();
 /// ```
 /// From a safety perspective, RustHDL will panic if the argument is too large to fit
 /// into the bit vector.  Thus, this example will panic, since the literal cannot be
 /// fit into 16 bits without truncation:
 /// ```should_panic
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// let x: Bits<16> = 0xDEADBEEF.into(); // This will panic!
 /// ```
 impl<const N: usize> From<LiteralType> for Bits<N> {
@@ -1184,7 +1184,7 @@ impl<const N: usize> From<Wrapping<LiteralType>> for Bits<N> {
 /// if you try to convert a [Bits] that is more than 128 bits to a literal.  Even if the
 /// value in the bitvector would fit.
 ///```
-///# use rust_hdl_core::prelude::*;
+///# use rust_hdl_private_core::prelude::*;
 /// let x: Bits<16> = 0xDEAD.into();
 /// let y: u128 = x.to_u128();
 /// assert_eq!(y, 0xDEAD);
@@ -1192,7 +1192,7 @@ impl<const N: usize> From<Wrapping<LiteralType>> for Bits<N> {
 ///The following will panic even through the literal value stored in the 256 bit vector
 ///is less than 128 bits.
 ///```should_panic
-///# use rust_hdl_core::prelude::*;
+///# use rust_hdl_private_core::prelude::*;
 ///let x : Bits<256> = 42.into();
 ///let y: u128 = x.to_u128(); // Panics!
 /// ```
@@ -1313,7 +1313,7 @@ op_shift!(shl, Shl, <<);
 
 /// Construct a default [Bits] - i.e., a zero bit vector of length N.
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// let x : Bits<200> = Default::default();
 /// assert_eq!(x, bits(0));
 /// ```
@@ -1326,7 +1326,7 @@ impl<const N: usize> Default for Bits<N> {
 /// Bitwise inversion of a [Bits] vector
 /// The `!` operator will invert each bit in a [Bits] vector.
 /// ```
-/// # use rust_hdl_core::prelude::*;
+/// # use rust_hdl_private_core::prelude::*;
 /// let x : Bits<16> = bits(0xAAAA);
 /// let y = !x;
 /// assert_eq!(y, bits(0x5555))

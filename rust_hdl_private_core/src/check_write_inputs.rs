@@ -135,8 +135,8 @@ impl Probe for CheckInputsNotDriven {
 /// not written by the HDL kernel.  In RustHDL, you are not allowed
 /// to write to input signals from within a module.
 /// ```rust
-/// use rust_hdl_core::prelude::*;
-/// use rust_hdl_core::check_write_inputs::check_inputs_not_written;
+/// use rust_hdl_private_core::prelude::*;
+/// use rust_hdl_private_core::check_write_inputs::check_inputs_not_written;
 ///
 /// #[derive(LogicBlock, Default)]
 /// struct BadGuy {

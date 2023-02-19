@@ -21,7 +21,7 @@ use crate::synth::{Synth, VCDValue};
 ///
 /// Here is a correct usage of a [Constant]
 /// ```rust
-///  use rust_hdl_core::prelude::*;
+///  use rust_hdl_private_core::prelude::*;
 ///
 /// #[derive(LogicBlock)]
 /// struct AddNum {

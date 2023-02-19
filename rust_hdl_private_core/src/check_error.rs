@@ -34,7 +34,7 @@ pub enum CheckError {
 /// This is a helper function used to check a [Block] for connection, loops, and
 /// writes to the inputs.  
 /// ```rust
-/// use rust_hdl_core::prelude::*;
+/// use rust_hdl_private_core::prelude::*;
 ///
 /// #[derive(LogicBlock, Default)]
 /// struct Circuit {
