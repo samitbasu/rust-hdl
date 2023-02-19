@@ -7,7 +7,7 @@ description = "Macro support for RustHDL"
 homepage = "https://github.com/samitbasu/rust-hdl"
 repository = "https://github.com/samitbasu/rust-hdl"
 keywords = ["fpga", "verilog", "hardware"]
-authors = ["Samit Basu <samit.basu@smiths.com>"]
+authors = ["Samit Basu <basu.samit@gmail.com>"]
 
 [lib]
 proc-macro = true
