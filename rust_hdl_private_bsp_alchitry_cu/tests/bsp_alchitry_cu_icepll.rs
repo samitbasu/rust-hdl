@@ -1,6 +1,6 @@
 use rust_hdl::fpga::lattice::ice40::ice_pll::ICE40PLLBlock;
 use rust_hdl::prelude::*;
-use rust_hdl__bsp_alchitry_cu::synth;
+use rust_hdl_private_bsp_alchitry_cu::synth;
 
 #[test]
 fn test_pll_synthesizable() {

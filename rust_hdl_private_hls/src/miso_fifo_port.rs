@@ -1,7 +1,7 @@
 use crate::bus::{FIFOWriteResponder, SoCPortResponder};
 use crate::fifo::SyncFIFO;
 use crate::miso_port::MISOPort;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(LogicBlock, Default)]
 pub struct MISOFIFOPort<const W: usize, const N: usize, const NP1: usize, const BLOCK: u32> {

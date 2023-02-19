@@ -1,5 +1,5 @@
 // Covers the ECP5 via nextpnr, not via Diamond
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 use std::collections::HashMap;
 
 use super::map_signal_type_to_lattice_string;

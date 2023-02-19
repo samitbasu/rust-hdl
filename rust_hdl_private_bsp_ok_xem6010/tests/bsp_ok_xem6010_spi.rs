@@ -1,6 +1,6 @@
 use rust_hdl::prelude::*;
-use rust_hdl__bsp_ok_xem6010::xem6010::{synth, XEM6010};
-use rust_hdl__ok_core::test_common::spi::{
+use rust_hdl_private_bsp_ok_xem6010::xem6010::{synth, XEM6010};
+use rust_hdl_private_ok_core::test_common::spi::{
     test_opalkelly_spi_reg_read_runtime, test_opalkelly_spi_reg_write_runtime,
     test_opalkelly_spi_single_conversion_runtime, OpalKellySPITest,
 };

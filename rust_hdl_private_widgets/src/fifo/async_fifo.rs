@@ -1,7 +1,7 @@
 use crate::fifo::fifo_logic::{FIFOReadLogic, FIFOWriteLogic};
 use crate::ramrom::ram::RAM;
 use crate::synchronizer::VectorSynchronizer;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[macro_export]
 macro_rules! declare_async_fifo {

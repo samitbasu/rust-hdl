@@ -1,6 +1,6 @@
 use crate::bus::{FIFOReadResponder, FIFOWriteResponder};
-use rust_hdl__core::prelude::*;
-use rust_hdl__widgets::prelude::*;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 #[derive(LogicBlock, Default)]
 pub struct SyncFIFO<T: Synth, const N: usize, const NP1: usize, const BLOCK_SIZE: u32> {

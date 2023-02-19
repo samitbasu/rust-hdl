@@ -1,6 +1,6 @@
 use super::ad7193_sim::{AD7193Config, AD7193Simulator};
-use rust_hdl__core::prelude::*;
-use rust_hdl__widgets::prelude::*;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct MuxedAD7193Simulators {

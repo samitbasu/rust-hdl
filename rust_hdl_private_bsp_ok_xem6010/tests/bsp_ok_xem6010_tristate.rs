@@ -1,8 +1,8 @@
-use rust_hdl__ok_core::core::ok_hi::OpalKellyHostInterface;
-use rust_hdl__ok_core::core::prelude::*;
+use rust_hdl_private_ok_core::core::ok_hi::OpalKellyHostInterface;
+use rust_hdl_private_ok_core::core::prelude::*;
 
 use rust_hdl::prelude::*;
-use rust_hdl__bsp_ok_xem6010::xem6010::XEM6010;
+use rust_hdl_private_bsp_ok_xem6010::xem6010::XEM6010;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyTristateBuffer {

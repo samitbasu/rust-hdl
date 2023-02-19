@@ -4,8 +4,8 @@ use std::time::Duration;
 
 use crate::core::prelude::*;
 
-use rust_hdl__ok_frontpanel_sys::{OkError, OkHandle};
-use rust_hdl__sim::prelude::AD7193_REG_WIDTHS;
+use rust_hdl_private_ok_frontpanel_sys::{OkError, OkHandle};
+use rust_hdl_private_sim::prelude::AD7193_REG_WIDTHS;
 
 pub fn ok_test_prelude(filename: &str, serial_number: &str) -> Result<OkHandle, OkError> {
     let hnd = OkHandle::new();

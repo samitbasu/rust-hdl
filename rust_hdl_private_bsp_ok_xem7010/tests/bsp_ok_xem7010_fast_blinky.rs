@@ -1,7 +1,7 @@
 use rust_hdl::prelude::*;
-use rust_hdl__bsp_ok_xem7010::xem7010::sys_clock::OpalKellySystemClock7;
-use rust_hdl__bsp_ok_xem7010::xem7010::XEM7010;
-use rust_hdl__ok_core::core::prelude::*;
+use rust_hdl_private_bsp_ok_xem7010::xem7010::sys_clock::OpalKellySystemClock7;
+use rust_hdl_private_bsp_ok_xem7010::xem7010::XEM7010;
+use rust_hdl_private_ok_core::core::prelude::*;
 use std::time::Duration;
 
 #[derive(LogicBlock)]

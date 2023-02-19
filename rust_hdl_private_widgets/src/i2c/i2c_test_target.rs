@@ -1,7 +1,7 @@
 use array_init::array_init;
 
 use crate::prelude::*;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct I2CTestBus<const N: usize> {

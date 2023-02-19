@@ -1,9 +1,9 @@
 use crate::core::prelude::*;
 use crate::test_common::tools::{ok_do_spi_txn, ok_reg_read, ok_reg_write, ok_test_prelude};
-use rust_hdl__core::prelude::*;
-use rust_hdl__ok_frontpanel_sys::OkError;
-use rust_hdl__sim::prelude::*;
-use rust_hdl__widgets::prelude::*;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_ok_frontpanel_sys::OkError;
+use rust_hdl_private_sim::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 use std::thread::sleep;
 use std::time::Duration;
 

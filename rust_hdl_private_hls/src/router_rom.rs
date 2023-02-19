@@ -1,7 +1,7 @@
 use crate::bus::{SoCBusController, SoCBusResponder};
 use crate::HLSNamedPorts;
-use rust_hdl__core::prelude::*;
-use rust_hdl__widgets::prelude::ROM;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::ROM;
 use std::collections::BTreeMap;
 
 // A RouterROM allows you to connect multiple bridges to a single master

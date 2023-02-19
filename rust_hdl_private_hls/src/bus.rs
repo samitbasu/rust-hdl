@@ -1,5 +1,5 @@
 // A simple, local bus for attaching stuff together on the FPGA
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 // Ultimately, a device will have multiple ports.  It will represent
 // a "chunk" of bus addresses that can be communicated with via the

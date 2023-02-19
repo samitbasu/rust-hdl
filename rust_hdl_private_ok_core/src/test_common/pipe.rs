@@ -2,9 +2,9 @@ use std::num::Wrapping;
 
 use crate::core::prelude::*;
 use crate::test_common::tools::ok_test_prelude;
-use rust_hdl__core::prelude::*;
-use rust_hdl__ok_frontpanel_sys::{make_u16_buffer, OkError};
-use rust_hdl__widgets::prelude::*;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_ok_frontpanel_sys::{make_u16_buffer, OkError};
+use rust_hdl_private_widgets::prelude::*;
 
 declare_sync_fifo!(OKTestFIFO, Bits<16>, 256, 1);
 

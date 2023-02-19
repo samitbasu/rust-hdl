@@ -1,4 +1,4 @@
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 use crate::fifo::fifo_logic::{FIFOReadLogic, FIFOWriteLogic};
 use crate::ramrom::ram::RAM;

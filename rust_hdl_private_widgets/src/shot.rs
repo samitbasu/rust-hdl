@@ -1,4 +1,4 @@
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 use std::time::Duration;
 
 #[derive(Clone, Debug, LogicBlock)]

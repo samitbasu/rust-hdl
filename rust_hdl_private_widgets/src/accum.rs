@@ -1,4 +1,4 @@
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Accum<const N: usize, const M: usize, const P: usize> {

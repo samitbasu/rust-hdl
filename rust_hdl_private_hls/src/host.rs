@@ -3,8 +3,8 @@ use crate::bus::FIFOWriteController;
 use crate::bus::{FIFOReadController, SoCBusController};
 use crate::controller::BaseController;
 use crate::cross_fifo::{CrossNarrow, CrossWiden};
-use rust_hdl__core::prelude::*;
-use rust_hdl__widgets::prelude::*;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 // Creates a Host object that connects a bidirectional 8-bit
 // bus to a Controller with the appropriate intermediate pieces.

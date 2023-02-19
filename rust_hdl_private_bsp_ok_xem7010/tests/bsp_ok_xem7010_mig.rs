@@ -1,11 +1,11 @@
 use rust_hdl::prelude::*;
-use rust_hdl__ok_core::core::prelude::*;
+use rust_hdl_private_ok_core::core::prelude::*;
 
-use rust_hdl__bsp_ok_xem7010::xem7010::mcb_if::MCBInterface4GDDR3;
-use rust_hdl__bsp_ok_xem7010::xem7010::mig7::MemoryInterfaceGenerator7Series;
-use rust_hdl__bsp_ok_xem7010::xem7010::XEM7010;
-use rust_hdl__ok_core::test_common::tools::ok_test_prelude;
-use rust_hdl__ok_frontpanel_sys::OkError;
+use rust_hdl_private_bsp_ok_xem7010::xem7010::mcb_if::MCBInterface4GDDR3;
+use rust_hdl_private_bsp_ok_xem7010::xem7010::mig7::MemoryInterfaceGenerator7Series;
+use rust_hdl_private_bsp_ok_xem7010::xem7010::XEM7010;
+use rust_hdl_private_ok_core::test_common::tools::ok_test_prelude;
+use rust_hdl_private_ok_frontpanel_sys::OkError;
 
 declare_expanding_fifo!(FrontPorch, 16, 4096, 128, 256);
 declare_narrowing_fifo!(BackPorch, 128, 256, 16, 4096);

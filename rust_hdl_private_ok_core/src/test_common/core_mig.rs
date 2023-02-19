@@ -1,6 +1,6 @@
 use rust_hdl::prelude::*;
 #[cfg(feature = "frontpanel")]
-use rust_hdl__ok_core::xem6010::mig::{MIGInstruction, MemoryInterfaceGenerator};
+use rust_hdl_private_ok_core::xem6010::mig::{MIGInstruction, MemoryInterfaceGenerator};
 
 #[cfg(feature = "frontpanel")]
 #[test]

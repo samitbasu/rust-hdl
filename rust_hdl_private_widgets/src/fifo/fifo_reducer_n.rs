@@ -1,5 +1,5 @@
 use crate::fifo::fifo_expander_n::WordOrder;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct FIFOReducerN<const DW: usize, const DN: usize> {

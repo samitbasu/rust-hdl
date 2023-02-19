@@ -1,5 +1,5 @@
-use rust_hdl__core::prelude::*;
-use rust_hdl__core::timing::TimingInfo;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_core::timing::TimingInfo;
 
 #[derive(Clone, Debug, LogicBlock, Default)]
 pub struct EdgeDFF<T: Synth> {

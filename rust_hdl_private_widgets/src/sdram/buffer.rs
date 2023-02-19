@@ -1,5 +1,5 @@
 use crate::sdram::*;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(LogicBlock, Clone, Default)]
 pub struct SDRAMOnChipBuffer<const D: usize> {

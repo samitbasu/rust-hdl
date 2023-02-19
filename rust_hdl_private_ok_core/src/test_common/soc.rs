@@ -1,6 +1,6 @@
 use {
     crate::test_common::tools::ok_test_prelude,
-    rust_hdl__ok_frontpanel_sys::{make_u16_buffer, OkError, OkHandle},
+    rust_hdl_private_ok_frontpanel_sys::{make_u16_buffer, OkError, OkHandle},
     std::thread::sleep,
 };
 

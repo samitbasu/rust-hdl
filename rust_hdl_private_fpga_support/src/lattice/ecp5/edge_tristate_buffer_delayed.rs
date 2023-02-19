@@ -1,5 +1,5 @@
-use rust_hdl__core::prelude::*;
-use rust_hdl__widgets::prelude::*;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct EdgeTristateBufferDelayed<T: Synth> {

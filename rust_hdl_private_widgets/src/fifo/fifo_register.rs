@@ -1,4 +1,4 @@
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 // A synchronous FIFO of depth 1, backed by a pair of registers
 #[derive(LogicBlock, Default)]

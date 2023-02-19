@@ -1,4 +1,4 @@
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct FIFOReducer<const DW: usize, const DN: usize, const REVERSE: bool> {

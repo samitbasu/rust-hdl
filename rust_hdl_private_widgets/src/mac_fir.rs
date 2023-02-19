@@ -1,7 +1,7 @@
 use crate::ramrom::ram::RAM;
 use crate::ramrom::sync_rom::SyncROM;
-use rust_hdl__core::prelude::*;
-use rust_hdl__core::signed::ToSignedBits;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_core::signed::ToSignedBits;
 
 #[derive(Clone, Debug, LogicState, Copy, PartialEq)]
 enum MACFIRState {

@@ -1,6 +1,6 @@
 use crate::ramrom::rom::make_btree_from_iterable;
-use rust_hdl__core::prelude::*;
-use rust_hdl__core::timing::TimingInfo;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_core::timing::TimingInfo;
 use std::collections::BTreeMap;
 
 #[derive(LogicInterface, Default)]

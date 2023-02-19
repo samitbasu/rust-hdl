@@ -1,5 +1,5 @@
 use crate::test_common::tools::ok_test_prelude;
-use rust_hdl__ok_frontpanel_sys::{make_u16_buffer, OkError};
+use rust_hdl_private_ok_frontpanel_sys::{make_u16_buffer, OkError};
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 

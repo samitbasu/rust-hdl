@@ -1,5 +1,5 @@
 [package]
-name = "rust_hdl__sim"
+name = "rust_hdl_private_sim"
 version = "0.44.0"
 edition = "2021"
 license = "MIT"
@@ -12,6 +12,6 @@ authors = ["Samit Basu <basu.samit@gmail.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust_hdl__core = { version = "0.44.0", path = "../rust_hdl__core" }
-rust_hdl__widgets = { version = "0.44.0", path = "../rust_hdl__widgets" }
+rust_hdl_private_core = { version = "0.44.0", path = "../rust_hdl_private_core" }
+rust_hdl_private_widgets = { version = "0.44.0", path = "../rust_hdl_private_widgets" }
 array-init = { version = "2.0.0" }

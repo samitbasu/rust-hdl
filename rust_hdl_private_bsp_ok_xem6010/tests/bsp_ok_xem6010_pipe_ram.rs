@@ -1,7 +1,9 @@
 use rust_hdl::prelude::*;
-use rust_hdl__bsp_ok_xem6010::xem6010::XEM6010;
-use rust_hdl__ok_core::core::prelude::OpalKellyBSP;
-use rust_hdl__ok_core::test_common::pipe::{test_opalkelly_pipe_ram_runtime, OpalKellyPipeRAMTest};
+use rust_hdl_private_bsp_ok_xem6010::xem6010::XEM6010;
+use rust_hdl_private_ok_core::core::prelude::OpalKellyBSP;
+use rust_hdl_private_ok_core::test_common::pipe::{
+    test_opalkelly_pipe_ram_runtime, OpalKellyPipeRAMTest,
+};
 
 #[test]
 fn test_opalkelly_xem_6010_synth_pipe_ram() {

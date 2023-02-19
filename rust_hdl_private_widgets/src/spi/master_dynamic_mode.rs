@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum SPIState {

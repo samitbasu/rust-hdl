@@ -1,6 +1,6 @@
 use crate::bus::{FIFOReadResponder, FIFOWriteResponder};
-use rust_hdl__core::prelude::*;
-use rust_hdl__widgets::prelude::*;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct SDRAMFIFO<const R: usize, const C: usize, const P: u32, const D: usize, const A: usize> {

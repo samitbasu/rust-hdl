@@ -1,4 +1,4 @@
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 /// A [BitSynchronizer] is used to move signals that are asynchronous to a clock into that
 /// clock domain using a pair of back-to-back flip-flops.  While the first flip flop may

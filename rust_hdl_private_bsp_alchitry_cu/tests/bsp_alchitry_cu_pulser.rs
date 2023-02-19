@@ -1,6 +1,6 @@
 use rust_hdl::prelude::*;
-use rust_hdl__bsp_alchitry_cu::pins::CLOCK_SPEED_100MHZ;
-use rust_hdl__bsp_alchitry_cu::{pins, synth};
+use rust_hdl_private_bsp_alchitry_cu::pins::CLOCK_SPEED_100MHZ;
+use rust_hdl_private_bsp_alchitry_cu::{pins, synth};
 use std::time::Duration;
 
 pub const MHZ100: u64 = 100_000_000;

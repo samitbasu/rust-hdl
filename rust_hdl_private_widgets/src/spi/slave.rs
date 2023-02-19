@@ -1,7 +1,7 @@
 use crate::edge_detector::EdgeDetector;
 use crate::prelude::BitSynchronizer;
 use crate::spi::master::{SPIConfig, SPIWiresSlave};
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
 enum SPISlaveState {

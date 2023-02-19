@@ -1980,27 +1980,27 @@
 ///! Tools for documenting RustHDL designs, including the generation of SVGs from simulation waveforms.
 pub mod docs;
 ///! A series of High Level Synthesis blocks used to build System-on-Chip designs quickly.
-pub use rust_hdl__hls as hls;
+pub use rust_hdl_private_hls as hls;
 ///! Prelude module defines common symbols to make importing RustHDL easier.
 pub mod prelude;
 ///! The core RustHDL module.  Defines variable width bits, signals, logical blocks, etc.
-pub use rust_hdl__core as core;
+pub use rust_hdl_private_core as core;
 ///! A set of routines for dealing with FPGA specific pieces.  Either tools for synthesis, or
 /// logic circuits that are specific to an FPGA family.
 #[cfg(feature = "fpga")]
-pub use rust_hdl__fpga_support as fpga;
+pub use rust_hdl_private_fpga_support as fpga;
 ///! Support for the OpalKelly devices (including HDL components and the FrontPanel API)
 #[cfg(feature = "ok")]
-pub use rust_hdl__ok_core as ok;
+pub use rust_hdl_private_ok_core as ok;
 #[cfg(feature = "ok")]
-pub use rust_hdl__ok_frontpanel_sys as frontpanel;
+pub use rust_hdl_private_ok_frontpanel_sys as frontpanel;
 ///! Module that contains all code related to simulating RustHDL designs in Rust (i.e., without
 ///! an external Verilog simulator).
-pub use rust_hdl__sim as sim;
+pub use rust_hdl_private_sim as sim;
 ///! A set of core widgets useful for FPGA based designs, all written in RustHDL.  This includes
 ///! elements such as Digital Flip Flops, Block RAMs, ROMs, FIFOs, SDRAM controllers, SPI controllers
 ///! I2C controllers, FIR filters, etc.
-pub use rust_hdl__widgets as widgets;
+pub use rust_hdl_private_widgets as widgets;
 
 #[test]
 fn doc_sim() {

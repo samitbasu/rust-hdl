@@ -1,5 +1,5 @@
 use crate::bus::{FIFOReadController, FIFOWriteController};
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(LogicBlock, Default)]
 pub struct FIFOLink<T: Synth> {

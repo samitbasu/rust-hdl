@@ -1,5 +1,5 @@
 use array_init::array_init;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 // A configurable delay line.  Given writes at the input,
 // will write those values back to the output N cycles later,

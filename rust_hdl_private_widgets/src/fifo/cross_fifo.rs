@@ -2,7 +2,7 @@ use crate::fifo::async_fifo::AsynchronousFIFO;
 use crate::fifo::fifo_expander_n::WordOrder;
 use crate::fifo::sync_fifo::SynchronousFIFO;
 use crate::prelude::{FIFOExpanderN, FIFOReducerN};
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct CrossWidenFIFO<

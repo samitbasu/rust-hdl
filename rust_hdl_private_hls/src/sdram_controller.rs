@@ -3,8 +3,8 @@ use crate::bus::{SoCBusResponder, SoCPortController};
 use crate::miso_wide_port::MISOWidePort;
 use crate::prelude::{MOSIPort, MOSIWidePort};
 use crate::HLSNamedPorts;
-use rust_hdl__core::prelude::*;
-use rust_hdl__widgets::prelude::*;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct SDRAMController<const R: usize, const C: usize> {

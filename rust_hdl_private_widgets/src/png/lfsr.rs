@@ -1,5 +1,5 @@
 use crate::prelude::DFFWithInit;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 // Adopted from Alchitry.com Lucid module `pn_gen`
 // This version does not provide seed setting.  It generates a fixed sequence.

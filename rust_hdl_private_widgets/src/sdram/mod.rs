@@ -5,7 +5,7 @@ pub mod cmd;
 pub mod fifo_sdram;
 pub mod timings;
 
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum OutputBuffer {

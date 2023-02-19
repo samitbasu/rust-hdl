@@ -1,5 +1,5 @@
 use rust_hdl::prelude::*;
-use rust_hdl__bsp_alchitry_cu::{pins, synth};
+use rust_hdl_private_bsp_alchitry_cu::{pins, synth};
 use std::collections::BTreeMap;
 
 #[derive(LogicBlock)]

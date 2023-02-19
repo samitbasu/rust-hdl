@@ -1,12 +1,12 @@
 use crate::core::ok_pipe::{BTPipeIn, BTPipeOut};
 use crate::core::ok_wire::{WireIn, WireOut};
-use rust_hdl__core::prelude::*;
-use rust_hdl__hls::prelude::*;
-use rust_hdl__ok_frontpanel_sys::{
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_hls::prelude::*;
+use rust_hdl_private_ok_frontpanel_sys::{
     make_u16_buffer, ok_ErrorCode_ok_DataAlignmentError, ok_ErrorCode_ok_InvalidParameter,
     ok_ErrorCode_ok_Timeout, OkError, OkHandle,
 };
-use rust_hdl__widgets::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 use std::time::Duration;
 
 #[derive(Copy, Clone, Debug)]

@@ -1,7 +1,7 @@
 use rust_hdl::prelude::*;
-use rust_hdl__bsp_ok_xem7010::xem7010::XEM7010;
-use rust_hdl__ok_core::core::prelude::*;
-use rust_hdl__ok_core::test_common::blinky::OpalKellyBlinky;
+use rust_hdl_private_bsp_ok_xem7010::xem7010::XEM7010;
+use rust_hdl_private_ok_core::core::prelude::*;
+use rust_hdl_private_ok_core::test_common::blinky::OpalKellyBlinky;
 
 #[test]
 fn test_opalkelly_xem_7010_synth_blinky() {

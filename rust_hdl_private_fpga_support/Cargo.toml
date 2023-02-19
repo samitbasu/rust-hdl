@@ -1,5 +1,5 @@
 [package]
-name = "rust_hdl__fpga_support"
+name = "rust_hdl_private_fpga_support"
 version = "0.44.0"
 edition = "2021"
 license = "MIT"
@@ -10,6 +10,6 @@ keywords = ["fpga", "verilog", "hardware"]
 authors = ["Samit Basu <samit.basu@smiths.com>"]
 
 [dependencies]
-rust_hdl__core = { version = "0.44.0", path = "../rust_hdl__core" }
-rust_hdl__widgets = { version = "0.44.0", path = "../rust_hdl__widgets" }
+rust_hdl_private_core = { version = "0.44.0", path = "../rust_hdl_private_core" }
+rust_hdl_private_widgets = { version = "0.44.0", path = "../rust_hdl_private_widgets" }
 regex = { version = "^1.6.0" }

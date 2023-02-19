@@ -1,4 +1,4 @@
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 /// A [Strobe] generates a periodic pulse train, with a single clock-cycle wide pulse
 /// at the prescribed frequency.  The argument [N] of the generic [Strobe<N>] is used

@@ -1,5 +1,5 @@
 [package]
-name = "rust_hdl__ok_core"
+name = "rust_hdl_private_ok_core"
 version = "0.44.0"
 edition = "2021"
 license = "MIT"
@@ -12,10 +12,10 @@ authors = ["Samit Basu <samit.basu@smiths.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust_hdl__core = { version = "0.44.0", path = "../rust_hdl__core" }
-rust_hdl__hls = { version = "0.44.0", path = "../rust_hdl__hls" }
-rust_hdl__sim = { version = "0.44.0", path = "../rust_hdl__sim" }
-rust_hdl__widgets = { version = "0.44.0", path = "../rust_hdl__widgets" }
-rust_hdl__ok_frontpanel_sys = { version = "0.44.0", path = "../rust_hdl__ok_frontpanel_sys" }
+rust_hdl_private_core = { version = "0.44.0", path = "../rust_hdl_private_core" }
+rust_hdl_private_hls = { version = "0.44.0", path = "../rust_hdl_private_hls" }
+rust_hdl_private_sim = { version = "0.44.0", path = "../rust_hdl_private_sim" }
+rust_hdl_private_widgets = { version = "0.44.0", path = "../rust_hdl_private_widgets" }
+rust_hdl_private_ok_frontpanel_sys = { version = "0.44.0", path = "../rust_hdl_private_ok_frontpanel_sys" }
 regex = "1.5.4"
 rand = "0.8.5"

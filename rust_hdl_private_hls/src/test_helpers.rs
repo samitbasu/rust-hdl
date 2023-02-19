@@ -8,8 +8,8 @@ use crate::fifo::AsyncFIFO;
 use crate::miso_port::MISOPort;
 use crate::mosi_port::MOSIPort;
 use rand::Rng;
-use rust_hdl__core::prelude::*;
-use rust_hdl__widgets::prelude::*;
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
 

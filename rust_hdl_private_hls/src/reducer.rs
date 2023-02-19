@@ -1,6 +1,6 @@
 use crate::bus::{FIFOReadController, FIFOWriteController};
-use rust_hdl__core::prelude::*;
-use rust_hdl__widgets::prelude::{FIFOReducerN, WordOrder};
+use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::{FIFOReducerN, WordOrder};
 
 #[derive(LogicBlock)]
 pub struct Reducer<const DW: usize, const DN: usize> {

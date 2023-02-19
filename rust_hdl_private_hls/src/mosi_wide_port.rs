@@ -1,5 +1,5 @@
 use crate::bus::SoCPortResponder;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct MOSIWidePort<const W: usize, const D: usize> {

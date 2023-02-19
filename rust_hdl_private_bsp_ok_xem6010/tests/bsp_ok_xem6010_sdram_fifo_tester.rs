@@ -1,11 +1,11 @@
 use rust_hdl::prelude::*;
-use rust_hdl__bsp_ok_xem6010::xem6010;
-use rust_hdl__bsp_ok_xem6010::xem6010::pins::xem_6010_base_clock;
-use rust_hdl__bsp_ok_xem6010::xem6010::XEM6010;
-use rust_hdl__hls::sdram_fifo::SDRAMFIFO;
-use rust_hdl__ok_core::core::prelude::*;
-use rust_hdl__ok_core::test_common::download::test_opalkelly_download_runtime;
-use rust_hdl__sim::sdr_sdram::chip::SDRAMSimulator;
+use rust_hdl_private_bsp_ok_xem6010::xem6010;
+use rust_hdl_private_bsp_ok_xem6010::xem6010::pins::xem_6010_base_clock;
+use rust_hdl_private_bsp_ok_xem6010::xem6010::XEM6010;
+use rust_hdl_private_hls::sdram_fifo::SDRAMFIFO;
+use rust_hdl_private_ok_core::core::prelude::*;
+use rust_hdl_private_ok_core::test_common::download::test_opalkelly_download_runtime;
+use rust_hdl_private_sim::sdr_sdram::chip::SDRAMSimulator;
 
 #[derive(LogicBlock)]
 struct SDRAMSimulatedFIFOTester {

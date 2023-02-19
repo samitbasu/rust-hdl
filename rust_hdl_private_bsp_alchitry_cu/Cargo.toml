@@ -1,5 +1,5 @@
 [package]
-name = "rust_hdl__bsp_alchitry_cu"
+name = "rust_hdl_private_bsp_alchitry_cu"
 version = "0.44.0"
 edition = "2021"
 license = "MIT"

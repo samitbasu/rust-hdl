@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::toolchains::map_signal_type_to_xilinx_string;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(Default)]
 struct UCFGenerator {

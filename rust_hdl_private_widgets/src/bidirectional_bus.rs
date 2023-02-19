@@ -1,6 +1,6 @@
 use crate::async_fifo::AsynchronousFIFO;
 use crate::prelude::{SynchronousFIFO, TristateBuffer};
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(Clone, Debug, Default, LogicInterface)]
 #[join = "FifoBusIn"]

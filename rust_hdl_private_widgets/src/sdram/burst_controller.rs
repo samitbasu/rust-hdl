@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use crate::sdram::cmd::{SDRAMCommand, SDRAMCommandEncoder};
 use crate::sdram::{OutputBuffer, SDRAMDriver};
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 // Controller states...
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]

@@ -1,7 +1,7 @@
 use crate::i2c::i2c_driver::{I2CDriver, I2CDriverCmd};
 use crate::i2c::i2c_test_target::I2CTestTarget;
 use crate::prelude::*;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 use std::time::Duration;
 
 use super::i2c_test_target::I2CTestBus;

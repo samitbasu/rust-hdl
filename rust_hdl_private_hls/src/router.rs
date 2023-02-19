@@ -1,6 +1,6 @@
 use crate::bus::{SoCBusController, SoCBusResponder};
 use crate::HLSNamedPorts;
-use rust_hdl__core::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 // A router allows you to connect multiple bridges to a single master
 // Each bridge is assigned a base address (they must be non-overlapping).
