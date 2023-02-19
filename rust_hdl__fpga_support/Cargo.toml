@@ -1,0 +1,15 @@
+[package]
+name = "rust_hdl__fpga_support"
+version = "0.44.0"
+edition = "2021"
+license = "MIT"
+description = "Support crate for RustHDL - provides FPGA specific code"
+homepage = "https://github.com/samitbasu/rust-hdl"
+repository = "https://github.com/samitbasu/rust-hdl"
+keywords = ["fpga", "verilog", "hardware"]
+authors = ["Samit Basu <samit.basu@smiths.com>"]
+
+[dependencies]
+rust_hdl__core = { version = "0.44.0", path = "../rust_hdl__core" }
+rust_hdl__widgets = { version = "0.44.0", path = "../rust_hdl__widgets" }
+regex = { version = "^1.6.0" }
