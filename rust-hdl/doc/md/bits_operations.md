@@ -16,7 +16,7 @@ always treated as unsigned values for comparison purposes.
 These should feel natural when using RustHDL, as expressions follow Rust's rules (and not Verilog's).
 For example:
 ```rust
-# use rust_hdl::core::prelude::*;
+# use rust_hdl::prelude::*;
 let x: Bits<32> = 0xDEAD_0000_u32.to_bits();
 let y: Bits<32> = 0x0000_BEEF_u32.to_bits();
 let z = x + y;

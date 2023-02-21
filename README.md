@@ -55,9 +55,8 @@ our clock speed is (a comically slow) 10kHz.  Here is a minimal working Blinky! 
 
 ```rust
 use std::time::Duration;
-use rust_hdl::core::prelude::*;
+use rust_hdl::prelude::*;
 use rust_hdl::docs::vcd2svg::vcd_to_svg;
-use rust_hdl::widgets::prelude::*;
 
 const CLOCK_SPEED_HZ : u64 = 10_000;
 

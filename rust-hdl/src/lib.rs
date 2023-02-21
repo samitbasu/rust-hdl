@@ -251,9 +251,7 @@
 //! The definition of [Signal] also indicates how it should be used.  [Signal]'s cannot be
 //! assigned to using usual semantics.
 //! ```
-//! # use rust_hdl::constraint::PinConstraint;
-//! # use rust_hdl::direction::Direction;
-//! # use rust_hdl::synth::Synth;
+//! # use rust_hdl::prelude::*;
 //!
 //! #[derive(Clone, Debug)]
 //! pub struct Signal<D: Direction, T: Synth> {
@@ -407,7 +405,6 @@
 //! full definition of the trait:
 //!```
 //! # use rust_hdl::prelude::*;
-//! # use rust_hdl::timing::TimingInfo;
 //!
 //! pub trait Logic {
 //!     fn update(&mut self);
@@ -439,7 +436,6 @@
 //! # use std::time::Duration;
 //! # use rust_hdl::prelude::*;
 //! # use rust_hdl::docs::vcd2svg::vcd_to_svg;
-//! # use rust_hdl::widgets::prelude::*;
 //!
 //! # const CLOCK_SPEED_HZ : u64 = 10_000;
 //!
