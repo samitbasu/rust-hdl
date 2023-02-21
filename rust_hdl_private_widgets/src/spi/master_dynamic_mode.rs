@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use crate::dff_setup;
+use crate::spi::master::SPIWiresMaster;
+use crate::synchronizer::BitSynchronizer;
+use crate::{dff::DFF, dff_with_init::DFFWithInit, spi::master::SPIConfig, strobe::Strobe};
 use rust_hdl_private_core::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]

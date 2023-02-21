@@ -1,4 +1,4 @@
-use crate::fifo::fifo_expander_n::WordOrder;
+use crate::{dff::DFF, dff_setup, fifo::fifo_expander_n::WordOrder};
 use rust_hdl_private_core::prelude::*;
 
 #[derive(LogicBlock)]

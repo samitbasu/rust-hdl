@@ -7,11 +7,11 @@ use crate::bits::Bit;
 use crate::block::Block;
 use crate::clock::Clock;
 use crate::constraint::{Constraint, PinConstraint, SignalType};
-use crate::direction::{Direction, In, Local, Out};
+use crate::direction::{Direction, In, InOut, Local, Out};
 use crate::logic::{Logic, LogicJoin, LogicLink};
-use crate::prelude::{InOut, TypeDescriptor};
 use crate::probe::Probe;
 use crate::synth::{Synth, VCDValue};
+use crate::type_descriptor::TypeDescriptor;
 
 static GLOBAL_THREAD_COUNT: AtomicUsize = AtomicUsize::new(1);
 

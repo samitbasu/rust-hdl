@@ -1,3 +1,5 @@
+use crate::dff::DFF;
+use crate::dff_setup;
 use crate::prelude::{DelayLine, MemoryTimings};
 use crate::sdram::cmd::{SDRAMCommand, SDRAMCommandEncoder};
 use crate::sdram::{OutputBuffer, SDRAMDriver};

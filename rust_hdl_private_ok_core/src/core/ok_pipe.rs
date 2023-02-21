@@ -1,4 +1,5 @@
 use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct BTPipeIn {

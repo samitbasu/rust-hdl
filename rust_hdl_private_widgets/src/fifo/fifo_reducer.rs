@@ -1,5 +1,7 @@
 use rust_hdl_private_core::prelude::*;
 
+use crate::{dff::DFF, dff_setup};
+
 #[derive(LogicBlock)]
 pub struct FIFOReducer<const DW: usize, const DN: usize, const REVERSE: bool> {
     // Data comes by reading from the source FIFO

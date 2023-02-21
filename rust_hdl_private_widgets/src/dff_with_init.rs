@@ -1,3 +1,4 @@
+use crate::{dff::DFF, dff_setup};
 use rust_hdl_private_core::prelude::*;
 use std::ops::BitXor;
 

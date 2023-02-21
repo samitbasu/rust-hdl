@@ -1,6 +1,7 @@
-use crate::prelude::{AsynchronousFIFO, MemoryTimings, OutputBuffer, SDRAMBurstController};
-use crate::sdram::SDRAMDriver;
+use crate::{dff::DFF, dff_setup, fifo::async_fifo::AsynchronousFIFO, sdram::SDRAMDriver};
 use rust_hdl_private_core::prelude::*;
+
+use super::{burst_controller::SDRAMBurstController, timings::MemoryTimings, OutputBuffer};
 
 #[derive(Copy, Clone, Debug, PartialEq, LogicState)]
 enum State {

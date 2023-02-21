@@ -1,6 +1,8 @@
 use rust_hdl_private_core::prelude::*;
 use std::time::Duration;
 
+use crate::{dff::DFF, dff_setup};
+
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Shot<const N: usize> {
     pub trigger: Signal<In, Bit>,

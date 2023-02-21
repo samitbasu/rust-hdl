@@ -1,7 +1,8 @@
 use crate::block::Block;
+use crate::check_connected::check_connected;
 use crate::check_logic_loops::check_logic_loops;
 use crate::check_write_inputs::check_inputs_not_written;
-use crate::prelude::check_connected;
+
 use std::collections::HashMap;
 
 /// A map of open connections, hashed on the signal ID

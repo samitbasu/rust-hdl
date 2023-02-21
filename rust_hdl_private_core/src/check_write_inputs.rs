@@ -2,8 +2,9 @@ use crate::ast::{Verilog, VerilogExpression};
 use crate::atom::{Atom, AtomKind};
 use crate::block::Block;
 use crate::check_error::{CheckError, PathedName, PathedNameList};
-use crate::prelude::{NamedPath, VerilogVisitor};
+use crate::named_path::NamedPath;
 use crate::probe::Probe;
+use crate::verilog_visitor::VerilogVisitor;
 use std::collections::HashSet;
 
 #[derive(Copy, Clone, Debug, PartialEq)]

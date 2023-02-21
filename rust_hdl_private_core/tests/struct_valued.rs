@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use rust_hdl_private_core::prelude::*;
 
 // We want to be able to combine a set of signals into a struct
 #[cfg(test)]
@@ -78,7 +78,7 @@ impl Default for TestBlock {
 
 #[test]
 fn test_test_block_synthesizes() {
-    let mut uut = TopWrap::new(TestBlock::default());
+    let mut uut = TestBlock::default();
     uut.connect_all();
     yosys_validate("test_block", &generate_verilog(&uut)).unwrap();
 }

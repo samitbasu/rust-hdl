@@ -1,4 +1,4 @@
-use crate::prelude::{DFFWithInit, Strobe};
+use crate::{dff::DFF, dff_setup, dff_with_init::DFFWithInit, strobe::Strobe};
 use rust_hdl_private_core::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -143,10 +143,8 @@ impl<const N: usize> Logic for SPIMaster<N> {
                     self.register_in.d.next = 0.into(); // Clear out the input store register
                     self.msel_flop.d.next = !self.cs_off.val(); // Activate the chip select
                     self.continued_save.d.next = self.continued_transaction.val();
-                } else {
-                    if !self.continued_save.q.val() {
-                        self.msel_flop.d.next = self.cs_off.val(); // Set the chip select signal to be "off"
-                    }
+                } else if !self.continued_save.q.val() {
+                    self.msel_flop.d.next = self.cs_off.val(); // Set the chip select signal to be "off"
                 }
                 self.mosi_flop.d.next = self.mosi_off.val(); // Set the mosi signal to be "off"
             }

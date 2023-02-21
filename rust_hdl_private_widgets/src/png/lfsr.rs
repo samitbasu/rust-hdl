@@ -1,4 +1,4 @@
-use crate::prelude::DFFWithInit;
+use crate::{dff_setup, prelude::DFFWithInit};
 use rust_hdl_private_core::prelude::*;
 
 // Adopted from Alchitry.com Lucid module `pn_gen`

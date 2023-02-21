@@ -1,5 +1,4 @@
-use crate::prelude::*;
-use crate::timing::TimingInfo;
+use rust_hdl_private_core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock)]
 pub struct DFF<T: Synth> {

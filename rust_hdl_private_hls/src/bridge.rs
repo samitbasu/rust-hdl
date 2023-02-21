@@ -1,6 +1,7 @@
 use crate::bus::*;
 use crate::HLSNamedPorts;
 use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 // A simple bus bridge.  It connects to the master on the one side, and
 // then exposes a number of device ports on the other side.  Data is

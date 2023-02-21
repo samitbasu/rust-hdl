@@ -1,5 +1,7 @@
 use rust_hdl_private_core::prelude::*;
 
+use crate::{dff::DFF, dff_setup};
+
 /// A [BitSynchronizer] is used to move signals that are asynchronous to a clock into that
 /// clock domain using a pair of back-to-back flip-flops.  While the first flip flop may
 /// become metastable, the second one is likely to be stable.

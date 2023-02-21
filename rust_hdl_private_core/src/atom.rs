@@ -1,8 +1,7 @@
 use crate::ast::VerilogLiteral;
 use crate::constraint::PinConstraint;
-use crate::prelude::TypeKind;
 use crate::synth::VCDValue;
-use crate::type_descriptor::TypeDescriptor;
+use crate::type_descriptor::{TypeDescriptor, TypeKind};
 
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug, PartialEq)]

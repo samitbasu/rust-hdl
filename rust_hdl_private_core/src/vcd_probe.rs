@@ -1,9 +1,9 @@
 use crate::atom::Atom;
 use crate::block::Block;
-use crate::prelude::TypeKind;
 use crate::probe::Probe;
 use crate::synth::VCDValue;
 use crate::type_descriptor::TypeDescriptor;
+use crate::type_descriptor::TypeKind;
 use std::collections::HashMap;
 use std::io::Write;
 

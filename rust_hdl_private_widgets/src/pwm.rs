@@ -1,5 +1,7 @@
 use rust_hdl_private_core::prelude::*;
 
+use crate::dff::DFF;
+
 #[derive(LogicBlock)]
 pub struct PulseWidthModulator<const N: usize> {
     pub enable: Signal<In, Bit>,

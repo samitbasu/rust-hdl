@@ -1,5 +1,7 @@
 use rust_hdl_private_core::prelude::*;
 
+use crate::{dff::DFF, dff_setup};
+
 #[derive(LogicBlock, Default)]
 pub struct RegisteredEdgeTristate<const W: usize> {
     pub bus: Signal<InOut, Bits<W>>,

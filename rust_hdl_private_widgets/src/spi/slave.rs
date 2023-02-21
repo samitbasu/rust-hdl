@@ -1,6 +1,7 @@
 use crate::edge_detector::EdgeDetector;
-use crate::prelude::BitSynchronizer;
 use crate::spi::master::{SPIConfig, SPIWiresSlave};
+use crate::synchronizer::BitSynchronizer;
+use crate::{dff::DFF, dff_setup};
 use rust_hdl_private_core::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]

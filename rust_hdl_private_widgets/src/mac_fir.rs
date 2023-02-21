@@ -1,3 +1,5 @@
+use crate::dff::DFF;
+use crate::dff_setup;
 use crate::ramrom::ram::RAM;
 use crate::ramrom::sync_rom::SyncROM;
 use rust_hdl_private_core::prelude::*;

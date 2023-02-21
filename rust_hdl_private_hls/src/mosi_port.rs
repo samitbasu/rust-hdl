@@ -1,5 +1,6 @@
 use crate::bus::SoCPortResponder;
 use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 // An output port simply stores the value written to that memory location
 // by the master.  The value is latched.

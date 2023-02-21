@@ -1,5 +1,6 @@
 use crate::bus::{FIFOReadController, FIFOWriteController, SoCBusController};
 use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 // For now, we will hard code the op codes
 // 00 - NOOP

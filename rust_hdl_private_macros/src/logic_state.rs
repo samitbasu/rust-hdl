@@ -50,9 +50,9 @@ pub fn get_logic_state_impls(input: &syn::DeriveInput) -> Result<TS> {
         .map(|x| x.to_string())
         .collect::<Vec<String>>();
     Ok(quote!(
-        impl Synth for #name {
+        impl synth::Synth for #name {
             const BITS: usize = clog2(#num_variants);
-            fn descriptor() -> TypeDescriptor {
+            fn descriptor() -> type_descriptor::TypeDescriptor {
                 TypeDescriptor {
                     name: #name_as_string.to_string(),
                     kind: TypeKind::Enum(vec![#(#variants_as_strings.to_string(),)*])

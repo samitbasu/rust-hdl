@@ -1,7 +1,11 @@
-use crate::prelude::*;
+use crate::dff::DFF;
+use crate::dff_setup;
+use crate::prelude::DelayLine;
 use crate::sdram::cmd::{SDRAMCommand, SDRAMCommandEncoder};
 use crate::sdram::{OutputBuffer, SDRAMDriver};
 use rust_hdl_private_core::prelude::*;
+
+use super::timings::MemoryTimings;
 
 // Controller states...
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]

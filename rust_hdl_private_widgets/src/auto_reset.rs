@@ -1,3 +1,4 @@
+use crate::dff::DFF;
 use rust_hdl_private_core::prelude::*;
 
 #[derive(Clone, Debug, LogicBlock, Default)]

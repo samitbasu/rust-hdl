@@ -19,7 +19,7 @@ pub(crate) fn hdl_gen_process(item: syn::ItemFn) -> Result<TS> {
     let body = hdl_block(&item.block)?;
     Ok(quote! {
     fn hdl(&self) -> ast::Verilog {
-       ast::Verilog::Combinatorial(#body)
+        ast::Verilog::Combinatorial(#body)
     }
     })
 }
@@ -57,8 +57,8 @@ fn hdl_for_loop(expr: &syn::ExprForLoop) -> Result<TS> {
                     let block = hdl_block(&expr.body)?;
                     let loop_index = quote!(#loop_index).to_string();
                     return Ok(quote!(
-                    ast::VerilogStatement::Loop(
-                        ast::VerilogLoop {
+                        ast::VerilogStatement::Loop(
+                            ast::VerilogLoop {
                             index: #loop_index.into(),
                             from: #from.into(),
                             to: #to.into(),
@@ -120,7 +120,7 @@ fn hdl_non_indexed_assignment(expr: &syn::ExprAssign) -> Result<TS> {
                     let offset = quote!(#base.#get_offset_name());
                     let value = hdl_compute(&expr.right)?;
                     Ok(quote!({
-                    ast::VerilogStatement::SliceAssignment{
+                        ast::VerilogStatement::SliceAssignment{
                         base: #target,
                         width: #width,
                         offset: ast::VerilogExpression::Literal(#offset.into()),
@@ -231,7 +231,7 @@ fn hdl_conditional(conditions: &syn::ExprIf) -> Result<TS> {
         }
     }
     Ok(quote!({
-       ast::VerilogStatement::If(ast::VerilogConditional{test: #test_condition, then: #then_branch, otherwise: #else_branch})
+        ast::VerilogStatement::If(ast::VerilogConditional{test: #test_condition, then: #then_branch, otherwise: #else_branch})
     }))
 }
 
@@ -296,7 +296,7 @@ fn hdl_unop(unop: &syn::ExprUnary) -> Result<TS> {
         }
     };
     Ok(quote!({
-      ast::VerilogExpression::Unary(#op, Box::new(#arg))
+        ast::VerilogExpression::Unary(#op, Box::new(#arg))
     }))
 }
 
@@ -304,8 +304,8 @@ fn hdl_binop(binop: &syn::ExprBinary) -> Result<TS> {
     let left = hdl_compute(&binop.left)?;
     let right = hdl_compute(&binop.right)?;
     let op = match &binop.op {
-        BinOp::Add(_) => quote!(ast::VerilogOp::Add),
         BinOp::Sub(_) => quote!(ast::VerilogOp::Sub),
+        BinOp::Add(_) => quote!(ast::VerilogOp::Add),
         BinOp::Mul(_) => quote!(ast::VerilogOp::Mul),
         BinOp::And(_) => quote!(ast::VerilogOp::LogicalAnd),
         BinOp::Or(_) => quote!(ast::VerilogOp::LogicalOr),

@@ -1,5 +1,7 @@
 use rust_hdl_private_core::prelude::*;
 
+use crate::{dff::DFF, dff_setup};
+
 // The read side of the circuitry for the FIFO.  Manages the read
 // address
 #[derive(LogicBlock)]

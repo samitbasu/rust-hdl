@@ -1,5 +1,6 @@
-use crate::prelude::*;
 use rust_hdl_private_core::prelude::*;
+
+use crate::prelude::{SPIWiresMaster, SPIWiresSlave};
 
 // Mux N SPI slaves onto a bus
 #[derive(LogicBlock)]

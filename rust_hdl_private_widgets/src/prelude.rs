@@ -4,6 +4,8 @@ pub use crate::declare_expanding_fifo;
 pub use crate::declare_narrowing_fifo;
 pub use crate::declare_sync_fifo;
 pub use crate::delay_line::DelayLine;
+pub use crate::dff::DFF;
+pub use crate::dff_setup;
 pub use crate::dff_with_init::DFFWithInit;
 pub use crate::edge_detector::EdgeDetector;
 pub use crate::fifo::async_fifo::AsynchronousFIFO;
@@ -43,6 +45,7 @@ pub use crate::spi::mux::{MuxMasters, MuxSlaves};
 pub use crate::spi::slave::SPISlave;
 pub use crate::strobe::Strobe;
 pub use crate::synchronizer::{BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer};
+pub use crate::top_wrap::TopWrap;
 pub use crate::tristate::TristateBuffer;
 pub use crate::{
     i2c_begin_read, i2c_begin_write, i2c_end_transmission, i2c_read, i2c_read_last, i2c_write,

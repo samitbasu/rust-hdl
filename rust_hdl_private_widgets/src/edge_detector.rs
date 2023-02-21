@@ -1,5 +1,7 @@
 use rust_hdl_private_core::prelude::*;
 
+use crate::{dff::DFF, dff_setup};
+
 #[derive(LogicBlock)]
 pub struct EdgeDetector {
     pub input_signal: Signal<In, Bit>,

@@ -1,5 +1,7 @@
 use rust_hdl_private_core::prelude::*;
 
+use crate::{dff::DFF, dff_setup};
+
 /// A [Strobe] generates a periodic pulse train, with a single clock-cycle wide pulse
 /// at the prescribed frequency.  The argument [N] of the generic [Strobe<N>] is used
 /// to size the counter that stores the internal delay value.  Unfortunately, Rust const

@@ -1,6 +1,7 @@
+use crate::dff::DFF;
 use crate::i2c::i2c_driver::{I2CDriver, I2CDriverCmd};
 use crate::i2c::i2c_test_target::I2CTestTarget;
-use crate::prelude::*;
+use crate::{dff_setup, prelude::*};
 use rust_hdl_private_core::prelude::*;
 use std::time::Duration;
 

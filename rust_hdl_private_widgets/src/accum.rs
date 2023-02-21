@@ -1,5 +1,7 @@
 use rust_hdl_private_core::prelude::*;
 
+use crate::{dff::DFF, top_wrap::TopWrap};
+
 #[derive(Clone, Debug, LogicBlock)]
 pub struct Accum<const N: usize, const M: usize, const P: usize> {
     pub clock: Signal<In, Clock>,

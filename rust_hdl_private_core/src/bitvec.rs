@@ -1,4 +1,4 @@
-use crate::prelude::LiteralType;
+use crate::bits::LiteralType;
 
 #[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub struct BitVec<const N: usize> {

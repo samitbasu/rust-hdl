@@ -1,6 +1,7 @@
 // A simple, local bus for attaching stuff together on the FPGA
 use crate::bus::SoCPortResponder;
 use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 // An input port simply stores the value written to it's input back to
 // the master.  The address comparison logic is registered to improve the

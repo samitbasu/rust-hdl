@@ -1,3 +1,4 @@
+use crate::{dff::DFF, dff_setup};
 use array_init::array_init;
 use rust_hdl_private_core::prelude::*;
 

@@ -1,5 +1,6 @@
 use crate::bus::SoCPortResponder;
 use rust_hdl_private_core::prelude::*;
+use rust_hdl_private_widgets::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct MISOWidePort<const W: usize, const D: usize> {

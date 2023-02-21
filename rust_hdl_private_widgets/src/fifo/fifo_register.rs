@@ -1,5 +1,7 @@
 use rust_hdl_private_core::prelude::*;
 
+use crate::{dff::DFF, dff_setup};
+
 // A synchronous FIFO of depth 1, backed by a pair of registers
 #[derive(LogicBlock, Default)]
 pub struct RegisterFIFO<T: Synth> {

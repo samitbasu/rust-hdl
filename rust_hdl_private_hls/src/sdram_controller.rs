@@ -1,7 +1,8 @@
 use crate::bridge::Bridge;
 use crate::bus::{SoCBusResponder, SoCPortController};
 use crate::miso_wide_port::MISOWidePort;
-use crate::prelude::{MOSIPort, MOSIWidePort};
+use crate::mosi_port::MOSIPort;
+use crate::mosi_wide_port::MOSIWidePort;
 use crate::HLSNamedPorts;
 use rust_hdl_private_core::prelude::*;
 use rust_hdl_private_widgets::prelude::*;
