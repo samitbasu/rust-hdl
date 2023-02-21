@@ -7,7 +7,7 @@ description = "Support crate for RustHDL - provides FPGA specific code"
 homepage = "https://github.com/samitbasu/rust-hdl"
 repository = "https://github.com/samitbasu/rust-hdl"
 keywords = ["fpga", "verilog", "hardware"]
-authors = ["Samit Basu <samit.basu@smiths.com>"]
+authors = ["Samit Basu <basu.samit@gmail.com>"]
 
 [dependencies]
 rust_hdl_private_core = { version = "0.44.0", path = "../rust_hdl_private_core" }
