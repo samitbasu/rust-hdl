@@ -51,10 +51,20 @@ impl From<bool> for Clock {
 /// use rust_hdl_private_core::prelude::*;
 ///
 /// #[derive(LogicBlock)]
+/// pub struct SubWidget {
+///    pub clock: Signal<In, Clock>,
+/// }
+///
+/// # impl Logic for SubWidget {
+/// #   #[hdl_gen]
+/// #   fn update(&mut self) {}
+/// # }
+///
+/// #[derive(LogicBlock)]
 /// pub struct Widget {
 ///    pub clock: Signal<In, Clock>,
-///    pub dff_1: DFF<Bit>,
-///    pub dff_2: DFF<Bit>,
+///    pub dff_1: SubWidget,
+///    pub dff_2: SubWidget,
 /// }
 ///
 /// impl Logic for Widget {

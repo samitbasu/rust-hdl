@@ -45,7 +45,6 @@ pub use crate::spi::mux::{MuxMasters, MuxSlaves};
 pub use crate::spi::slave::SPISlave;
 pub use crate::strobe::Strobe;
 pub use crate::synchronizer::{BitSynchronizer, SyncReceiver, SyncSender, VectorSynchronizer};
-pub use crate::top_wrap::TopWrap;
 pub use crate::tristate::TristateBuffer;
 pub use crate::{
     i2c_begin_read, i2c_begin_write, i2c_end_transmission, i2c_read, i2c_read_last, i2c_write,

@@ -1,4 +1,4 @@
-use crate::{dff::DFF, dff_setup, sdram::*, top_wrap::TopWrap};
+use crate::{dff::DFF, dff_setup, sdram::*};
 use rust_hdl_private_core::prelude::*;
 
 #[derive(LogicBlock, Clone, Default)]

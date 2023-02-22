@@ -49,6 +49,7 @@ pub use crate::synth::Synth;
 pub use crate::synth::VCDValue;
 pub use crate::target_path;
 pub use crate::timing::TimingInfo;
+pub use crate::top_wrap::TopWrap;
 pub use crate::type_descriptor;
 pub use crate::type_descriptor::{TypeDescriptor, TypeField, TypeKind};
 pub use crate::vcd_path;

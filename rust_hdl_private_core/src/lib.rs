@@ -29,6 +29,7 @@ pub mod signed;
 pub mod simulate;
 pub mod synth;
 pub mod timing;
+pub mod top_wrap;
 pub mod type_descriptor;
 pub mod vcd_probe;
 pub mod verilog_gen;
