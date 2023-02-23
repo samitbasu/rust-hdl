@@ -218,7 +218,7 @@ use std::fmt::{Display, Formatter, LowerHex};
 /// x.uut.B.connect(); // Drive the negative clock from outside
 /// x.connect_all();     // Wire up x and its internal components
 /// let v = generate_verilog(&x);  // Generates verilog and validates it
-/// yosys_validate("clock", &v)?;
+/// yosys_validate("clock_driver", &v)?;
 /// # Ok::<(), SynthError>(())
 /// ```
 ///
