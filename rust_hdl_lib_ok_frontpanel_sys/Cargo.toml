@@ -1,0 +1,19 @@
+[package]
+name = "rust_hdl_lib_ok_frontpanel_sys"
+version = "0.44.0"
+edition = "2018"
+license = "MIT"
+description = "OpalKelly FrontPanel library wrapper for the RustHDL crate."
+homepage = "https://github.com/samitbasu/rust-hdl"
+repository = "https://github.com/samitbasu/rust-hdl"
+keywords = ["fpga", "verilog", "hardware"]
+authors = ["Samit Basu <basu.samit@gmail.com>"]
+
+
+links = "okFrontPanel"
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]
+bindgen = "^0"

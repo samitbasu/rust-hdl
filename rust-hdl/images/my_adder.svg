@@ -104,34 +104,34 @@ uut.sig_a
 <path d="M0,85 L200,85" fill="none" stroke="#cbcbcb" stroke-width="1"/>
 <path d="M200,85 L1000,85" fill="none" stroke="#202070" stroke-width="1"/>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="202" y="76">
-0h9c
+0h55
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="282.1" y="76">
-0h82
+0hd5
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="362.2" y="76">
-0ha
+0h81
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="442.29999999999995" y="76">
-0h9b
+0hcd
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="522.4" y="76">
-0h45
+0hc7
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="602.5" y="76">
-0hb7
+0h32
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="682.5999999999999" y="76">
-0hc4
+0h8b
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="762.6999999999999" y="76">
-0hcc
+0h23
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="842.8" y="76">
-0h76
+0h5e
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="922.9" y="76">
-0he1
+0hf9
 </text>
 <path d="M200,67 L199,67 L201,83 L279.1,83 L281.1,67 L359.2,67 L361.2,83 L439.3,83 L441.3,67 L519.4,67 L521.4,83 L599.5,83 L601.5,67 L679.6,67 L681.6,83 L759.7,83 L761.7,67 L839.8,67 L841.8,83 L919.9,83 L921.9,67 L1001,67" fill="none" stroke="#00ff00" stroke-width="0.75"/>
 <path d="M200,83 L199,83 L201,67 L279.1,67 L281.1,83 L359.2,83 L361.2,67 L439.3,67 L441.3,83 L519.4,83 L521.4,67 L599.5,67 L601.5,83 L679.6,83 L681.6,67 L759.7,67 L761.7,83 L839.8,83 L841.8,67 L919.9,67 L921.9,83 L1001,83" fill="none" stroke="#00ff00" stroke-width="0.75"/>
@@ -141,34 +141,34 @@ uut.sig_b
 <path d="M0,105 L200,105" fill="none" stroke="#cbcbcb" stroke-width="1"/>
 <path d="M200,105 L1000,105" fill="none" stroke="#202070" stroke-width="1"/>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="202" y="96">
-0h4c
+0hd1
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="282.1" y="96">
-0h4a
+0h25
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="362.2" y="96">
-0h49
+0h99
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="442.29999999999995" y="96">
-0hcc
+0h30
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="522.4" y="96">
-0h74
+0h7f
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="602.5" y="96">
-0h37
+0h5f
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="682.5999999999999" y="96">
-0hd8
+0h6d
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="762.6999999999999" y="96">
-0h6c
+0hc7
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="842.8" y="96">
-0h1
+0h70
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="922.9" y="96">
-0h87
+0h1e
 </text>
 <path d="M200,87 L199,87 L201,103 L279.1,103 L281.1,87 L359.2,87 L361.2,103 L439.3,103 L441.3,87 L519.4,87 L521.4,103 L599.5,103 L601.5,87 L679.6,87 L681.6,103 L759.7,103 L761.7,87 L839.8,87 L841.8,103 L919.9,103 L921.9,87 L1001,87" fill="none" stroke="#00ff00" stroke-width="0.75"/>
 <path d="M200,103 L199,103 L201,87 L279.1,87 L281.1,103 L359.2,103 L361.2,87 L439.3,87 L441.3,103 L519.4,103 L521.4,87 L599.5,87 L601.5,103 L679.6,103 L681.6,87 L759.7,87 L761.7,103 L839.8,103 L841.8,87 L919.9,87 L921.9,103 L1001,103" fill="none" stroke="#00ff00" stroke-width="0.75"/>
@@ -178,34 +178,34 @@ uut.my_reg.d
 <path d="M0,125 L200,125" fill="none" stroke="#cbcbcb" stroke-width="1"/>
 <path d="M200,125 L1000,125" fill="none" stroke="#202070" stroke-width="1"/>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="202" y="116">
-0he8
+0h26
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="282.1" y="116">
-0hcc
+0hfa
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="362.2" y="116">
-0h53
+0h1a
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="442.29999999999995" y="116">
-0h67
+0hfd
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="522.4" y="116">
-0hb9
+0h46
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="602.5" y="116">
-0hee
+0h91
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="682.5999999999999" y="116">
-0h9c
+0hf8
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="762.6999999999999" y="116">
-0h38
+0hea
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="842.8" y="116">
-0h77
+0hce
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="922.9" y="116">
-0h68
+0h17
 </text>
 <path d="M200,107 L199,107 L201,123 L279.1,123 L281.1,107 L359.2,107 L361.2,123 L439.3,123 L441.3,107 L519.4,107 L521.4,123 L599.5,123 L601.5,107 L679.6,107 L681.6,123 L759.7,123 L761.7,107 L839.8,107 L841.8,123 L919.9,123 L921.9,107 L1001,107" fill="none" stroke="#00ff00" stroke-width="0.75"/>
 <path d="M200,123 L199,123 L201,107 L279.1,107 L281.1,123 L359.2,123 L361.2,107 L439.3,107 L441.3,123 L519.4,123 L521.4,107 L599.5,107 L601.5,123 L679.6,123 L681.6,107 L759.7,107 L761.7,123 L839.8,123 L841.8,107 L919.9,107 L921.9,123 L1001,123" fill="none" stroke="#00ff00" stroke-width="0.75"/>
@@ -218,34 +218,34 @@ uut.my_reg.q
 0h0
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="242.05" y="136">
-0he8
+0h26
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="322.15" y="136">
-0hcc
+0hfa
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="402.25" y="136">
-0h53
+0h1a
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="482.34999999999997" y="136">
-0h67
+0hfd
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="562.45" y="136">
-0hb9
+0h46
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="642.55" y="136">
-0hee
+0h91
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="722.65" y="136">
-0h9c
+0hf8
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="802.75" y="136">
-0h38
+0hea
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="882.85" y="136">
-0h77
+0hce
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="962.9499999999999" y="136">
-0h68
+0h17
 </text>
 <path d="M200,127 L199,127 L201,143 L239.05,143 L241.05,127 L319.15,127 L321.15,143 L399.25,143 L401.25,127 L479.35,127 L481.35,143 L559.45,143 L561.45,127 L639.55,127 L641.55,143 L719.65,143 L721.65,127 L799.75,127 L801.75,143 L879.85,143 L881.85,127 L959.95,127 L961.95,143 L1001,143" fill="none" stroke="#00ff00" stroke-width="0.75"/>
 <path d="M200,143 L199,143 L201,127 L239.05,127 L241.05,143 L319.15,143 L321.15,127 L399.25,127 L401.25,143 L479.35,143 L481.35,127 L559.45,127 L561.45,143 L639.55,143 L641.55,127 L719.65,127 L721.65,143 L799.75,143 L801.75,127 L879.85,127 L881.85,143 L959.95,143 L961.95,127 L1001,127" fill="none" stroke="#00ff00" stroke-width="0.75"/>
@@ -258,34 +258,34 @@ uut.sig_sum
 0h0
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="242.05" y="156">
-0he8
+0h26
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="322.15" y="156">
-0hcc
+0hfa
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="402.25" y="156">
-0h53
+0h1a
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="482.34999999999997" y="156">
-0h67
+0hfd
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="562.45" y="156">
-0hb9
+0h46
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="642.55" y="156">
-0hee
+0h91
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="722.65" y="156">
-0h9c
+0hf8
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="802.75" y="156">
-0h38
+0hea
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="882.85" y="156">
-0h77
+0hce
 </text>
 <text alignment-baseline="middle" fill="white" font-family="monospace" font-size="8" text-anchor="start" x="962.9499999999999" y="156">
-0h68
+0h17
 </text>
 <path d="M200,147 L199,147 L201,163 L239.05,163 L241.05,147 L319.15,147 L321.15,163 L399.25,163 L401.25,147 L479.35,147 L481.35,163 L559.45,163 L561.45,147 L639.55,147 L641.55,163 L719.65,163 L721.65,147 L799.75,147 L801.75,163 L879.85,163 L881.85,147 L959.95,147 L961.95,163 L1001,163" fill="none" stroke="#00ff00" stroke-width="0.75"/>
 <path d="M200,163 L199,163 L201,147 L239.05,147 L241.05,163 L319.15,163 L321.15,147 L399.25,147 L401.25,163 L479.35,163 L481.35,147 L559.45,147 L561.45,163 L639.55,163 L641.55,147 L719.65,147 L721.65,163 L799.75,163 L801.75,147 L879.85,147 L881.85,163 L959.95,163 L961.95,147 L1001,147" fill="none" stroke="#00ff00" stroke-width="0.75"/>

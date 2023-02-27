@@ -1,0 +1,21 @@
+[package]
+name = "rust_hdl_lib_ok_core"
+version = "0.44.0"
+edition = "2021"
+license = "MIT"
+description = "Generic support code for OpalKelly based FPGA modules that use the FrontPanel HDL interface"
+homepage = "https://github.com/samitbasu/rust-hdl"
+repository = "https://github.com/samitbasu/rust-hdl"
+keywords = ["fpga", "verilog", "hardware"]
+authors = ["Samit Basu <sbasu.samit@gmail.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust_hdl_lib_core = { version = "0.44.0", path = "../rust_hdl_lib_core" }
+rust_hdl_lib_hls = { version = "0.44.0", path = "../rust_hdl_lib_hls" }
+rust_hdl_lib_sim = { version = "0.44.0", path = "../rust_hdl_lib_sim" }
+rust_hdl_lib_widgets = { version = "0.44.0", path = "../rust_hdl_lib_widgets" }
+rust_hdl_lib_ok_frontpanel_sys = { version = "0.44.0", path = "../rust_hdl_lib_ok_frontpanel_sys" }
+regex = "1.5.4"
+rand = "0.8.5"
