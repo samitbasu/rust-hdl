@@ -1,5 +1,5 @@
 [package]
-name = "rust_hdl_bsp_ok_xem7010"
+name = "rust-hdl-bsp-ok-xem7010"
 version = "0.44.0"
 edition = "2021"
 license = "MIT"
