@@ -8,8 +8,8 @@ members = [
     "rust_hdl_lib_widgets",
     "rust_hdl_lib_macros",
     "rust_hdl_lib_ok_core",
-    "rust_hdl_lib_bsp_alchitry_cu",
-    "rust_hdl_lib_bsp_ok_xem6010",
-    "rust_hdl_lib_bsp_ok_xem7010",
     "rust_hdl_lib_fpga_support",
+    "rust-hdl-bsp-alchitry-cu",
+    "rust-hdl-bsp-ok-xem6010",
+    "rust-hdl-bsp-ok-xem7010",
 ]
