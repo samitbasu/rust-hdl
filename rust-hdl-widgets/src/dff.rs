@@ -7,12 +7,12 @@ use rust_hdl_core::prelude::*;
 ///
 /// ### Examples
 ///
-/// In this example DFF is used to store state for an internal counter which counts to 100.
+/// Use `DFF` to store state for an internal counter which counts to 100.
 ///
 /// ```
 /// # use rust_hdl_lib_core::prelude::*;
 /// # use rust_hdl_lib_widgets::prelude::*;
-///
+/// #
 /// #[derive(LogicBlock)]
 /// struct Counter {
 ///     pub clock: Signal<In, Clock>,
@@ -47,14 +47,16 @@ use rust_hdl_core::prelude::*;
 ///
 /// ### Additional info
 ///
-/// It is a good idea to connect `q` to `d` to ensure that d is never undriven. The [`dff_setup`] macro can generate that code for you.
+/// It is a good idea to connect [`q`](Self::q) to [`d`](Self::d) to ensure that [`d`](Self::d) is never undriven. The [`dff_setup`] macro can generate that code for you.
+///
+/// If you need to set an initial value for the flip-flop use [`DFFWithInit`](crate::dff_with_init::DFFWithInit) instead.
 #[derive(Clone, Debug, LogicBlock)]
 pub struct DFF<T: Synth> {
-    /// Input for data that will be stored on the next rising edge of `clock`.
+    /// Input for data that will be stored on the next rising edge of [`clock`](Self::clock).
     pub d: Signal<In, T>,
     /// Outputs the currently stored data.
     pub q: Signal<Out, T>,
-    /// On every rising edge the data from `d` is stored into the flip-flop. `q` outputs the currently stored data.
+    /// On every rising edge the data from [`d`](Self::d) is stored into the flip-flop. [`q`](Self::q) outputs the currently stored data.
     pub clock: Signal<In, Clock>,
 }
 
@@ -106,6 +108,8 @@ end
 /// You probably want to connect the input and output of every [`DFF`] together, to ensure that the input is never undriven.
 /// Usually you also want to connect a clock to all [`DFF`]s. This macro can generate that boilerplate for you.
 ///
+/// The first argument `dff-setup` receives is `self`. The second argument is the clock that will be connected to all [`DFF`]s. Every additional argument is a [`DFF`].
+///
 /// ### Example
 ///
 /// Connect the clock `your_clock` to `your_flip_flop`
@@ -113,17 +117,17 @@ end
 /// ```
 /// # use rust_hdl_lib_core::prelude::*;
 /// # use rust_hdl_lib_widgets::prelude::*;
-///
+/// #
 /// # #[derive(LogicBlock)]
 /// # struct Demo {
 /// #     pub your_clock: Signal<In, Clock>,
 /// #     your_flip_flop: DFF<Bits<7>>,
 /// # }
-///  
+/// #
 /// # impl Logic for Demo {
 /// #     #[hdl_gen]
 /// #     fn update(&mut self) {
-///         dff_setup!(self, your_clock, your_flip_flop);
+/// dff_setup!(self, your_clock, your_flip_flop);
 /// #     }
 /// # }
 /// ```
@@ -133,7 +137,7 @@ end
 /// ```
 /// # use rust_hdl_lib_core::prelude::*;
 /// # use rust_hdl_lib_widgets::prelude::*;
-///
+/// #
 /// #[derive(LogicBlock)]
 /// struct Demo {
 ///     pub clock: Signal<In, Clock>,
