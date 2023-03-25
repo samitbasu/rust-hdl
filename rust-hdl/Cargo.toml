@@ -10,12 +10,12 @@ keywords = ["fpga", "verilog", "hardware"]
 authors = ["Samit Basu <basu.samit@gmail.com>"]
 
 [dependencies]
-rust_hdl_macros = { version = "0.44.0", path = "../rust_hdl_macros" }
-rust_hdl_core = { version = "0.44.0", path = "../rust_hdl_core" }
-rust_hdl_sim = { version = "0.44.0", path = "../rust_hdl_sim" }
-rust_hdl_hls = { version = "0.44.0", path = "../rust_hdl_hls" }
-rust_hdl_widgets = { version = "0.44.0", path = "../rust_hdl_widgets" }
-rust_hdl_fpga_support = { version = "0.44.0", path = "../rust_hdl_fpga_support", optional = true }
+rust-hdl-macros = { version = "0.44.0", path = "../rust-hdl-macros" }
+rust-hdl-core = { version = "0.44.0", path = "../rust-hdl-core" }
+rust-hdl-sim = { version = "0.44.0", path = "../rust-hdl-sim" }
+rust-hdl-hls = { version = "0.44.0", path = "../rust-hdl-hls" }
+rust-hdl-widgets = { version = "0.44.0", path = "../rust-hdl-widgets" }
+rust-hdl-fpga-support = { version = "0.44.0", path = "../rust-hdl-fpga-support", optional = true }
 crossbeam = "0.8.1"
 num-bigint = "0.4.0"
 num-traits = "0.2.14"
@@ -33,4 +33,4 @@ anyhow = "^1"
 seq-macro = "0.3.1"
 
 [features]
-fpga = ["dep:rust_hdl_fpga_support"]
+fpga = ["dep:rust-hdl-fpga-support"]
