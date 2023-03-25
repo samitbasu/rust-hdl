@@ -1,7 +1,7 @@
 use super::ddr_fifo::DDRFIFO;
 use super::mcb_if::MCBInterface1GDDR2;
 use rust_hdl::prelude::*;
-use rust_hdl_lib_ok_core::core::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 
 #[derive(LogicBlock)]
 pub struct OpalKellyDDRBackedDownloadFIFO {

@@ -1,8 +1,8 @@
-use rust_hdl_lib_ok_core::core::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 
 use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem6010::xem6010::XEM6010;
-use rust_hdl_lib_ok_core::test_common::pipe::{
+use rust_hdl_ok_core::test_common::pipe::{
     test_opalkelly_pipe_fifo_runtime, OpalKellyPipeFIFOTest,
 };
 

@@ -3,8 +3,8 @@ use rust_hdl_bsp_ok_xem6010::xem6010;
 use rust_hdl_bsp_ok_xem6010::xem6010::mcb_if::MCBInterface1GDDR2;
 use rust_hdl_bsp_ok_xem6010::xem6010::ok_download_ddr::OpalKellyDDRBackedDownloadFIFO;
 use rust_hdl_bsp_ok_xem6010::xem6010::pins::xem_6010_base_clock;
-use rust_hdl_lib_ok_core::core::prelude::*;
-use rust_hdl_lib_ok_core::test_common::ddr;
+use rust_hdl_ok_core::core::prelude::*;
+use rust_hdl_ok_core::test_common::ddr;
 
 #[derive(LogicBlock)]
 struct OpalKellyDownloadDDRFIFOStressTest {

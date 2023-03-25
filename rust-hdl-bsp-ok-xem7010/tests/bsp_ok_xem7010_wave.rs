@@ -1,7 +1,7 @@
 use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem7010::xem7010::XEM7010;
-use rust_hdl_lib_ok_core::core::prelude::*;
-use rust_hdl_lib_ok_core::test_common::wave::OpalKellyWave;
+use rust_hdl_ok_core::core::prelude::*;
+use rust_hdl_ok_core::test_common::wave::OpalKellyWave;
 
 #[test]
 fn test_opalkelly_xem_7010_synth_wave() {

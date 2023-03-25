@@ -1,0 +1,28 @@
+[package]
+name = "rust_hdl_core"
+version = "0.44.1"
+edition = "2021"
+license = "MIT"
+description = "Write firmware for FPGAs in Rust - core crate"
+homepage = "https://github.com/samitbasu/rust-hdl"
+repository = "https://github.com/samitbasu/rust-hdl"
+keywords = ["fpga", "verilog", "hardware"]
+authors = ["Samit Basu <basu.samit@gmail.com>"]
+
+[dependencies]
+rust_hdl_macros = { version = "0.44.0", path = "../rust_hdl_macros" }
+crossbeam = "0.8.1"
+num-bigint = "0.4.0"
+num-traits = "0.2.14"
+vcd = "0.6.1"
+evalexpr = "6.3.0"
+regex = "1.5.4"
+array-init = "2.0.0"
+rand = "0.8"
+petgraph = "0.6.0"
+embed-doc-image = "0.1.4"
+svg = "0.10.0"
+substring = "^1"
+anyhow = "^1"
+
+seq-macro = "0.3.1"

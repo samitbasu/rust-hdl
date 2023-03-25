@@ -1,14 +1,14 @@
-use rust_hdl_lib_ok_core::core::ok_hls_bridge::{
+use rust_hdl_ok_core::core::ok_hls_bridge::{
     disable_streaming, drain_stream, enable_streaming, ping_bridge, read_data_from_address,
     stream_read, write_data_to_address, OKHLSBridgeAddressConfig, OpalKellyHLSBridge,
 };
-use rust_hdl_lib_ok_core::core::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 
 use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem6010::xem6010::XEM6010;
-use rust_hdl_lib_ok_core::test_common::tools::ok_test_prelude;
+use rust_hdl_ok_core::test_common::tools::ok_test_prelude;
 
-use rust_hdl_lib_ok_core::frontpanel::OkError;
+use rust_hdl_ok_core::frontpanel::OkError;
 
 #[derive(LogicBlock)]
 struct OpalKellyHLSBridgeTest {

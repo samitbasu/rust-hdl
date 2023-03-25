@@ -9,7 +9,7 @@ pub mod synth;
 pub mod sys_clock;
 
 use pins::*;
-use rust_hdl_lib_ok_core::core::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct XEM7010 {}

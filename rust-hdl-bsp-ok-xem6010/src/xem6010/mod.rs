@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use pins::*;
 use rust_hdl::prelude::*;
-use rust_hdl_lib_ok_core::core::prelude::*;
+use rust_hdl_ok_core::core::prelude::*;
 
 pub mod ddr_fifo;
 pub mod mcb_if;

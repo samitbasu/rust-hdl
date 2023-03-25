@@ -1,9 +1,7 @@
 use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem6010::xem6010;
 use rust_hdl_bsp_ok_xem6010::xem6010::XEM6010;
-use rust_hdl_lib_ok_core::test_common::mux_spi::{
-    test_opalkelly_mux_spi_runtime, OpalKellySPIMuxTest,
-};
+use rust_hdl_ok_core::test_common::mux_spi::{test_opalkelly_mux_spi_runtime, OpalKellySPIMuxTest};
 
 #[test]
 fn test_opalkelly_xem_6010_mux_spi() {

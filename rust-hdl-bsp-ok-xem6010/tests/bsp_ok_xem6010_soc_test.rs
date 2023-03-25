@@ -3,8 +3,8 @@
 use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem6010::xem6010::pins::xem_6010_base_clock;
 use rust_hdl_bsp_ok_xem6010::xem6010::XEM6010;
-use rust_hdl_lib_ok_core::core::prelude::*;
-use rust_hdl_lib_ok_core::test_common::soc::test_opalkelly_soc_hello;
+use rust_hdl_ok_core::core::prelude::*;
+use rust_hdl_ok_core::test_common::soc::test_opalkelly_soc_hello;
 
 #[derive(LogicBlock)]
 struct OpalKellySoCTest {

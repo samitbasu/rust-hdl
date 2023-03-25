@@ -1,8 +1,8 @@
 use rust_hdl::prelude::*;
 use rust_hdl_bsp_ok_xem7010::xem7010::sys_clock::OpalKellySystemClock7;
 use rust_hdl_bsp_ok_xem7010::xem7010::XEM7010;
-use rust_hdl_lib_ok_core::core::prelude::*;
-use rust_hdl_lib_ok_core::test_common::pipe::test_opalkelly_pipe_afifo_runtime;
+use rust_hdl_ok_core::core::prelude::*;
+use rust_hdl_ok_core::test_common::pipe::test_opalkelly_pipe_afifo_runtime;
 
 declare_async_fifo!(OKTestAFIFO, Bits<16>, 256, 1);
 
