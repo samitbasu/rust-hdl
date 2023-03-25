@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-sim"
-version = "0.44.0"
+version = "0.44.2"
 edition = "2021"
 license = "MIT"
 description = "Write firmware for FPGAs in Rust - Simulation crate"
@@ -12,6 +12,6 @@ authors = ["Samit Basu <basu.samit@gmail.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl-core = { version = "0.44.0", path = "../rust-hdl-core" }
-rust-hdl-widgets = { version = "0.44.0", path = "../rust-hdl-widgets" }
+rust-hdl-core = { version = "0.44.2", path = "../rust-hdl-core" }
+rust-hdl-widgets = { version = "0.44.2", path = "../rust-hdl-widgets" }
 array-init = { version = "2.0.0" }
