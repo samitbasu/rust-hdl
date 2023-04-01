@@ -4,6 +4,11 @@ description = "Changelog"
 weight = 2
 +++
 
+# v0.44.0
+
+- More renaming stuff related to some mistakes I made with the sub crates.
+
+
 # v0.43.0
 
 - Add support for right and left shifts by different bit width amounts.  For example,
