@@ -17,7 +17,7 @@ fn save_stdout(output: Output, dir: &PathBuf, basename: &str) -> Result<(), std:
     Ok(())
 }
 
-pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
+/* pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
     uut.connect_all();
     check_all(&uut).unwrap(); // TODO - Change from panic to return an error
     let verilog_text = generate_verilog(&uut);
@@ -48,6 +48,50 @@ pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
     let output = Command::new("icepack")
         .current_dir(dir.clone())
         .args(["top.txt", "top.bin"])
+        .output()
+        .unwrap();
+    save_stdout(output, &dir, "icepack").unwrap();
+}
+ */
+pub fn generate_bitstream<U: Block>(mut uut: U, prefix: &str) {
+    uut.connect_all();
+    check_all(&uut).unwrap(); // TODO - Change from panic to return an error
+    let verilog_text = generate_verilog(&uut);
+    let pcf_text = generate_pcf(&uut);
+    let dir = PathBuf::from_str(prefix).unwrap();
+    let _ = remove_dir_all(&dir);
+    let _ = create_dir_all(&dir);
+    let mut v_file = File::create(dir.join("top.v")).unwrap();
+    write!(v_file, "{}", verilog_text).unwrap();
+    let pcf_filename = "top.pcf".to_string();
+    let mut pcf_file = File::create(dir.join(pcf_filename)).unwrap();
+    write!(pcf_file, "{}", pcf_text).unwrap();
+    let output = Command::new("yosys")
+        .current_dir(dir.clone())
+        .arg(r#"-p synth_ice40 -top top -json top.json"#)
+        .arg("top.v")
+        .output()
+        .unwrap();
+    save_stdout(output, &dir, "yosys_synth").unwrap();
+    let output = Command::new("nextpnr-ice40")
+        .current_dir(dir.clone())
+        .args([
+            "--hx8k",
+            "--package",
+            "cb132",
+            "--pcf",
+            "top.pcf",
+            "--asc",
+            "top.asc",
+            "--json",
+            "top.json",
+        ])
+        .output()
+        .unwrap();
+    save_stdout(output, &dir, "nextpnr").unwrap();
+    let output = Command::new("icepack")
+        .current_dir(dir.clone())
+        .args(["top.asc", "top.bin"])
         .output()
         .unwrap();
     save_stdout(output, &dir, "icepack").unwrap();
