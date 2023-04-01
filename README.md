@@ -1,6 +1,6 @@
 # rust-hdl
 
-** Note!  This is still a live project.  Just taking a short break.  Back in a few weeks. **
+** Ok so the docs need some work...  Stay tuned. **
 
 
 ** Write FPGA Firmware using Rust! **
