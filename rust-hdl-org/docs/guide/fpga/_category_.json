@@ -1,0 +1,7 @@
+{
+    "label": "FPGA Intro",
+    "link": {
+        "type": "generated-index",
+        "description": "Intro to FPGAs.  Maybe some day you need to explain to your CEO what an FPGA is and why you need to use one."
+    }
+}

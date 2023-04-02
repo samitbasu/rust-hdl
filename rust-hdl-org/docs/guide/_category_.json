@@ -1,0 +1,8 @@
+{
+    "label": "The Guide",
+    "position": 3,
+    "link": {
+        "type": "generated-index",
+        "description": "Some basic orienting information on RustHDL and FPGAs."
+    }
+}

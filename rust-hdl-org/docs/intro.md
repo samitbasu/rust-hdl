@@ -3,7 +3,7 @@ sidebar_position: 1
 ---
 import ReactPlayer from 'react-player'
 
-# Tutorial Intro
+# Blinky on Alchitry CU
 
 Let's go from an empty setup to a functioning blinking LED on an actual FPGA!  Blinking an LED is a time-honored tradition of demonstrating that you can go from source to somehting that understands
 the hardware it is running on.

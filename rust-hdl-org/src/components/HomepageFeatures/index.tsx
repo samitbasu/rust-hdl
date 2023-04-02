@@ -10,38 +10,40 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
+    title: 'Safe',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Use <code>rustc</code> to check the validity of your firmware with
+        strongly typed interfaces that are checked at <i>compile</i> time.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Powerful',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Easily package complex designs into easy-to-reuse modules that
+        you can reuse easily.  Connecting components is simple and missing or erroneous
+        connections are caught at compile time or with the built in static analysis passes.
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Batteries Included',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Need an asynchronous FIFO?  Or a SDR memory controller?  Or a one shot?
+        Use the provided set of <i>widgets</i> to get started.  Most are generic
+        and can be used to handle arbitrary data types.
       </>
     ),
   },
 ];
 
-function Feature({title, Svg, description}: FeatureItem) {
+function Feature({ title, Svg, description }: FeatureItem) {
   return (
     <div className={clsx('col col--4')}>
       <div className="text--center">
