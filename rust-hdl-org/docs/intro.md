@@ -1,6 +1,7 @@
 ---
 sidebar_position: 1
 ---
+import ReactPlayer from 'react-player'
 
 # Tutorial Intro
 
@@ -87,7 +88,7 @@ Next, we add the `rust-hdl` meta package as a dependency.  You will need the `fp
 ```bash
 samitbasu@samitbasu-virtual-machine:~/Devel/blinky$ cargo add rust-hdl --features fpga
     Updating crates.io index
-      Adding rust-hdl v0.44.2 to dependencies.
+      Adding rust-hdl v0.45.0 to dependencies.
              Features:
              + fpga
 samitbasu@samitbasu-virtual-machine:~/Devel/blinky$ 
@@ -98,7 +99,7 @@ We will also need the board support package for the Alchitry Cu board.  So lets 
 ```bash
 samitbasu@samitbasu-virtual-machine:~/Devel/blinky$ cargo add rust-hdl-bsp-alchitry-cu
     Updating crates.io index
-      Adding rust-hdl-bsp-alchitry-cu v0.44.2 to dependencies.
+      Adding rust-hdl-bsp-alchitry-cu v0.45.0 to dependencies.
 samitbasu@samitbasu-virtual-machine:~/Devel/blinky$ 
 ```
 
@@ -140,58 +141,48 @@ impl Default for Blinky {
   }
 }
 
+fn main() {
+    let uut = Blinky::default();
+    synth::generate_bitstream(uut, "firmware/blinky")
+}
 ```
 
-```
-
-## Getting Started
-
-
-
-
-
-
-
-
-
-Let's discover **Docusaurus in less than 5 minutes**.
-
-## Getting Started
-
-Get started by **creating a new site**.
-
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
-
-### What you'll need
-
-- [Node.js](https://nodejs.org/en/download/) version 16.14 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
-
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
+That's it!  Now to build firmware, we return to the command line
 
 ```bash
-npm init docusaurus@latest my-website classic
+samitbasu@samitbasu-virtual-machine:~/Devel/blinky$ cargo run
+   Finished dev [unoptimized + debuginfo] target(s) in 15.74s
+   Running `target/debug/blinky`
+samitbasu@samitbasu-virtual-machine:~/Devel/blinky$ 
 ```
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
+The output directory `firmware/blinky` contains our `top.bit` firmware file, that we can flash onto the Alchitry using the `iceprog` tool:
 
 ```bash
-cd my-website
-npm run start
+samitbasu@samitbasu-virtual-machine:~/Devel/blinky$ iceprog firmware/blinky/top.bin 
+init..
+cdone: high
+reset..
+cdone: low
+flash ID: 0xEF 0x40 0x16 0x00
+file size: 135100
+erase 64kB sector at 0x000000..
+erase 64kB sector at 0x010000..
+erase 64kB sector at 0x020000..
+programming..
+done.                 
+reading..
+VERIFY OK             
+cdone: high
+Bye.
+samitbasu@samitbasu-virtual-machine:~/Devel/blinky$ 
 ```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+Watch for blinking!
 
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
+<ReactPlayer playing controls url="img/blinky.mp4"/>
 
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+Needs a few emoji: 🎉🎈🦀, but most importantly, 😁!
+
+
+
