@@ -12,3 +12,12 @@ of them in the course of this guide (did you check outside the front door?).   I
 these are interesting to you, move on.  This guide is probably not meant for you.
 
 Still here? Great! This is meant to be helpful.
+
+The guide is broken down into sections.
+
+- [What is an FPGA](./fpga/index.md) has some musings on FPGAs and maybe some useful tools to 
+explain them to your colleagues.
+- [Programming](./programming/index.md) has a few observations on different programming models for
+FPGAs and how RustHDL fits in
+- [Using RustHDL](./rusthdl/index.md) covers the details of using RustHDL to build firmware
+

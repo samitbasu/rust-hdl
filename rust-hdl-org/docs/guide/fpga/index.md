@@ -18,10 +18,10 @@ to make them less difficult to use, but it doesn't make the underlying complexit
 "So what do FPGAs do well, then?".  Great question!  Glad I asked it.  There are a few areas
 where FPGAs still hold an advantage over other digital solutions.
 
-- Deterministic systems!
-- True parallelism
-- High speed I/O
-- Low power designs
-- Cybersecurity
+- [Deterministic systems](./deterministic-systems.md)!
+- [True parallelism](./kitchen-analogy.md)
+- [High speed I/O](./high-speed-io.md)
+- [Low power designs](./low-power.md)
+- [Cybersecurity](./cybersecurity.md)
 
 Keep reading for more details!
