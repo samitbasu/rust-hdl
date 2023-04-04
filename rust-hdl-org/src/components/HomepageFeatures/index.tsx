@@ -11,7 +11,7 @@ type FeatureItem = {
 const FeatureList: FeatureItem[] = [
   {
     title: 'Safe',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    Svg: require('@site/static/img/cyber_ferris_safe.svg').default,
     description: (
       <>
         Use <code>rustc</code> to check the validity of your firmware with
@@ -21,7 +21,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     title: 'Powerful',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    Svg: require('@site/static/img/cyber_ferris_powerful.svg').default,
     description: (
       <>
         Easily package complex designs into easy-to-reuse modules that
@@ -32,7 +32,7 @@ const FeatureList: FeatureItem[] = [
   },
   {
     title: 'Batteries Included',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    Svg: require('@site/static/img/cyber_ferris_batteries.svg').default,
     description: (
       <>
         Need an asynchronous FIFO?  Or a SDR memory controller?  Or a one shot?

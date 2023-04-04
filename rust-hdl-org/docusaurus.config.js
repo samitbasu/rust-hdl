@@ -18,8 +18,8 @@ const config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'samitbasu', // Usually your GitHub org/user name.
+  projectName: 'rust-hdl', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -60,9 +60,9 @@ const config = {
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
       navbar: {
-        title: 'My Site',
+        title: 'RustHDL',
         logo: {
-          alt: 'My Site Logo',
+          alt: 'CyberFerris Logo',
           src: 'img/logo.svg',
         },
         items: [
@@ -72,9 +72,12 @@ const config = {
             position: 'left',
             label: 'Tutorial',
           },
-          { to: '/blog', label: 'Blog', position: 'left' },
+          { href: 'https://docs.rs/rust-hdl', label: 'API Docs', position: 'right' },
           {
-            href: 'https://github.com/facebook/docusaurus',
+            href: 'https://crates.io/crates/rust-hdl', label: 'Crates 📦', position: 'right'
+          },
+          {
+            href: 'https://github.com/samitbasu/rust-hdl',
             label: 'GitHub',
             position: 'right',
           },
@@ -96,29 +99,21 @@ const config = {
             title: 'Community',
             items: [
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-              },
-              {
                 label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
-              },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
+                href: 'https://discord.gg/uESUbfhQub',
               },
             ],
           },
           {
             title: 'More',
             items: [
+              { href: 'https://docs.rs/rust-hdl', label: 'API Docs' },
               {
-                label: 'Blog',
-                to: '/blog',
+                href: 'https://crates.io/crates/rust-hdl', label: 'Crates 📦'
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                href: 'https://github.com/samitbasu/rust-hdl',
               },
             ],
           },
