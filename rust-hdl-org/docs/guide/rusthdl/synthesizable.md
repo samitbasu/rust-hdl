@@ -1,9 +1,11 @@
-# The Synthesizable Subset of Rust and the HDL Kernel
+# Synthesizable Subset of Rust
 
 RustHDL uses procedural macros to define a subset of the Rust language that can be used to
 describe actual hardware.  That subset is known as the synthesizable subset of Rust.  It is
 quite limited because the end result is translated into Verilog and ultimately into hardware
 configuration for the FPGA.
+
+## Valid Rust
 
 :::danger
 The HDL kernel must be valid Rust!  If you remove the `#[hdl_gen]` attribute, the code
@@ -26,6 +28,8 @@ impl Logic for Foo {
    }
 }
 ```
+
+## HDL Kernel Signature
 
 :::info
 The `#[hdl_gen]` attribute can only be applied to a function (aka HDL Kernel) that
@@ -65,6 +69,8 @@ impl Logic for Foo {
 }
 ```
 
+## Assignments
+
 :::info
 Assignments are allowed as long as you follow the rules about signals.  Types are
 still enforced by Rust.
@@ -103,11 +109,17 @@ impl Logic for Foo {
 }
 ```
 
+## Unary operators
+
 - Unary operations supported are `-` and `!`
 The `-` operator is only supported for `Signed` types.  Otherwise, it makes no sense.  If
 you want to compute the 2's complement of an unsigned value, you need to do so explicitly.
 The `!` operator will flip all of the bits in the bitvector.
-- Conditionals (`if`) are supported
+
+## Conditionals
+
+Conditionals (`if`) are supported.
+
 ```rust
 # use rust_hdl::prelude::*;
 
@@ -145,6 +157,8 @@ impl Logic for Foo {
     }
 }
 ```
+
+## Literals and Function Calls
 - Literals (provided they implement the `Synth` trait) are supported.  In most cases, you
 can used un-suffixed literals (like `1` or `0xDEAD`) as add `.into()`.
 - Function calls - RustHDL kernels support a very limited number of function calls, all of
@@ -185,6 +199,9 @@ impl Logic for Foo {
     }
 }
 ```
+
+## Matches
+
 - Matches - Kernels support matching with literals or identifiers
 Matches are used for state machines and implementing ROMs.  
 For now, `match` is a statement, not an expression!  Maybe that will be fixed in a future
@@ -234,14 +251,23 @@ impl Logic for Foo {
     }
 }
 ```
+
+## Macros
+
 - Macros - some macros are supported in kernels
     - `println` - this is converted into a comment in the generated HDL
     - `comment` - also a comment
     - `assert` - converted to a comment
     - `dff_setup` - setup a DFF - this macro is converted into the appropriate HDL
     - `clock` - clock a set of components - this macro is also converted into the appropriate HDL
+
+## Loops 
 - Loops - `for` loops are supported for code generation
-    - In software parlance, all `for` loops are unrolled at compile time, so they must be of the form `for <ident> in <const>..<const>`.
+
+:::info
+In software parlance, all `for` loops are unrolled at compile time, so they must be of the form `for <ident> in <const>..<const>`.
+:::
+
 A simple example to consider is a parameterizable mux.
 
 ```rust
@@ -279,44 +305,7 @@ Since an example is instructive, here is the HDL kernel for a nontrivial circuit
 annotated to demonstrate the various valid bits of syntax.  It's been heavily redacted to make
 it easier to read.
 
-```
-# use rust_hdl::prelude::*;
-# use rust_hdl::widgets::prelude::*;
-# #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
-# enum SPIState {
-#     Idle,
-#     Dwell,
-#     LoadBit,
-#     MActive,
-#     SampleMISO,
-#     MIdle,
-#     Finish,
-# }
-# #[derive(Copy, Clone)]
-# pub struct SPIConfig {
-#     pub clock_speed: u64,
-#     pub cs_off: bool,
-#     pub mosi_off: bool,
-#     pub speed_hz: u64,
-#     pub cpha: bool,
-#     pub cpol: bool,
-# }
-# #[derive(LogicInterface, Default)]
-# #[join = "SPIWiresSlave"]
-# pub struct SPIWiresMaster {
-#     pub mosi: Signal<Out, Bit>,
-#     pub miso: Signal<In, Bit>,
-#     pub msel: Signal<Out, Bit>,
-#     pub mclk: Signal<Out, Bit>,
-# }
-# #[derive(LogicInterface, Default)]
-# #[join = "SPIWiresMaster"]
-# pub struct SPIWiresSlave {
-#     pub mosi: Signal<In, Bit>,
-#     pub miso: Signal<Out, Bit>,
-#     pub msel: Signal<In, Bit>,
-#     pub mclk: Signal<In, Bit>,
-# }
+```rust
 // Note - you can use const generics in HDL definitions and kernels!
 #[derive(LogicBlock)]
 struct SPIMaster<const N: usize> {
@@ -326,12 +315,6 @@ struct SPIMaster<const N: usize> {
     pub bits_outbound: Signal<In, Bits<16>>,
     pub data_outbound: Signal<In, Bits<N>>,
     // snip...
-#     pub data_inbound: Signal<Out, Bits<N>>,
-#     pub start_send: Signal<In, Bit>,
-#     pub transfer_done: Signal<Out, Bit>,
-#     pub continued_transaction: Signal<In, Bit>,
-#     pub busy: Signal<Out, Bit>,
-#     pub wires: SPIWiresMaster,   // <-- This is a LogicInterface type
     // These are private, so they can only be accessed by internal code
     register_out: DFF<Bits<N>>,
     register_in: DFF<Bits<N>>,
@@ -339,17 +322,9 @@ struct SPIMaster<const N: usize> {
     strobe: Strobe<32>,
     pointer: DFF<Bits<16>>,
      // snip...
-#     pointerm1: Signal<Local, Bits<16>>,
-#     clock_state: DFF<Bit>,
-#     done_flop: DFF<Bit>,
-#     msel_flop: DFFWithInit<Bit>,
-#     mosi_flop: DFF<Bit>,
-#     continued_save: DFF<Bit>,
     // Computed constants need to be stored in a special Constant field member
     cs_off: Constant<Bit>,
     mosi_off: Constant<Bit>,
-#     cpha: Constant<Bit>,
-#     cpol: Constant<Bit>,
 }
 
 impl<const N: usize> Logic for SPIMaster<N> {
@@ -368,11 +343,6 @@ impl<const N: usize> Logic for SPIMaster<N> {
             register_in,
             state,
             pointer,
-#             clock_state,
-#             done_flop,
-#             msel_flop,
-#             mosi_flop,
-#             continued_save
         );
         // This macro is shorthand for `self.strobe.next = self.clock.val();`
         clock!(self, clock, strobe);
@@ -380,13 +350,9 @@ impl<const N: usize> Logic for SPIMaster<N> {
         // Note that `.next` is on the LHS, and `.val()` on the right...
         self.strobe.enable.next = true;
         self.wires.mclk.next = self.clock_state.q.val();
-#         self.wires.mosi.next = self.mosi_flop.q.val();
         self.wires.msel.next = self.msel_flop.q.val();
         self.data_inbound.next = self.register_in.q.val();
-#         self.transfer_done.next = self.done_flop.q.val();
-#         self.done_flop.d.next = false;
         self.pointerm1.next = self.pointer.q.val() - 1;
-#         self.busy.next = true;
         // The `match` is used to model state machines
         match self.state.q.val() {
             SPIState::Idle => {
@@ -423,7 +389,6 @@ impl<const N: usize> Logic for SPIMaster<N> {
                         .q
                         .val()
                         .get_bit(self.pointerm1.val().index()); // Fetch the corresponding bit out of the register
-#                     self.pointer.d.next = self.pointerm1.val(); // Decrement the pointer
                     self.state.d.next = SPIState::MActive; // Move to the hold mclock low state
                     self.clock_state.d.next = self.cpol.val() ^ self.cpha.val();
                 } else {
@@ -437,9 +402,6 @@ impl<const N: usize> Logic for SPIMaster<N> {
                     self.state.d.next = SPIState::SampleMISO;
                 }
             }
-#           SPIState::SampleMISO => {}
-#           SPIState::MIdle => {}
-#           SPIState::Finish => {}
        }
     }
 }
@@ -515,7 +477,11 @@ signals, and the namespaces ensure that there is no ambiguity in assignment.  Th
 won't compile, since `On` without the name of the `enum` means nothing, and `State1` and
 `State2` are separate types.  They cannot be assigned to one another.
 
-```compile_fail
+:::danger
+This example won't compile.
+:::
+
+```rust
 # use rust_hdl::prelude::*;
 
 #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
@@ -547,24 +513,6 @@ impl Logic for Foo {
 If for some reason, you needed to translate between enums, use a `match`:
 
 ```rust
-# use rust_hdl::prelude::*;
-
-# #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
-# enum State1 {
-#     On,
-#     Off,
-# }
-# #[derive(Copy, Clone, PartialEq, Debug, LogicState)]
-# enum State2 {
-#     Off,
-#     On,
-# }
-#
-# struct Foo {
-#     pub sig_in: Signal<In, State1>,
-#     pub sig_out: Signal<Out, State2>,
-# }
-#
 impl Logic for Foo {
    #[hdl_gen]
    fn update(&mut self) {

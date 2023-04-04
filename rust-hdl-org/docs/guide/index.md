@@ -1,3 +1,6 @@
+---
+sidebar_position: 3
+---
 # The Basics
 
 Let's start with the basic questions you may be asking yourself:
