@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-widgets"
-version = "0.45.0"
+version = "0.45.1"
 edition = "2021"
 license = "MIT"
 description = "Write firmware for FPGAs in Rust - widget crate"
@@ -12,7 +12,7 @@ authors = ["Samit Basu <basu.samit@gmail.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl-core = { version = "0.45.0", path = "../rust-hdl-core" }
+rust-hdl-core = { version = "0.45.1", path = "../rust-hdl-core" }
 array-init = "2.0.0"
 
 [dev-dependencies]

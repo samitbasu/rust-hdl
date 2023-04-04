@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-bsp-ok-xem7010"
-version = "0.45.0"
+version = "0.45.1"
 edition = "2021"
 license = "MIT"
 description = "Support crate for RustHDL - provides Board Support Package for the OpalKelly XEM7010 module (Artix-7 based)"
@@ -12,7 +12,7 @@ authors = ["Samit Basu <basu.samit@gmail>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl = { path = "../rust-hdl", version = "0.45.0", features = ["fpga"] }
-rust-hdl-ok-core = { path = "../rust-hdl-ok-core", version = "0.45.0" }
-rust-hdl-ok-frontpanel-sys = { path = "../rust-hdl-ok-frontpanel-sys", version = "0.45.0" }
+rust-hdl = { path = "../rust-hdl", version = "0.45.1", features = ["fpga"] }
+rust-hdl-ok-core = { path = "../rust-hdl-ok-core", version = "0.45.1" }
+rust-hdl-ok-frontpanel-sys = { path = "../rust-hdl-ok-frontpanel-sys", version = "0.45.1" }
 rand = { version = "0.8.1" }
