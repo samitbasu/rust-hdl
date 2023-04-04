@@ -1,7 +1,6 @@
-# rust-hdl
+# RustHDL
 
-** Ok so the docs need some work...  Stay tuned. **
-
+** New docs launched!  Check them out at https://rust-hdl.org... **
 
 ** Write FPGA Firmware using Rust! **
 
