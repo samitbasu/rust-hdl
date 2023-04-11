@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./rust-hdl-bsp-icesugar-1-5/Cargo.toml"
+    ]
+}
