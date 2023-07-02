@@ -376,7 +376,11 @@ fn hdl_call(call: &syn::ExprCall) -> Result<TS> {
         || funcname.starts_with("bits")
         || funcname.starts_with("Bits")
     {
-        hdl_compute(&call.args[0])
+        let out = quote!(call).to_string();
+        let target = hdl_compute(&call.args[0])?;
+        Ok(quote!({
+            ast::VerilogExpression::Cast(Box::new(#target),(#call).bits())
+        }))
     } else if funcname.starts_with("unsigned_cast") {
         let target = hdl_compute(&call.args[0])?;
         Ok(quote!({ast::VerilogExpression::Unsigned(Box::new(#target))}))

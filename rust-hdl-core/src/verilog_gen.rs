@@ -237,10 +237,10 @@ impl VerilogVisitor for VerilogCodeGenerator {
     }
 
     fn visit_cast(&mut self, e: &VerilogExpression, bits: &usize) {
-        self.io.write("(");
+        self.io.write("((");
         self.visit_expression(e);
         let mask = (BigUint::from(1_u32) << bits) - 1_u32;
-        self.io.write(format!(") & {}'h{:x}", bits, mask))
+        self.io.write(format!(") & {}'h{:x})", bits, mask))
     }
 
     fn visit_signed(&mut self, a: &VerilogExpression) {

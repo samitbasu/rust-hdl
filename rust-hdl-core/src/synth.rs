@@ -29,6 +29,9 @@ pub trait Synth: Default + Copy + PartialEq + Debug {
     fn descriptor() -> TypeDescriptor;
     fn vcd(self) -> VCDValue;
     fn verilog(self) -> VerilogLiteral;
+    fn bits(self) -> usize {
+        Self::BITS
+    }
 }
 
 impl<const N: usize> Synth for Bits<N> {
