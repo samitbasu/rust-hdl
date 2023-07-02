@@ -1,6 +1,6 @@
 [package]
 name = "rust-hdl-bsp-alchitry-cu"
-version = "0.45.1"
+version = "0.46.0"
 edition = "2021"
 license = "MIT"
 description = "Support crate for RustHDL - provides Board Support Package for the Alchitry Cu board"
@@ -13,4 +13,4 @@ authors = ["Samit Basu <basu.samit@gmail.com>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rust-hdl = { version = "0.45.1", path = "../rust-hdl", features = ["fpga"] }
+rust-hdl = { version = "0.46.0", path = "../rust-hdl", features = ["fpga"] }
