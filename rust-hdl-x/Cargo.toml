@@ -1,0 +1,11 @@
+[package]
+name = "rust-hdl-x"
+version = "0.1.0"
+edition = "2021"
+description = "Experiments in RustHDL design and concepts"
+authors = ["Samit Basu <basu.samit@gmail.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust-hdl = { version = "0.46.0", path = "../rust-hdl" }

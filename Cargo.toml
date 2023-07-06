@@ -12,4 +12,5 @@ members = [
     "rust-hdl-bsp-alchitry-cu",
     "rust-hdl-bsp-ok-xem6010",
     "rust-hdl-bsp-ok-xem7010",
+    "rust-hdl-x",
 ]
