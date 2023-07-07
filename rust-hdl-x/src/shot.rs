@@ -1,28 +1,28 @@
 use std::time::Duration;
 
-use rust_hdl::prelude::{freq_hz_to_period_femto, NANOS_PER_FEMTO};
+use rust_hdl::prelude::{freq_hz_to_period_femto, Bits, NANOS_PER_FEMTO};
 
 use crate::synchronous::Synchronous;
 
-pub struct ShotConfig {
-    duration: u32,
+pub struct ShotConfig<const N: usize> {
+    duration: Bits<N>,
 }
 
-impl ShotConfig {
+impl<const N: usize> ShotConfig<N> {
     pub fn new(frequency: u64, duration: Duration) -> Self {
         let duration_nanos = duration.as_nanos() as f64 * NANOS_PER_FEMTO; // duration in femtos
         let clock_period_nanos = freq_hz_to_period_femto(frequency as f64);
         let clocks = (duration_nanos / clock_period_nanos).floor() as u64;
         assert!(clocks < (1_u64 << 32));
         Self {
-            duration: clocks as u32,
+            duration: clocks.into(),
         }
     }
 }
 
 #[derive(Debug, Default)]
-pub struct ShotState {
-    counter: u32,
+pub struct ShotState<const N: usize> {
+    counter: Bits<N>,
     state: bool,
 }
 
@@ -32,12 +32,12 @@ pub struct ShotOutputs {
     pub fired: bool,
 }
 
-impl Synchronous for ShotConfig {
+impl<const N: usize> Synchronous for ShotConfig<N> {
     type Input = bool;
     type Output = ShotOutputs;
-    type State = ShotState;
+    type State = ShotState<N>;
 
-    fn update(&self, state_q: ShotState, trigger: bool) -> (ShotOutputs, ShotState) {
+    fn update(&self, state_q: ShotState<N>, trigger: bool) -> (ShotOutputs, ShotState<N>) {
         let ShotState {
             counter: counter_q,
             state: state_q,
@@ -52,7 +52,7 @@ impl Synchronous for ShotConfig {
         outputs.active = state_q;
         if trigger {
             state_d = true;
-            counter_d = 0;
+            counter_d = 0.into();
         }
         let state_d = ShotState {
             counter: counter_d,
@@ -64,7 +64,9 @@ impl Synchronous for ShotConfig {
 
 #[test]
 fn test_shot() {
-    let shot_config = ShotConfig { duration: 100 };
+    let shot_config = ShotConfig::<32> {
+        duration: 100.into(),
+    };
     let mut state = ShotState::default();
     let mut output: ShotOutputs = Default::default();
     let mut shot_on = 0;

@@ -8,7 +8,7 @@ use crate::{
 
 pub struct PulserConfig {
     strobe: StrobeConfig,
-    shot: ShotConfig,
+    shot: ShotConfig<32>,
 }
 
 impl PulserConfig {
@@ -22,7 +22,7 @@ impl PulserConfig {
 #[derive(Default, Debug)]
 pub struct PulserState {
     strobe: StrobeState,
-    shot: ShotState,
+    shot: ShotState<32>,
 }
 
 impl Synchronous for PulserConfig {
