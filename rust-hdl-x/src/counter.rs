@@ -6,9 +6,13 @@ impl Synchronous for Counter {
     type State = u32;
     type Input = bool;
     type Output = u32;
-    fn update(&self, state_q: u32, enable: bool) -> (u32, u32) {
-        let state_d = if enable { state_q + 1 } else { state_q };
-        (state_q, state_d)
+    fn update(&self, q: u32, enable: bool) -> (u32, u32) {
+        let d = if enable { q + 1 } else { q };
+        (q, d)
+    }
+
+    fn default_output(&self) -> Self::Output {
+        0
     }
 }
 

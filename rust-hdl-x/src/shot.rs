@@ -20,7 +20,7 @@ impl<const N: usize> ShotConfig<N> {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct ShotState<const N: usize> {
     counter: Bits<N>,
     state: bool,
@@ -37,28 +37,24 @@ impl<const N: usize> Synchronous for ShotConfig<N> {
     type Output = ShotOutputs;
     type State = ShotState<N>;
 
-    fn update(&self, state_q: ShotState<N>, trigger: bool) -> (ShotOutputs, ShotState<N>) {
-        let ShotState {
-            counter: counter_q,
-            state: state_q,
-        } = state_q;
-        let mut counter_d = if state_q { counter_q + 1 } else { counter_q };
+    fn update(&self, q: ShotState<N>, trigger: bool) -> (ShotOutputs, ShotState<N>) {
+        let mut d = q;
+        d.counter = if q.state { q.counter + 1 } else { q.counter };
         let mut outputs: ShotOutputs = Default::default();
-        let mut state_d = state_q;
-        if state_q && counter_q == self.duration {
-            state_d = false;
+        if q.state && q.counter == self.duration {
+            d.state = false;
             outputs.fired = true;
         }
-        outputs.active = state_q;
+        outputs.active = q.state;
         if trigger {
-            state_d = true;
-            counter_d = 0.into();
+            d.state = true;
+            d.counter = 0.into();
         }
-        let state_d = ShotState {
-            counter: counter_d,
-            state: state_d,
-        };
-        (outputs, state_d)
+        (outputs, d)
+    }
+
+    fn default_output(&self) -> Self::Output {
+        Default::default()
     }
 }
 

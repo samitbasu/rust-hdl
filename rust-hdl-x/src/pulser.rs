@@ -19,7 +19,7 @@ impl PulserConfig {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct PulserState {
     strobe: StrobeState,
     shot: ShotState<32>,
@@ -30,21 +30,21 @@ impl Synchronous for PulserConfig {
     type Output = bool;
     type State = PulserState;
 
-    fn update(&self, state: Self::State, enable: bool) -> (Self::Output, Self::State) {
-        let PulserState {
-            strobe: strobe_q,
-            shot: shot_q,
-        } = state;
-        let (strobe_output, strobe_d) = self.strobe.update(strobe_q, enable);
-        let (shot_outputs, shot_d) = self.shot.update(shot_q, strobe_output);
+    fn update(&self, q: Self::State, enable: bool) -> (Self::Output, Self::State) {
+        let (strobe_output, d_strobe) = self.strobe.update(q.strobe, enable);
+        let (shot_outputs, d_shot) = self.shot.update(q.shot, strobe_output);
         let pulse = shot_outputs.active;
         (
             pulse,
             PulserState {
-                strobe: strobe_d,
-                shot: shot_d,
+                strobe: d_strobe,
+                shot: d_shot,
             },
         )
+    }
+
+    fn default_output(&self) -> Self::Output {
+        false
     }
 }
 

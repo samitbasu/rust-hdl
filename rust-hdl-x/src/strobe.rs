@@ -22,7 +22,7 @@ impl StrobeConfig {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct StrobeState(u32);
 
 impl Synchronous for StrobeConfig {
@@ -39,6 +39,10 @@ impl Synchronous for StrobeConfig {
         let strobe = enable & (state_q.0 == self.threshold);
         let state_d = StrobeState(if strobe { 1 } else { counter });
         (strobe, state_d)
+    }
+
+    fn default_output(&self) -> Self::Output {
+        false
     }
 }
 
