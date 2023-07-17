@@ -337,6 +337,8 @@ use crate::short_bit_vec::{ShortBitVec, ShortType, SHORT_BITS};
 use crate::synth::VCDValue;
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
+use serde::ser::SerializeTuple;
+use serde::Serialize;
 use std::cmp::Ordering;
 use std::fmt::{Binary, Debug, Formatter, LowerHex, UpperHex};
 use std::hash::Hasher;
@@ -426,6 +428,15 @@ pub enum Bits<const N: usize> {
     Short(ShortBitVec<N>),
     #[doc(hidden)]
     Long(BitVec<N>),
+}
+
+impl<const N: usize> Serialize for Bits<N> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let bytes = (0..N)
+            .map(|i| if self.get_bit(i) { 1_u8 } else { 0_u8 })
+            .collect::<Vec<u8>>();
+        serializer.serialize_bytes(&bytes)
+    }
 }
 
 /// Convert from a [BigUint] to a [Bits].  Will panic if the number of bits

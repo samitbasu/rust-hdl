@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use rust_hdl::prelude::{freq_hz_to_period_femto, Bits, NANOS_PER_FEMTO};
+use serde::Serialize;
 
 use crate::synchronous::Synchronous;
 
@@ -20,13 +21,13 @@ impl<const N: usize> ShotConfig<N> {
     }
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, Serialize)]
 pub struct ShotState<const N: usize> {
     counter: Bits<N>,
     state: bool,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy, Serialize)]
 pub struct ShotOutputs {
     pub active: bool,
     pub fired: bool,

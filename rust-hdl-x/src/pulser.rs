@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use serde::Serialize;
+
 use crate::{
     shot::{ShotConfig, ShotState},
     strobe::{StrobeConfig, StrobeState},
@@ -19,7 +21,7 @@ impl PulserConfig {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy, Serialize)]
 pub struct PulserState {
     strobe: StrobeState,
     shot: ShotState<32>,

@@ -1,6 +1,7 @@
 use std::num::Wrapping;
 
 use rust_hdl::prelude::freq_hz_to_period_femto;
+use serde::Serialize;
 
 use crate::synchronous::Synchronous;
 
@@ -22,7 +23,7 @@ impl StrobeConfig {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy, Serialize)]
 pub struct StrobeState(u32);
 
 impl Synchronous for StrobeConfig {

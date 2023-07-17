@@ -26,3 +26,4 @@ substring = "^1"
 anyhow = "^1"
 
 seq-macro = "0.3.1"
+serde = { version = "1.0.171", features = ["derive"] }

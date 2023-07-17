@@ -1,3 +1,5 @@
+mod bit_iter;
+mod bit_slice;
 mod counter;
 mod pulser;
 mod shot;
