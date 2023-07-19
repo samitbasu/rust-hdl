@@ -13,4 +13,6 @@ members = [
     "rust-hdl-bsp-ok-xem6010",
     "rust-hdl-bsp-ok-xem7010",
     "rust-hdl-x",
+    "rust-hdl-x-macro",
+    "rust-hdl-x-macro-core",
 ]

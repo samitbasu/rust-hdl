@@ -3,7 +3,8 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::ItemStruct;
 
-pub fn derive_vcd_writeable(decl: ItemStruct) -> anyhow::Result<TokenStream> {
+pub fn derive_vcd_writeable(input: TokenStream) -> anyhow::Result<TokenStream> {
+    let decl = syn::parse2::<syn::ItemStruct>(input)?;
     let struct_name = &decl.ident;
     if let syn::Fields::Named(field) = &decl.fields {
         let fields = field.named.iter().map(|f| &f.ident);
@@ -58,7 +59,6 @@ fn test_proc_macro() {
             nest_3: TwoBits,
         }
     );
-    let decl = syn::parse2::<syn::ItemStruct>(decl).unwrap();
     let output = derive_vcd_writeable(decl).unwrap();
     let expected = quote! {
         impl VCDWriteable for NestedBits {

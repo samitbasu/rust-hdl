@@ -5,6 +5,7 @@ use rust_hdl::prelude::ToBits;
 use vcd::IdCode;
 
 use crate::{bit_iter::BitIter, bit_slice::BitSlice};
+use rust_hdl_x_macro::VCDWriteable;
 
 trait VCDWriteable {
     fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()>;
@@ -80,6 +81,7 @@ impl<W: Write, S: VCDWriteable> VCDWriter for VCD<W, S> {
     }
 }
 
+#[derive(VCDWriteable)]
 pub struct TwoBits {
     bit_1: bool,
     bit_2: bool,
@@ -87,6 +89,7 @@ pub struct TwoBits {
     nibble_4: Bits<4>,
 }
 
+#[derive(VCDWriteable)]
 pub struct NestedBits {
     nest_1: bool,
     nest_2: u8,
@@ -100,24 +103,10 @@ pub enum MyState {
     Sleeping,
 }
 
+#[derive(VCDWriteable)]
 pub struct Mixed {
     state: MyState,
     bits: TwoBits,
-}
-
-impl VCDWriteable for Mixed {
-    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.push_scope(name);
-        self.state.register("state", w)?;
-        self.bits.register("bits", w)?;
-        w.pop_scope();
-        Ok(())
-    }
-    fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        self.state.serialize(w)?;
-        self.bits.serialize(w)?;
-        Ok(())
-    }
 }
 
 impl VCDWriteable for MyState {
@@ -131,59 +120,6 @@ impl VCDWriteable for MyState {
             MyState::Faulted => w.serialize_string("Faulted"),
             MyState::Sleeping => w.serialize_string("Sleeping"),
         }
-    }
-}
-
-/* impl VCDWriteable for NestedBits {
-    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.push_scope(name);
-        self.nest_1.register("nest_1", w)?;
-        self.nest_2.register("nest_2", w)?;
-        self.nest_3.register("nest_3", w)?;
-        w.pop_scope();
-        Ok(())
-    }
-    fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        self.nest_1.serialize(w)?;
-        self.nest_2.serialize(w)?;
-        self.nest_3.serialize(w)?;
-        Ok(())
-    }
-}
- */
-impl VCDWriteable for NestedBits {
-    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.push_scope(name);
-        self.nest_1.register(stringify!(nest_1), w)?;
-        self.nest_2.register(stringify!(nest_2), w)?;
-        self.nest_3.register(stringify!(nest_3), w)?;
-        w.pop_scope();
-        Ok(())
-    }
-    fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        self.nest_1.serialize(w)?;
-        self.nest_2.serialize(w)?;
-        self.nest_3.serialize(w)?;
-        Ok(())
-    }
-}
-
-impl VCDWriteable for TwoBits {
-    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.push_scope("name");
-        self.bit_1.register("bit_1", w)?;
-        self.bit_2.register("bit_2", w)?;
-        self.part_3.register("part_3", w)?;
-        self.nibble_4.register("nibble_4", w)?;
-        w.pop_scope();
-        Ok(())
-    }
-    fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        self.bit_1.serialize(w)?;
-        self.bit_2.serialize(w)?;
-        self.part_3.serialize(w)?;
-        self.nibble_4.serialize(w)?;
-        Ok(())
     }
 }
 
