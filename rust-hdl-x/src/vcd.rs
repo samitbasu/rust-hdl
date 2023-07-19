@@ -96,6 +96,7 @@ pub struct NestedBits {
     nest_3: TwoBits,
 }
 
+#[derive(VCDWriteable)]
 pub enum MyState {
     Idle,
     Running,
@@ -107,20 +108,6 @@ pub enum MyState {
 pub struct Mixed {
     state: MyState,
     bits: TwoBits,
-}
-
-impl VCDWriteable for MyState {
-    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.allocate(name, 0)
-    }
-    fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        match self {
-            MyState::Idle => w.serialize_string("Idle"),
-            MyState::Running => w.serialize_string("Running"),
-            MyState::Faulted => w.serialize_string("Faulted"),
-            MyState::Sleeping => w.serialize_string("Sleeping"),
-        }
-    }
 }
 
 impl VCDWriteable for bool {
