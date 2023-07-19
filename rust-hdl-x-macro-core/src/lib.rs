@@ -1,6 +1,6 @@
 use std::f32::consts::E;
 
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Item, ItemEnum, ItemStruct};
@@ -16,6 +16,11 @@ pub fn derive_vcd_writeable(input: TokenStream) -> anyhow::Result<TokenStream> {
 
 pub fn derive_vcd_writeable_enum(decl: ItemEnum) -> anyhow::Result<TokenStream> {
     let enum_name = &decl.ident;
+    for variant in &decl.variants {
+        if !variant.fields.is_empty() {
+            bail!("Only unit variants supported")
+        }
+    }
     let variants = decl.variants.iter().map(|x| &x.ident);
     Ok(quote! {
         impl VCDWriteable for #enum_name {

@@ -102,6 +102,8 @@ pub enum MyState {
     Running,
     Faulted,
     Sleeping,
+    Color,
+    Foobar(u8),
 }
 
 #[derive(VCDWriteable)]
