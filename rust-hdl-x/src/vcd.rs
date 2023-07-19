@@ -7,14 +7,14 @@ use vcd::IdCode;
 use crate::{bit_iter::BitIter, bit_slice::BitSlice};
 
 trait VCDWriteable {
-    fn register(&self, w: &mut impl VCDWriter) -> anyhow::Result<()>;
+    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()>;
     fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()>;
 }
 
 trait VCDWriter {
     fn push_scope(&mut self, name: &str);
     fn pop_scope(&mut self);
-    fn allocate(&mut self, width: u32) -> anyhow::Result<()>;
+    fn allocate(&mut self, name: &str, width: u32) -> anyhow::Result<()>;
     fn serialize_scalar(&mut self, value: bool) -> anyhow::Result<()>;
     fn serialize_vector(&mut self, iter: impl Iterator<Item = bool>) -> anyhow::Result<()>;
     fn serialize_string(&mut self, value: &str) -> anyhow::Result<()>;
@@ -22,7 +22,6 @@ trait VCDWriter {
 
 struct VCD<W: Write, S: VCDWriteable> {
     initialized: bool,
-    scope: Vec<String>,
     ids: Vec<IdCode>,
     vcd: vcd::Writer<W>,
     id_ptr: usize,
@@ -30,23 +29,18 @@ struct VCD<W: Write, S: VCDWriteable> {
 }
 
 impl<W: Write, S: VCDWriteable> VCD<W, S> {
-    pub fn new(top: &str, w: W) -> Self {
+    pub fn new(w: W) -> Self {
         Self {
             initialized: false,
-            scope: vec![top.to_string()],
             ids: vec![],
             vcd: vcd::Writer::new(w),
             id_ptr: 0,
             phantom: std::marker::PhantomData,
         }
     }
-    pub fn setup(&mut self) -> anyhow::Result<()> {
-        self.vcd.add_module(&self.scope[0])?;
-        Ok(())
-    }
     pub fn write(&mut self, s: &S) -> anyhow::Result<()> {
         if !self.initialized {
-            s.register(self)?;
+            s.register("top", self)?;
             self.initialized = true;
         }
         self.id_ptr = 0;
@@ -57,14 +51,13 @@ impl<W: Write, S: VCDWriteable> VCD<W, S> {
 
 impl<W: Write, S: VCDWriteable> VCDWriter for VCD<W, S> {
     fn push_scope(&mut self, name: &str) {
-        self.scope.push(name.to_string());
+        self.vcd.add_module(name).unwrap();
     }
     fn pop_scope(&mut self) {
-        self.scope.pop();
+        self.vcd.upscope().unwrap();
     }
-    fn allocate(&mut self, width: u32) -> anyhow::Result<()> {
-        let my_path = self.scope.join(".");
-        self.ids.push(self.vcd.add_wire(width, &my_path)?);
+    fn allocate(&mut self, name: &str, width: u32) -> anyhow::Result<()> {
+        self.ids.push(self.vcd.add_wire(width, &name)?);
         Ok(())
     }
     fn serialize_scalar(&mut self, value: bool) -> anyhow::Result<()> {
@@ -113,12 +106,10 @@ pub struct Mixed {
 }
 
 impl VCDWriteable for Mixed {
-    fn register(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.push_scope("state");
-        self.state.register(w)?;
-        w.pop_scope();
-        w.push_scope("bits");
-        self.bits.register(w)?;
+    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
+        w.push_scope(name);
+        self.state.register("state", w)?;
+        self.bits.register("bits", w)?;
         w.pop_scope();
         Ok(())
     }
@@ -130,8 +121,8 @@ impl VCDWriteable for Mixed {
 }
 
 impl VCDWriteable for MyState {
-    fn register(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.allocate(0)
+    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
+        w.allocate(name, 0)
     }
     fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
         match self {
@@ -143,16 +134,29 @@ impl VCDWriteable for MyState {
     }
 }
 
+/* impl VCDWriteable for NestedBits {
+    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
+        w.push_scope(name);
+        self.nest_1.register("nest_1", w)?;
+        self.nest_2.register("nest_2", w)?;
+        self.nest_3.register("nest_3", w)?;
+        w.pop_scope();
+        Ok(())
+    }
+    fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
+        self.nest_1.serialize(w)?;
+        self.nest_2.serialize(w)?;
+        self.nest_3.serialize(w)?;
+        Ok(())
+    }
+}
+ */
 impl VCDWriteable for NestedBits {
-    fn register(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.push_scope("nest_1");
-        self.nest_1.register(w)?;
-        w.pop_scope();
-        w.push_scope("nest_2");
-        self.nest_2.register(w)?;
-        w.pop_scope();
-        w.push_scope("nest_3");
-        self.nest_3.register(w)?;
+    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
+        w.push_scope(name);
+        self.nest_1.register(stringify!(nest_1), w)?;
+        self.nest_2.register(stringify!(nest_2), w)?;
+        self.nest_3.register(stringify!(nest_3), w)?;
         w.pop_scope();
         Ok(())
     }
@@ -165,18 +169,12 @@ impl VCDWriteable for NestedBits {
 }
 
 impl VCDWriteable for TwoBits {
-    fn register(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.push_scope("bit_1");
-        self.bit_1.register(w)?;
-        w.pop_scope();
-        w.push_scope("bit_2");
-        self.bit_2.register(w)?;
-        w.pop_scope();
-        w.push_scope("part_3");
-        self.part_3.register(w)?;
-        w.pop_scope();
-        w.push_scope("nibble_4");
-        self.nibble_4.register(w)?;
+    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
+        w.push_scope("name");
+        self.bit_1.register("bit_1", w)?;
+        self.bit_2.register("bit_2", w)?;
+        self.part_3.register("part_3", w)?;
+        self.nibble_4.register("nibble_4", w)?;
         w.pop_scope();
         Ok(())
     }
@@ -190,8 +188,8 @@ impl VCDWriteable for TwoBits {
 }
 
 impl VCDWriteable for bool {
-    fn register(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.allocate(1)
+    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
+        w.allocate(name, 1)
     }
     fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
         w.serialize_scalar(*self)
@@ -199,8 +197,8 @@ impl VCDWriteable for bool {
 }
 
 impl VCDWriteable for u8 {
-    fn register(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.allocate(8)
+    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
+        w.allocate(name, 8)
     }
     fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
         w.serialize_vector(BitIter::new(*self))
@@ -208,8 +206,8 @@ impl VCDWriteable for u8 {
 }
 
 impl<const N: usize> VCDWriteable for Bits<N> {
-    fn register(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
-        w.allocate(N as u32)
+    fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()> {
+        w.allocate(name, N as u32)
     }
     fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()> {
         w.serialize_vector(BitIter::new(*self))
@@ -218,14 +216,13 @@ impl<const N: usize> VCDWriteable for Bits<N> {
 
 #[test]
 fn test_vcd_write() {
-    let mut vcd = VCD::new("top", std::io::stdout());
+    let mut vcd = VCD::new(std::io::stdout());
     let bits = TwoBits {
         bit_1: true,
         bit_2: false,
         part_3: 0b1010_1010,
         nibble_4: 0b1010_u8.to_bits(),
     };
-    vcd.setup().unwrap();
     vcd.write(&bits).unwrap();
     let bits = TwoBits {
         bit_1: false,
@@ -238,7 +235,7 @@ fn test_vcd_write() {
 
 #[test]
 fn test_vcd_nested_write() {
-    let mut vcd = VCD::new("top", std::io::stdout());
+    let mut vcd = VCD::new(std::io::stdout());
     let bits = NestedBits {
         nest_1: true,
         nest_2: 0b1010_1010,
@@ -249,7 +246,6 @@ fn test_vcd_nested_write() {
             nibble_4: 0b1010_u8.to_bits(),
         },
     };
-    vcd.setup().unwrap();
     vcd.write(&bits).unwrap();
     let bits = NestedBits {
         nest_1: false,
@@ -266,7 +262,7 @@ fn test_vcd_nested_write() {
 
 #[test]
 fn test_vcd_mixed_write() {
-    let mut vcd = VCD::new("top", std::io::stdout());
+    let mut vcd = VCD::new(std::io::stdout());
     let bits = Mixed {
         state: MyState::Running,
         bits: TwoBits {
@@ -276,7 +272,6 @@ fn test_vcd_mixed_write() {
             nibble_4: 0b1010_u8.to_bits(),
         },
     };
-    vcd.setup().unwrap();
     vcd.write(&bits).unwrap();
     let bits = Mixed {
         state: MyState::Faulted,

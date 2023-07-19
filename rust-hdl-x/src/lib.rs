@@ -1,6 +1,7 @@
 mod bit_iter;
 mod bit_slice;
 mod counter;
+mod derive_vcd;
 mod pulser;
 mod shot;
 mod spi_controller;
