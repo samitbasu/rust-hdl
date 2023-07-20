@@ -5,7 +5,7 @@ use serde::Serialize;
 use crate::{
     shot::{ShotConfig, ShotState},
     strobe::{StrobeConfig, StrobeState},
-    synchronous::Synchronous,
+    synchronous::{NoTrace, Synchronous, Tracer},
 };
 
 pub struct PulserConfig {
@@ -32,9 +32,10 @@ impl Synchronous for PulserConfig {
     type Output = bool;
     type State = PulserState;
 
-    fn update(&self, q: Self::State, enable: bool) -> (Self::Output, Self::State) {
-        let (strobe_output, d_strobe) = self.strobe.update(q.strobe, enable);
-        let (shot_outputs, d_shot) = self.shot.update(q.shot, strobe_output);
+    fn update(&self, t: impl Tracer, q: Self::State, enable: bool) -> (Self::Output, Self::State) {
+        let _module = t.module("pulser");
+        let (strobe_output, d_strobe) = self.strobe.update(&t, q.strobe, enable);
+        let (shot_outputs, d_shot) = self.shot.update(&t, q.shot, strobe_output);
         let pulse = shot_outputs.active;
         (
             pulse,
@@ -57,8 +58,9 @@ fn test_pulser() {
     let mut time_high = 0;
     let mut output;
     let now = std::time::Instant::now();
+    let tracer = NoTrace {};
     for _cycle in 0..1_000_000_000 {
-        (output, state) = config.update(state, true);
+        (output, state) = config.update(&tracer, state, true);
         if output {
             time_high += 1;
         }

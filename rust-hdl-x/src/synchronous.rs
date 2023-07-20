@@ -82,10 +82,13 @@ impl Synthesizable for bool {
 }
 
 // Todo - need RAII pattern
-pub trait Tracer {
+pub trait Tracer: Sized {
     fn enter(&self, name: &str);
     fn write(&self, tag: &str, value: impl VCDWriteable);
     fn exit(&self);
+    fn module(&self, name: &str) -> Scope<Self> {
+        Scope { tracer: self }
+    }
 }
 
 #[derive(Clone, PartialEq, Debug, Default)]
@@ -97,13 +100,42 @@ impl Tracer for NoTrace {
     fn exit(&self) {}
 }
 
+impl<T: Tracer> Tracer for &T {
+    fn enter(&self, name: &str) {
+        (*self).enter(name)
+    }
+    fn write(&self, tag: &str, value: impl VCDWriteable) {
+        (*self).write(tag, value)
+    }
+    fn exit(&self) {
+        (*self).exit()
+    }
+}
+
+pub struct Scope<'a, T: Tracer> {
+    tracer: &'a T,
+}
+
+impl<'a, T: Tracer> Scope<'a, T> {
+    fn new(tracer: &'a T, name: &str) -> Self {
+        tracer.enter(name);
+        Self { tracer }
+    }
+}
+
+impl<'a, T: Tracer> Drop for Scope<'a, T> {
+    fn drop(&mut self) {
+        self.tracer.exit();
+    }
+}
+
 pub trait Synchronous {
     type Input: Copy;
     type Output: Copy;
     type State: Copy + Default;
     fn update(
         &self,
-        //        tracer: impl Tracer,
+        tracer: impl Tracer,
         state: Self::State,
         inputs: Self::Input,
     ) -> (Self::Output, Self::State);

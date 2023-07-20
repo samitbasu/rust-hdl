@@ -3,7 +3,7 @@ use std::num::Wrapping;
 use rust_hdl::prelude::freq_hz_to_period_femto;
 use serde::Serialize;
 
-use crate::synchronous::Synchronous;
+use crate::synchronous::{NoTrace, Synchronous, Tracer};
 
 pub struct StrobeConfig {
     threshold: u32,
@@ -31,7 +31,13 @@ impl Synchronous for StrobeConfig {
     type Input = bool;
     type Output = bool;
 
-    fn update(&self, state_q: StrobeState, enable: bool) -> (bool, StrobeState) {
+    fn update(
+        &self,
+        tracer: impl Tracer,
+        state_q: StrobeState,
+        enable: bool,
+    ) -> (bool, StrobeState) {
+        let module = tracer.module("strobe");
         let counter = if enable {
             (Wrapping(state_q.0) + Wrapping(1)).0
         } else {
@@ -56,8 +62,9 @@ fn test_strobe() {
     let mut num_pulses = 0;
     let mut output = false;
     let now = std::time::Instant::now();
+    let tracer = NoTrace {};
     for _cycle in 0..1_000_000_000 {
-        (output, state) = constants.update(state, true);
+        (output, state) = constants.update(&tracer, state, true);
         if output {
             num_pulses += 1;
         }

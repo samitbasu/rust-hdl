@@ -41,11 +41,11 @@ impl<const N: usize> Synchronous for ShotConfig<N> {
 
     fn update(
         &self,
-        //        t: impl Tracer,
+        t: impl Tracer,
         q: ShotState<N>,
         trigger: bool,
     ) -> (ShotOutputs, ShotState<N>) {
-        //t.enter("one_shot");
+        let _module = t.module("shot");
         let mut d = q;
         d.counter = if q.state { q.counter + 1 } else { q.counter };
         let mut outputs: ShotOutputs = Default::default();
@@ -58,7 +58,6 @@ impl<const N: usize> Synchronous for ShotConfig<N> {
             d.state = true;
             d.counter = 0.into();
         }
-        //        t.exit();
         (outputs, d)
     }
 
@@ -79,7 +78,7 @@ fn test_shot() {
     let now = std::time::Instant::now();
     let tracer = NoTrace {};
     for clk in 0..1_000_000_000 {
-        (output, state) = shot_config.update(state, clk % 1000 == 0);
+        (output, state) = shot_config.update(&tracer, state, clk % 1000 == 0);
         if output.active {
             shot_on += 1;
         }

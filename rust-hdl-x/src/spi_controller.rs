@@ -3,7 +3,7 @@ use serde::Serialize;
 
 use crate::{
     strobe::{StrobeConfig, StrobeState},
-    synchronous::Synchronous,
+    synchronous::{NoTrace, Synchronous, Tracer},
 };
 
 #[derive(Copy, Clone, PartialEq, Debug, Default, Serialize)]
@@ -99,12 +99,18 @@ impl<const N: usize> Synchronous for SPIControllerConfig<N> {
         }
     }
 
-    fn update(&self, q: Self::State, i: Self::Input) -> (Self::Output, Self::State) {
+    fn update(
+        &self,
+        t: impl Tracer,
+        q: Self::State,
+        i: Self::Input,
+    ) -> (Self::Output, Self::State) {
+        let _module = t.module("spi_master");
         let mut d = q;
         let mut o = self.default_output();
         let strobe_output;
         // Activate the baud strobe
-        (strobe_output, d.strobe) = self.strobe.update(q.strobe, true);
+        (strobe_output, d.strobe) = self.strobe.update(&t, q.strobe, true);
         o.mclk = q.clock_state;
         o.mosi = q.mosi_flop;
         o.msel = q.msel_flop;
@@ -200,9 +206,9 @@ fn test_spi_master_basic() {
     };
     writer.timescale(1, vcd::TimescaleUnit::PS).unwrap();
     writer.add_module("spi").unwrap();
-
+    let tracer = NoTrace {};
     for clk in 0..1_000_000 {
-        let (o, s) = config.update(state, inputs);
+        let (o, s) = config.update(&tracer, state, inputs);
         state = s;
         output = o;
         inputs = SPIInputs {
