@@ -7,7 +7,7 @@ use vcd::IdCode;
 use crate::{bit_iter::BitIter, bit_slice::BitSlice};
 use rust_hdl_x_macro::VCDWriteable;
 
-trait VCDWriteable {
+pub trait VCDWriteable {
     fn register(&self, name: &str, w: &mut impl VCDWriter) -> anyhow::Result<()>;
     fn serialize(&self, w: &mut impl VCDWriter) -> anyhow::Result<()>;
 }
@@ -103,13 +103,20 @@ pub enum MyState {
     Faulted,
     Sleeping,
     Color,
-    Foobar(u8),
 }
 
 #[derive(VCDWriteable)]
 pub struct Mixed {
     state: MyState,
     bits: TwoBits,
+}
+
+#[derive(VCDWriteable)]
+pub struct TwoBits2<const N: usize> {
+    bit_1: bool,
+    bit_2: bool,
+    part_3: u8,
+    nibble_4: Bits<N>,
 }
 
 impl VCDWriteable for bool {
@@ -206,6 +213,25 @@ fn test_vcd_mixed_write() {
             part_3: 0b0101_0101,
             nibble_4: 0b0101_u8.to_bits(),
         },
+    };
+    vcd.write(&bits).unwrap();
+}
+
+#[test]
+fn test_vcd_write_const_generic() {
+    let mut vcd = VCD::new(std::io::stdout());
+    let bits = TwoBits2::<4> {
+        bit_1: true,
+        bit_2: false,
+        part_3: 0b1010_1010,
+        nibble_4: 0b1010_u8.to_bits(),
+    };
+    vcd.write(&bits).unwrap();
+    let bits = TwoBits2::<4> {
+        bit_1: false,
+        bit_2: true,
+        part_3: 0b0101_0101,
+        nibble_4: 0b0101_u8.to_bits(),
     };
     vcd.write(&bits).unwrap();
 }

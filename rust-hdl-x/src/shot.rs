@@ -1,9 +1,10 @@
 use std::time::Duration;
 
 use rust_hdl::prelude::{freq_hz_to_period_femto, Bits, NANOS_PER_FEMTO};
+use rust_hdl_x_macro::VCDWriteable;
 use serde::Serialize;
 
-use crate::synchronous::Synchronous;
+use crate::synchronous::{NoTrace, Synchronous, Tracer};
 
 pub struct ShotConfig<const N: usize> {
     duration: Bits<N>,
@@ -21,7 +22,7 @@ impl<const N: usize> ShotConfig<N> {
     }
 }
 
-#[derive(Debug, Default, Clone, Copy, Serialize)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct ShotState<const N: usize> {
     counter: Bits<N>,
     state: bool,
@@ -38,7 +39,13 @@ impl<const N: usize> Synchronous for ShotConfig<N> {
     type Output = ShotOutputs;
     type State = ShotState<N>;
 
-    fn update(&self, q: ShotState<N>, trigger: bool) -> (ShotOutputs, ShotState<N>) {
+    fn update(
+        &self,
+        //        t: impl Tracer,
+        q: ShotState<N>,
+        trigger: bool,
+    ) -> (ShotOutputs, ShotState<N>) {
+        //t.enter("one_shot");
         let mut d = q;
         d.counter = if q.state { q.counter + 1 } else { q.counter };
         let mut outputs: ShotOutputs = Default::default();
@@ -51,6 +58,7 @@ impl<const N: usize> Synchronous for ShotConfig<N> {
             d.state = true;
             d.counter = 0.into();
         }
+        //        t.exit();
         (outputs, d)
     }
 
@@ -69,6 +77,7 @@ fn test_shot() {
     let mut shot_on = 0;
     let mut trig_count = 0;
     let now = std::time::Instant::now();
+    let tracer = NoTrace {};
     for clk in 0..1_000_000_000 {
         (output, state) = shot_config.update(state, clk % 1000 == 0);
         if output.active {

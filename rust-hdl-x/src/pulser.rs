@@ -21,7 +21,7 @@ impl PulserConfig {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, Serialize)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct PulserState {
     strobe: StrobeState,
     shot: ShotState<32>,

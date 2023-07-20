@@ -7,4 +7,5 @@ mod shot;
 mod spi_controller;
 mod strobe;
 mod synchronous;
+mod tracer;
 mod vcd;

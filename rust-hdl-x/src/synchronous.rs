@@ -11,7 +11,7 @@ use serde::{
     Serialize, Serializer,
 };
 
-use crate::bit_iter::BitIter;
+use crate::{bit_iter::BitIter, vcd::VCDWriteable};
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum VCDValue {
@@ -81,12 +81,32 @@ impl Synthesizable for bool {
     }
 }
 
-pub trait Synchronous {
-    type Input: Serialize + Copy;
-    type Output: Serialize + Copy;
-    type State: Serialize + Copy + Default;
+// Todo - need RAII pattern
+pub trait Tracer {
+    fn enter(&self, name: &str);
+    fn write(&self, tag: &str, value: impl VCDWriteable);
+    fn exit(&self);
+}
 
-    fn update(&self, state: Self::State, inputs: Self::Input) -> (Self::Output, Self::State);
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct NoTrace {}
+
+impl Tracer for NoTrace {
+    fn enter(&self, _name: &str) {}
+    fn write(&self, _tag: &str, _value: impl VCDWriteable) {}
+    fn exit(&self) {}
+}
+
+pub trait Synchronous {
+    type Input: Copy;
+    type Output: Copy;
+    type State: Copy + Default;
+    fn update(
+        &self,
+        //        tracer: impl Tracer,
+        state: Self::State,
+        inputs: Self::Input,
+    ) -> (Self::Output, Self::State);
     fn default_output(&self) -> Self::Output;
 }
 
@@ -163,7 +183,7 @@ impl<S: BitSerialize, W: Write> VCDSerializer<S, W> {
 impl<S: BitSerialize, W: Write> BitSerializer for VCDSerializer<S, W> {
     fn register(&mut self, width: u32) -> anyhow::Result<()> {
         let my_path = self.scope.join(".");
-        self.ids.push(self.vcd.add_wire(width as u32, &my_path)?);
+        self.ids.push(self.vcd.add_wire(width, &my_path)?);
         Ok(())
     }
 
