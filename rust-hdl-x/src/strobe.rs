@@ -37,7 +37,7 @@ impl Synchronous for StrobeConfig {
         state_q: StrobeState,
         enable: bool,
     ) -> (bool, StrobeState) {
-        let module = tracer.module("strobe");
+        let _module = tracer.module("strobe");
         let counter = if enable {
             (Wrapping(state_q.0) + Wrapping(1)).0
         } else {

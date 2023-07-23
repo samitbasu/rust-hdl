@@ -3,6 +3,9 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput};
 
+pub mod bit_serialize;
+pub use bit_serialize::derive_bit_serialize;
+
 pub fn derive_vcd_writeable(input: TokenStream) -> anyhow::Result<TokenStream> {
     let decl = syn::parse2::<DeriveInput>(input)?;
     match &decl.data {
