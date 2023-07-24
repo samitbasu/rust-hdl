@@ -3,7 +3,8 @@ use serde::Serialize;
 
 use crate::{
     strobe::{StrobeConfig, StrobeState},
-    synchronous::{NoTrace, Synchronous, Tracer},
+    synchronous::Synchronous,
+    tracer::{NullTracer, Tracer},
 };
 
 #[derive(Copy, Clone, PartialEq, Debug, Default, Serialize)]
@@ -206,7 +207,7 @@ fn test_spi_master_basic() {
     };
     writer.timescale(1, vcd::TimescaleUnit::PS).unwrap();
     writer.add_module("spi").unwrap();
-    let tracer = NoTrace {};
+    let tracer = NullTracer {};
     for clk in 0..1_000_000 {
         let (o, s) = config.update(&tracer, state, inputs);
         state = s;

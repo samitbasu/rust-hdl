@@ -1,11 +1,14 @@
 use std::time::Duration;
 
-use serde::Serialize;
+use crate::tracer::BitSerialize;
+use crate::tracer::BitSerializer;
+use rust_hdl_x_macro::BitSerialize;
 
 use crate::{
     shot::{ShotConfig, ShotState},
     strobe::{StrobeConfig, StrobeState},
-    synchronous::{NoTrace, Synchronous, Tracer},
+    synchronous::Synchronous,
+    tracer::{NullTracer, Tracer},
 };
 
 pub struct PulserConfig {
@@ -21,7 +24,7 @@ impl PulserConfig {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy, BitSerialize)]
 pub struct PulserState {
     strobe: StrobeState,
     shot: ShotState<32>,
@@ -58,7 +61,7 @@ fn test_pulser() {
     let mut time_high = 0;
     let mut output;
     let now = std::time::Instant::now();
-    let tracer = NoTrace {};
+    let tracer = NullTracer {};
     for _cycle in 0..1_000_000_000 {
         (output, state) = config.update(&tracer, state, true);
         if output {

@@ -21,6 +21,7 @@
 use std::cell::RefCell;
 
 use ruint::Uint;
+use rust_hdl::prelude::Bits;
 use rust_hdl_x_macro::BitSerialize;
 
 #[derive(Debug, Clone)]
@@ -37,17 +38,51 @@ enum TraceMessage {
 
 // The tracing interface is then
 
-trait Tracer {
+pub trait Tracer {
     fn enter_module(&self, name: &'static str);
     fn log(&self, name: &'static str, value: impl BitSerialize);
     fn exit_module(&self);
+    fn module(&self, name: &'static str) -> TracerModule<Self> {
+        self.enter_module(name);
+        TracerModule { tracer: self }
+    }
 }
 
-trait BitSerialize {
+impl<T: Tracer> Tracer for &T {
+    fn enter_module(&self, name: &'static str) {
+        (*self).enter_module(name);
+    }
+    fn log(&self, name: &'static str, value: impl BitSerialize) {
+        (*self).log(name, value);
+    }
+    fn exit_module(&self) {
+        (*self).exit_module();
+    }
+}
+
+pub struct NullTracer {}
+
+impl Tracer for NullTracer {
+    fn enter_module(&self, _name: &'static str) {}
+    fn log(&self, _name: &'static str, _value: impl BitSerialize) {}
+    fn exit_module(&self) {}
+}
+
+pub struct TracerModule<'a, T: Tracer + ?Sized> {
+    tracer: &'a T,
+}
+
+impl<'a, T: Tracer + ?Sized> Drop for TracerModule<'a, T> {
+    fn drop(&mut self) {
+        self.tracer.exit_module();
+    }
+}
+
+pub trait BitSerialize {
     fn serialize(&self, tag: &'static str, serializer: impl BitSerializer);
 }
 
-trait BitSerializer {
+pub trait BitSerializer {
     fn enter_struct(&self, name: &'static str);
     fn bool(&self, tag: &'static str, value: bool);
     fn short(&self, tag: &'static str, bits: usize, value: u64);
@@ -64,6 +99,18 @@ impl<const N: usize, const LIMBS: usize> BitSerialize for Uint<N, LIMBS> {
             serializer.short(tag, N, self.to());
         } else {
             serializer.long(tag, N, self.as_limbs().as_slice());
+        }
+    }
+}
+
+impl<const N: usize> BitSerialize for Bits<N> {
+    fn serialize(&self, tag: &'static str, mut serializer: impl BitSerializer) {
+        if N == 1 {
+            serializer.bool(tag, self.get_bit(0));
+        } else if N <= 64 {
+            serializer.short(tag, N, self.to_u64());
+        } else {
+            serializer.long(tag, N, self.as_slice());
         }
     }
 }
