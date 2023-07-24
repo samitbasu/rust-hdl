@@ -1,11 +1,12 @@
 use std::num::Wrapping;
 
 use rust_hdl::prelude::freq_hz_to_period_femto;
+use rust_hdl_x_macro::BitSerialize;
 use serde::Serialize;
 
 use crate::{
     synchronous::Synchronous,
-    tracer::{NullTracer, Tracer},
+    tracer::{BitSerialize, BitSerializer, NullTracer, Tracer},
 };
 
 pub struct StrobeConfig {
@@ -26,29 +27,27 @@ impl StrobeConfig {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, Serialize)]
-pub struct StrobeState(u32);
+#[derive(Default, Debug, Clone, Copy, BitSerialize)]
+pub struct StrobeState {
+    count: u32,
+}
 
 impl Synchronous for StrobeConfig {
     type State = StrobeState;
     type Input = bool;
     type Output = bool;
 
-    fn update(
-        &self,
-        tracer: impl Tracer,
-        state_q: StrobeState,
-        enable: bool,
-    ) -> (bool, StrobeState) {
+    fn update(&self, tracer: impl Tracer, q: StrobeState, enable: bool) -> (bool, StrobeState) {
         let _module = tracer.module("strobe");
-        let counter = if enable {
-            (Wrapping(state_q.0) + Wrapping(1)).0
-        } else {
-            state_q.0
-        };
-        let strobe = enable & (state_q.0 == self.threshold);
-        let state_d = StrobeState(if strobe { 1 } else { counter });
-        (strobe, state_d)
+        let mut d = q;
+        if enable {
+            d.count = q.count + 1;
+        }
+        let strobe = enable & (q.count == self.threshold);
+        if strobe {
+            d.count = 1;
+        }
+        (strobe, d)
     }
 
     fn default_output(&self) -> Self::Output {

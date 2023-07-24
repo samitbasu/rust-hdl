@@ -1,5 +1,6 @@
+use crate::tracer::{BitSerialize, BitSerializer};
 use rust_hdl::prelude::Bits;
-use serde::Serialize;
+use rust_hdl_x_macro::BitSerialize;
 
 use crate::{
     strobe::{StrobeConfig, StrobeState},
@@ -7,7 +8,7 @@ use crate::{
     tracer::{NullTracer, Tracer},
 };
 
-#[derive(Copy, Clone, PartialEq, Debug, Default, Serialize)]
+#[derive(Copy, Clone, PartialEq, Debug, Default, BitSerialize)]
 pub enum SPIState {
     #[default]
     Idle,
@@ -51,7 +52,7 @@ impl<const N: usize> SPIControllerConfig<N> {
     }
 }
 
-#[derive(Default, Clone, Copy, Serialize)]
+#[derive(Default, Clone, Copy, BitSerialize)]
 pub struct SPIControllerState<const N: usize> {
     pub register_out: Bits<N>,
     pub register_in: Bits<N>,
@@ -65,7 +66,7 @@ pub struct SPIControllerState<const N: usize> {
     pub continued_save: bool,
 }
 
-#[derive(Copy, Clone, Serialize)]
+#[derive(Copy, Clone, BitSerialize)]
 pub struct SPIInputs<const N: usize> {
     pub bits_outbound: u16,
     pub data_outbound: Bits<N>,
@@ -74,7 +75,7 @@ pub struct SPIInputs<const N: usize> {
     pub miso: bool,
 }
 
-#[derive(Copy, Clone, Serialize)]
+#[derive(Copy, Clone, BitSerialize)]
 pub struct SPIOutputs<const N: usize> {
     pub mosi: bool,
     pub msel: bool,
@@ -119,7 +120,6 @@ impl<const N: usize> Synchronous for SPIControllerConfig<N> {
         o.data_inbound = q.register_in;
         o.transfer_done = q.done_flop;
         d.done_flop = false;
-        let pointerm1 = q.pointer - 1;
         o.busy = true;
         // The main state machine
         match q.state {
@@ -147,8 +147,8 @@ impl<const N: usize> Synchronous for SPIControllerConfig<N> {
             }
             SPIState::LoadBit => {
                 if q.pointer != 0 {
-                    d.mosi_flop = q.register_out.get_bit(pointerm1 as usize); //Fetch the corresponding bit out of the register
-                    d.pointer = pointerm1; // Decrement the pointer
+                    d.mosi_flop = q.register_out.get_bit((q.pointer - 1) as usize); //Fetch the corresponding bit out of the register
+                    d.pointer = q.pointer - 1; // Decrement the pointer
                     d.state = SPIState::MActive; // Move to the hold mclock low state
                     d.clock_state = self.cpol ^ self.cpha;
                 } else {
@@ -194,7 +194,7 @@ fn test_spi_master_basic() {
         cpha: false,
         cpol: false,
     };
-    let mut writer = vcd::Writer::new(std::fs::File::create("spi_master_basic.vcd").unwrap());
+    //let mut writer = vcd::Writer::new(std::fs::File::create("spi_master_basic.vcd").unwrap());
     let config = SPIControllerConfig::<64>::new(50_000_000, 1_000_000, mode);
     let mut state = SPIControllerState::<64>::default();
     let mut output = config.default_output();
@@ -205,8 +205,8 @@ fn test_spi_master_basic() {
         continued_transaction: false,
         miso: false,
     };
-    writer.timescale(1, vcd::TimescaleUnit::PS).unwrap();
-    writer.add_module("spi").unwrap();
+    //    writer.timescale(1, vcd::TimescaleUnit::PS).unwrap();
+    //writer.add_module("spi").unwrap();
     let tracer = NullTracer {};
     for clk in 0..1_000_000 {
         let (o, s) = config.update(&tracer, state, inputs);
@@ -219,6 +219,6 @@ fn test_spi_master_basic() {
             continued_transaction: false,
             miso: false,
         };
-        writer.timestamp(clk).unwrap();
+        //        writer.timestamp(clk).unwrap();
     }
 }

@@ -11,7 +11,17 @@ impl<const N: usize> From<[bool; N]> for BitVec<N> {
     }
 }
 
+impl<const N: usize> From<BitVec<N>> for [bool; N] {
+    fn from(x: BitVec<N>) -> Self {
+        x.bits
+    }
+}
+
 impl<const N: usize> BitVec<N> {
+    pub fn bits(&self) -> [bool; N] {
+        self.bits
+    }
+
     pub fn to_u128(&self) -> u128 {
         assert!(N <= 128);
         let mut ret = 0_u128;

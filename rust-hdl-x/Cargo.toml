@@ -13,7 +13,6 @@ colored-diff = "0.2.3"
 num-traits = "0.2.15"
 proc-macro2 = "1.0.66"
 quote = "1.0.31"
-ruint = "1.8.0"
 rust-hdl = { version = "0.46.0", path = "../rust-hdl" }
 rust-hdl-x-macro = { version = "0.1.0", path = "../rust-hdl-x-macro" }
 serde = { version = "1.0.171", features = ["derive"] }

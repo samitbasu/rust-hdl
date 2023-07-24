@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use crate::tracer::BitSerialize;
 use crate::tracer::BitSerializer;
-use ruint::Uint;
 use rust_hdl::prelude::{freq_hz_to_period_femto, Bits, NANOS_PER_FEMTO};
 use rust_hdl_x_macro::BitSerialize;
 

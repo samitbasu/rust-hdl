@@ -20,17 +20,18 @@
 
 use std::cell::RefCell;
 
-use ruint::Uint;
 use rust_hdl::prelude::Bits;
 use rust_hdl_x_macro::BitSerialize;
+
+use crate::bit_iter::BitIter;
 
 #[derive(Debug, Clone)]
 enum TraceMessage {
     EnterModule(&'static str),
     EnterStruct(&'static str),
     Bool(&'static str, bool),
-    Short(&'static str, usize, u64),
-    Vector(&'static str, usize, Vec<u64>),
+    Short(&'static str, usize, u32),
+    Vector(&'static str, Vec<bool>),
     String(&'static str, &'static str),
     ExitStruct(),
     ExitModule(),
@@ -85,32 +86,23 @@ pub trait BitSerialize {
 pub trait BitSerializer {
     fn enter_struct(&self, name: &'static str);
     fn bool(&self, tag: &'static str, value: bool);
-    fn short(&self, tag: &'static str, bits: usize, value: u64);
-    fn long(&self, tag: &'static str, bits: usize, values: &[u64]);
+    fn short(&self, tag: &'static str, bits: usize, value: u32);
+    fn long(&self, tag: &'static str, bits: &[bool]);
     fn string(&self, tag: &'static str, value: &'static str);
     fn exit_struct(&self);
 }
 
-impl<const N: usize, const LIMBS: usize> BitSerialize for Uint<N, LIMBS> {
-    fn serialize(&self, tag: &'static str, mut serializer: impl BitSerializer) {
-        if N == 1 {
-            serializer.bool(tag, self.to());
-        } else if N <= 64 {
-            serializer.short(tag, N, self.to());
-        } else {
-            serializer.long(tag, N, self.as_limbs().as_slice());
-        }
-    }
-}
-
 impl<const N: usize> BitSerialize for Bits<N> {
     fn serialize(&self, tag: &'static str, mut serializer: impl BitSerializer) {
-        if N == 1 {
-            serializer.bool(tag, self.get_bit(0));
-        } else if N <= 64 {
-            serializer.short(tag, N, self.to_u64());
-        } else {
-            serializer.long(tag, N, self.as_slice());
+        match self {
+            Bits::Short(x) => {
+                if N == 1 {
+                    serializer.bool(tag, x.get_bit(0));
+                } else {
+                    serializer.short(tag, N, x.short())
+                }
+            }
+            Bits::Long(x) => serializer.long(tag, &x.bits()),
         }
     }
 }
@@ -123,25 +115,25 @@ impl BitSerialize for bool {
 
 impl BitSerialize for u8 {
     fn serialize(&self, tag: &'static str, mut serializer: impl BitSerializer) {
-        serializer.short(tag, 8, *self as u64);
+        serializer.short(tag, 8, *self as u32);
     }
 }
 
 impl BitSerialize for u16 {
     fn serialize(&self, tag: &'static str, mut serializer: impl BitSerializer) {
-        serializer.short(tag, 16, *self as u64);
+        serializer.short(tag, 16, *self as u32);
     }
 }
 
 impl BitSerialize for u32 {
     fn serialize(&self, tag: &'static str, mut serializer: impl BitSerializer) {
-        serializer.short(tag, 32, *self as u64);
+        serializer.short(tag, 32, *self as u32);
     }
 }
 
 impl BitSerialize for u64 {
     fn serialize(&self, tag: &'static str, mut serializer: impl BitSerializer) {
-        serializer.short(tag, 64, *self);
+        serializer.long(tag, BitIter::new(*self).collect::<Vec<_>>().as_slice());
     }
 }
 
@@ -197,15 +189,15 @@ impl BitSerializer for InMemoryTracer {
             .borrow_mut()
             .push(TraceMessage::Bool(tag, value));
     }
-    fn short(&self, tag: &'static str, bits: usize, value: u64) {
+    fn short(&self, tag: &'static str, bits: usize, value: u32) {
         self.messages
             .borrow_mut()
             .push(TraceMessage::Short(tag, bits, value));
     }
-    fn long(&self, tag: &'static str, bits: usize, values: &[u64]) {
+    fn long(&self, tag: &'static str, bits: &[bool]) {
         self.messages
             .borrow_mut()
-            .push(TraceMessage::Vector(tag, bits, values.to_vec()));
+            .push(TraceMessage::Vector(tag, bits.to_vec()));
     }
     fn string(&self, tag: &'static str, value: &'static str) {
         self.messages
@@ -224,11 +216,11 @@ impl<T: BitSerializer> BitSerializer for &T {
     fn bool(&self, tag: &'static str, value: bool) {
         (*self).bool(tag, value);
     }
-    fn short(&self, tag: &'static str, bits: usize, value: u64) {
+    fn short(&self, tag: &'static str, bits: usize, value: u32) {
         (*self).short(tag, bits, value);
     }
-    fn long(&self, tag: &'static str, bits: usize, values: &[u64]) {
-        (*self).long(tag, bits, values);
+    fn long(&self, tag: &'static str, values: &[bool]) {
+        (*self).long(tag, values);
     }
     fn string(&self, tag: &'static str, value: &'static str) {
         (*self).string(tag, value);

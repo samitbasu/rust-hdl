@@ -1,5 +1,3 @@
-use ruint::{aliases::U32, uint};
-
 mod bit_iter;
 mod bit_slice;
 mod counter;
@@ -27,6 +25,7 @@ fn bits_benchmark() {
     println!("Time to run bit benchmark: {:?}", toc - tic);
 }
 
+/* #[ignore]
 #[test]
 fn uint_benchmark() {
     let tic = std::time::Instant::now();
@@ -41,3 +40,4 @@ fn uint_benchmark() {
     let toc = std::time::Instant::now();
     println!("Time to run uint benchmark: {:?}", toc - tic);
 }
+ */

@@ -1,5 +1,4 @@
 use num_traits::Num;
-use ruint::Uint;
 use std::{
     io::Write,
     ops::{BitAnd, Shr},
@@ -13,15 +12,15 @@ pub struct Scope<'a, T: Tracer> {
 }
 
 impl<'a, T: Tracer> Scope<'a, T> {
-    fn new(tracer: &'a T, name: &str) -> Self {
-        tracer.enter(name);
+    fn new(tracer: &'a T, name: &'static str) -> Self {
+        tracer.enter_module(name);
         Self { tracer }
     }
 }
 
 impl<'a, T: Tracer> Drop for Scope<'a, T> {
     fn drop(&mut self) {
-        self.tracer.exit();
+        self.tracer.exit_module();
     }
 }
 
@@ -37,9 +36,3 @@ pub trait Synchronous {
     ) -> (Self::Output, Self::State);
     fn default_output(&self) -> Self::Output;
 }
-
-trait Binary<const T: usize> {}
-
-impl Binary<1> for Uint<1, 1> {}
-impl Binary<2> for Uint<2, 1> {}
-impl Binary<4> for Uint<4, 1> {}
