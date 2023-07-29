@@ -37,29 +37,41 @@ enum TraceMessage {
     ExitModule(),
 }
 
+// A seperate setup pass allows us to eliminate the
+// runtime cost of registering items with the tracer.
+
 // The tracing interface is then
 
-pub trait Tracer {
-    fn enter_module(&self, name: &'static str);
-    fn log(&self, name: &'static str, value: impl BitSerialize);
-    fn exit_module(&self);
-    fn module(&self, name: &'static str) -> TracerModule<Self> {
-        self.enter_module(name);
-        TracerModule { tracer: self }
-    }
+pub struct TraceId(usize);
+
+pub enum TracerLevel {
+    Trace,
+    Debug,
+    Info,
+    Warn,
+    Error,
 }
 
-impl<T: Tracer> Tracer for &T {
-    fn enter_module(&self, name: &'static str) {
-        (*self).enter_module(name);
+pub trait Tracer {
+    fn id<T: Traceable>(&mut self, name: &'static str, value: T) -> TraceId {
+        T::allocate(name, self)
     }
-    fn log(&self, name: &'static str, value: impl BitSerialize) {
-        (*self).log(name, value);
-    }
-    fn exit_module(&self) {
-        (*self).exit_module();
-    }
+    fn log(&mut self, level: TracerLevel, value: impl Traceable);
+    fn enter_module(&mut self, name: &'static str);
+    fn enter_struct(&mut self);
+    fn field(&mut self, name: &'static str);
+    fn item(&mut self, width: usize) -> TraceId;
+    fn exit_struct(&mut self);
+    fn exit_module(&mut self);
 }
+
+pub trait Traceable {
+    fn allocate(name: &'static str, tracer: impl Tracer) -> TraceId;
+    fn short(&mut self, id: TraceId, value: u64);
+    fn long(&mut self, id: TraceId, value: &[u64]);
+}
+
+pub trait TracerSetup {}
 
 pub struct NullTracer {}
 

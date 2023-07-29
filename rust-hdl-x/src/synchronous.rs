@@ -28,6 +28,7 @@ pub trait Synchronous {
     type Input: Copy + BitSerialize;
     type Output: Copy + BitSerialize;
     type State: Copy + Default + BitSerialize;
+    fn setup(&mut self, tracer: impl Tracer);
     fn update(
         &self,
         tracer: impl Tracer,
