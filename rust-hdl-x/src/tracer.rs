@@ -69,9 +69,44 @@ pub trait Traceable {
     fn allocate(name: &'static str, tracer: impl Tracer) -> TraceId;
     fn short(&mut self, id: TraceId, value: u64);
     fn long(&mut self, id: TraceId, value: &[u64]);
+    fn string(&mut self, id: TraceId, value: &'static str);
 }
 
 pub trait TracerSetup {}
+
+/*
+So for a sample circuit...
+
+struct Thing {
+    pub sub_thing_1: Thing1,
+    pub sub_thing_2: Thing2,
+}
+
+// Associated probe type?
+struct Probes {
+    id_input: TraceId,
+    id_output: TraceId,
+    id_d: TraceId,
+    id_q: TraceId,
+    probe_sub_thing_1: Thing1::Probes,
+    probe_sub_thing_2: Thing2::Probes,
+}
+
+
+impl Synchronous for Thing {
+    fn setup(&mut self, tracer: impl Tracer) {
+        tracer.enter_module("thing");
+        self.id_input = MyInputStruct::allocate(tracer);
+        self.id_output = MyOutputStruct::allocate(tracer);
+        self.id_q = MyStateStruct::allocate(tracer);
+        self.id_d = MyStateStruct::allocate(tracer);
+        self.sub_thing_1.setup(tracer);
+        self.sub_thing_2.setup(tracer);
+        tracer.exit_module();
+    }
+}
+
+*/
 
 pub struct NullTracer {}
 
