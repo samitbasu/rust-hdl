@@ -1,0 +1,1946 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "rust-hdl",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_sdram_burst'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_sdram_burst",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_sdram_burst",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_sync_rom'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_sync_rom",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_sync_rom",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_mosi_port'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_mosi_port",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_mosi_port",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_fifo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_fifo",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_fifo",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_controller'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_controller",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_controller",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_reg_fifo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_reg_fifo",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_reg_fifo",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_soc'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_soc",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_soc",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_sdram_fifo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_sdram_fifo",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_sdram_fifo",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_sdram_controller_test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_sdram_controller_test",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_sdram_controller_test",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_router'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_router",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_router",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_struct_valued'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_struct_valued",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_struct_valued",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_sdram'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_sdram",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_sdram",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_edge_detector'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_edge_detector",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_edge_detector",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_fir_test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_fir_test",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_fir_test",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_fifo_sdram'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_fifo_sdram",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_fifo_sdram",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_router_stack'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_router_stack",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_router_stack",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_host'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_host",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_host",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_fifo_link'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_fifo_link",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_fifo_link",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_pwm'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_pwm",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_pwm",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_tristate_test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_tristate_test",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_tristate_test",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_fifo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_fifo",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_fifo",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_reducer'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_reducer",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_reducer",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_spi_mux_slaves'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_spi_mux_slaves",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_spi_mux_slaves",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_nested_ports'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_nested_ports",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_nested_ports",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_testchip'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_testchip",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_testchip",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_rom'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_rom",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_rom",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_dff_with_init'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_dff_with_init",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_dff_with_init",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_signed'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_signed",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_signed",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_miso_port'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_miso_port",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_miso_port",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_base_tests'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_base_tests",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_base_tests",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_lfsr_widget'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_lfsr_widget",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_lfsr_widget",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_ram'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_ram",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_ram",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_timing'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_timing",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_timing",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_expander_reducer'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_expander_reducer",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_expander_reducer",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_spi_mux'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_spi_mux",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_spi_mux",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_expander'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_expander",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_expander",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_spi'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_spi",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_spi",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_sync_reset'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_sync_reset",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_sync_reset",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_cross_fifo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_cross_fifo",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_cross_fifo",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_spi_mux'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_spi_mux",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_spi_mux",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_spi'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_spi",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_spi",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_spi_dm'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_spi_dm",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_spi_dm",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_sdram_controller_tester'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_sdram_controller_tester",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_sdram_controller_tester",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'core_hls_bidi'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=core_hls_bidi",
+                    "--package=rust-hdl"
+                ],
+                "filter": {
+                    "name": "core_hls_bidi",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-core'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-core"
+                ],
+                "filter": {
+                    "name": "rust-hdl-core",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bitcast_test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bitcast_test",
+                    "--package=rust-hdl-core"
+                ],
+                "filter": {
+                    "name": "bitcast_test",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'addnum_test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=addnum_test",
+                    "--package=rust-hdl-core"
+                ],
+                "filter": {
+                    "name": "addnum_test",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'struct_valued'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=struct_valued",
+                    "--package=rust-hdl-core"
+                ],
+                "filter": {
+                    "name": "struct_valued",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-fpga-support'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-fpga-support"
+                ],
+                "filter": {
+                    "name": "rust-hdl-fpga-support",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-widgets'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-widgets"
+                ],
+                "filter": {
+                    "name": "rust-hdl-widgets",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-hls'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-hls"
+                ],
+                "filter": {
+                    "name": "rust-hdl-hls",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-sim'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-sim"
+                ],
+                "filter": {
+                    "name": "rust-hdl-sim",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-ok-core'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-ok-core"
+                ],
+                "filter": {
+                    "name": "rust-hdl-ok-core",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-ok-frontpanel-sys'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-ok-frontpanel-sys"
+                ],
+                "filter": {
+                    "name": "rust-hdl-ok-frontpanel-sys",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-bsp-alchitry-cu'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-bsp-alchitry-cu"
+                ],
+                "filter": {
+                    "name": "rust-hdl-bsp-alchitry-cu",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_alchitry_cu_pulser_pll'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_alchitry_cu_pulser_pll",
+                    "--package=rust-hdl-bsp-alchitry-cu"
+                ],
+                "filter": {
+                    "name": "bsp_alchitry_cu_pulser_pll",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_alchitry_cu_pulser'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_alchitry_cu_pulser",
+                    "--package=rust-hdl-bsp-alchitry-cu"
+                ],
+                "filter": {
+                    "name": "bsp_alchitry_cu_pulser",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_alchitry_cu_pwm'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_alchitry_cu_pwm",
+                    "--package=rust-hdl-bsp-alchitry-cu"
+                ],
+                "filter": {
+                    "name": "bsp_alchitry_cu_pwm",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_alchitry_cu_pwm_vec'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_alchitry_cu_pwm_vec",
+                    "--package=rust-hdl-bsp-alchitry-cu"
+                ],
+                "filter": {
+                    "name": "bsp_alchitry_cu_pwm_vec",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_alchitry_cu_pwm_vec_srom'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_alchitry_cu_pwm_vec_srom",
+                    "--package=rust-hdl-bsp-alchitry-cu"
+                ],
+                "filter": {
+                    "name": "bsp_alchitry_cu_pwm_vec_srom",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_alchitry_cu_icepll'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_alchitry_cu_icepll",
+                    "--package=rust-hdl-bsp-alchitry-cu"
+                ],
+                "filter": {
+                    "name": "bsp_alchitry_cu_icepll",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-bsp-ok-xem6010'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "rust-hdl-bsp-ok-xem6010",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_download'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_download",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_download",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_wave'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_wave",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_wave",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_pipe_bt'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_pipe_bt",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_pipe_bt",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_pipe_in'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_pipe_in",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_pipe_in",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_ddr'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_ddr",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_ddr",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_pipe_fifo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_pipe_fifo",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_pipe_fifo",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_tristate'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_tristate",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_tristate",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_blinky'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_blinky",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_blinky",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_mux_spi'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_mux_spi",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_mux_spi",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_pll'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_pll",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_pll",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_fir'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_fir",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_fir",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_spi'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_spi",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_spi",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_hls_bridge'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_hls_bridge",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_hls_bridge",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_pipe_ram'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_pipe_ram",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_pipe_ram",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_soc_test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_soc_test",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_soc_test",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_sdram_fifo_tester'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_sdram_fifo_tester",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_sdram_fifo_tester",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_wire'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_wire",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_wire",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_mig'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_mig",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_mig",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_pipe_afifo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_pipe_afifo",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_pipe_afifo",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem6010_download32'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem6010_download32",
+                    "--package=rust-hdl-bsp-ok-xem6010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem6010_download32",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-bsp-ok-xem7010'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "rust-hdl-bsp-ok-xem7010",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_ddr'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_ddr",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_ddr",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_wire'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_wire",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_wire",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_pipe_fifo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_pipe_fifo",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_pipe_fifo",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_spi'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_spi",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_spi",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_download'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_download",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_download",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_blinky'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_blinky",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_blinky",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_fast_blinky'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_fast_blinky",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_fast_blinky",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_pipe'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_pipe",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_pipe",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_ddr_fifo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_ddr_fifo",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_ddr_fifo",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_mux_spi'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_mux_spi",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_mux_spi",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_pipe_afifo'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_pipe_afifo",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_pipe_afifo",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_download32'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_download32",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_download32",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_pipe_ram'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_pipe_ram",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_pipe_ram",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_wave'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_wave",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_wave",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_pipe_in'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_pipe_in",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_pipe_in",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'bsp_ok_xem7010_mig'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=bsp_ok_xem7010_mig",
+                    "--package=rust-hdl-bsp-ok-xem7010"
+                ],
+                "filter": {
+                    "name": "bsp_ok_xem7010_mig",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-x'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-x"
+                ],
+                "filter": {
+                    "name": "rust-hdl-x",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'rust-hdl-x-macro-core'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=rust-hdl-x-macro-core"
+                ],
+                "filter": {
+                    "name": "rust-hdl-x-macro-core",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
