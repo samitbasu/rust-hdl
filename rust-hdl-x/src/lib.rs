@@ -4,6 +4,11 @@ use std::{
     rc::Rc,
 };
 
+use tracer::{TraceID, TraceTag, TraceType, Tracer};
+use tracer_builder::TracerBuilder;
+
+use crate::basic_tracer::BasicTracerBuilder;
+
 //use synchronous::Synchronous;
 
 //mod bit_iter;
@@ -15,9 +20,12 @@ use std::{
 //mod spi_controller;
 //mod strobe;
 //mod synchronous;
-//mod tracer;
+mod basic_tracer;
+mod tracer;
+mod tracer_builder;
 //mod vcd;
 
+#[ignore]
 #[test]
 fn bits_benchmark() {
     let tic = std::time::Instant::now();
@@ -49,55 +57,6 @@ fn uint_benchmark() {
     println!("Time to run uint benchmark: {:?}", toc - tic);
 }
  */
-
-/*
-
-More ideas
-
-// Use stack to preserve the path.
-
-fn update() -> () {
-    let id = t.get_id();
-    t.set_id(Hash(id,Self::ID));
-    // Do stuff
-    t.set_id(id)
-    return (output, state)
-}
-
-This prevents a memory allocation or any other heap related operations in each cycle.
-
-
-What about using a generic argument for the trace itself?
-struct Foo<T: TracerBuilder> {
-    trace: T::Tracer,
-}
-
-This does not guarantee that subfields will also be generic over the same argument.
-It also does not guarantee that the tracer will be the same type as the tracer for the subfields.
-
-
-How about:
-1. Use a traceID in the struct
-2. Have the TracerBuilder hand out traceIDs
-3. Write a setup pass that registers the input output and state types with the tracerbuilder
-4. Have the tracer be passed in, and use the traceID to set the context.
- */
-
-// Latest idea - make a trace handle part of the struct.
-
-// TODO - add some kind of token to make sure we do not call compute directly, but only via update.
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct TraceID(usize);
-
-pub trait Tracer {
-    fn set_context(&mut self, id: TraceID);
-    fn set_tag(&mut self, tag: TraceTag);
-    fn write_bool(&mut self, val: bool);
-    fn write_small(&mut self, val: u64);
-    fn write_large(&mut self, val: &[bool]);
-    fn write_string(&mut self, val: &'static str);
-}
 
 impl Tracer for () {
     fn set_context(&mut self, _id: TraceID) {}
@@ -244,36 +203,6 @@ impl Synchronous for Foo {
     }
 }
 
-pub trait TracerBuilder {
-    type SubBuilder: TracerBuilder;
-    fn scope(&self, name: &str) -> Self::SubBuilder;
-    fn trace_id(&self) -> TraceID;
-    fn set_kind(&mut self, kind: TraceType);
-    fn register(&self, width: usize);
-    fn namespace(&self, name: &str) -> Self::SubBuilder;
-}
-
-impl<T: TracerBuilder> TracerBuilder for &mut T {
-    type SubBuilder = T::SubBuilder;
-    fn scope(&self, name: &str) -> Self::SubBuilder {
-        (**self).scope(name)
-    }
-    fn trace_id(&self) -> TraceID {
-        (**self).trace_id()
-    }
-    fn register(&self, width: usize) {
-        (**self).register(width)
-    }
-    fn namespace(&self, name: &str) -> Self::SubBuilder {
-        (**self).namespace(name)
-    }
-    fn set_kind(&mut self, kind: TraceType) {
-        (**self).set_kind(kind)
-    }
-}
-
-pub trait TraceTarget {}
-
 pub trait Traceable {
     fn register_trace_type(tracer: impl TracerBuilder);
     fn record(&self, tracer: impl Tracer);
@@ -300,6 +229,15 @@ impl Traceable for u8 {
 impl Traceable for u16 {
     fn register_trace_type(tracer: impl TracerBuilder) {
         tracer.register(16);
+    }
+    fn record(&self, mut tracer: impl Tracer) {
+        tracer.write_small(*self as u64);
+    }
+}
+
+impl Traceable for u32 {
+    fn register_trace_type(tracer: impl TracerBuilder) {
+        tracer.register(32);
     }
     fn record(&self, mut tracer: impl Tracer) {
         tracer.write_small(*self as u64);
@@ -362,299 +300,6 @@ impl Traceable for MoreJunk {
     }
 }
 
-#[derive(Debug, Clone)]
-enum TraceValues {
-    Short(Vec<u64>),
-    Long(Vec<Vec<bool>>),
-    Enum(Vec<&'static str>),
-}
-
-impl TraceValues {
-    fn len(&self) -> usize {
-        match self {
-            TraceValues::Short(v) => v.len(),
-            TraceValues::Long(v) => v.len(),
-            TraceValues::Enum(v) => v.len(),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct TraceSignal {
-    name: String,
-    width: usize,
-    values: TraceValues,
-}
-
-impl TraceSignal {
-    fn new(name: &str, width: usize) -> TraceSignal {
-        TraceSignal {
-            name: name.to_string(),
-            width,
-            values: if width == 0 {
-                TraceValues::Enum(vec![])
-            } else if width <= 64 {
-                TraceValues::Short(vec![])
-            } else {
-                TraceValues::Long(vec![])
-            },
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Default)]
-pub enum TraceTag {
-    #[default]
-    Input,
-    Output,
-    StateD,
-    StateQ,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum TraceType {
-    Input,
-    Output,
-    State,
-}
-
-#[derive(Debug, Clone)]
-struct ScopeRecord {
-    name: String,
-    inputs: Vec<TraceSignal>,
-    outputs: Vec<TraceSignal>,
-    state_q: Vec<TraceSignal>,
-    state_d: Vec<TraceSignal>,
-}
-
-impl Display for ScopeRecord {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for input in &self.inputs {
-            writeln!(
-                f,
-                "{}::input::{} [{}] --> {}",
-                self.name,
-                input.name,
-                input.width,
-                input.values.len()
-            )?;
-        }
-        for output in &self.outputs {
-            writeln!(
-                f,
-                "{}::output::{} [{}] --> {}",
-                self.name,
-                output.name,
-                output.width,
-                output.values.len()
-            )?;
-        }
-        for state_q in &self.state_q {
-            writeln!(
-                f,
-                "{}::state_q::{} [{}] --> {}",
-                self.name,
-                state_q.name,
-                state_q.width,
-                state_q.values.len()
-            )?;
-        }
-        for state_d in &self.state_d {
-            writeln!(
-                f,
-                "{}::state_d::{} [{}] --> {}",
-                self.name,
-                state_d.name,
-                state_d.width,
-                state_d.values.len()
-            )?;
-        }
-        Ok(())
-    }
-}
-
-#[derive(Default, Debug, Clone)]
-pub struct BasicTracer {
-    scopes: Vec<ScopeRecord>,
-    scope_index: usize,
-    field_index: usize,
-    tag: TraceTag,
-}
-
-impl BasicTracer {
-    fn signal(&mut self) -> &mut TraceSignal {
-        let scope = &mut self.scopes[self.scope_index];
-        match self.tag {
-            TraceTag::Input => &mut scope.inputs[self.field_index],
-            TraceTag::Output => &mut scope.outputs[self.field_index],
-            TraceTag::StateD => &mut scope.state_d[self.field_index],
-            TraceTag::StateQ => &mut scope.state_q[self.field_index],
-        }
-    }
-}
-
-impl Tracer for BasicTracer {
-    fn write_bool(&mut self, value: bool) {
-        if let TraceValues::Short(ref mut values) = self.signal().values {
-            values.push(value as u64);
-        } else {
-            panic!("Wrong type");
-        }
-    }
-    fn write_small(&mut self, value: u64) {
-        if let TraceValues::Short(ref mut values) = self.signal().values {
-            values.push(value);
-        } else {
-            panic!("Wrong type");
-        }
-    }
-    fn write_large(&mut self, val: &[bool]) {
-        if let TraceValues::Long(ref mut values) = self.signal().values {
-            values.push(val.to_vec());
-        } else {
-            panic!("Wrong type");
-        }
-    }
-    fn write_string(&mut self, val: &'static str) {
-        if let TraceValues::Enum(ref mut values) = self.signal().values {
-            values.push(val);
-        } else {
-            panic!("Wrong type");
-        }
-    }
-
-    fn set_context(&mut self, id: TraceID) {
-        self.scope_index = id.0;
-    }
-
-    fn set_tag(&mut self, tag: TraceTag) {
-        self.field_index = 0;
-        self.tag = tag;
-    }
-}
-
-impl Display for BasicTracer {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.scopes[self.scope_index].fmt(f)
-    }
-}
-
-// I don't like the use of interior mutability here.
-// I need to redesign the API so it is not required.
-#[derive(Clone, Debug)]
-struct BasicTracerBuilder {
-    scopes: Rc<RefCell<Vec<ScopeRecord>>>,
-    current_scope: usize,
-    current_kind: Option<TraceType>,
-    path: Vec<String>,
-}
-
-impl Display for BasicTracerBuilder {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for scope in self.scopes.borrow().iter() {
-            writeln!(f, "{}", scope)?;
-        }
-        Ok(())
-    }
-}
-
-impl Default for BasicTracerBuilder {
-    fn default() -> Self {
-        Self {
-            scopes: Rc::new(RefCell::new(vec![ScopeRecord {
-                name: "root".to_string(),
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                state_q: Vec::new(),
-                state_d: Vec::new(),
-            }])),
-            current_scope: 0,
-            current_kind: None,
-            path: vec![],
-        }
-    }
-}
-
-impl TracerBuilder for BasicTracerBuilder {
-    type SubBuilder = Self;
-    fn scope(&self, name: &str) -> Self {
-        let name = format!(
-            "{}::{}",
-            self.scopes.borrow()[self.current_scope].name,
-            name
-        );
-        self.scopes.borrow_mut().push(ScopeRecord {
-            name,
-            inputs: Vec::new(),
-            outputs: Vec::new(),
-            state_q: Vec::new(),
-            state_d: Vec::new(),
-        });
-        Self {
-            scopes: self.scopes.clone(),
-            current_scope: self.scopes.borrow().len() - 1,
-            current_kind: None,
-            path: vec![],
-        }
-    }
-
-    fn trace_id(&self) -> TraceID {
-        TraceID(self.current_scope)
-    }
-
-    fn set_kind(&mut self, kind: TraceType) {
-        self.current_kind = Some(kind);
-    }
-
-    fn register(&self, width: usize) {
-        let name = self.path.join("::");
-        let signal = TraceSignal::new(&name, width);
-        let kind = self.current_kind.unwrap();
-        match kind {
-            TraceType::Input => {
-                self.scopes.borrow_mut()[self.current_scope]
-                    .inputs
-                    .push(signal);
-            }
-            TraceType::Output => {
-                self.scopes.borrow_mut()[self.current_scope]
-                    .outputs
-                    .push(signal);
-            }
-            TraceType::State => {
-                self.scopes.borrow_mut()[self.current_scope]
-                    .state_q
-                    .push(signal.clone());
-                self.scopes.borrow_mut()[self.current_scope]
-                    .state_d
-                    .push(signal);
-            }
-        }
-    }
-
-    fn namespace(&self, name: &str) -> Self {
-        let mut new_path = self.path.clone();
-        new_path.push(name.to_string());
-        Self {
-            scopes: self.scopes.clone(),
-            current_scope: self.current_scope,
-            current_kind: self.current_kind,
-            path: new_path,
-        }
-    }
-}
-
-impl BasicTracerBuilder {
-    pub fn build(self) -> BasicTracer {
-        BasicTracer {
-            scopes: self.scopes.take(),
-            scope_index: 0,
-            field_index: 0,
-            tag: TraceTag::Input,
-        }
-    }
-}
-
 #[test]
 fn test_trace_setup() {
     let mut tracer_builder = BasicTracerBuilder::default();
@@ -665,49 +310,6 @@ fn test_trace_setup() {
     let mut tracer = tracer_builder.build();
     println!("{}", tracer);
 }
-
-/*
-Consider the possibility of separating the trace function from the update function so that
-they are completely different.  This means that you cannot, for example, easily write multiple
-intermediate results to the trace.
-
-There are a few options:
-1.  The trace contains only the state vector.  That is the easiest, but not particularly helpful.
-2.  A new struct is created that contains the states and the inputs and outputs.
-
-*/
-
-// We then provide a derive macro to add the TraceHandle storage into the parent struct.
-
-/*
-
-#[add_trace_support]
-struct MyThing {
-   a: Sub1,
-   b: Sub2,
-   c: u16
-   handle: TraceHandle, // <- inserted by the attribute macro
-}
-
-impl FooTrace for MyThing {
-    fn set_handle(&mut self, handle: TraceHandle) {
-        self.handle = handle;
-    }
-    fn get_handle(&self) -> TraceHandle {
-        self.handle
-    }
-}
-
-Adds a generated field to hold the trace handle and a couple of accessor methods:
-
-
-
-struct MyThing {
-
-}
-
-
-*/
 
 #[test]
 fn test_using_address() {
@@ -733,14 +335,17 @@ fn test_using_address() {
 }
 
 // Test a simple counter machine.
-struct Counter {
+struct Counter<T> {
     trace_id: Option<TraceID>,
+    _phantom: std::marker::PhantomData<T>,
 }
 
-impl Synchronous for Counter {
-    type State = u16;
+impl<T: Traceable + Default + Copy + num_traits::ops::wrapping::WrappingAdd + num_traits::One>
+    Synchronous for Counter<T>
+{
+    type State = T;
     type Input = bool;
-    type Output = u16;
+    type Output = T;
 
     fn setup(&mut self, builder: impl TracerBuilder) {
         self.trace_id = Some(Self::register_trace_types(builder));
@@ -755,7 +360,7 @@ impl Synchronous for Counter {
         input: Self::Input,
     ) -> (Self::Output, Self::State) {
         let new_state = if input {
-            u16::wrapping_add(state, 1)
+            T::wrapping_add(&state, &T::one())
         } else {
             state
         };
@@ -765,15 +370,22 @@ impl Synchronous for Counter {
 
 #[test]
 fn test_counter_with_tracing() {
-    let mut counter = Counter { trace_id: None };
+    let mut counter = Counter {
+        trace_id: None,
+        _phantom: std::marker::PhantomData::<u32>,
+    };
     let mut tracer_builder = BasicTracerBuilder::default();
     counter.setup(&mut tracer_builder);
     let mut tracer = tracer_builder.build();
     let mut state = 0;
-    for cycle in 0..100_000_000 {
+    let mut last_output = 0;
+    let mut new_state = 0;
+    for cycle in 0..10_000_000 {
         let (output, new_state) = counter.update(&mut tracer, state, cycle % 2 == 0);
         state = new_state;
+        last_output = output;
         //        println!("{} {}", output, state);
     }
+    println!("Last output {last_output}");
     println!("{}", tracer);
 }
