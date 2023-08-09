@@ -90,12 +90,6 @@ How about:
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct TraceID(usize);
 
-impl Default for TraceID {
-    fn default() -> Self {
-        Self(!0)
-    }
-}
-
 pub trait Tracer {
     fn set_context(&mut self, id: TraceID);
     fn set_tag(&mut self, tag: TraceTag);
@@ -142,7 +136,7 @@ pub trait Synchronous {
     // Must be derived
     fn setup(&mut self, trace: impl TracerBuilder);
     // User provided or derived
-    fn trace_id(&self) -> TraceID;
+    fn trace_id(&self) -> Option<TraceID>;
     // User provided
     fn compute(
         &self,
@@ -157,16 +151,21 @@ pub trait Synchronous {
         state: Self::State,
         inputs: Self::Input,
     ) -> (Self::Output, Self::State) {
-        tracer.set_context(self.trace_id());
-        tracer.set_tag(TraceTag::Input);
-        inputs.record(&mut tracer);
-        tracer.set_tag(TraceTag::StateQ);
-        state.record(&mut tracer);
+        if let Some(id) = self.trace_id() {
+            tracer.set_context(id);
+            tracer.set_tag(TraceTag::Input);
+            inputs.record(&mut tracer);
+            tracer.set_tag(TraceTag::StateQ);
+            state.record(&mut tracer);
+        }
         let (output, state) = self.compute(&mut tracer, state, inputs);
-        tracer.set_tag(TraceTag::Output);
-        output.record(&mut tracer);
-        tracer.set_tag(TraceTag::StateD);
-        state.record(&mut tracer);
+        if let Some(id) = self.trace_id() {
+            tracer.set_context(id);
+            tracer.set_tag(TraceTag::Output);
+            output.record(&mut tracer);
+            tracer.set_tag(TraceTag::StateD);
+            state.record(&mut tracer);
+        }
         (output, state)
     }
     // Always fixed
@@ -184,7 +183,7 @@ pub trait Synchronous {
 #[derive(Default, Debug)]
 struct Bar {
     counter: u16,
-    trace_id: TraceID,
+    trace_id: Option<TraceID>,
 }
 
 impl Synchronous for Bar {
@@ -193,9 +192,9 @@ impl Synchronous for Bar {
     type State = u16;
 
     fn setup(&mut self, tracer: impl TracerBuilder) {
-        self.trace_id = Self::register_trace_types(tracer);
+        self.trace_id = Some(Self::register_trace_types(tracer));
     }
-    fn trace_id(&self) -> TraceID {
+    fn trace_id(&self) -> Option<TraceID> {
         self.trace_id
     }
     fn compute(
@@ -212,7 +211,7 @@ impl Synchronous for Bar {
 struct Foo {
     sub1: Bar,
     sub2: Bar,
-    trace_id: TraceID,
+    trace_id: Option<TraceID>,
 }
 
 impl Synchronous for Foo {
@@ -221,12 +220,12 @@ impl Synchronous for Foo {
     type State = u16;
 
     fn setup(&mut self, mut builder: impl TracerBuilder) {
-        self.trace_id = Self::register_trace_types(&mut builder);
+        self.trace_id = Some(Self::register_trace_types(&mut builder));
         // Set up the submodules
         self.sub1.setup(builder.scope("sub1"));
         self.sub2.setup(builder.scope("sub2"));
     }
-    fn trace_id(&self) -> TraceID {
+    fn trace_id(&self) -> Option<TraceID> {
         self.trace_id
     }
     fn compute(
