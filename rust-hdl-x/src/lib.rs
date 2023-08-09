@@ -369,6 +369,16 @@ enum TraceValues {
     Enum(Vec<&'static str>),
 }
 
+impl TraceValues {
+    fn len(&self) -> usize {
+        match self {
+            TraceValues::Short(v) => v.len(),
+            TraceValues::Long(v) => v.len(),
+            TraceValues::Enum(v) => v.len(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct TraceSignal {
     name: String,
@@ -420,27 +430,43 @@ struct ScopeRecord {
 impl Display for ScopeRecord {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for input in &self.inputs {
-            writeln!(f, "{}::input::{} [{}]", self.name, input.name, input.width)?;
+            writeln!(
+                f,
+                "{}::input::{} [{}] --> {}",
+                self.name,
+                input.name,
+                input.width,
+                input.values.len()
+            )?;
         }
         for output in &self.outputs {
             writeln!(
                 f,
-                "{}::output::{} [{}]",
-                self.name, output.name, output.width
+                "{}::output::{} [{}] --> {}",
+                self.name,
+                output.name,
+                output.width,
+                output.values.len()
             )?;
         }
         for state_q in &self.state_q {
             writeln!(
                 f,
-                "{}::state_q::{} [{}]",
-                self.name, state_q.name, state_q.width
+                "{}::state_q::{} [{}] --> {}",
+                self.name,
+                state_q.name,
+                state_q.width,
+                state_q.values.len()
             )?;
         }
         for state_d in &self.state_d {
             writeln!(
                 f,
-                "{}::state_d::{} [{}]",
-                self.name, state_d.name, state_d.width
+                "{}::state_d::{} [{}] --> {}",
+                self.name,
+                state_d.name,
+                state_d.width,
+                state_d.values.len()
             )?;
         }
         Ok(())
@@ -704,4 +730,50 @@ fn test_using_address() {
     println!("{:?}", &jnk as *const Junk);
     println!("{:?}", &jnk.bar1 as *const Foo);
     println!("{:?}", &jnk.bar2 as *const Foo);
+}
+
+// Test a simple counter machine.
+struct Counter {
+    trace_id: Option<TraceID>,
+}
+
+impl Synchronous for Counter {
+    type State = u16;
+    type Input = bool;
+    type Output = u16;
+
+    fn setup(&mut self, builder: impl TracerBuilder) {
+        self.trace_id = Some(Self::register_trace_types(builder));
+    }
+    fn trace_id(&self) -> Option<TraceID> {
+        self.trace_id
+    }
+    fn compute(
+        &self,
+        _tracer: impl Tracer,
+        state: Self::State,
+        input: Self::Input,
+    ) -> (Self::Output, Self::State) {
+        let new_state = if input {
+            u16::wrapping_add(state, 1)
+        } else {
+            state
+        };
+        (new_state, new_state)
+    }
+}
+
+#[test]
+fn test_counter_with_tracing() {
+    let mut counter = Counter { trace_id: None };
+    let mut tracer_builder = BasicTracerBuilder::default();
+    counter.setup(&mut tracer_builder);
+    let mut tracer = tracer_builder.build();
+    let mut state = 0;
+    for cycle in 0..100_000_000 {
+        let (output, new_state) = counter.update(&mut tracer, state, cycle % 2 == 0);
+        state = new_state;
+        //        println!("{} {}", output, state);
+    }
+    println!("{}", tracer);
 }
