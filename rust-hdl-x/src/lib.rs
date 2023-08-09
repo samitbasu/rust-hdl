@@ -4,6 +4,7 @@ use std::{
     rc::Rc,
 };
 
+use traceable::Traceable;
 use tracer::{TraceID, TraceTag, TraceType, Tracer};
 use tracer_builder::TracerBuilder;
 
@@ -20,9 +21,11 @@ use crate::basic_tracer::BasicTracerBuilder;
 //mod spi_controller;
 //mod strobe;
 //mod synchronous;
-mod basic_tracer;
-mod tracer;
-mod tracer_builder;
+pub mod basic_tracer;
+pub mod no_trace;
+pub mod traceable;
+pub mod tracer;
+pub mod tracer_builder;
 //mod vcd;
 
 #[ignore]
@@ -57,36 +60,6 @@ fn uint_benchmark() {
     println!("Time to run uint benchmark: {:?}", toc - tic);
 }
  */
-
-impl Tracer for () {
-    fn set_context(&mut self, _id: TraceID) {}
-    fn set_tag(&mut self, _tag: TraceTag) {}
-    fn write_bool(&mut self, _val: bool) {}
-    fn write_small(&mut self, _val: u64) {}
-    fn write_large(&mut self, _val: &[bool]) {}
-    fn write_string(&mut self, _val: &'static str) {}
-}
-
-impl<T: Tracer> Tracer for &mut T {
-    fn set_context(&mut self, id: TraceID) {
-        (**self).set_context(id)
-    }
-    fn set_tag(&mut self, tag: TraceTag) {
-        (**self).set_tag(tag)
-    }
-    fn write_bool(&mut self, val: bool) {
-        (**self).write_bool(val)
-    }
-    fn write_small(&mut self, val: u64) {
-        (**self).write_small(val)
-    }
-    fn write_large(&mut self, val: &[bool]) {
-        (**self).write_large(val)
-    }
-    fn write_string(&mut self, val: &'static str) {
-        (**self).write_string(val)
-    }
-}
 
 pub trait Synchronous {
     type Input: Copy + Traceable;
@@ -200,47 +173,6 @@ impl Synchronous for Foo {
         let output = MoreJunk::default();
         let state = sub1_state + sub2_state;
         (output, state)
-    }
-}
-
-pub trait Traceable {
-    fn register_trace_type(tracer: impl TracerBuilder);
-    fn record(&self, tracer: impl Tracer);
-}
-
-impl Traceable for bool {
-    fn register_trace_type(tracer: impl TracerBuilder) {
-        tracer.register(1);
-    }
-    fn record(&self, mut tracer: impl Tracer) {
-        tracer.write_bool(*self);
-    }
-}
-
-impl Traceable for u8 {
-    fn register_trace_type(tracer: impl TracerBuilder) {
-        tracer.register(8);
-    }
-    fn record(&self, mut tracer: impl Tracer) {
-        tracer.write_small(*self as u64);
-    }
-}
-
-impl Traceable for u16 {
-    fn register_trace_type(tracer: impl TracerBuilder) {
-        tracer.register(16);
-    }
-    fn record(&self, mut tracer: impl Tracer) {
-        tracer.write_small(*self as u64);
-    }
-}
-
-impl Traceable for u32 {
-    fn register_trace_type(tracer: impl TracerBuilder) {
-        tracer.register(32);
-    }
-    fn record(&self, mut tracer: impl Tracer) {
-        tracer.write_small(*self as u64);
     }
 }
 
