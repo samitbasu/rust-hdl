@@ -12,3 +12,17 @@ pub fn bit_serialize(input: TokenStream) -> TokenStream {
         .unwrap()
         .into()
 }
+
+#[proc_macro_derive(Traceable)]
+pub fn traceable(input: TokenStream) -> TokenStream {
+    rust_hdl_x_macro_core::derive_traceable(input.into())
+        .unwrap()
+        .into()
+}
+
+#[proc_macro_derive(Loggable)]
+pub fn loggable(input: TokenStream) -> TokenStream {
+    rust_hdl_x_macro_core::derive_loggable(input.into())
+        .unwrap()
+        .into()
+}

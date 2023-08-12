@@ -4,11 +4,15 @@ use std::{
     rc::Rc,
 };
 
-use traceable::Traceable;
-use tracer::{TraceID, TraceTag, TraceType, Tracer};
-use tracer_builder::TracerBuilder;
+use crate::log::LogBuilder;
+use crate::loggable::Loggable;
+use log::TagID;
+use logger::Logger;
+use rust_hdl::prelude::Bits;
+use rust_hdl_x_macro::Loggable;
+use synchronous::Synchronous;
 
-use crate::basic_tracer::BasicTracerBuilder;
+use crate::basic_logger::BasicLoggerBuilder;
 
 //use synchronous::Synchronous;
 
@@ -17,16 +21,23 @@ use crate::basic_tracer::BasicTracerBuilder;
 //mod counter;
 //mod derive_vcd;
 //mod pulser;
-//mod shot;
+//pub mod shot;
 //mod spi_controller;
-//mod strobe;
+//pub mod strobe;
 //mod synchronous;
-pub mod basic_tracer;
-pub mod no_trace;
-pub mod traceable;
-pub mod tracer;
-pub mod tracer_builder;
+//pub mod basic_tracer;
+//pub mod counter;
+//pub mod no_trace;
+//pub mod shot;
+pub mod synchronous;
+//pub mod traceable;
+//pub mod tracer;
+//pub mod tracer_builder;
 //mod vcd;
+pub mod basic_logger;
+pub mod log;
+pub mod loggable;
+pub mod logger;
 
 #[ignore]
 #[test]
@@ -61,61 +72,29 @@ fn uint_benchmark() {
 }
  */
 
-pub trait Synchronous {
-    type Input: Copy + Traceable;
-    type Output: Copy + Traceable + Default;
-    type State: Copy + Default + Traceable;
-    // Must be derived
-    fn setup(&mut self, trace: impl TracerBuilder);
-    // User provided or derived
-    fn trace_id(&self) -> Option<TraceID>;
-    // User provided
-    fn compute(
-        &self,
-        tracer: impl Tracer,
-        state: Self::State,
-        inputs: Self::Input,
-    ) -> (Self::Output, Self::State);
-    // Always fixed
-    fn update(
-        &self,
-        mut tracer: impl Tracer,
-        state: Self::State,
-        inputs: Self::Input,
-    ) -> (Self::Output, Self::State) {
-        if let Some(id) = self.trace_id() {
-            tracer.set_context(id);
-            tracer.set_tag(TraceTag::Input);
-            inputs.record(&mut tracer);
-            tracer.set_tag(TraceTag::StateQ);
-            state.record(&mut tracer);
-        }
-        let (output, state) = self.compute(&mut tracer, state, inputs);
-        if let Some(id) = self.trace_id() {
-            tracer.set_context(id);
-            tracer.set_tag(TraceTag::Output);
-            output.record(&mut tracer);
-            tracer.set_tag(TraceTag::StateD);
-            state.record(&mut tracer);
-        }
-        (output, state)
-    }
-    // Always fixed
-    fn register_trace_types(mut builder: impl TracerBuilder) -> TraceID {
-        builder.set_kind(TraceType::Input);
-        Self::Input::register_trace_type(&mut builder);
-        builder.set_kind(TraceType::Output);
-        Self::Output::register_trace_type(&mut builder);
-        builder.set_kind(TraceType::State);
-        Self::State::register_trace_type(&mut builder);
-        builder.trace_id()
-    }
-}
-
-#[derive(Default, Debug)]
+#[derive(Debug)]
 struct Bar {
     counter: u16,
-    trace_id: Option<TraceID>,
+    tag_input: TagID<u16>,
+    tag_output: TagID<bool>,
+    tag_state: TagID<u16>,
+    tag_next_state: TagID<u16>,
+}
+
+impl Bar {
+    fn new(builder: impl LogBuilder) -> Self {
+        let tag_input = builder.tag("input");
+        let tag_output = builder.tag("output");
+        let tag_state = builder.tag("state");
+        let tag_next_state = builder.tag("next_state");
+        Self {
+            counter: 0,
+            tag_input,
+            tag_output,
+            tag_state,
+            tag_next_state,
+        }
+    }
 }
 
 impl Synchronous for Bar {
@@ -123,19 +102,19 @@ impl Synchronous for Bar {
     type Output = bool;
     type State = u16;
 
-    fn setup(&mut self, tracer: impl TracerBuilder) {
-        self.trace_id = Some(Self::register_trace_types(tracer));
-    }
-    fn trace_id(&self) -> Option<TraceID> {
-        self.trace_id
-    }
     fn compute(
         &self,
-        trace: impl Tracer,
+        mut trace: impl Logger,
         state: Self::State,
         inputs: Self::Input,
     ) -> (Self::Output, Self::State) {
-        todo!()
+        let next_state = state + inputs;
+        let output = next_state % 2 == 0;
+        trace.log(self.tag_input, inputs);
+        trace.log(self.tag_output, output);
+        trace.log(self.tag_state, state);
+        trace.log(self.tag_next_state, next_state);
+        (output, next_state)
     }
 }
 
@@ -143,7 +122,27 @@ impl Synchronous for Bar {
 struct Foo {
     sub1: Bar,
     sub2: Bar,
-    trace_id: Option<TraceID>,
+    tag_input: TagID<u16>,
+    tag_output: TagID<MoreJunk>,
+    tag_state: TagID<u16>,
+    tag_next_state: TagID<u16>,
+}
+
+impl Foo {
+    fn new(builder: impl LogBuilder) -> Self {
+        let tag_input = builder.tag("input");
+        let tag_output = builder.tag("output");
+        let tag_state = builder.tag("state");
+        let tag_next_state = builder.tag("next_state");
+        Self {
+            sub1: Bar::new(builder.scope("sub1")),
+            sub2: Bar::new(builder.scope("sub2")),
+            tag_input,
+            tag_output,
+            tag_state,
+            tag_next_state,
+        }
+    }
 }
 
 impl Synchronous for Foo {
@@ -151,92 +150,50 @@ impl Synchronous for Foo {
     type Output = MoreJunk;
     type State = u16;
 
-    fn setup(&mut self, mut builder: impl TracerBuilder) {
-        self.trace_id = Some(Self::register_trace_types(&mut builder));
-        // Set up the submodules
-        self.sub1.setup(builder.scope("sub1"));
-        self.sub2.setup(builder.scope("sub2"));
-    }
-    fn trace_id(&self) -> Option<TraceID> {
-        self.trace_id
-    }
     fn compute(
         &self,
-        mut tracer: impl Tracer,
+        mut logger: impl Logger,
         state: Self::State,
         inputs: Self::Input,
     ) -> (Self::Output, Self::State) {
         // Update the submodules
-        let (sub1_out, sub1_state) = self.sub1.update(&mut tracer, state, inputs);
-        let (sub2_out, sub2_state) = self.sub2.update(&mut tracer, state, inputs);
+        logger.log(self.tag_input, inputs);
+        logger.log(self.tag_state, state);
+        let (sub1_out, sub1_state) = self.sub1.update(&mut logger, state, inputs);
+        let (sub2_out, sub2_state) = self.sub2.update(&mut logger, state, inputs);
         // Do our own update
         let output = MoreJunk::default();
         let state = sub1_state + sub2_state;
+        logger.log(self.tag_output, output);
+        logger.log(self.tag_next_state, state);
         (output, state)
     }
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Loggable)]
 enum State {
     #[default]
     Boot,
     Running,
 }
 
-impl Traceable for State {
-    fn register_trace_type(tracer: impl TracerBuilder) {
-        tracer.register(0);
-    }
-    fn record(&self, mut tracer: impl Tracer) {
-        match self {
-            State::Boot => tracer.write_string("Boot"),
-            State::Running => tracer.write_string("Running"),
-        }
-    }
-}
-
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Loggable)]
 struct Junk {
     a: bool,
     b: u8,
     c: State,
 }
 
-impl Traceable for Junk {
-    fn register_trace_type(tracer: impl TracerBuilder) {
-        bool::register_trace_type(tracer.namespace("a"));
-        u8::register_trace_type(tracer.namespace("b"));
-        State::register_trace_type(tracer.namespace("c"));
-    }
-    fn record(&self, mut tracer: impl Tracer) {
-        self.a.record(&mut tracer);
-        self.b.record(&mut tracer);
-        self.c.record(&mut tracer);
-    }
-}
-
-#[derive(Default, Copy, Clone)]
+#[derive(Default, Copy, Clone, Loggable)]
 struct MoreJunk {
     a: Junk,
     b: Junk,
 }
 
-impl Traceable for MoreJunk {
-    fn register_trace_type(tracer: impl TracerBuilder) {
-        Junk::register_trace_type(tracer.namespace("a"));
-        Junk::register_trace_type(tracer.namespace("b"));
-    }
-    fn record(&self, mut tracer: impl Tracer) {
-        self.a.record(&mut tracer);
-        self.b.record(&mut tracer);
-    }
-}
-
 #[test]
 fn test_trace_setup() {
-    let mut tracer_builder = BasicTracerBuilder::default();
-    let mut foo = Foo::default();
-    foo.setup(&mut tracer_builder);
+    let mut tracer_builder = basic_logger::BasicLoggerBuilder::default();
+    let mut foo = Foo::new(&mut tracer_builder);
     println!("{}", tracer_builder);
     println!("{:#?}", foo);
     let mut tracer = tracer_builder.build();
@@ -267,57 +224,60 @@ fn test_using_address() {
 }
 
 // Test a simple counter machine.
-struct Counter<T> {
-    trace_id: Option<TraceID>,
-    _phantom: std::marker::PhantomData<T>,
+struct Counter<T: Loggable> {
+    tag_input: TagID<bool>,
+    tag_output: TagID<T>,
 }
 
-impl<T: Traceable + Default + Copy + num_traits::ops::wrapping::WrappingAdd + num_traits::One>
+impl<T: Loggable> Counter<T> {
+    fn new(builder: impl LogBuilder) -> Self {
+        let tag_input = builder.tag("input");
+        let tag_output = builder.tag("output");
+        Self {
+            tag_input,
+            tag_output,
+        }
+    }
+}
+
+impl<T: Loggable + Default + Copy + num_traits::ops::wrapping::WrappingAdd + num_traits::One>
     Synchronous for Counter<T>
 {
     type State = T;
     type Input = bool;
     type Output = T;
 
-    fn setup(&mut self, builder: impl TracerBuilder) {
-        self.trace_id = Some(Self::register_trace_types(builder));
-    }
-    fn trace_id(&self) -> Option<TraceID> {
-        self.trace_id
-    }
     fn compute(
         &self,
-        _tracer: impl Tracer,
-        state: Self::State,
+        mut tracer: impl Logger,
         input: Self::Input,
+        state: Self::State,
     ) -> (Self::Output, Self::State) {
+        tracer.log(self.tag_input, input);
         let new_state = if input {
             T::wrapping_add(&state, &T::one())
         } else {
             state
         };
+        tracer.log(self.tag_output, new_state);
         (new_state, new_state)
     }
 }
 
 #[test]
 fn test_counter_with_tracing() {
-    let mut counter = Counter {
-        trace_id: None,
-        _phantom: std::marker::PhantomData::<u32>,
-    };
-    let mut tracer_builder = BasicTracerBuilder::default();
-    counter.setup(&mut tracer_builder);
-    let mut tracer = tracer_builder.build();
+    let mut logger_builder = BasicLoggerBuilder::default();
+    let counter = Counter::new::<u32>(&mut logger_builder);
+    let mut logger = logger_builder.build();
     let mut state = 0;
     let mut last_output = 0;
     let mut new_state = 0;
     for cycle in 0..10_000_000 {
-        let (output, new_state) = counter.update(&mut tracer, state, cycle % 2 == 0);
+        let (output, new_state) = counter.compute(&mut logger, cycle % 2 == 0, state);
         state = new_state;
         last_output = output;
         //        println!("{} {}", output, state);
     }
     println!("Last output {last_output}");
-    println!("{}", tracer);
+    println!("{}", logger);
 }

@@ -1,17 +1,14 @@
+use crate::tracer_builder::TracerBuilder;
+use crate::{traceable::Traceable, tracer::Tracer};
+use rust_hdl::prelude::{freq_hz_to_period_femto, Bits, NANOS_PER_FEMTO};
+use rust_hdl_x_macro::Traceable;
 use std::time::Duration;
 
-use crate::tracer::BitSerialize;
-use crate::tracer::BitSerializer;
-use rust_hdl::prelude::{freq_hz_to_period_femto, Bits, NANOS_PER_FEMTO};
-use rust_hdl_x_macro::BitSerialize;
-
-use crate::{
-    synchronous::Synchronous,
-    tracer::{NullTracer, Tracer},
-};
+use crate::{synchronous::Synchronous, tracer::TraceID};
 
 pub struct ShotConfig<const N: usize> {
     duration: Bits<N>,
+    trace_id: Option<TraceID>,
 }
 
 impl<const N: usize> ShotConfig<N> {
@@ -22,17 +19,18 @@ impl<const N: usize> ShotConfig<N> {
         assert!(clocks < (1_u64 << 32));
         Self {
             duration: clocks.into(),
+            trace_id: None,
         }
     }
 }
 
-#[derive(Debug, Default, Clone, Copy, BitSerialize)]
+#[derive(Debug, Default, Clone, Copy, Traceable)]
 pub struct ShotState<const N: usize> {
     counter: Bits<N>,
     state: bool,
 }
 
-#[derive(Default, Clone, Copy, BitSerialize)]
+#[derive(Default, Clone, Copy, Traceable)]
 pub struct ShotOutputs {
     pub active: bool,
     pub fired: bool,
@@ -43,13 +41,20 @@ impl<const N: usize> Synchronous for ShotConfig<N> {
     type Output = ShotOutputs;
     type State = ShotState<N>;
 
-    fn update(
+    fn trace_id(&self) -> Option<TraceID> {
+        self.trace_id
+    }
+
+    fn setup(&mut self, builder: impl TracerBuilder) {
+        self.trace_id = Some(Self::register_trace_types(builder));
+    }
+
+    fn compute(
         &self,
-        t: impl Tracer,
-        q: ShotState<N>,
-        trigger: bool,
-    ) -> (ShotOutputs, ShotState<N>) {
-        let _module = t.module("shot");
+        _t: impl Tracer,
+        trigger: Self::Input,
+        q: Self::State,
+    ) -> (Self::Output, Self::State) {
         let mut d = q;
         d.counter = if q.state { q.counter + 1 } else { q.counter };
         let mut outputs: ShotOutputs = Default::default();
@@ -64,25 +69,50 @@ impl<const N: usize> Synchronous for ShotConfig<N> {
         }
         (outputs, d)
     }
-
-    fn default_output(&self) -> Self::Output {
-        Default::default()
-    }
 }
 
 #[test]
 fn test_shot() {
     let shot_config = ShotConfig::<32> {
         duration: 100.into(),
+        trace_id: None,
     };
     let mut state = ShotState::default();
     let mut output: ShotOutputs = Default::default();
     let mut shot_on = 0;
     let mut trig_count = 0;
     let now = std::time::Instant::now();
-    let tracer = NullTracer {};
-    for clk in 0..1_000_000_000 {
-        (output, state) = shot_config.update(&tracer, state, clk % 1000 == 0);
+    for clk in 0..100_000_000 {
+        (output, state) = shot_config.update((), clk % 1000 == 0, state);
+        if output.active {
+            shot_on += 1;
+        }
+        if output.fired {
+            trig_count += 1;
+        }
+    }
+    println!(
+        "Final state: {state:?} elapsed time {} shot on {shot_on} trig_count {trig_count}",
+        now.elapsed().as_millis()
+    )
+}
+
+#[test]
+fn test_shot_basic_trace() {
+    let mut shot_config = ShotConfig::<32> {
+        duration: 100.into(),
+        trace_id: None,
+    };
+    let mut state = ShotState::default();
+    let mut output = ShotOutputs::default();
+    let mut shot_on = 0;
+    let mut trig_count = 0;
+    let mut builder = crate::basic_tracer::BasicTracerBuilder::default();
+    shot_config.setup(&mut builder);
+    let mut tracer = builder.build();
+    let now = std::time::Instant::now();
+    for clk in 0..10_000_000 {
+        (output, state) = shot_config.update(&mut tracer, clk % 1000 == 0, state);
         if output.active {
             shot_on += 1;
         }

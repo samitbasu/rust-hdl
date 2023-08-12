@@ -1,38 +1,52 @@
+use rust_hdl::prelude::Bits;
+
 use crate::{
     synchronous::Synchronous,
-    tracer::{NullTracer, Tracer},
+    tracer::{TraceID, Tracer},
+    tracer_builder::TracerBuilder,
 };
 
-struct Counter {}
+struct BitCounter<const N: usize> {
+    trace_id: Option<TraceID>,
+}
 
-impl Synchronous for Counter {
-    type State = u32;
+impl<const N: usize> Synchronous for BitCounter<N> {
+    type State = Bits<N>;
     type Input = bool;
-    type Output = u32;
-    fn update(&self, t: impl Tracer, q: u32, enable: bool) -> (u32, u32) {
-        let _ = t.module("counter");
-        let d = if enable { q + 1 } else { q };
-        (q, d)
-    }
+    type Output = Bits<N>;
 
-    fn default_output(&self) -> Self::Output {
-        0
+    fn setup(&mut self, builder: impl TracerBuilder) {
+        self.trace_id = Some(Self::register_trace_types(builder));
+    }
+    fn trace_id(&self) -> Option<TraceID> {
+        self.trace_id
+    }
+    fn compute(
+        &self,
+        _tracer: impl Tracer,
+        input: Self::Input,
+        state: Self::State,
+    ) -> (Self::Output, Self::State) {
+        let new_state = if input { state + 1 } else { state };
+        let output = new_state;
+        (output, new_state)
     }
 }
 
-// Count to 1e9
 #[test]
-fn test_count_to_1e9() {
-    let mut state = 0_u32;
-    let mut output = 0_u32;
-    let now = std::time::Instant::now();
-    let counter = Counter {};
-    let tracer = NullTracer {};
-    for cycle in 0..1_000_000_000 {
-        (output, state) = counter.update(&tracer, state, cycle % 2 == 0);
+fn test_bit_counter_with_tracing() {
+    let mut counter = BitCounter::<32> { trace_id: None };
+    let mut tracer_builder = crate::basic_tracer::BasicTracerBuilder::default();
+    counter.setup(&mut tracer_builder);
+    let mut tracer = tracer_builder.build();
+    let mut state = Bits::<32>::default();
+    let mut last_output = Bits::<32>::default();
+    for cycle in 0..10_000_000 {
+        let (output, new_state) = counter.update(&mut tracer, cycle % 2 == 0, state);
+        state = new_state;
+        last_output = output;
+        //        println!("{} {}", output, state);
     }
-    println!(
-        "Final state: {state:?}, elapsed time {}",
-        now.elapsed().as_millis()
-    );
+    println!("Last output {last_output:x}");
+    println!("{}", tracer);
 }

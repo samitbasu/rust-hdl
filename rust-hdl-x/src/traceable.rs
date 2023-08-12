@@ -1,3 +1,5 @@
+use rust_hdl::prelude::Bits;
+
 use crate::{tracer::Tracer, tracer_builder::TracerBuilder};
 
 pub trait Traceable {
@@ -38,5 +40,17 @@ impl Traceable for u32 {
     }
     fn record(&self, mut tracer: impl Tracer) {
         tracer.write_small(*self as u64);
+    }
+}
+
+impl<const N: usize> Traceable for Bits<N> {
+    fn register_trace_type(tracer: impl TracerBuilder) {
+        tracer.register(N);
+    }
+    fn record(&self, mut tracer: impl Tracer) {
+        match self {
+            Bits::Short(x) => tracer.write_small(x.short() as u64),
+            Bits::Long(x) => tracer.write_large(&x.bits()),
+        }
     }
 }

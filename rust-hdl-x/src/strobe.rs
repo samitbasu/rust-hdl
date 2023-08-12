@@ -1,16 +1,13 @@
-use std::num::Wrapping;
-
+use crate::traceable::Traceable;
+use crate::tracer::TraceID;
+use crate::tracer_builder::TracerBuilder;
+use crate::{synchronous::Synchronous, tracer::Tracer};
 use rust_hdl::prelude::freq_hz_to_period_femto;
-use rust_hdl_x_macro::BitSerialize;
-use serde::Serialize;
-
-use crate::{
-    synchronous::Synchronous,
-    tracer::{BitSerialize, BitSerializer, NullTracer, Tracer},
-};
+use rust_hdl_x_macro::Traceable;
 
 pub struct StrobeConfig {
     threshold: u32,
+    trace_id: Option<TraceID>,
 }
 
 impl StrobeConfig {
@@ -23,11 +20,12 @@ impl StrobeConfig {
         assert!(threshold > 2);
         Self {
             threshold: threshold as u32,
+            trace_id: None,
         }
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, BitSerialize)]
+#[derive(Default, Debug, Clone, Copy, Traceable)]
 pub struct StrobeState {
     count: u32,
 }
@@ -37,8 +35,15 @@ impl Synchronous for StrobeConfig {
     type Input = bool;
     type Output = bool;
 
-    fn update(&self, tracer: impl Tracer, q: StrobeState, enable: bool) -> (bool, StrobeState) {
-        let _module = tracer.module("strobe");
+    fn trace_id(&self) -> Option<TraceID> {
+        self.trace_id
+    }
+
+    fn setup(&mut self, builder: impl TracerBuilder) {
+        self.trace_id = Some(Self::register_trace_types(builder));
+    }
+
+    fn compute(&self, _t: impl Tracer, enable: bool, q: StrobeState) -> (bool, StrobeState) {
         let mut d = q;
         if enable {
             d.count = q.count + 1;
@@ -49,24 +54,25 @@ impl Synchronous for StrobeConfig {
         }
         (strobe, d)
     }
-
-    fn default_output(&self) -> Self::Output {
-        false
-    }
 }
 
 #[test]
 fn test_strobe() {
     // Final state: Strobe { counter: 1000 }, elapsed time 11678, pulse count 999999
     // We want a strobe every 1000 clock cycles.
-    let constants = StrobeConfig { threshold: 1000 };
+    let mut config = StrobeConfig {
+        threshold: 1000,
+        trace_id: None,
+    };
     let mut state = StrobeState::default();
     let mut num_pulses = 0;
     let mut output = false;
     let now = std::time::Instant::now();
-    let tracer = NullTracer {};
-    for _cycle in 0..1_000_000_000 {
-        (output, state) = constants.update(&tracer, state, true);
+    let mut builder = crate::basic_tracer::BasicTracerBuilder::default();
+    config.setup(&mut builder);
+    let mut tracer = builder.build();
+    for _cycle in 0..10_000_000 {
+        (output, state) = config.update(&mut tracer, true, state);
         if output {
             num_pulses += 1;
         }

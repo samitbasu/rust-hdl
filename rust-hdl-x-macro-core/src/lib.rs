@@ -4,7 +4,11 @@ use quote::quote;
 use syn::{Data, DeriveInput};
 
 pub mod bit_serialize;
+pub mod loggable;
+pub mod traceable;
 pub use bit_serialize::derive_bit_serialize;
+pub use loggable::derive_loggable;
+pub use traceable::derive_traceable;
 
 pub fn derive_vcd_writeable(input: TokenStream) -> anyhow::Result<TokenStream> {
     let decl = syn::parse2::<DeriveInput>(input)?;
@@ -175,4 +179,58 @@ fn test_proc_macro_generics() {
         }
     };
     assert_tokens_eq(&expected, &output)
+}
+
+#[test]
+fn test_traceable_proc_macro() {
+    let decl = quote!(
+        pub struct NestedBits {
+            nest_1: bool,
+            nest_2: u8,
+            nest_3: TwoBits,
+        }
+    );
+    let output = derive_traceable(decl).unwrap();
+    let expected = quote! {
+        impl Traceable for NestedBits {
+            fn register_trace_type(tracer: impl TracerBuilder) {
+                <bool as Traceable>::register_trace_type(tracer.namespace(stringify!(nest_1)));
+                <u8 as Traceable>::register_trace_type(tracer.namespace(stringify!(nest_2)));
+                <TwoBits as Traceable>::register_trace_type(tracer.namespace(stringify!(nest_3)));
+            }
+            fn record(&self, mut tracer: impl Tracer) {
+                self.nest_1.record(&mut tracer);
+                self.nest_2.record(&mut tracer);
+                self.nest_3.record(&mut tracer);
+            }
+        }
+    };
+    assert_tokens_eq(&expected, &output);
+}
+
+#[test]
+fn test_loggable_proc_macro() {
+    let decl = quote!(
+        pub struct NestedBits {
+            nest_1: bool,
+            nest_2: u8,
+            nest_3: TwoBits,
+        }
+    );
+    let output = derive_loggable(decl).unwrap();
+    let expected = quote! {
+        impl Loggable for NestedBits {
+            fn allocate(builder: impl LogBuilder) {
+                <bool as Loggable>::allocate(builder.namespace(stringify!(nest_1)));
+                <u8 as Loggable>::allocate(builder.namespace(stringify!(nest_2)));
+                <TwoBits as Loggable>::allocate(builder.namespace(stringify!(nest_3)));
+            }
+            fn record(&self, mut logger: impl Logger) {
+                self.nest_1.record(&mut logger);
+                self.nest_2.record(&mut logger);
+                self.nest_3.record(&mut logger);
+            }
+        }
+    };
+    assert_tokens_eq(&expected, &output);
 }
