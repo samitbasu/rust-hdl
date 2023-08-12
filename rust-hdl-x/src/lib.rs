@@ -18,7 +18,7 @@ use crate::basic_logger::BasicLoggerBuilder;
 
 //mod bit_iter;
 //mod bit_slice;
-//mod counter;
+mod counter;
 //mod derive_vcd;
 //mod pulser;
 //pub mod shot;

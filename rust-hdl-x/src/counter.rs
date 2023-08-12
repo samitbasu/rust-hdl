@@ -1,13 +1,26 @@
 use rust_hdl::prelude::Bits;
 
 use crate::{
+    basic_logger::BasicLoggerBuilder,
+    log::{LogBuilder, TagID},
+    logger::Logger,
     synchronous::Synchronous,
-    tracer::{TraceID, Tracer},
-    tracer_builder::TracerBuilder,
 };
 
 struct BitCounter<const N: usize> {
-    trace_id: Option<TraceID>,
+    tag_input: TagID<bool>,
+    tag_output: TagID<Bits<N>>,
+}
+
+impl<const N: usize> BitCounter<N> {
+    fn new(mut builder: impl LogBuilder) -> Self {
+        let tag_input = builder.tag("input");
+        let tag_output = builder.tag("output");
+        Self {
+            tag_input,
+            tag_output,
+        }
+    }
 }
 
 impl<const N: usize> Synchronous for BitCounter<N> {
@@ -15,38 +28,32 @@ impl<const N: usize> Synchronous for BitCounter<N> {
     type Input = bool;
     type Output = Bits<N>;
 
-    fn setup(&mut self, builder: impl TracerBuilder) {
-        self.trace_id = Some(Self::register_trace_types(builder));
-    }
-    fn trace_id(&self) -> Option<TraceID> {
-        self.trace_id
-    }
     fn compute(
         &self,
-        _tracer: impl Tracer,
+        mut logger: impl Logger,
         input: Self::Input,
         state: Self::State,
     ) -> (Self::Output, Self::State) {
+        logger.log(self.tag_input, input);
         let new_state = if input { state + 1 } else { state };
         let output = new_state;
+        logger.log(self.tag_output, output);
         (output, new_state)
     }
 }
 
 #[test]
-fn test_bit_counter_with_tracing() {
-    let mut counter = BitCounter::<32> { trace_id: None };
-    let mut tracer_builder = crate::basic_tracer::BasicTracerBuilder::default();
-    counter.setup(&mut tracer_builder);
-    let mut tracer = tracer_builder.build();
-    let mut state = Bits::<32>::default();
-    let mut last_output = Bits::<32>::default();
-    for cycle in 0..10_000_000 {
-        let (output, new_state) = counter.update(&mut tracer, cycle % 2 == 0, state);
+fn test_counter_with_bits_argument() {
+    let mut logger_builder = BasicLoggerBuilder::default();
+    let counter: BitCounter<24> = BitCounter::new(&mut logger_builder);
+    let mut logger = logger_builder.build();
+    let mut state: Bits<24> = Default::default();
+    let mut last_output = Default::default();
+    for cycle in 0..100_000_000 {
+        let (output, new_state) = counter.compute(&mut logger, cycle % 2 == 0, state);
         state = new_state;
         last_output = output;
         //        println!("{} {}", output, state);
     }
     println!("Last output {last_output:x}");
-    println!("{}", tracer);
 }
