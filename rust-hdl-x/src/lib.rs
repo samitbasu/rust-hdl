@@ -4,11 +4,11 @@ use std::{
     rc::Rc,
 };
 
-use crate::log::LogBuilder;
+use crate::log::{ClockDetails, LogBuilder};
 use crate::loggable::Loggable;
 use log::TagID;
 use logger::Logger;
-use rust_hdl::prelude::Bits;
+use rust_hdl::prelude::{freq_hz_to_period_femto, Bits};
 use rust_hdl_x_macro::Loggable;
 use synchronous::Synchronous;
 
@@ -278,6 +278,12 @@ impl<T: Loggable + Default + Copy + num_traits::ops::wrapping::WrappingAdd + num
 #[test]
 fn test_counter_with_tracing() {
     let mut logger_builder = BasicLoggerBuilder::default();
+    let clock = ClockDetails {
+        period_in_fs: freq_hz_to_period_femto(1e6) as u64,
+        offset_in_fs: 0,
+        initial_state: true,
+    };
+    logger_builder.add_clock(clock);
     let counter: Counter<u32> = Counter::new(&mut logger_builder);
     let mut logger = logger_builder.build();
     let mut state = 0;
@@ -294,6 +300,12 @@ fn test_counter_with_tracing() {
 #[test]
 fn test_counter_with_no_tracing() {
     let mut logger_builder = BasicLoggerBuilder::default();
+    let clock = ClockDetails {
+        period_in_fs: freq_hz_to_period_femto(1e6) as u64,
+        offset_in_fs: 0,
+        initial_state: true,
+    };
+    logger_builder.add_clock(clock);
     let counter: Counter<u32> = Counter::new(&mut logger_builder);
     let mut logger = logger_builder.build();
     let mut state = 0;

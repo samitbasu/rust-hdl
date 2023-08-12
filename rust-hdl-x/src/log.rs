@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, time::Duration};
 
 use crate::loggable::Loggable;
 
@@ -21,12 +21,20 @@ impl<T: Loggable> Clone for TagID<T> {
 
 impl<T: Loggable> Copy for TagID<T> {}
 
+#[derive(Debug, Clone, Copy)]
+pub struct ClockDetails {
+    pub period_in_fs: u64,
+    pub offset_in_fs: u64,
+    pub initial_state: bool,
+}
+
 pub trait LogBuilder {
     type SubBuilder: LogBuilder;
     fn scope(&self, name: &str) -> Self::SubBuilder;
     fn tag<T: Loggable>(&mut self, name: &str) -> TagID<T>;
     fn allocate<L: Loggable>(&self, tag: TagID<L>, width: usize);
     fn namespace(&self, name: &str) -> Self::SubBuilder;
+    fn add_clock(&mut self, clock: ClockDetails);
 }
 
 impl<T: LogBuilder> LogBuilder for &mut T {
@@ -42,5 +50,8 @@ impl<T: LogBuilder> LogBuilder for &mut T {
     }
     fn namespace(&self, name: &str) -> Self::SubBuilder {
         (**self).namespace(name)
+    }
+    fn add_clock(&mut self, clock: ClockDetails) {
+        (**self).add_clock(clock)
     }
 }

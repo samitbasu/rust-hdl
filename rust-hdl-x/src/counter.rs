@@ -1,7 +1,6 @@
 use rust_hdl::prelude::Bits;
 
 use crate::{
-    basic_logger::BasicLoggerBuilder,
     log::{LogBuilder, TagID},
     logger::Logger,
     synchronous::Synchronous,
@@ -13,7 +12,7 @@ struct BitCounter<const N: usize> {
 }
 
 impl<const N: usize> BitCounter<N> {
-    fn new(mut builder: impl LogBuilder) -> Self {
+    pub fn new(mut builder: impl LogBuilder) -> Self {
         let tag_input = builder.tag("input");
         let tag_output = builder.tag("output");
         Self {
@@ -42,18 +41,27 @@ impl<const N: usize> Synchronous for BitCounter<N> {
     }
 }
 
-#[test]
-fn test_counter_with_bits_argument() {
-    let mut logger_builder = BasicLoggerBuilder::default();
-    let counter: BitCounter<24> = BitCounter::new(&mut logger_builder);
-    let mut logger = logger_builder.build();
-    let mut state: Bits<24> = Default::default();
-    let mut last_output = Default::default();
-    for cycle in 0..100_000_000 {
-        let (output, new_state) = counter.compute(&mut logger, cycle % 2 == 0, state);
-        state = new_state;
-        last_output = output;
-        //        println!("{} {}", output, state);
+#[cfg(test)]
+mod tests {
+    use crate::basic_logger::BasicLoggerBuilder;
+
+    use super::*;
+    #[test]
+    fn test_counter_with_bits_argument() {
+        let mut logger_builder = BasicLoggerBuilder::default();
+        let counter: BitCounter<24> = BitCounter::new(&mut logger_builder);
+        let mut logger = logger_builder.build();
+        let mut state: Bits<24> = Default::default();
+        let mut last_output = Default::default();
+        for cycle in 0..100_000_000 {
+            let (output, new_state) = counter.compute(&mut logger, cycle % 2 == 0, state);
+            state = new_state;
+            last_output = output;
+            //        println!("{} {}", output, state);
+        }
+        println!(
+            "Last output {last_output:x} (vs) {:x}",
+            (100_000_000 / 2) & 0xFF_FFFF
+        );
     }
-    println!("Last output {last_output:x}");
 }
