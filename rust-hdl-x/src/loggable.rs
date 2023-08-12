@@ -37,3 +37,13 @@ impl Loggable for u16 {
         logger.write_small(tag, *self as u64);
     }
 }
+
+impl Loggable for u32 {
+    fn allocate<L: Loggable>(tag: TagID<L>, builder: impl LogBuilder) {
+        builder.allocate(tag, 32);
+    }
+
+    fn record<L: Loggable>(&self, tag: TagID<L>, mut logger: impl Logger) {
+        logger.write_small(tag, *self as u64);
+    }
+}

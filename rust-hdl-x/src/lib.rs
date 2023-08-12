@@ -82,7 +82,7 @@ struct Bar {
 }
 
 impl Bar {
-    fn new(builder: impl LogBuilder) -> Self {
+    fn new(mut builder: impl LogBuilder) -> Self {
         let tag_input = builder.tag("input");
         let tag_output = builder.tag("output");
         let tag_state = builder.tag("state");
@@ -118,7 +118,7 @@ impl Synchronous for Bar {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 struct Foo {
     sub1: Bar,
     sub2: Bar,
@@ -129,7 +129,7 @@ struct Foo {
 }
 
 impl Foo {
-    fn new(builder: impl LogBuilder) -> Self {
+    fn new(mut builder: impl LogBuilder) -> Self {
         let tag_input = builder.tag("input");
         let tag_output = builder.tag("output");
         let tag_state = builder.tag("state");
@@ -159,8 +159,8 @@ impl Synchronous for Foo {
         // Update the submodules
         logger.log(self.tag_input, inputs);
         logger.log(self.tag_state, state);
-        let (sub1_out, sub1_state) = self.sub1.update(&mut logger, state, inputs);
-        let (sub2_out, sub2_state) = self.sub2.update(&mut logger, state, inputs);
+        let (sub1_out, sub1_state) = self.sub1.compute(&mut logger, state, inputs);
+        let (sub2_out, sub2_state) = self.sub2.compute(&mut logger, state, inputs);
         // Do our own update
         let output = MoreJunk::default();
         let state = sub1_state + sub2_state;
@@ -170,21 +170,33 @@ impl Synchronous for Foo {
     }
 }
 
-#[derive(Default, Clone, Copy, Loggable)]
+#[derive(Default, Clone, Copy, Debug)]
 enum State {
     #[default]
     Boot,
     Running,
 }
 
-#[derive(Default, Clone, Copy, Loggable)]
+impl Loggable for State {
+    fn allocate<L: Loggable>(tag: TagID<L>, builder: impl LogBuilder) {
+        builder.allocate(tag, 0)
+    }
+    fn record<L: Loggable>(&self, tag: TagID<L>, mut logger: impl Logger) {
+        match self {
+            State::Boot => logger.write_string(tag, "Boot"),
+            State::Running => logger.write_string(tag, "Running"),
+        }
+    }
+}
+
+#[derive(Default, Clone, Copy, Debug, Loggable)]
 struct Junk {
     a: bool,
     b: u8,
     c: State,
 }
 
-#[derive(Default, Copy, Clone, Loggable)]
+#[derive(Default, Copy, Clone, Debug, Loggable)]
 struct MoreJunk {
     a: Junk,
     b: Junk,
@@ -197,7 +209,6 @@ fn test_trace_setup() {
     println!("{}", tracer_builder);
     println!("{:#?}", foo);
     let mut tracer = tracer_builder.build();
-    println!("{}", tracer);
 }
 
 #[test]
@@ -230,7 +241,7 @@ struct Counter<T: Loggable> {
 }
 
 impl<T: Loggable> Counter<T> {
-    fn new(builder: impl LogBuilder) -> Self {
+    fn new(mut builder: impl LogBuilder) -> Self {
         let tag_input = builder.tag("input");
         let tag_output = builder.tag("output");
         Self {
@@ -267,17 +278,31 @@ impl<T: Loggable + Default + Copy + num_traits::ops::wrapping::WrappingAdd + num
 #[test]
 fn test_counter_with_tracing() {
     let mut logger_builder = BasicLoggerBuilder::default();
-    let counter = Counter::new::<u32>(&mut logger_builder);
+    let counter: Counter<u32> = Counter::new(&mut logger_builder);
     let mut logger = logger_builder.build();
     let mut state = 0;
     let mut last_output = 0;
-    let mut new_state = 0;
-    for cycle in 0..10_000_000 {
+    for cycle in 0..100_000_000 {
         let (output, new_state) = counter.compute(&mut logger, cycle % 2 == 0, state);
         state = new_state;
         last_output = output;
         //        println!("{} {}", output, state);
     }
     println!("Last output {last_output}");
-    println!("{}", logger);
+}
+
+#[test]
+fn test_counter_with_no_tracing() {
+    let mut logger_builder = BasicLoggerBuilder::default();
+    let counter: Counter<u32> = Counter::new(&mut logger_builder);
+    let mut logger = logger_builder.build();
+    let mut state = 0;
+    let mut last_output = 0;
+    for cycle in 0..100_000_000 {
+        let (output, new_state) = counter.compute((), cycle % 2 == 0, state);
+        state = new_state;
+        last_output = output;
+        //        println!("{} {}", output, state);
+    }
+    println!("Last output {last_output}");
 }

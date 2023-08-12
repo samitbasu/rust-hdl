@@ -27,3 +27,13 @@ impl<T: Logger> Logger for &mut T {
         (**self).write_string(tag, val)
     }
 }
+
+impl Logger for () {
+    fn write_bool<L: Loggable>(&mut self, _: TagID<L>, _: bool) {}
+
+    fn write_small<L: Loggable>(&mut self, _: TagID<L>, _: u64) {}
+
+    fn write_large<L: Loggable>(&mut self, _: TagID<L>, _: &[bool]) {}
+
+    fn write_string<L: Loggable>(&mut self, _: TagID<L>, _: &'static str) {}
+}

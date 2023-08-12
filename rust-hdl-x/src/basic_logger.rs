@@ -164,7 +164,7 @@ impl Default for BasicLoggerBuilder {
 
 impl LogBuilder for BasicLoggerBuilder {
     type SubBuilder = Self;
-    fn scope<S: Synchronous>(&self, name: &str) -> Self {
+    fn scope(&self, name: &str) -> Self {
         let name = format!("{}::{}", self.scopes.borrow().last().unwrap().name, name);
         self.scopes.borrow_mut().push(ScopeRecord {
             name,
@@ -178,15 +178,17 @@ impl LogBuilder for BasicLoggerBuilder {
 
     fn tag<L: Loggable>(&mut self, name: &str) -> TagID<L> {
         let context_id: usize = self.scopes.borrow().len() - 1;
-        let scope = &mut self.scopes.borrow_mut()[context_id];
-        scope.tags.push(TaggedSignal {
-            tag: name.to_string(),
-            data: Vec::new(),
-        });
-        let tag = TagID {
-            context: context_id,
-            id: scope.tags.len() - 1,
-            _marker: Default::default(),
+        let tag = {
+            let scope = &mut self.scopes.borrow_mut()[context_id];
+            scope.tags.push(TaggedSignal {
+                tag: name.to_string(),
+                data: Vec::new(),
+            });
+            TagID {
+                context: context_id,
+                id: scope.tags.len() - 1,
+                _marker: Default::default(),
+            }
         };
         L::allocate(tag, self);
         tag
@@ -202,7 +204,7 @@ impl LogBuilder for BasicLoggerBuilder {
         tag.data.push(signal);
     }
 
-    fn namespace<L: Loggable>(&self, name: &str) -> Self {
+    fn namespace(&self, name: &str) -> Self {
         let mut new_path = self.path.clone();
         new_path.push(name.to_string());
         Self {

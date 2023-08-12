@@ -32,7 +32,7 @@ fn derive_loggable_enum(decl: DeriveInput) -> anyhow::Result<TokenStream> {
                     fn record<L: Loggable>(&self, tag: TagID<L>, mut logger: impl Logger) {
                         match self {
                             #(
-                                Self::#variants => logger.write_string(stringify!(#variants)),
+                                Self::#variants => logger.write_string(tag, stringify!(#variants)),
                             )*
                         }
                     }
