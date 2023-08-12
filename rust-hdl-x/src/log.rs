@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, time::Duration};
+use std::marker::PhantomData;
 
 use crate::loggable::Loggable;
 

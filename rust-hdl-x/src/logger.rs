@@ -1,6 +1,7 @@
 use crate::{log::TagID, loggable::Loggable};
 
 pub trait Logger: Sized {
+    fn set_time_in_fs(&mut self, time: u64);
     fn log<L: Loggable>(&mut self, tag: TagID<L>, val: L) {
         val.record(tag, self)
     }
@@ -11,6 +12,9 @@ pub trait Logger: Sized {
 }
 
 impl<T: Logger> Logger for &mut T {
+    fn set_time_in_fs(&mut self, time: u64) {
+        (**self).set_time_in_fs(time)
+    }
     fn write_bool<L: Loggable>(&mut self, tag: TagID<L>, val: bool) {
         (**self).write_bool(tag, val)
     }
@@ -29,6 +33,8 @@ impl<T: Logger> Logger for &mut T {
 }
 
 impl Logger for () {
+    fn set_time_in_fs(&mut self, _: u64) {}
+
     fn write_bool<L: Loggable>(&mut self, _: TagID<L>, _: bool) {}
 
     fn write_small<L: Loggable>(&mut self, _: TagID<L>, _: u64) {}

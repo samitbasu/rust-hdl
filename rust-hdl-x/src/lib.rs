@@ -12,8 +12,6 @@ use rust_hdl::prelude::{freq_hz_to_period_femto, Bits};
 use rust_hdl_x_macro::Loggable;
 use synchronous::Synchronous;
 
-use crate::basic_logger::BasicLoggerBuilder;
-
 //use synchronous::Synchronous;
 
 //mod bit_iter;
@@ -35,6 +33,7 @@ pub mod synchronous;
 //pub mod tracer_builder;
 //mod vcd;
 pub mod basic_logger;
+pub mod basic_logger_builder;
 pub mod log;
 pub mod loggable;
 pub mod logger;
@@ -204,7 +203,7 @@ struct MoreJunk {
 
 #[test]
 fn test_trace_setup() {
-    let mut tracer_builder = basic_logger::BasicLoggerBuilder::default();
+    let mut tracer_builder = basic_logger_builder::BasicLoggerBuilder::default();
     let mut foo = Foo::new(&mut tracer_builder);
     println!("{}", tracer_builder);
     println!("{:#?}", foo);
@@ -277,7 +276,7 @@ impl<T: Loggable + Default + Copy + num_traits::ops::wrapping::WrappingAdd + num
 
 #[test]
 fn test_counter_with_tracing() {
-    let mut logger_builder = BasicLoggerBuilder::default();
+    let mut logger_builder = basic_logger_builder::BasicLoggerBuilder::default();
     let clock = ClockDetails {
         period_in_fs: freq_hz_to_period_femto(1e6) as u64,
         offset_in_fs: 0,
@@ -299,7 +298,7 @@ fn test_counter_with_tracing() {
 
 #[test]
 fn test_counter_with_no_tracing() {
-    let mut logger_builder = BasicLoggerBuilder::default();
+    let mut logger_builder = basic_logger_builder::BasicLoggerBuilder::default();
     let clock = ClockDetails {
         period_in_fs: freq_hz_to_period_femto(1e6) as u64,
         offset_in_fs: 0,

@@ -10,16 +10,24 @@ use crate::{
     logger::Logger,
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct TimedValue<T: Clone + PartialEq + Eq> {
+    pub(crate) time_in_fs: u64,
+    pub(crate) value: T,
+}
+
 #[derive(Debug, Clone)]
-enum LogValues {
-    Short(Vec<u64>),
-    Long(Vec<Vec<bool>>),
-    Enum(Vec<&'static str>),
+pub(crate) enum LogValues {
+    Bool(Vec<TimedValue<bool>>),
+    Short(Vec<TimedValue<u64>>),
+    Long(Vec<TimedValue<Vec<bool>>>),
+    Enum(Vec<TimedValue<&'static str>>),
 }
 
 impl LogValues {
-    fn len(&self) -> usize {
+    pub(crate) fn len(&self) -> usize {
         match self {
+            LogValues::Bool(v) => v.len(),
             LogValues::Short(v) => v.len(),
             LogValues::Long(v) => v.len(),
             LogValues::Enum(v) => v.len(),
@@ -28,19 +36,21 @@ impl LogValues {
 }
 
 #[derive(Debug, Clone)]
-struct LogSignal {
-    name: String,
-    width: usize,
-    values: LogValues,
+pub(crate) struct LogSignal {
+    pub(crate) name: String,
+    pub(crate) width: usize,
+    pub(crate) values: LogValues,
 }
 
 impl LogSignal {
-    fn new(name: &str, width: usize) -> LogSignal {
+    pub(crate) fn new(name: &str, width: usize) -> LogSignal {
         LogSignal {
             name: name.to_string(),
             width,
             values: if width == 0 {
                 LogValues::Enum(vec![])
+            } else if width == 1 {
+                LogValues::Bool(vec![])
             } else if width <= 64 {
                 LogValues::Short(vec![])
             } else {
@@ -51,9 +61,9 @@ impl LogSignal {
 }
 
 #[derive(Debug, Clone)]
-struct TaggedSignal {
-    tag: String,
-    data: Vec<LogSignal>,
+pub(crate) struct TaggedSignal {
+    pub(crate) tag: String,
+    pub(crate) data: Vec<LogSignal>,
 }
 
 impl Display for TaggedSignal {
@@ -73,9 +83,9 @@ impl Display for TaggedSignal {
 }
 
 #[derive(Debug, Clone)]
-struct ScopeRecord {
-    name: String,
-    tags: Vec<TaggedSignal>,
+pub(crate) struct ScopeRecord {
+    pub(crate) name: String,
+    pub(crate) tags: Vec<TaggedSignal>,
 }
 
 impl Display for ScopeRecord {
@@ -89,9 +99,10 @@ impl Display for ScopeRecord {
 
 #[derive(Default, Debug, Clone)]
 pub struct BasicLogger {
-    scopes: Vec<ScopeRecord>,
-    clocks: Vec<ClockDetails>,
-    field_index: usize,
+    pub(crate) scopes: Vec<ScopeRecord>,
+    pub(crate) clocks: Vec<ClockDetails>,
+    pub(crate) field_index: usize,
+    pub(crate) time_in_fs: u64,
 }
 
 impl BasicLogger {
@@ -103,141 +114,45 @@ impl BasicLogger {
 }
 
 impl Logger for BasicLogger {
+    fn set_time_in_fs(&mut self, time: u64) {
+        self.time_in_fs = time;
+    }
     fn write_bool<L: Loggable>(&mut self, tag_id: TagID<L>, value: bool) {
-        if let LogValues::Short(ref mut values) = self.signal(tag_id).values {
-            values.push(value as u64);
+        let time_in_fs = self.time_in_fs;
+        if let LogValues::Bool(ref mut values) = self.signal(tag_id).values {
+            values.push(TimedValue { time_in_fs, value });
         } else {
             panic!("Wrong type");
         }
     }
     fn write_small<L: Loggable>(&mut self, tag_id: TagID<L>, value: u64) {
+        let time_in_fs = self.time_in_fs;
         if let LogValues::Short(ref mut values) = self.signal(tag_id).values {
-            values.push(value);
+            values.push(TimedValue { time_in_fs, value });
         } else {
             panic!("Wrong type");
         }
     }
     fn write_large<L: Loggable>(&mut self, tag_id: TagID<L>, val: &[bool]) {
+        let time_in_fs = self.time_in_fs;
         if let LogValues::Long(ref mut values) = self.signal(tag_id).values {
-            values.push(val.to_vec());
+            values.push(TimedValue {
+                time_in_fs,
+                value: val.to_vec(),
+            });
         } else {
             panic!("Wrong type");
         }
     }
     fn write_string<L: Loggable>(&mut self, tag_id: TagID<L>, val: &'static str) {
+        let time_in_fs = self.time_in_fs;
         if let LogValues::Enum(ref mut values) = self.signal(tag_id).values {
-            values.push(val);
+            values.push(TimedValue {
+                time_in_fs,
+                value: val,
+            });
         } else {
             panic!("Wrong type");
-        }
-    }
-}
-
-#[derive(Clone, Debug, Default)]
-struct BasicLoggerBuilderInner {
-    scopes: Vec<ScopeRecord>,
-    clocks: Vec<ClockDetails>,
-}
-
-// I don't like the use of interior mutability here.
-// I need to redesign the API so it is not required.
-#[derive(Clone, Debug)]
-pub struct BasicLoggerBuilder {
-    inner: Rc<RefCell<BasicLoggerBuilderInner>>,
-    path: Vec<String>,
-}
-
-impl Display for BasicLoggerBuilder {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for scope in self.inner.borrow().scopes.iter() {
-            writeln!(f, "{}", scope)?;
-        }
-        Ok(())
-    }
-}
-
-impl Default for BasicLoggerBuilder {
-    fn default() -> Self {
-        Self {
-            inner: Rc::new(RefCell::new(BasicLoggerBuilderInner {
-                scopes: vec![ScopeRecord {
-                    name: "root".to_string(),
-                    tags: Vec::new(),
-                }],
-                ..Default::default()
-            })),
-            path: vec![],
-        }
-    }
-}
-
-impl LogBuilder for BasicLoggerBuilder {
-    type SubBuilder = Self;
-    fn scope(&self, name: &str) -> Self {
-        let name = format!(
-            "{}::{}",
-            self.inner.borrow().scopes.last().unwrap().name,
-            name
-        );
-        self.inner.borrow_mut().scopes.push(ScopeRecord {
-            name,
-            tags: Vec::new(),
-        });
-        Self {
-            inner: self.inner.clone(),
-            path: vec![],
-        }
-    }
-
-    fn tag<L: Loggable>(&mut self, name: &str) -> TagID<L> {
-        let context_id: usize = self.inner.borrow().scopes.len() - 1;
-        let tag = {
-            let scope = &mut self.inner.borrow_mut().scopes[context_id];
-            scope.tags.push(TaggedSignal {
-                tag: name.to_string(),
-                data: Vec::new(),
-            });
-            TagID {
-                context: context_id,
-                id: scope.tags.len() - 1,
-                _marker: Default::default(),
-            }
-        };
-        L::allocate(tag, self);
-        tag
-    }
-
-    fn allocate<L: Loggable>(&self, tag: TagID<L>, width: usize) {
-        let name = self.path.join("::");
-        let signal = LogSignal::new(&name, width);
-        let context_id: usize = tag.context;
-        let scope = &mut self.inner.borrow_mut().scopes[context_id];
-        let tag_id: usize = tag.id;
-        let tag = &mut scope.tags[tag_id];
-        tag.data.push(signal);
-    }
-
-    fn namespace(&self, name: &str) -> Self {
-        let mut new_path = self.path.clone();
-        new_path.push(name.to_string());
-        Self {
-            inner: self.inner.clone(),
-            path: new_path,
-        }
-    }
-
-    fn add_clock(&mut self, clock: ClockDetails) {
-        self.inner.borrow_mut().clocks.push(clock);
-    }
-}
-
-impl BasicLoggerBuilder {
-    pub fn build(self) -> BasicLogger {
-        let inner = self.inner.take();
-        BasicLogger {
-            scopes: inner.scopes,
-            clocks: inner.clocks,
-            field_index: 0,
         }
     }
 }

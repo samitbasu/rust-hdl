@@ -43,17 +43,26 @@ impl<const N: usize> Synchronous for BitCounter<N> {
 
 #[cfg(test)]
 mod tests {
-    use crate::basic_logger::BasicLoggerBuilder;
+    use crate::{basic_logger_builder::BasicLoggerBuilder, log::ClockDetails};
 
     use super::*;
     #[test]
     fn test_counter_with_bits_argument() {
         let mut logger_builder = BasicLoggerBuilder::default();
+        let clock_period = 1_000_000_000;
+        logger_builder.add_clock(ClockDetails {
+            period_in_fs: clock_period,
+            offset_in_fs: 0,
+            initial_state: false,
+        });
         let counter: BitCounter<24> = BitCounter::new(&mut logger_builder);
         let mut logger = logger_builder.build();
         let mut state: Bits<24> = Default::default();
         let mut last_output = Default::default();
+        let mut time = 0;
         for cycle in 0..100_000_000 {
+            logger.set_time_in_fs(time);
+            time += clock_period;
             let (output, new_state) = counter.compute(&mut logger, cycle % 2 == 0, state);
             state = new_state;
             last_output = output;
