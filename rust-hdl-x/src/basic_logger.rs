@@ -1,13 +1,12 @@
 use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
     fmt::{Display, Formatter},
     io::Write,
-    rc::Rc,
 };
 
+use indexmap::IndexMap;
+
 use crate::{
-    log::{ClockDetails, LogBuilder, TagID},
+    log::{ClockDetails, TagID},
     loggable::Loggable,
     logger::Logger,
 };
@@ -84,30 +83,30 @@ impl Display for TaggedSignal {
     }
 }
 
-enum ScopeNode {
+enum ScopeNode<'a> {
     Internal {
-        children: HashMap<String, ScopeNode>,
+        children: IndexMap<String, ScopeNode<'a>>,
     },
     Leaf {
-        name: String,
         width: usize,
         code: Option<vcd::IdCode>,
+        signal: &'a LogSignal,
     },
 }
 
-impl ScopeNode {
+impl<'a> ScopeNode<'a> {
     fn new_scope() -> Self {
         ScopeNode::Internal {
-            children: HashMap::new(),
+            children: IndexMap::new(),
         }
     }
-    fn children(&mut self) -> &mut HashMap<String, ScopeNode> {
+    fn children(&mut self) -> &mut IndexMap<String, ScopeNode<'a>> {
         match self {
             ScopeNode::Internal { children } => children,
             ScopeNode::Leaf { .. } => panic!("Leaf node"),
         }
     }
-    fn children_at(&mut self, path: &[&str]) -> &mut HashMap<String, ScopeNode> {
+    fn children_at(&mut self, path: &[&str]) -> &mut IndexMap<String, ScopeNode<'a>> {
         if let Some((&first, rest)) = path.split_first() {
             self.children()
                 .entry(first.to_owned())
@@ -122,8 +121,8 @@ impl ScopeNode {
 fn build_scope_tree(scopes: &[ScopeRecord]) -> ScopeNode {
     let mut root = ScopeNode::new_scope();
     for scope in scopes {
+        println!("scope name: {}", scope.name);
         let path: Vec<_> = scope.name.split("::").collect();
-        let children = root.children_at(&path);
         for tag in &scope.tags {
             // There are two possibilities for tags.
             // One is a tag that stores a struct, in which case,
@@ -133,24 +132,32 @@ fn build_scope_tree(scopes: &[ScopeRecord]) -> ScopeNode {
             // treat the tag as a scope.  In the second, we treat it as a signal.
             if tag.data.len() == 1 {
                 let signal = &tag.data[0];
-                children
+                root.children_at(&path)
                     .entry(tag.tag.clone())
                     .or_insert_with(|| ScopeNode::Leaf {
                         width: signal.width,
                         code: None,
+                        signal,
                     });
             } else {
-                let children = children
+                println!("Structured tag {}", tag.tag);
+                let tag_root = root
+                    .children_at(&path)
                     .entry(tag.tag.clone())
-                    .or_insert_with(ScopeNode::new_scope)
-                    .children();
+                    .or_insert_with(ScopeNode::new_scope);
                 for signal in &tag.data {
-                    children
-                        .entry(signal.name.clone())
-                        .or_insert_with(|| ScopeNode::Leaf {
-                            width: signal.width,
-                            code: None,
-                        });
+                    println!("signal name: {}", signal.name);
+                    let sub_path: Vec<_> = signal.name.split("::").collect();
+                    if let Some((item, path)) = sub_path.split_last() {
+                        tag_root
+                            .children_at(path)
+                            .entry(item.to_string())
+                            .or_insert_with(|| ScopeNode::Leaf {
+                                width: signal.width,
+                                code: None,
+                                signal,
+                            });
+                    }
                 }
             }
         }
@@ -158,7 +165,7 @@ fn build_scope_tree(scopes: &[ScopeRecord]) -> ScopeNode {
     root
 }
 
-impl ScopeNode {
+impl<'a> ScopeNode<'a> {
     fn dump(&self, indent_level: usize) {
         match self {
             ScopeNode::Internal { children } => {
@@ -167,21 +174,29 @@ impl ScopeNode {
                     child.dump(indent_level + 1);
                 }
             }
-            ScopeNode::Leaf { width, code } => {
+            ScopeNode::Leaf {
+                width,
+                code,
+                signal,
+            } => {
                 println!("{}[{}] {:?}", "  ".repeat(indent_level), width, code);
             }
         }
     }
-    fn register<W: Write>(&mut self, v: &mut vcd::Writer<W>) {
+    fn register<W: Write>(&mut self, name: &str, v: &mut vcd::Writer<W>) {
         match self {
             ScopeNode::Internal { children } => {
                 for (name, child) in children {
                     v.add_module(name);
-                    child.register(v);
+                    child.register(name.as_str(), v);
                     v.upscope();
                 }
             }
-            ScopeNode::Leaf { width, code } => *code = Some(v.add_wire(width, &[]).unwrap()),
+            ScopeNode::Leaf {
+                width,
+                code,
+                signal: _,
+            } => *code = Some(v.add_wire(*width as u32, name).unwrap()),
         }
     }
 }
@@ -238,12 +253,11 @@ impl BasicLogger {
         let tag = &mut scope.tags[tag_id.id];
         &mut tag.data[self.field_index]
     }
-    fn vcd<W: Write>(self, w: W) -> anyhow::Result<()> {
+    pub fn vcd<W: Write>(self, w: W) -> anyhow::Result<()> {
         let mut writer = vcd::Writer::new(w);
         writer.timescale(1, vcd::TimescaleUnit::FS)?;
         let mut tree = build_scope_tree(&self.scopes);
-        let mut ptr = &tree;
-
+        tree.register("", &mut writer);
         Ok(())
     }
     pub(crate) fn dump(&self) {

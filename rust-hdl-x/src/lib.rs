@@ -189,10 +189,17 @@ impl Loggable for State {
 }
 
 #[derive(Default, Clone, Copy, Debug, Loggable)]
+struct DeepJunk {
+    x: u32,
+    y: u16,
+}
+
+#[derive(Default, Clone, Copy, Debug, Loggable)]
 struct Junk {
     a: bool,
     b: u8,
     c: State,
+    d: DeepJunk,
 }
 
 #[derive(Default, Copy, Clone, Debug, Loggable)]
@@ -209,7 +216,10 @@ fn test_trace_setup() {
     println!("{:#?}", foo);
     let logger = logger_builder.build();
     println!("{}", logger);
-    logger.dump();
+    let mut vcd = vec![];
+    logger.vcd(&mut vcd).unwrap();
+    //    println!("{}", String::from_utf8(vcd).unwrap());
+    std::fs::write("empty.vcd", vcd).unwrap();
 }
 
 #[test]
