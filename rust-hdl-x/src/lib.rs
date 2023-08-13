@@ -203,11 +203,13 @@ struct MoreJunk {
 
 #[test]
 fn test_trace_setup() {
-    let mut tracer_builder = basic_logger_builder::BasicLoggerBuilder::default();
-    let mut foo = Foo::new(&mut tracer_builder);
-    println!("{}", tracer_builder);
+    let mut logger_builder = basic_logger_builder::BasicLoggerBuilder::default();
+    let foo = Foo::new(&mut logger_builder);
+    println!("{}", logger_builder);
     println!("{:#?}", foo);
-    let mut tracer = tracer_builder.build();
+    let logger = logger_builder.build();
+    println!("{}", logger);
+    logger.dump();
 }
 
 #[test]
@@ -294,6 +296,7 @@ fn test_counter_with_tracing() {
         //        println!("{} {}", output, state);
     }
     println!("Last output {last_output}");
+    println!("{}", logger);
 }
 
 #[test]
