@@ -258,6 +258,9 @@ impl BasicLogger {
         writer.timescale(1, vcd::TimescaleUnit::FS)?;
         let mut tree = build_scope_tree(&self.scopes);
         tree.register("", &mut writer);
+        writer.enddefinitions()?;
+        writer.timestamp(0)?;
+        writer.timestamp(1)?;
         Ok(())
     }
     pub(crate) fn dump(&self) {
