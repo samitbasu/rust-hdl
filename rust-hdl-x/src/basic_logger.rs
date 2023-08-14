@@ -83,6 +83,12 @@ impl Display for TaggedSignal {
     }
 }
 
+struct SignalPointer<'a> {
+    signal: &'a LogSignal,
+    index: usize,
+    code: vcd::IdCode,
+}
+
 enum ScopeNode<'a> {
     Internal {
         children: IndexMap<String, ScopeNode<'a>>,
@@ -163,6 +169,24 @@ fn build_scope_tree(scopes: &[ScopeRecord]) -> ScopeNode {
         }
     }
     root
+}
+
+fn build_signal_pointer_list<'a>(node: &ScopeNode<'a>) -> Vec<SignalPointer<'a>> {
+    match node {
+        ScopeNode::Internal { children } => children
+            .iter()
+            .flat_map(|(_, child)| build_signal_pointer_list(child))
+            .collect(),
+        ScopeNode::Leaf {
+            width: _,
+            code,
+            signal,
+        } => vec![SignalPointer {
+            signal,
+            index: 0,
+            code: code.unwrap(),
+        }],
+    }
 }
 
 impl<'a> ScopeNode<'a> {
@@ -260,6 +284,16 @@ impl BasicLogger {
         tree.register("", &mut writer);
         writer.enddefinitions()?;
         writer.timestamp(0)?;
+        let mut signal_pointers = build_signal_pointer_list(&tree);
+        let mut current_time = 0;
+        let mut next_time: Option<u64> = None;
+        // Find the next sample time (if any), and log any values that have the current timestamp
+        for ptr in &signal_pointers {
+            if let Some(time) = ptr.signal.values.get(ptr.index).map(|v| v.time_in_fs) {}
+        }
+        for ptr in signal_pointers {
+            println!("{}: {} -> {}", ptr.signal.name, ptr.index, ptr.code);
+        }
         writer.timestamp(1)?;
         Ok(())
     }
