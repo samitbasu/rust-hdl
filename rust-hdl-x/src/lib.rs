@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    fmt::{Display, Formatter},
+    fmt::{Display, Formatter, LowerHex},
     rc::Rc,
 };
 
@@ -17,6 +17,7 @@ use synchronous::Synchronous;
 //mod bit_iter;
 //mod bit_slice;
 mod counter;
+mod rev_bit_iter;
 //mod derive_vcd;
 //mod pulser;
 //pub mod shot;
@@ -262,8 +263,14 @@ impl<T: Loggable> Counter<T> {
     }
 }
 
-impl<T: Loggable + Default + Copy + num_traits::ops::wrapping::WrappingAdd + num_traits::One>
-    Synchronous for Counter<T>
+impl<
+        T: Loggable
+            + Default
+            + Copy
+            + num_traits::ops::wrapping::WrappingAdd
+            + num_traits::One
+            + LowerHex,
+    > Synchronous for Counter<T>
 {
     type State = T;
     type Input = bool;
@@ -299,14 +306,22 @@ fn test_counter_with_tracing() {
     let mut logger = logger_builder.build();
     let mut state = 0;
     let mut last_output = 0;
-    for cycle in 0..100_000_000 {
+    let now = std::time::Instant::now();
+    for cycle in 0..10_000_000 {
+        logger.set_time_in_fs(cycle * clock.period_in_fs);
         let (output, new_state) = counter.compute(&mut logger, cycle % 2 == 0, state);
         state = new_state;
         last_output = output;
         //        println!("{} {}", output, state);
     }
     println!("Last output {last_output}");
+    println!("Simulation time: {}", now.elapsed().as_secs_f64());
+    let now = std::time::Instant::now();
     println!("{}", logger);
+    let mut vcd = vec![];
+    logger.vcd(&mut vcd).unwrap();
+    println!("VCD generation time: {}", now.elapsed().as_secs_f64());
+    std::fs::write("counter.vcd", vcd).unwrap();
 }
 
 #[test]

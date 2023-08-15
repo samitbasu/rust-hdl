@@ -4,11 +4,13 @@ use std::{
 };
 
 use indexmap::IndexMap;
+use vcd::Value;
 
 use crate::{
     log::{ClockDetails, TagID},
     loggable::Loggable,
     logger::Logger,
+    rev_bit_iter::RevBitIter,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -286,15 +288,71 @@ impl BasicLogger {
         writer.timestamp(0)?;
         let mut signal_pointers = build_signal_pointer_list(&tree);
         let mut current_time = 0;
-        let mut next_time: Option<u64> = None;
         // Find the next sample time (if any), and log any values that have the current timestamp
-        for ptr in &signal_pointers {
-            if let Some(time) = ptr.signal.values.get(ptr.index).map(|v| v.time_in_fs) {}
+        let mut keep_running = true;
+        while keep_running {
+            keep_running = false;
+            let mut next_time = !0;
+            for ptr in &mut signal_pointers {
+                match ptr.signal.values {
+                    LogValues::Bool(ref values) => {
+                        if let Some(value) = values.get(ptr.index) {
+                            if value.time_in_fs == current_time {
+                                writer.change_scalar(ptr.code, value.value)?;
+                                ptr.index += 1;
+                            } else {
+                                next_time = next_time.min(value.time_in_fs);
+                            }
+                            keep_running = true;
+                        }
+                    }
+                    LogValues::Short(ref values) => {
+                        if let Some(value) = values.get(ptr.index) {
+                            if value.time_in_fs == current_time {
+                                writer.change_vector(
+                                    ptr.code,
+                                    RevBitIter::new(value.value, ptr.signal.width as u64)
+                                        .map(|x| x.into()),
+                                )?;
+                                ptr.index += 1;
+                            } else {
+                                next_time = next_time.min(value.time_in_fs);
+                            }
+                            keep_running = true;
+                        }
+                    }
+                    LogValues::Long(ref values) => {
+                        if let Some(value) = values.get(ptr.index) {
+                            if value.time_in_fs == current_time {
+                                writer.change_vector(
+                                    ptr.code,
+                                    value.value.iter().map(|x| (*x).into()).rev(),
+                                )?;
+                                ptr.index += 1;
+                            } else {
+                                next_time = next_time.min(value.time_in_fs);
+                            }
+                            keep_running = true;
+                        }
+                    }
+                    LogValues::Enum(ref values) => {
+                        if let Some(value) = values.get(ptr.index) {
+                            if value.time_in_fs == current_time {
+                                writer.change_string(ptr.code, value.value)?;
+                                ptr.index += 1;
+                            } else {
+                                next_time = next_time.min(value.time_in_fs);
+                            }
+                            keep_running = true;
+                        }
+                    }
+                }
+            }
+            if next_time != !0 {
+                current_time = next_time;
+                writer.timestamp(current_time)?;
+            }
         }
-        for ptr in signal_pointers {
-            println!("{}: {} -> {}", ptr.signal.name, ptr.index, ptr.code);
-        }
-        writer.timestamp(1)?;
         Ok(())
     }
     pub(crate) fn dump(&self) {
