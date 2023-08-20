@@ -43,34 +43,31 @@ impl<const N: usize> Synchronous for BitCounter<N> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{basic_logger_builder::BasicLoggerBuilder, log::ClockDetails};
+    use rust_hdl::prelude::freq_hz_to_period_femto;
+
+    use crate::{
+        basic_logger_builder::BasicLoggerBuilder, log::ClockDetails, single_clock_simulation,
+    };
 
     use super::*;
     #[test]
     fn test_counter_with_bits_argument() {
         let mut logger_builder = BasicLoggerBuilder::default();
-        let clock_period = 1_000_000_000;
-        logger_builder.add_clock(ClockDetails {
-            period_in_fs: clock_period,
-            offset_in_fs: 0,
-            initial_state: false,
-        });
+        let clock_period = freq_hz_to_period_femto(1e6) as u64;
+        logger_builder.add_simple_clock(clock_period);
         let counter: BitCounter<24> = BitCounter::new(&mut logger_builder);
-        let mut logger = logger_builder.build();
-        let mut state: Bits<24> = Default::default();
-        let mut last_output = Default::default();
-        let mut time = 0;
-        for cycle in 0..100_000_000 {
-            logger.set_time_in_fs(time);
-            time += clock_period;
-            let (output, new_state) = counter.compute(&mut logger, cycle % 2 == 0, state);
-            state = new_state;
-            last_output = output;
-            //        println!("{} {}", output, state);
-        }
-        println!(
-            "Last output {last_output:x} (vs) {:x}",
-            (100_000_000 / 2) & 0xFF_FFFF
+        let logger = logger_builder.build();
+        let mut last_output: Bits<24> = Default::default();
+        single_clock_simulation(
+            logger,
+            counter,
+            clock_period,
+            100_000_000,
+            |cycle, output| {
+                last_output = output;
+                cycle % 2 == 0
+            },
         );
+        assert_eq!(last_output, (100_000_000 / 2) & 0xFF_FFFF);
     }
 }

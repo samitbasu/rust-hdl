@@ -5,7 +5,7 @@ use crate::{
     logger::Logger,
 };
 
-pub trait Loggable: Sized {
+pub trait Loggable: Sized + Copy + Clone + Default + PartialEq {
     fn allocate<L: Loggable>(tag: TagID<L>, builder: impl LogBuilder);
     fn record<L: Loggable>(&self, tag: TagID<L>, logger: impl Logger);
 }

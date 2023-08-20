@@ -84,7 +84,9 @@ pub fn derive_vcd_writeable_struct(decl: DeriveInput) -> anyhow::Result<TokenStr
 #[cfg(test)]
 fn assert_tokens_eq(expected: &TokenStream, actual: &TokenStream) {
     let expected = expected.to_string();
+    let expected = prettyplease::unparse(&syn::parse_file(&expected).unwrap());
     let actual = actual.to_string();
+    let actual = prettyplease::unparse(&syn::parse_file(&actual).unwrap());  
 
     if expected != actual {
         println!(
@@ -229,6 +231,33 @@ fn test_loggable_proc_macro() {
                 self.nest_1.record(&mut logger);
                 self.nest_2.record(&mut logger);
                 self.nest_3.record(&mut logger);
+            }
+        }
+    };
+    assert_tokens_eq(&expected, &output);
+}
+
+#[test]
+fn test_loggable_with_struct() {
+    let decl = quote!(
+        pub struct Inputs {
+            pub input: u32,
+            pub write: bool,
+            pub read: bool,
+        }
+    );
+    let output = derive_loggable(decl).unwrap();
+    let expected = quote! {
+        impl Loggable for Inputs {
+            fn allocate(builder: impl LogBuilder) {
+                <u32 as Loggable>::allocate(builder.namespace(stringify!(input)));
+                <bool as Loggable>::allocate(builder.namespace(stringify!(write)));
+                <bool as Loggable>::allocate(builder.namespace(stringify!(read)));
+            }
+            fn record(&self, mut logger: impl Logger) {
+                self.input.record(&mut logger);
+                self.write.record(&mut logger);
+                self.read.record(&mut logger);
             }
         }
     };

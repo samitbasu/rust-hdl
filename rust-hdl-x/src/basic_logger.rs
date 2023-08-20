@@ -4,7 +4,8 @@ use std::{
 };
 
 use indexmap::IndexMap;
-use vcd::Value;
+use serde::{Deserialize, Serialize};
+use vcd::{SimulationCommand, Value};
 
 use crate::{
     log::{ClockDetails, TagID},
@@ -13,21 +14,22 @@ use crate::{
     rev_bit_iter::RevBitIter,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct TimedValue<T: Clone + PartialEq + Eq> {
     pub(crate) time_in_fs: u64,
     pub(crate) value: T,
 }
 
-#[derive(Debug, Clone)]
-pub(crate) enum LogValues {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) enum LogValues<'a> {
     Bool(Vec<TimedValue<bool>>),
     Short(Vec<TimedValue<u64>>),
     Long(Vec<TimedValue<Vec<bool>>>),
-    Enum(Vec<TimedValue<&'static str>>),
+    #[serde(borrow)]
+    Enum(Vec<TimedValue<&'a str>>),
 }
 
-impl LogValues {
+impl<'a> LogValues<'a> {
     pub(crate) fn len(&self) -> usize {
         match self {
             LogValues::Bool(v) => v.len(),
@@ -38,17 +40,18 @@ impl LogValues {
     }
 }
 
-#[derive(Debug, Clone)]
-pub(crate) struct LogSignal {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct LogSignal<'a> {
     pub(crate) name: String,
     pub(crate) width: usize,
-    pub(crate) values: LogValues,
+    #[serde(borrow)]
+    pub(crate) values: LogValues<'a>,
 }
 
-impl LogSignal {
-    pub(crate) fn new(name: &str, width: usize) -> LogSignal {
+impl<'a> LogSignal<'a> {
+    pub(crate) fn new(name: String, width: usize) -> LogSignal<'a> {
         LogSignal {
-            name: name.to_string(),
+            name,
             width,
             values: if width == 0 {
                 LogValues::Enum(vec![])
@@ -63,13 +66,14 @@ impl LogSignal {
     }
 }
 
-#[derive(Debug, Clone)]
-pub(crate) struct TaggedSignal {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct TaggedSignal<'a> {
     pub(crate) tag: String,
-    pub(crate) data: Vec<LogSignal>,
+    #[serde(borrow)]
+    pub(crate) data: Vec<LogSignal<'a>>,
 }
 
-impl Display for TaggedSignal {
+impl<'a> Display for TaggedSignal<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for signal in &self.data {
             writeln!(
@@ -86,9 +90,10 @@ impl Display for TaggedSignal {
 }
 
 struct SignalPointer<'a> {
-    signal: &'a LogSignal,
+    signal: &'a LogSignal<'static>,
     index: usize,
     code: vcd::IdCode,
+    code_as_bytes: Vec<u8>,
 }
 
 enum ScopeNode<'a> {
@@ -98,7 +103,7 @@ enum ScopeNode<'a> {
     Leaf {
         width: usize,
         code: Option<vcd::IdCode>,
-        signal: &'a LogSignal,
+        signal: &'a LogSignal<'static>,
     },
 }
 
@@ -126,53 +131,6 @@ impl<'a> ScopeNode<'a> {
     }
 }
 
-fn build_scope_tree(scopes: &[ScopeRecord]) -> ScopeNode {
-    let mut root = ScopeNode::new_scope();
-    for scope in scopes {
-        println!("scope name: {}", scope.name);
-        let path: Vec<_> = scope.name.split("::").collect();
-        for tag in &scope.tags {
-            // There are two possibilities for tags.
-            // One is a tag that stores a struct, in which case,
-            // there are named elements beneath the tag.  In
-            // the other case, the tag just holds a single data element.
-            // We treat these differently - in the first case, we
-            // treat the tag as a scope.  In the second, we treat it as a signal.
-            if tag.data.len() == 1 {
-                let signal = &tag.data[0];
-                root.children_at(&path)
-                    .entry(tag.tag.clone())
-                    .or_insert_with(|| ScopeNode::Leaf {
-                        width: signal.width,
-                        code: None,
-                        signal,
-                    });
-            } else {
-                println!("Structured tag {}", tag.tag);
-                let tag_root = root
-                    .children_at(&path)
-                    .entry(tag.tag.clone())
-                    .or_insert_with(ScopeNode::new_scope);
-                for signal in &tag.data {
-                    println!("signal name: {}", signal.name);
-                    let sub_path: Vec<_> = signal.name.split("::").collect();
-                    if let Some((item, path)) = sub_path.split_last() {
-                        tag_root
-                            .children_at(path)
-                            .entry(item.to_string())
-                            .or_insert_with(|| ScopeNode::Leaf {
-                                width: signal.width,
-                                code: None,
-                                signal,
-                            });
-                    }
-                }
-            }
-        }
-    }
-    root
-}
-
 fn build_signal_pointer_list<'a>(node: &ScopeNode<'a>) -> Vec<SignalPointer<'a>> {
     match node {
         ScopeNode::Internal { children } => children
@@ -187,6 +145,7 @@ fn build_signal_pointer_list<'a>(node: &ScopeNode<'a>) -> Vec<SignalPointer<'a>>
             signal,
             index: 0,
             code: code.unwrap(),
+            code_as_bytes: code.unwrap().to_string().into_bytes(),
         }],
     }
 }
@@ -227,13 +186,14 @@ impl<'a> ScopeNode<'a> {
     }
 }
 
-#[derive(Debug, Clone)]
-pub(crate) struct ScopeRecord {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct ScopeRecord<'a> {
     pub(crate) name: String,
-    pub(crate) tags: Vec<TaggedSignal>,
+    #[serde(borrow)]
+    pub(crate) tags: Vec<TaggedSignal<'a>>,
 }
 
-impl Display for ScopeRecord {
+impl<'a> Display for ScopeRecord<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for tag in &self.tags {
             for signal in &tag.data {
@@ -252,15 +212,16 @@ impl Display for ScopeRecord {
     }
 }
 
-#[derive(Default, Debug, Clone)]
-pub struct BasicLogger {
-    pub(crate) scopes: Vec<ScopeRecord>,
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct BasicLogger<'a> {
+    #[serde(borrow)]
+    pub(crate) scopes: Vec<ScopeRecord<'a>>,
     pub(crate) clocks: Vec<ClockDetails>,
     pub(crate) field_index: usize,
     pub(crate) time_in_fs: u64,
 }
 
-impl Display for BasicLogger {
+impl<'a> Display for BasicLogger<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for scope in &self.scopes {
             writeln!(f, "{}", scope)?;
@@ -273,77 +234,180 @@ impl Display for BasicLogger {
 // build a tree of scope names for writing to the VCD file
 // in a hierarchical manner.
 
-impl BasicLogger {
-    fn signal<L: Loggable>(&mut self, tag_id: TagID<L>) -> &mut LogSignal {
+impl BasicLogger<'static> {
+    fn signal<L: Loggable>(&mut self, tag_id: TagID<L>) -> &mut LogSignal<'static> {
         let scope = &mut self.scopes[tag_id.context];
         let tag = &mut scope.tags[tag_id.id];
-        &mut tag.data[self.field_index]
+        let len = tag.data.len();
+        let ret = &mut tag.data[self.field_index];
+        self.field_index = (self.field_index + 1) % len;
+        ret
+    }
+    fn build_scope_tree(&self) -> ScopeNode {
+        let mut root = ScopeNode::new_scope();
+        for scope in &self.scopes {
+            println!("scope name: {}", scope.name);
+            let path: Vec<_> = scope.name.split("::").collect();
+            for tag in &scope.tags {
+                // There are two possibilities for tags.
+                // One is a tag that stores a struct, in which case,
+                // there are named elements beneath the tag.  In
+                // the other case, the tag just holds a single data element.
+                // We treat these differently - in the first case, we
+                // treat the tag as a scope.  In the second, we treat it as a signal.
+                if tag.data.len() == 1 {
+                    let signal = &tag.data[0];
+                    root.children_at(&path)
+                        .entry(tag.tag.clone())
+                        .or_insert_with(|| ScopeNode::Leaf {
+                            width: signal.width,
+                            code: None,
+                            signal,
+                        });
+                } else {
+                    println!("Structured tag {}", tag.tag);
+                    let tag_root = root
+                        .children_at(&path)
+                        .entry(tag.tag.clone())
+                        .or_insert_with(ScopeNode::new_scope);
+                    for signal in &tag.data {
+                        println!("signal name: {}", signal.name);
+                        let sub_path: Vec<_> = signal.name.split("::").collect();
+                        if let Some((item, path)) = sub_path.split_last() {
+                            tag_root
+                                .children_at(path)
+                                .entry(item.to_string())
+                                .or_insert_with(|| ScopeNode::Leaf {
+                                    width: signal.width,
+                                    code: None,
+                                    signal,
+                                });
+                        }
+                    }
+                }
+            }
+        }
+        root
     }
     pub fn vcd<W: Write>(self, w: W) -> anyhow::Result<()> {
         let mut writer = vcd::Writer::new(w);
         writer.timescale(1, vcd::TimescaleUnit::FS)?;
-        let mut tree = build_scope_tree(&self.scopes);
+        writer.add_module("top")?;
+        let clocks = self
+            .clocks
+            .iter()
+            .map(|c| {
+                (
+                    c,
+                    writer
+                        .add_wire(1, &c.name)
+                        .unwrap()
+                        .to_string()
+                        .into_bytes(),
+                )
+            })
+            .collect::<Vec<_>>();
+        let mut tree = self.build_scope_tree();
         tree.register("", &mut writer);
+        writer.upscope()?;
         writer.enddefinitions()?;
         writer.timestamp(0)?;
         let mut signal_pointers = build_signal_pointer_list(&tree);
         let mut current_time = 0;
         // Find the next sample time (if any), and log any values that have the current timestamp
         let mut keep_running = true;
+        let mut sbuf = [0_u8; 256];
         while keep_running {
             keep_running = false;
             let mut next_time = !0;
-            for ptr in &mut signal_pointers {
-                match ptr.signal.values {
-                    LogValues::Bool(ref values) => {
-                        if let Some(value) = values.get(ptr.index) {
-                            if value.time_in_fs == current_time {
-                                writer.change_scalar(ptr.code, value.value)?;
-                                ptr.index += 1;
-                            } else {
-                                next_time = next_time.min(value.time_in_fs);
+            // Write states for each clock
+            for (clock, code) in &clocks {
+                if clock.pos_edge_at(current_time) {
+                    writer.writer().write_all(b"1")?;
+                    writer.writer().write_all(code)?;
+                    writer.writer().write_all(b"\n")?;
+                } else if clock.neg_edge_at(current_time) {
+                    writer.writer().write_all(b"0")?;
+                    writer.writer().write_all(code)?;
+                    writer.writer().write_all(b"\n")?;
+                }
+                next_time = next_time.min(clock.next_edge_after(current_time));
+            }
+            let mut found_match = true;
+            while found_match {
+                found_match = false;
+                for ptr in &mut signal_pointers {
+                    match ptr.signal.values {
+                        LogValues::Bool(ref values) => {
+                            if let Some(value) = values.get(ptr.index) {
+                                if value.time_in_fs == current_time {
+                                    writer.writer().write_all(if value.value {
+                                        b"1"
+                                    } else {
+                                        b"0"
+                                    })?;
+                                    writer.writer().write_all(&ptr.code_as_bytes)?;
+                                    writer.writer().write_all(b"\n")?;
+                                    ptr.index += 1;
+                                    found_match = true;
+                                } else {
+                                    next_time = next_time.min(value.time_in_fs);
+                                }
+                                keep_running = true;
                             }
-                            keep_running = true;
                         }
-                    }
-                    LogValues::Short(ref values) => {
-                        if let Some(value) = values.get(ptr.index) {
-                            if value.time_in_fs == current_time {
-                                writer.change_vector(
-                                    ptr.code,
-                                    RevBitIter::new(value.value, ptr.signal.width as u64)
-                                        .map(|x| x.into()),
-                                )?;
-                                ptr.index += 1;
-                            } else {
-                                next_time = next_time.min(value.time_in_fs);
+                        LogValues::Short(ref values) => {
+                            if let Some(value) = values.get(ptr.index) {
+                                if value.time_in_fs == current_time {
+                                    sbuf[0] = b'b';
+                                    let n = ptr.signal.width;
+                                    for i in 0..n {
+                                        sbuf[i + 1] = if value.value & (1 << (n - 1 - i)) != 0 {
+                                            b'1'
+                                        } else {
+                                            b'0'
+                                        }
+                                    }
+                                    sbuf[ptr.signal.width + 1] = b' ';
+                                    writer
+                                        .writer()
+                                        .write_all(&sbuf[0..(ptr.signal.width + 2)])?;
+                                    writer.writer().write_all(&ptr.code_as_bytes)?;
+                                    writer.writer().write_all(&[b'\n'])?;
+                                    ptr.index += 1;
+                                    found_match = true;
+                                } else {
+                                    next_time = next_time.min(value.time_in_fs);
+                                }
+                                keep_running = true;
                             }
-                            keep_running = true;
                         }
-                    }
-                    LogValues::Long(ref values) => {
-                        if let Some(value) = values.get(ptr.index) {
-                            if value.time_in_fs == current_time {
-                                writer.change_vector(
-                                    ptr.code,
-                                    value.value.iter().map(|x| (*x).into()).rev(),
-                                )?;
-                                ptr.index += 1;
-                            } else {
-                                next_time = next_time.min(value.time_in_fs);
+                        LogValues::Long(ref values) => {
+                            if let Some(value) = values.get(ptr.index) {
+                                if value.time_in_fs == current_time {
+                                    writer.change_vector(
+                                        ptr.code,
+                                        value.value.iter().map(|x| (*x).into()).rev(),
+                                    )?;
+                                    ptr.index += 1;
+                                    found_match = true;
+                                } else {
+                                    next_time = next_time.min(value.time_in_fs);
+                                }
+                                keep_running = true;
                             }
-                            keep_running = true;
                         }
-                    }
-                    LogValues::Enum(ref values) => {
-                        if let Some(value) = values.get(ptr.index) {
-                            if value.time_in_fs == current_time {
-                                writer.change_string(ptr.code, value.value)?;
-                                ptr.index += 1;
-                            } else {
-                                next_time = next_time.min(value.time_in_fs);
+                        LogValues::Enum(ref values) => {
+                            if let Some(value) = values.get(ptr.index) {
+                                if value.time_in_fs == current_time {
+                                    writer.change_string(ptr.code, value.value)?;
+                                    ptr.index += 1;
+                                    found_match = true;
+                                } else {
+                                    next_time = next_time.min(value.time_in_fs);
+                                }
+                                keep_running = true;
                             }
-                            keep_running = true;
                         }
                     }
                 }
@@ -356,12 +420,12 @@ impl BasicLogger {
         Ok(())
     }
     pub(crate) fn dump(&self) {
-        let tree = build_scope_tree(&self.scopes);
+        let tree = self.build_scope_tree();
         tree.dump(0);
     }
 }
 
-impl Logger for BasicLogger {
+impl Logger for BasicLogger<'static> {
     fn set_time_in_fs(&mut self, time: u64) {
         self.time_in_fs = time;
     }

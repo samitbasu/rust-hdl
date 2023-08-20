@@ -1,6 +1,7 @@
 use std::{
     cell::RefCell,
     fmt::{Display, Formatter, LowerHex},
+    io::BufWriter,
     rc::Rc,
 };
 
@@ -38,6 +39,9 @@ pub mod basic_logger_builder;
 pub mod log;
 pub mod loggable;
 pub mod logger;
+
+pub mod reg_fifo;
+pub mod reg_fifo2;
 
 #[ignore]
 #[test]
@@ -170,7 +174,7 @@ impl Synchronous for Foo {
     }
 }
 
-#[derive(Default, Clone, Copy, Debug)]
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
 enum State {
     #[default]
     Boot,
@@ -189,13 +193,13 @@ impl Loggable for State {
     }
 }
 
-#[derive(Default, Clone, Copy, Debug, Loggable)]
+#[derive(Default, Clone, Copy, Debug, Loggable, PartialEq)]
 struct DeepJunk {
     x: u32,
     y: u16,
 }
 
-#[derive(Default, Clone, Copy, Debug, Loggable)]
+#[derive(Default, Clone, Copy, Debug, Loggable, PartialEq)]
 struct Junk {
     a: bool,
     b: u8,
@@ -203,7 +207,7 @@ struct Junk {
     d: DeepJunk,
 }
 
-#[derive(Default, Copy, Clone, Debug, Loggable)]
+#[derive(Default, Copy, Clone, Debug, Loggable, PartialEq)]
 struct MoreJunk {
     a: Junk,
     b: Junk,
@@ -248,16 +252,16 @@ fn test_using_address() {
 
 // Test a simple counter machine.
 struct Counter<T: Loggable> {
-    tag_input: TagID<bool>,
+    tag_enable: TagID<bool>,
     tag_output: TagID<T>,
 }
 
 impl<T: Loggable> Counter<T> {
-    fn new(mut builder: impl LogBuilder) -> Self {
-        let tag_input = builder.tag("input");
+    pub fn new(mut builder: impl LogBuilder) -> Self {
+        let tag_input = builder.tag("enable");
         let tag_output = builder.tag("output");
         Self {
-            tag_input,
+            tag_enable: tag_input,
             tag_output,
         }
     }
@@ -279,11 +283,11 @@ impl<
     fn compute(
         &self,
         mut tracer: impl Logger,
-        input: Self::Input,
+        enable: Self::Input,
         state: Self::State,
     ) -> (Self::Output, Self::State) {
-        tracer.log(self.tag_input, input);
-        let new_state = if input {
+        tracer.log(self.tag_enable, enable);
+        let new_state = if enable {
             T::wrapping_add(&state, &T::one())
         } else {
             state
@@ -293,22 +297,102 @@ impl<
     }
 }
 
+fn single_clock_simulation<S: Synchronous>(
+    mut logger: impl Logger,
+    obj: S,
+    period_in_fs: u64,
+    num_cycles: u64,
+    mut test_bench: impl FnMut(u64, S::Output) -> S::Input,
+) -> bool {
+    let mut state = S::State::default();
+    let mut new_state = S::State::default();
+    let mut output = S::Output::default();
+    for cycle in 0..num_cycles {
+        logger.set_time_in_fs(cycle * period_in_fs);
+        let mut input = test_bench(cycle, output);
+        loop {
+            (output, new_state) = obj.compute(&mut logger, input, state);
+            let next_input = test_bench(cycle, output);
+            if next_input == input {
+                break;
+            }
+            input = next_input;
+        }
+        state = new_state;
+    }
+    true
+}
+
+/*
+For combinatorial test logic...
+
+Suppose we have a fifo.
+inputs:
+<write>
+<read>
+outputs:
+<full>
+<empty>
+
+Then there is a logic connection between outputs and inputs.
+As such, we must first know the outputs before we can decide
+what the input should be.
+
+If the design contains combinatorial paths from input to
+output, then we can end up in oscillations.
+
+let mut prev_output;
+let prev_input = test_bench(clock, prev_output);
+let (output, new_state) = compute(logger, prev_input, state);
+let next_input = test_bench(clock, output);
+while next_input != prev_input {
+    let (output, new_state) = compute(logger, next_input, state);
+}
+
+*/
+
 #[test]
-fn test_counter_with_tracing() {
+fn test_counter_with_closures() {
     let mut logger_builder = basic_logger_builder::BasicLoggerBuilder::default();
     let clock = ClockDetails {
+        name: "clock".to_string(),
         period_in_fs: freq_hz_to_period_femto(1e6) as u64,
         offset_in_fs: 0,
         initial_state: true,
     };
+    let period_in_fs = clock.period_in_fs;
+    logger_builder.add_clock(clock);
+    let counter: Counter<u32> = Counter::new(&mut logger_builder);
+    let now = std::time::Instant::now();
+    assert!(single_clock_simulation(
+        logger_builder.build(),
+        counter,
+        period_in_fs,
+        10_000_000,
+        |cycle, output| cycle % 2 == 0,
+    ));
+    println!("Elapsed: {:?}", now.elapsed());
+}
+
+#[test]
+fn test_counter_with_tracing() {
+    let mut logger_builder = basic_logger_builder::BasicLoggerBuilder::default();
+    let clock = ClockDetails {
+        name: "clock".to_string(),
+        period_in_fs: freq_hz_to_period_femto(1e6) as u64,
+        offset_in_fs: 0,
+        initial_state: true,
+    };
+    assert_eq!(clock.next_edge_after(0), 1_000_000_000 / 2);
+    let period_in_fs = clock.period_in_fs;
     logger_builder.add_clock(clock);
     let counter: Counter<u32> = Counter::new(&mut logger_builder);
     let mut logger = logger_builder.build();
     let mut state = 0;
     let mut last_output = 0;
     let now = std::time::Instant::now();
-    for cycle in 0..10_000_000 {
-        logger.set_time_in_fs(cycle * clock.period_in_fs);
+    for cycle in 0..100_000 {
+        logger.set_time_in_fs(cycle * period_in_fs);
         let (output, new_state) = counter.compute(&mut logger, cycle % 2 == 0, state);
         state = new_state;
         last_output = output;
@@ -317,10 +401,23 @@ fn test_counter_with_tracing() {
     println!("Last output {last_output}");
     println!("Simulation time: {}", now.elapsed().as_secs_f64());
     let now = std::time::Instant::now();
+    // Time serde_json serialization of the logger.
+    {
+        let foo = bincode::serialize(&logger).unwrap();
+        println!(
+            "JSON generation time: {} {}",
+            now.elapsed().as_secs_f64(),
+            foo.len()
+        );
+        std::fs::write("counter.bcd", foo).unwrap();
+    }
+    let now = std::time::Instant::now();
     println!("{}", logger);
     let mut vcd = vec![];
-    logger.vcd(&mut vcd).unwrap();
-    println!("VCD generation time: {}", now.elapsed().as_secs_f64());
+    {
+        logger.vcd(&mut vcd).unwrap();
+        println!("VCD generation time: {}", now.elapsed().as_secs_f64());
+    }
     std::fs::write("counter.vcd", vcd).unwrap();
 }
 
@@ -328,6 +425,7 @@ fn test_counter_with_tracing() {
 fn test_counter_with_no_tracing() {
     let mut logger_builder = basic_logger_builder::BasicLoggerBuilder::default();
     let clock = ClockDetails {
+        name: "clock".to_string(),
         period_in_fs: freq_hz_to_period_femto(1e6) as u64,
         offset_in_fs: 0,
         initial_state: true,

@@ -4,6 +4,8 @@ use std::{
     rc::Rc,
 };
 
+use rust_hdl::prelude::freq_hz_to_period_femto;
+
 use crate::{
     basic_logger::{BasicLogger, LogSignal, ScopeRecord, TaggedSignal},
     log::{ClockDetails, LogBuilder, TagID},
@@ -12,7 +14,7 @@ use crate::{
 
 #[derive(Clone, Debug, Default)]
 struct BasicLoggerBuilderInner {
-    scopes: Vec<ScopeRecord>,
+    scopes: Vec<ScopeRecord<'static>>,
     clocks: Vec<ClockDetails>,
 }
 
@@ -85,8 +87,8 @@ impl LogBuilder for BasicLoggerBuilder {
     }
 
     fn allocate<L: Loggable>(&self, tag: TagID<L>, width: usize) {
-        let name = self.path.join("::");
-        let signal = LogSignal::new(&name, width);
+        let name = self.path.join("$");
+        let signal = LogSignal::new(name, width);
         let context_id: usize = tag.context;
         let scope = &mut self.inner.borrow_mut().scopes[context_id];
         let tag_id: usize = tag.id;
@@ -109,7 +111,7 @@ impl LogBuilder for BasicLoggerBuilder {
 }
 
 impl BasicLoggerBuilder {
-    pub fn build(self) -> BasicLogger {
+    pub fn build(self) -> BasicLogger<'static> {
         let inner = self.inner.take();
         BasicLogger {
             scopes: inner.scopes,
