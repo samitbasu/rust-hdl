@@ -1,11 +1,5 @@
-use crate::{basic_logger_builder, single_clock_simulation, synchronous::Synchronous, Logger};
-use rust_hdl::prelude::freq_hz_to_period_femto;
+use rust_hdl_x::{synchronous::Synchronous, LogBuilder, Loggable, Logger, TagID};
 use rust_hdl_x_macro::Loggable;
-
-use crate::{
-    log::{LogBuilder, TagID},
-    loggable::Loggable,
-};
 
 // A single register with a FIFO interface
 pub struct SingleRegisterFIFO<T: Loggable> {
@@ -86,26 +80,33 @@ impl<T: Loggable> Synchronous for SingleRegisterFIFO<T> {
 
 #[test]
 fn test_single_register_fifo() {
-    let mut logger_builder = basic_logger_builder::BasicLoggerBuilder::default();
-    let period_in_fs = freq_hz_to_period_femto(100.0e6) as u64;
+    let mut logger_builder = rust_hdl_x::basic_logger_builder::BasicLoggerBuilder::default();
+    let period_in_fs = rust_hdl::prelude::freq_hz_to_period_femto(100.0e6) as u64;
     logger_builder.add_simple_clock(period_in_fs);
     let fifo = SingleRegisterFIFO::<u32>::new(&mut logger_builder);
     let mut logger = logger_builder.build();
-    single_clock_simulation(&mut logger, fifo, period_in_fs, 100_000, |cycle, output| {
-        if output.full {
-            Inputs {
-                input: 0,
-                write: false,
-                read: true,
+    rust_hdl_x::single_clock_simulation(
+        &mut logger,
+        fifo,
+        period_in_fs,
+        100_000,
+        |cycle, output| {
+            if output.full {
+                Inputs {
+                    input: 0,
+                    write: false,
+                    read: true,
+                }
+            } else {
+                Inputs {
+                    input: cycle as u32,
+                    write: true,
+                    read: false,
+                }
             }
-        } else {
-            Inputs {
-                input: cycle as u32,
-                write: true,
-                read: false,
-            }
-        }
-    });
+        },
+    );
+    logger.dump();
     let mut vcd = std::fs::File::create("single_register_fifo.vcd").unwrap();
     logger.vcd(&mut vcd).unwrap();
 }
@@ -118,29 +119,36 @@ fn test_single_register_fifo_complex_struct() {
         b: u32,
     }
 
-    let mut logger_builder = basic_logger_builder::BasicLoggerBuilder::default();
-    let period_in_fs = freq_hz_to_period_femto(100.0e6) as u64;
+    let mut logger_builder = rust_hdl_x::basic_logger_builder::BasicLoggerBuilder::default();
+    let period_in_fs = rust_hdl::prelude::freq_hz_to_period_femto(100.0e6) as u64;
     logger_builder.add_simple_clock(period_in_fs);
     let fifo = SingleRegisterFIFO::<Complex>::new(&mut logger_builder);
     let mut logger = logger_builder.build();
-    single_clock_simulation(&mut logger, fifo, period_in_fs, 100_000, |cycle, output| {
-        if output.full {
-            Inputs {
-                input: Complex::default(),
-                write: false,
-                read: true,
+    rust_hdl_x::single_clock_simulation(
+        &mut logger,
+        fifo,
+        period_in_fs,
+        100_000,
+        |cycle, output| {
+            if output.full {
+                Inputs {
+                    input: Complex::default(),
+                    write: false,
+                    read: true,
+                }
+            } else {
+                Inputs {
+                    input: Complex {
+                        a: cycle as u32,
+                        b: cycle as u32,
+                    },
+                    write: true,
+                    read: false,
+                }
             }
-        } else {
-            Inputs {
-                input: Complex {
-                    a: cycle as u32,
-                    b: cycle as u32,
-                },
-                write: true,
-                read: false,
-            }
-        }
-    });
+        },
+    );
+    logger.dump();
     let mut vcd = std::fs::File::create("single_register_fifo_complex_struct.vcd").unwrap();
     logger.vcd(&mut vcd).unwrap();
 }

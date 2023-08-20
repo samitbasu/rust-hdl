@@ -1,10 +1,5 @@
 use rust_hdl::prelude::Bits;
-
-use crate::{
-    log::{LogBuilder, TagID},
-    logger::Logger,
-    synchronous::Synchronous,
-};
+use rust_hdl_x::{synchronous::Synchronous, LogBuilder, Logger, TagID};
 
 struct BitCounter<const N: usize> {
     tag_input: TagID<bool>,
@@ -45,20 +40,16 @@ impl<const N: usize> Synchronous for BitCounter<N> {
 mod tests {
     use rust_hdl::prelude::freq_hz_to_period_femto;
 
-    use crate::{
-        basic_logger_builder::BasicLoggerBuilder, log::ClockDetails, single_clock_simulation,
-    };
-
     use super::*;
     #[test]
     fn test_counter_with_bits_argument() {
-        let mut logger_builder = BasicLoggerBuilder::default();
+        let mut logger_builder = rust_hdl_x::basic_logger_builder::BasicLoggerBuilder::default();
         let clock_period = freq_hz_to_period_femto(1e6) as u64;
         logger_builder.add_simple_clock(clock_period);
         let counter: BitCounter<24> = BitCounter::new(&mut logger_builder);
         let logger = logger_builder.build();
         let mut last_output: Bits<24> = Default::default();
-        single_clock_simulation(
+        rust_hdl_x::single_clock_simulation(
             logger,
             counter,
             clock_period,

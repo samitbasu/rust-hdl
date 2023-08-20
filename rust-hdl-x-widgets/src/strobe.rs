@@ -1,31 +1,34 @@
-use crate::traceable::Traceable;
-use crate::tracer::TraceID;
-use crate::tracer_builder::TracerBuilder;
-use crate::{synchronous::Synchronous, tracer::Tracer};
+use crate::log::LogBuilder;
+use crate::loggable::Loggable;
+use crate::{log::TagID, synchronous::Synchronous};
 use rust_hdl::prelude::freq_hz_to_period_femto;
-use rust_hdl_x_macro::Traceable;
+use rust_hdl_x_macro::Loggable;
 
 pub struct StrobeConfig {
     threshold: u32,
-    trace_id: Option<TraceID>,
+    tag_input: TagID<bool>,
+    tag_output: TagID<bool>,
 }
 
 impl StrobeConfig {
-    pub fn new(frequency: u64, strobe_freq_hz: f64) -> Self {
+    pub fn new(frequency: u64, strobe_freq_hz: f64, mut builder: impl LogBuilder) -> Self {
         let clock_duration_femto = freq_hz_to_period_femto(frequency as f64);
         let strobe_interval_femto = freq_hz_to_period_femto(strobe_freq_hz);
         let interval = strobe_interval_femto / clock_duration_femto;
         let threshold = interval.round() as u64;
         assert!((threshold as u128) < (1_u128 << 32));
         assert!(threshold > 2);
+        let tag_input = builder.tag("trigger");
+        let tag_output = builder.tag("output");
         Self {
             threshold: threshold as u32,
-            trace_id: None,
+            tag_input,
+            tag_output,
         }
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, Traceable)]
+#[derive(Default, Debug, Clone, Copy, Loggable)]
 pub struct StrobeState {
     count: u32,
 }

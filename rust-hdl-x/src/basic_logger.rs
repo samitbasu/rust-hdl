@@ -5,13 +5,11 @@ use std::{
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use vcd::{SimulationCommand, Value};
 
 use crate::{
     log::{ClockDetails, TagID},
     loggable::Loggable,
     logger::Logger,
-    rev_bit_iter::RevBitIter,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -162,27 +160,28 @@ impl<'a> ScopeNode<'a> {
             ScopeNode::Leaf {
                 width,
                 code,
-                signal,
+                signal: _,
             } => {
                 println!("{}[{}] {:?}", "  ".repeat(indent_level), width, code);
             }
         }
     }
-    fn register<W: Write>(&mut self, name: &str, v: &mut vcd::Writer<W>) {
+    fn register<W: Write>(&mut self, name: &str, v: &mut vcd::Writer<W>) -> anyhow::Result<()> {
         match self {
             ScopeNode::Internal { children } => {
+                v.add_module(name)?;
                 for (name, child) in children {
-                    v.add_module(name);
-                    child.register(name.as_str(), v);
-                    v.upscope();
+                    child.register(name.as_str(), v)?;
                 }
+                v.upscope()?
             }
             ScopeNode::Leaf {
                 width,
                 code,
                 signal: _,
-            } => *code = Some(v.add_wire(*width as u32, name).unwrap()),
+            } => *code = Some(v.add_wire(*width as u32, name)?),
         }
+        Ok(())
     }
 }
 
@@ -272,17 +271,14 @@ impl BasicLogger<'static> {
                         .or_insert_with(ScopeNode::new_scope);
                     for signal in &tag.data {
                         println!("signal name: {}", signal.name);
-                        let sub_path: Vec<_> = signal.name.split("::").collect();
-                        if let Some((item, path)) = sub_path.split_last() {
-                            tag_root
-                                .children_at(path)
-                                .entry(item.to_string())
-                                .or_insert_with(|| ScopeNode::Leaf {
-                                    width: signal.width,
-                                    code: None,
-                                    signal,
-                                });
-                        }
+                        tag_root
+                            .children()
+                            .entry(signal.name.clone())
+                            .or_insert_with(|| ScopeNode::Leaf {
+                                width: signal.width,
+                                code: None,
+                                signal,
+                            });
                     }
                 }
             }
@@ -308,7 +304,7 @@ impl BasicLogger<'static> {
             })
             .collect::<Vec<_>>();
         let mut tree = self.build_scope_tree();
-        tree.register("", &mut writer);
+        tree.register("", &mut writer)?;
         writer.upscope()?;
         writer.enddefinitions()?;
         writer.timestamp(0)?;
@@ -419,7 +415,7 @@ impl BasicLogger<'static> {
         }
         Ok(())
     }
-    pub(crate) fn dump(&self) {
+    pub fn dump(&self) {
         let tree = self.build_scope_tree();
         tree.dump(0);
     }

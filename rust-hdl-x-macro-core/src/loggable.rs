@@ -25,11 +25,11 @@ fn derive_loggable_enum(decl: DeriveInput) -> anyhow::Result<TokenStream> {
                 }
             }
             Ok(quote! {
-                impl #impl_generics Loggable for #enum_name #ty_generics #where_clause {
-                    fn allocate<L: Loggable>(tag: TagID<L>, builder: impl LogBuilder) {
+                impl #impl_generics rust_hdl_x::Loggable for #enum_name #ty_generics #where_clause {
+                    fn allocate<L: rust_hdl_x::Loggable>(tag: rust_hdl_x::TagID<L>, builder: impl rust_hdl_x::LogBuilder) {
                         builder.allocate(tag, 0);
                     }
-                    fn record<L: Loggable>(&self, tag: TagID<L>, mut logger: impl Logger) {
+                    fn record<L: rust_hdl_x::Loggable>(&self, tag: rust_hdl_x::TagID<L>, mut logger: impl rust_hdl_x::Logger) {
                         match self {
                             #(
                                 Self::#variants => logger.write_string(tag, stringify!(#variants)),
@@ -52,13 +52,13 @@ fn derive_loggable_struct(decl: DeriveInput) -> anyhow::Result<TokenStream> {
             let fields2 = fields.clone();
             let field_types = s.fields.iter().map(|x| &x.ty);
             Ok(quote! {
-                impl #impl_generics Loggable for #struct_name #ty_generics #where_clause {
-                    fn allocate<L: Loggable>(tag: TagID<L>, builder: impl LogBuilder) {
+                impl #impl_generics rust_hdl_x::Loggable for #struct_name #ty_generics #where_clause {
+                    fn allocate<L: rust_hdl_x::Loggable>(tag: rust_hdl_x::TagID<L>, builder: impl rust_hdl_x::LogBuilder) {
                         #(
-                            <#field_types as Loggable>::allocate(tag, builder.namespace(stringify!(#fields)));
+                            <#field_types as rust_hdl_x::Loggable>::allocate(tag, builder.namespace(stringify!(#fields)));
                         )*
                     }
-                    fn record<L: Loggable>(&self, tag: TagID<L>, mut logger: impl Logger) {
+                    fn record<L: rust_hdl_x::Loggable>(&self, tag: rust_hdl_x::TagID<L>, mut logger: impl rust_hdl_x::Logger) {
                         #(
                             self.#fields2.record(tag, &mut logger);
                         )*

@@ -7,7 +7,7 @@ pub trait Synchronous: Sized {
     // User provided
     fn compute(
         &self,
-        tracer: impl Logger,
+        logger: impl Logger,
         inputs: Self::Input,
         state: Self::State,
     ) -> (Self::Output, Self::State);
