@@ -10,6 +10,7 @@ pub use crate::loggable::Loggable;
 pub use log::TagID;
 pub use logger::Logger;
 use rust_hdl::prelude::{freq_hz_to_period_femto, Bits};
+pub use rust_hdl_x_macro::Loggable;
 use synchronous::Synchronous;
 
 //use synchronous::Synchronous;

@@ -1,6 +1,5 @@
 use rust_hdl::prelude::{freq_hz_to_period_femto, Bits, NANOS_PER_FEMTO};
-use rust_hdl_x::{synchronous::Synchronous, LogBuilder, Logger, TagID};
-use rust_hdl_x_macro::Loggable;
+use rust_hdl_x::{synchronous::Synchronous, LogBuilder, Loggable, Logger, TagID};
 use std::time::Duration;
 
 pub struct ShotConfig<const N: usize> {
@@ -101,6 +100,7 @@ fn test_shot() {
         "Final state: elapsed time {} shot on {shot_on} trig_count {trig_count}",
         now.elapsed().as_millis()
     );
+    logger.dump();
     let buf = std::io::BufWriter::new(std::fs::File::create("shot.vcd").unwrap());
     logger.vcd(buf).unwrap();
 }

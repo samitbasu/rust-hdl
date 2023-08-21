@@ -1,8 +1,5 @@
-use crate::log::LogBuilder;
-use crate::loggable::Loggable;
-use crate::{log::TagID, synchronous::Synchronous};
 use rust_hdl::prelude::freq_hz_to_period_femto;
-use rust_hdl_x_macro::Loggable;
+use rust_hdl_x::{synchronous::Synchronous, LogBuilder, Loggable, Logger, TagID};
 
 pub struct StrobeConfig {
     threshold: u32,
@@ -18,7 +15,7 @@ impl StrobeConfig {
         let threshold = interval.round() as u64;
         assert!((threshold as u128) < (1_u128 << 32));
         assert!(threshold > 2);
-        let tag_input = builder.tag("trigger");
+        let tag_input = builder.tag("enable");
         let tag_output = builder.tag("output");
         Self {
             threshold: threshold as u32,
@@ -28,7 +25,7 @@ impl StrobeConfig {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy, Loggable)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Loggable)]
 pub struct StrobeState {
     count: u32,
 }
@@ -38,15 +35,13 @@ impl Synchronous for StrobeConfig {
     type Input = bool;
     type Output = bool;
 
-    fn trace_id(&self) -> Option<TraceID> {
-        self.trace_id
-    }
-
-    fn setup(&mut self, builder: impl TracerBuilder) {
-        self.trace_id = Some(Self::register_trace_types(builder));
-    }
-
-    fn compute(&self, _t: impl Tracer, enable: bool, q: StrobeState) -> (bool, StrobeState) {
+    fn compute(
+        &self,
+        mut logger: impl Logger,
+        enable: bool,
+        q: StrobeState,
+    ) -> (bool, StrobeState) {
+        logger.log(self.tag_input, enable);
         let mut d = q;
         if enable {
             d.count = q.count + 1;
@@ -55,6 +50,7 @@ impl Synchronous for StrobeConfig {
         if strobe {
             d.count = 1;
         }
+        logger.log(self.tag_output, strobe);
         (strobe, d)
     }
 }
@@ -63,25 +59,30 @@ impl Synchronous for StrobeConfig {
 fn test_strobe() {
     // Final state: Strobe { counter: 1000 }, elapsed time 11678, pulse count 999999
     // We want a strobe every 1000 clock cycles.
-    let mut config = StrobeConfig {
-        threshold: 1000,
-        trace_id: None,
-    };
-    let mut state = StrobeState::default();
+    let mut builder = rust_hdl_x::basic_logger_builder::BasicLoggerBuilder::default();
+    let period_in_fs = freq_hz_to_period_femto(100_000_000.0) as u64;
+    let config = StrobeConfig::new(100_000_000, 100_000.0, &mut builder);
+    builder.add_simple_clock(period_in_fs);
     let mut num_pulses = 0;
-    let mut output = false;
     let now = std::time::Instant::now();
-    let mut builder = crate::basic_tracer::BasicTracerBuilder::default();
-    config.setup(&mut builder);
-    let mut tracer = builder.build();
-    for _cycle in 0..10_000_000 {
-        (output, state) = config.update(&mut tracer, true, state);
-        if output {
-            num_pulses += 1;
-        }
-    }
+    let mut logger = builder.build();
+    let num_cycles = 1_000_000;
+    rust_hdl_x::single_clock_simulation(
+        &mut logger,
+        config,
+        period_in_fs,
+        num_cycles,
+        |_cycle, output| {
+            if output {
+                num_pulses += 1;
+            }
+            true
+        },
+    );
     println!(
-        "Final state: {state:?}, elapsed time {}, pulse count {num_pulses}",
+        "Final state: elapsed time {}, pulse count {num_pulses}",
         now.elapsed().as_millis()
     );
+    let buf = std::io::BufWriter::new(std::fs::File::create("strobe.vcd").unwrap());
+    logger.vcd(buf).unwrap();
 }

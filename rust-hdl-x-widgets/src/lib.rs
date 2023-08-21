@@ -1,12 +1,10 @@
-use rust_hdl_x::{
-    basic_logger_builder, synchronous::Synchronous, LogBuilder, Loggable, Logger, TagID,
-};
-use rust_hdl_x_macro::Loggable;
+use rust_hdl_x::{synchronous::Synchronous, LogBuilder, Loggable, Logger, TagID};
 
 pub mod counter;
+pub mod pulser;
 pub mod reg_fifo;
 pub mod shot;
-//pub mod strobe;
+pub mod strobe;
 
 #[derive(Debug)]
 struct Bar {
@@ -147,7 +145,7 @@ struct MoreJunk {
 
 #[test]
 fn test_trace_setup() {
-    let mut logger_builder = basic_logger_builder::BasicLoggerBuilder::default();
+    let mut logger_builder = rust_hdl_x::basic_logger_builder::BasicLoggerBuilder::default();
     let foo = Foo::new(&mut logger_builder);
     println!("{}", logger_builder);
     println!("{:#?}", foo);

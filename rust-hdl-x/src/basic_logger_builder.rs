@@ -24,6 +24,7 @@ struct BasicLoggerBuilderInner {
 pub struct BasicLoggerBuilder {
     inner: Rc<RefCell<BasicLoggerBuilderInner>>,
     path: Vec<String>,
+    my_scope: usize,
 }
 
 impl Display for BasicLoggerBuilder {
@@ -46,6 +47,7 @@ impl Default for BasicLoggerBuilder {
                 ..Default::default()
             })),
             path: vec![],
+            my_scope: 0,
         }
     }
 }
@@ -55,7 +57,7 @@ impl LogBuilder for BasicLoggerBuilder {
     fn scope(&self, name: &str) -> Self {
         let name = format!(
             "{}::{}",
-            self.inner.borrow().scopes.last().unwrap().name,
+            self.inner.borrow().scopes[self.my_scope].name,
             name
         );
         self.inner.borrow_mut().scopes.push(ScopeRecord {
@@ -65,11 +67,12 @@ impl LogBuilder for BasicLoggerBuilder {
         Self {
             inner: self.inner.clone(),
             path: vec![],
+            my_scope: self.inner.borrow().scopes.len() - 1,
         }
     }
 
     fn tag<L: Loggable>(&mut self, name: &str) -> TagID<L> {
-        let context_id: usize = self.inner.borrow().scopes.len() - 1;
+        let context_id: usize = self.my_scope;
         let tag = {
             let scope = &mut self.inner.borrow_mut().scopes[context_id];
             scope.tags.push(TaggedSignal {
@@ -82,6 +85,7 @@ impl LogBuilder for BasicLoggerBuilder {
                 _marker: Default::default(),
             }
         };
+        println!("Allocating tag: context: {}, id: {}", context_id, tag.id);
         L::allocate(tag, self);
         tag
     }
@@ -102,6 +106,7 @@ impl LogBuilder for BasicLoggerBuilder {
         Self {
             inner: self.inner.clone(),
             path: new_path,
+            my_scope: self.my_scope,
         }
     }
 

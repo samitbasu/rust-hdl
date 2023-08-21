@@ -1,5 +1,4 @@
 use rust_hdl_x::{synchronous::Synchronous, LogBuilder, Loggable, Logger, TagID};
-use rust_hdl_x_macro::Loggable;
 
 // A single register with a FIFO interface
 pub struct SingleRegisterFIFO<T: Loggable> {
