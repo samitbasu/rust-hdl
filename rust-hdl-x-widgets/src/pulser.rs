@@ -89,7 +89,7 @@ fn test_pulser() {
         config,
         clock_period_fs,
         1_000_000,
-        |cycle, output| {
+        |_cycle, output| {
             if output {
                 time_high += 1;
             }

@@ -13,29 +13,13 @@ use rust_hdl::prelude::{freq_hz_to_period_femto, Bits};
 pub use rust_hdl_x_macro::Loggable;
 use synchronous::Synchronous;
 
-//use synchronous::Synchronous;
-
-//mod bit_iter;
-//mod bit_slice;
-mod rev_bit_iter;
-//mod derive_vcd;
-//mod pulser;
-//pub mod shot;
-//mod spi_controller;
-//mod synchronous;
-//pub mod basic_tracer;
-//pub mod counter;
-//pub mod no_trace;
-pub mod synchronous;
-//pub mod traceable;
-//pub mod tracer;
-//pub mod tracer_builder;
-//mod vcd;
+pub mod ast;
 pub mod basic_logger;
 pub mod basic_logger_builder;
 pub mod log;
 pub mod loggable;
 pub mod logger;
+pub mod synchronous;
 
 #[ignore]
 #[test]
