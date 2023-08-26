@@ -51,7 +51,7 @@ pub struct ExprArray {
 
 #[derive(Debug)]
 pub struct ExprField {
-    pub base: Box<Expr>,
+    pub expr: Box<Expr>,
     pub member: Member,
 }
 
@@ -181,15 +181,24 @@ mod test {
         fn jnk() -> Vec<Stmt> {
             vec![
                 Stmt::Local(Local {
-                    pattern: LocalPattern::Ident(stringify!(a).to_string()),
+                    pattern: LocalPattern::Ident(LocalIdent {
+                        name: stringify!(a).to_string(),
+                        mutable: false,
+                    }),
                     value: Box::new(Expr::Lit(ExprLit::Int("1".to_string()))),
                 }),
                 Stmt::Local(Local {
-                    pattern: LocalPattern::Ident(stringify!(b).to_string()),
+                    pattern: LocalPattern::Ident(LocalIdent {
+                        name: stringify!(b).to_string(),
+                        mutable: false,
+                    }),
                     value: Box::new(Expr::Lit(ExprLit::Int("2".to_string()))),
                 }),
                 Stmt::Local(Local {
-                    pattern: LocalPattern::Ident(stringify!(c).to_string()),
+                    pattern: LocalPattern::Ident(LocalIdent {
+                        name: stringify!(c).to_string(),
+                        mutable: false,
+                    }),
                     value: Box::new(Expr::Binary(ExprBinary {
                         op: BinOp::Add,
                         lhs: Box::new(Expr::Ident(stringify!(a).to_string())),

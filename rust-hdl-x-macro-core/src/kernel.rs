@@ -88,14 +88,39 @@ fn hdl_expr(expr: &syn::Expr) -> Result<TS> {
         syn::Expr::Unary(unary) => hdl_unary(unary),
         syn::Expr::Paren(paren) => hdl_expr(&paren.expr),
         syn::Expr::Assign(assign) => hdl_assign(assign),
-        syn::Expr::Path(path) => hdl_path(path),
+        syn::Expr::Path(path) => hdl_path(&path.path),
+        syn::Expr::Struct(structure) => hdl_struct(structure),
         _ => Err(syn::Error::new(expr.span(), "Unsupported expression type")),
     }
 }
 
-fn hdl_path(path: &syn::ExprPath) -> Result<TS> {
+fn hdl_struct(structure: &syn::ExprStruct) -> Result<TS> {
+    let path = hdl_path(&structure.path)?;
+    let fields = structure
+        .fields
+        .iter()
+        .map(hdl_field)
+        .collect::<Result<Vec<_>>>()?;
+    if structure.qself.is_some() {
+        return Err(syn::Error::new(
+            structure.span(),
+            "Unsupported qualified self",
+        ));
+    }
+    let rest = structure.rest.as_ref().map(|x| hdl_expr(&x)).transpose()?;
+    Ok(quote! {
+        rust_hdl_x::ast::Expr::Struct(
+            rust_hdl_x::ast::ExprStruct {
+                path: #path,
+                fields: vec![#(#fields),*],
+                rest: #rest,
+            }
+        )
+    })
+}
+
+fn hdl_path(path: &syn::Path) -> Result<TS> {
     let ident = path
-        .path
         .get_ident()
         .ok_or(syn::Error::new(path.span(), "Unsupported path expression"))?;
     Ok(quote! {
@@ -108,6 +133,31 @@ fn hdl_assign(assign: &syn::ExprAssign) -> Result<TS> {
     let right = hdl_expr(&assign.right)?;
     Ok(quote! {
         rust_hdl_x::ast::Expr::Assign(Box::new(#left), Box::new(#right))
+    })
+}
+
+fn hdl_field(field: &syn::FieldValue) -> Result<TS> {
+    let member = hdl_member(&field.member)?;
+    let expr = hdl_expr(&field.expr)?;
+    Ok(quote! {
+        rust_hdl_x::ast::ExprField {
+            member: #member,
+            expr: Box::new(#expr),
+        }
+    })
+}
+
+fn hdl_member(member: &syn::Member) -> Result<TS> {
+    Ok(match member {
+        syn::Member::Named(ident) => quote! {
+            rust_hdl_x::ast::Member::Named(stringify!(#ident).to_string())
+        },
+        syn::Member::Unnamed(index) => {
+            let index = index.index;
+            quote! {
+                rust_hdl_x::ast::Member::Unnamed(#index)
+            }
+        }
     })
 }
 
@@ -179,10 +229,10 @@ fn hdl_lit(lit: &syn::ExprLit) -> Result<TS> {
     let lit = &lit.lit;
     match lit {
         syn::Lit::Int(int) => {
-            let value = int.base10_digits();
+            let value = int.token();
             Ok(quote! {
                 rust_hdl_x::ast::Expr::Lit(
-                    rust_hdl_x::ast::ExprLit::Int(#value.to_string())
+                    rust_hdl_x::ast::ExprLit::Int(stringify!(#value).to_string())
                 )
             })
         }
@@ -208,9 +258,26 @@ mod test {
             {
                 let a = 1;
                 let b = 2;
+                let q = 0x1234_u32;
                 let c = a + b;
                 let mut d = 3;
+                let g = Foo {r: 1, g: 120, b: 33};
+                let h = g.r;
                 c
+            }
+        };
+        let block = syn::parse2::<syn::Block>(test_code).unwrap();
+        let result = hdl_block(&block).unwrap();
+        let result = format!("fn jnk() -> Vec<Stmt> {{ {} }}", result);
+        let result = result.replace("rust_hdl_x :: ast :: ", "");
+        let result = prettyplease::unparse(&syn::parse_file(&result).unwrap());
+        println!("{}", result);
+    }
+    #[test]
+    fn test_precedence_parser() {
+        let test_code = quote! {
+            {
+                1 + 3 * 9
             }
         };
         let block = syn::parse2::<syn::Block>(test_code).unwrap();
