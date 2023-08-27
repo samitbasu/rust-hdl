@@ -1,18 +1,15 @@
+use std::default;
+
+use syn::token::Enum;
+
 pub trait Synth: Copy + PartialEq {
     const BITS: usize;
     fn bits(self) -> usize {
         Self::BITS
     }
     fn get(&self, index: usize) -> bool;
-    fn set(&mut self, index: usize, val: bool);
     fn pack(self) -> Vec<bool> {
         self.iter().collect()
-    }
-    fn unpack(&mut self, v: &[bool]) {
-        assert_eq!(v.len(), Self::BITS);
-        v.iter().enumerate().take(Self::BITS).for_each(|(i, b)| {
-            self.set(i, *b);
-        });
     }
     fn iter(&self) -> BitIter<Self> {
         BitIter {
@@ -48,12 +45,6 @@ impl<'a, T: Synth> Iterator for BitIter<'a, T> {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct BitSpec {
-    pub offset: usize,
-    pub width: usize,
-}
-
 pub trait SynthStruct: Synth {
     fn static_offset(name: &'static str) -> usize;
     fn offset(self, name: &'static str) -> usize {
@@ -83,12 +74,6 @@ impl<S: Synth, const N: usize> Synth for [S; N] {
         let synth_index = index % S::BITS;
         self[array_index].get(synth_index)
     }
-    fn set(&mut self, index: usize, val: bool) {
-        assert!(index < Self::BITS);
-        let array_index = index / S::BITS;
-        let synth_index = index % S::BITS;
-        self[array_index].set(synth_index, val)
-    }
 }
 
 impl<S: Synth, const N: usize> SynthArray for [S; N] {
@@ -103,14 +88,6 @@ impl Synth for u8 {
         assert!(index < Self::BITS as usize);
         *self & (1 << index) != 0
     }
-    fn set(&mut self, index: usize, val: bool) {
-        assert!(index < Self::BITS as usize);
-        if val {
-            *self |= 1 << index;
-        } else {
-            *self &= !(1 << index);
-        }
-    }
 }
 
 impl Synth for u16 {
@@ -118,14 +95,6 @@ impl Synth for u16 {
     fn get(&self, index: usize) -> bool {
         assert!(index < Self::BITS as usize);
         *self & (1 << index) != 0
-    }
-    fn set(&mut self, index: usize, val: bool) {
-        assert!(index < Self::BITS as usize);
-        if val {
-            *self |= 1 << index;
-        } else {
-            *self &= !(1 << index);
-        }
     }
 }
 
@@ -135,12 +104,36 @@ impl Synth for u32 {
         assert!(index < Self::BITS as usize);
         *self & (1 << index) != 0
     }
-    fn set(&mut self, index: usize, val: bool) {
-        assert!(index < Self::BITS as usize);
-        if val {
-            *self |= 1 << index;
-        } else {
-            *self &= !(1 << index);
+}
+
+#[derive(Default, Copy, Clone, PartialEq)]
+enum State {
+    #[default]
+    A,
+    B,
+    C,
+}
+
+impl Synth for State {
+    const BITS: usize = 2;
+    fn get(&self, index: usize) -> bool {
+        assert!(index < Self::BITS);
+        match self {
+            State::A => match index {
+                0 => false,
+                1 => false,
+                _ => panic!("Unknown index"),
+            },
+            State::B => match index {
+                0 => true,
+                1 => false,
+                _ => panic!("Unknown index"),
+            },
+            State::C => match index {
+                0 => false,
+                1 => true,
+                _ => panic!("Unknown index"),
+            },
         }
     }
 }
@@ -165,17 +158,6 @@ impl Synth for MyStruct {
                 .get(index - <u8 as Synth>::BITS - <u16 as Synth>::BITS)
         }
     }
-    fn set(&mut self, index: usize, val: bool) {
-        assert!(index < Self::BITS);
-        if index < <u8 as Synth>::BITS {
-            self.a.set(index, val)
-        } else if index < <u8 as Synth>::BITS + <u16 as Synth>::BITS {
-            self.b.set(index - <u8 as Synth>::BITS, val)
-        } else {
-            self.c
-                .set(index - <u8 as Synth>::BITS - <u16 as Synth>::BITS, val)
-        }
-    }
 }
 
 impl SynthStruct for MyStruct {
@@ -197,14 +179,6 @@ impl<A: Synth, B: Synth> Synth for (A, B) {
             self.0.get(index)
         } else {
             self.1.get(index - A::BITS)
-        }
-    }
-    fn set(&mut self, index: usize, val: bool) {
-        assert!(index < Self::BITS);
-        if index < A::BITS {
-            self.0.set(index, val)
-        } else {
-            self.1.set(index - A::BITS, val)
         }
     }
 }
@@ -278,52 +252,6 @@ impl Synth for MyComplexStruct {
             )
         }
     }
-    fn set(&mut self, index: usize, val: bool) {
-        assert!(index < Self::BITS);
-        if index < <u8 as Synth>::BITS {
-            self.a.set(index, val)
-        } else if index < <u8 as Synth>::BITS + <u16 as Synth>::BITS {
-            self.b.set(index - <u8 as Synth>::BITS, val)
-        } else if index < <u8 as Synth>::BITS + <u16 as Synth>::BITS + <u32 as Synth>::BITS {
-            self.c
-                .set(index - <u8 as Synth>::BITS - <u16 as Synth>::BITS, val)
-        } else if index
-            < <u8 as Synth>::BITS
-                + <u16 as Synth>::BITS
-                + <u32 as Synth>::BITS
-                + <MyStruct as Synth>::BITS
-        {
-            self.d.set(
-                index - <u8 as Synth>::BITS - <u16 as Synth>::BITS - <u32 as Synth>::BITS,
-                val,
-            )
-        } else if index
-            < <u8 as Synth>::BITS
-                + <u16 as Synth>::BITS
-                + <u32 as Synth>::BITS
-                + <MyStruct as Synth>::BITS
-                + <(u16, MyStruct) as Synth>::BITS
-        {
-            self.e.set(
-                index
-                    - <u8 as Synth>::BITS
-                    - <u16 as Synth>::BITS
-                    - <u32 as Synth>::BITS
-                    - <MyStruct as Synth>::BITS,
-                val,
-            )
-        } else {
-            self.f.set(
-                index
-                    - <u8 as Synth>::BITS
-                    - <u16 as Synth>::BITS
-                    - <u32 as Synth>::BITS
-                    - <MyStruct as Synth>::BITS
-                    - <(u16, MyStruct) as Synth>::BITS,
-                val,
-            )
-        }
-    }
 }
 
 impl SynthStruct for MyComplexStruct {
@@ -347,6 +275,89 @@ impl SynthStruct for MyComplexStruct {
                     + <(u16, MyStruct) as Synth>::BITS
             }
             _ => panic!("Unknown field name"),
+        }
+    }
+}
+
+#[derive(Default, Copy, Clone, PartialEq)]
+struct EnumWithU8 {
+    a: u8,
+    b: State,
+}
+
+impl Synth for EnumWithU8 {
+    const BITS: usize = <u8 as Synth>::BITS + <State as Synth>::BITS;
+    fn get(&self, index: usize) -> bool {
+        assert!(index < Self::BITS);
+        if index < <u8 as Synth>::BITS {
+            self.a.get(index)
+        } else {
+            self.b.get(index - <u8 as Synth>::BITS)
+        }
+    }
+}
+
+impl SynthStruct for EnumWithU8 {
+    fn static_offset(name: &'static str) -> usize {
+        match name {
+            "a" => 0,
+            "b" => <u8 as Synth>::BITS,
+            _ => panic!("Unknown field name"),
+        }
+    }
+}
+
+#[derive(Copy, Clone, PartialEq)]
+enum ADT {
+    A(u8),
+    B(u16),
+    C(u32),
+}
+
+const fn max(a: usize, b: usize) -> usize {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+impl Synth for ADT {
+    const BITS: usize = 2 + max(
+        <u8 as Synth>::BITS,
+        max(<u16 as Synth>::BITS, <u32 as Synth>::BITS),
+    );
+    #[allow(clippy::if_same_then_else)]
+    fn get(&self, index: usize) -> bool {
+        assert!(index < Self::BITS);
+        match self {
+            ADT::A(x) => {
+                if index == 0 {
+                    false
+                } else if index == 1 {
+                    false
+                } else {
+                    x.get(index - 2)
+                }
+            }
+            ADT::B(x) => {
+                if index == 0 {
+                    false
+                } else if index == 1 {
+                    true
+                } else {
+                    x.get(index - 2)
+                }
+            }
+            ADT::C(x) => {
+                if index == 0 {
+                    true
+                } else if index == 1 {
+                    true
+                } else {
+                    x.get(index - 2)
+                }
+            }
         }
     }
 }
@@ -406,6 +417,14 @@ mod test {
         println!("j: {}", j);
         // In the proc macro, we can convert an expression like `k.e.1.b` into something like:
         // Slice(k, k.field_offset("e") + k.e.index_offset(1) + k.e.1.field_offset("b"), k.e.1.b.bits())
+        // On the left hand side, something like:
+        // k.e.1.b = 0xDEAD
+        // Should translate into
+        // Assign(Slice(k, k.field_offset("e") + k.e.index_offset(1) + k.e.1.field_offset("b"), k.e.1.b.bits()), 0xDEAD)
+        // If we have a local like:
+        // let foo = <expr>;
+        // Then we can allocate a global, and use "<expr>::BITS" as the size of the global.
+        // We can avoid side effects by constructing a method for finding the type of an expression.
     }
 
     #[test]
@@ -413,6 +432,26 @@ mod test {
         let mut k = [0_u8; 4];
         println!("bits {}", k.bits());
         k[1] = 0xFF;
+        println!("{}", k.bin());
+    }
+
+    #[test]
+    fn test_side_effects() {
+        let c = false;
+        let foo = {
+            println!("Hello");
+            if c {
+                "blo"
+            } else {
+                "bar"
+            }
+        };
+        println!("Foo: {}", foo);
+    }
+
+    #[test]
+    fn test_enum_withu8() {
+        let k = EnumWithU8 { b: State::B, a: 0 };
         println!("{}", k.bin());
     }
 }
