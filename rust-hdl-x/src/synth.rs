@@ -22,11 +22,18 @@ impl<S: Synth, const N: usize> Synth for [S; N] {
     }
 }
 
+impl Synth for bool {
+    fn static_kind() -> SynthKind {
+        SynthKind::Bits { digits: 1 }
+    }
+    fn bin(self) -> Vec<bool> {
+        vec![self]
+    }
+}
+
 impl Synth for u8 {
     fn static_kind() -> SynthKind {
-        SynthKind::Bits {
-            digits: vec![false; 8],
-        }
+        SynthKind::Bits { digits: 8 }
     }
     fn bin(self) -> Vec<bool> {
         (0..8).map(|x| self & (1 << x) != 0).collect()
@@ -35,9 +42,7 @@ impl Synth for u8 {
 
 impl Synth for u16 {
     fn static_kind() -> SynthKind {
-        SynthKind::Bits {
-            digits: vec![false; 16],
-        }
+        SynthKind::Bits { digits: 16 }
     }
     fn bin(self) -> Vec<bool> {
         (0..16).map(|x| self & (1 << x) != 0).collect()
@@ -46,9 +51,7 @@ impl Synth for u16 {
 
 impl Synth for u32 {
     fn static_kind() -> SynthKind {
-        SynthKind::Bits {
-            digits: vec![false; 32],
-        }
+        SynthKind::Bits { digits: 32 }
     }
     fn bin(self) -> Vec<bool> {
         (0..32).map(|x| self & (1 << x) != 0).collect()
@@ -269,38 +272,7 @@ mod test {
             );
         }
 
-        #[test]
-        fn test_nested_indexing() {
-            let mut k = MyComplexStruct::default();
-            k.e.1.b = 0xDEAD;
-            println!("{}", k.bin());
-            let dummy_ptr = (&k) as *const _;
-            let member_ptr = (&k.e.1.b) as *const _;
-            let offset = member_ptr as usize - dummy_ptr as usize;
-            println!("Offset: {}", offset);
-            let base = k.offset("e") + k.e.offset(1) + k.e.1.offset("b");
-            let j = k.bin().chars().skip(base).take(16).collect::<String>();
-            println!("j: {}", j);
-            // In the proc macro, we can convert an expression like `k.e.1.b` into something like:
-            // Slice(k, k.field_offset("e") + k.e.index_offset(1) + k.e.1.field_offset("b"), k.e.1.b.bits())
-            // On the left hand side, something like:
-            // k.e.1.b = 0xDEAD
-            // Should translate into
-            // Assign(Slice(k, k.field_offset("e") + k.e.index_offset(1) + k.e.1.field_offset("b"), k.e.1.b.bits()), 0xDEAD)
-            // If we have a local like:
-            // let foo = <expr>;
-            // Then we can allocate a global, and use "<expr>::BITS" as the size of the global.
-            // We can avoid side effects by constructing a method for finding the type of an expression.
-            // This won't actually work because there is no variable "k" in play at the time this expression executes.
-        }
 
-        #[test]
-        fn test_array_case() {
-            let mut k = [0_u8; 4];
-            println!("bits {}", k.bits());
-            k[1] = 0xFF;
-            println!("{}", k.bin());
-        }
 
         #[test]
         fn test_side_effects() {
@@ -319,6 +291,27 @@ mod test {
     #[test]
     fn test_enum_withu8() {
         let k = EnumWithU8 { b: State::B, a: 0 };
+        println!("{}", binary(k));
+    }
+
+    #[test]
+    fn test_array() {
+        let p = [16_u8, 12_u8];
+        println!("{}", binary(p));
+    }
+
+    #[test]
+    fn test_array_case() {
+        let mut k = [0_u8; 4];
+        println!("bits {}", k.kind().bits());
+        k[1] = 0xFF;
+        println!("{}", binary(k));
+    }
+
+    #[test]
+    fn test_nested_indexing() {
+        let mut k = MyComplexStruct::default();
+        k.e.1.b = 0xDEAD;
         println!("{}", binary(k));
     }
 }

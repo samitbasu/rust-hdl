@@ -4,7 +4,7 @@ pub enum SynthKind {
     Tuple { elements: Vec<SynthKind> },
     Struct { fields: Vec<(String, SynthKind)> },
     Enum { variants: Vec<(String, SynthKind)> },
-    Bits { digits: Vec<bool> },
+    Bits { digits: usize },
     Empty,
 }
 
@@ -27,7 +27,7 @@ impl SynthKind {
             SynthKind::Enum { variants } => {
                 clog2(variants.len()) + variants.iter().map(|x| x.1.bits()).max().unwrap_or(0)
             }
-            SynthKind::Bits { digits } => digits.len(),
+            SynthKind::Bits { digits } => *digits,
             SynthKind::Empty => 0,
         }
     }
