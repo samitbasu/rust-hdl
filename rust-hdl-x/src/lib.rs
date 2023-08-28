@@ -16,6 +16,7 @@ use synchronous::Synchronous;
 pub mod ast;
 pub mod basic_logger;
 pub mod basic_logger_builder;
+pub mod kind;
 pub mod log;
 pub mod loggable;
 pub mod logger;

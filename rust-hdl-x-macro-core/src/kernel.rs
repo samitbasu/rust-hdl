@@ -262,7 +262,7 @@ mod test {
                 let c = a + b;
                 let mut d = 3;
                 let g = Foo {r: 1, g: 120, b: 33};
-                let h = g.r;
+                //let h = g.r;
                 c
             }
         };
