@@ -1,5 +1,17 @@
 # RustHDL
 
+** Redirect in Progress **
+
+Due to the concerns about having a project with "rust" in the name, I'm
+changing this project name to `rhdl`, and moving active development there.
+Sorry for the trouble, but I'd hate to have the project yanked at some
+point in the future for something so silly.  
+
+I am also in the process of rebuilding this project from scratch to be
+significantly faster and more powerful.  So I will do the new development
+in the `rhdl` crate/repo, and migrate the existing widgets over time.
+At that point, I will archive this repo.
+
 ** New docs launched!  Check them out at https://rust-hdl.org... **
 
 ** Write FPGA Firmware using Rust! **
