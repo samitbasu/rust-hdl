@@ -46,6 +46,8 @@ pub struct MultiplyAccumulateSymmetricFiniteImpulseResponseFilter<const ADDR_BIT
     accum: DFF<Signed<48>>,
     // FIR state
     state: DFF<MACFIRState>,
+    // The output of the Multiply
+    multiply_output: Signal<Local, Signed<32>>,
     // The output of the MAC slice
     mac_output: Signal<Local, Signed<48>>,
     // The next write location for data
@@ -96,9 +98,8 @@ impl<const ADDR_BITS: usize> Logic
             self.right_sample.next = 0.into();
         }
         // Wire up the accumulator
-        self.mac_output.next = signed_bit_cast::<48, 32>(
-            (self.left_sample.val() + self.right_sample.val()) * (self.coeff_memory.data.val()),
-        ) + self.accum.q.val();
+        self.multiply_output.next = (self.left_sample.val() + self.right_sample.val()) * self.coeff_memory.data.val();
+        self.mac_output.next = signed_bit_cast::<48, 32>(self.multiply_output.val()) + self.accum.q.val();
         if self.state.q.val() == MACFIRState::Idle {
             self.mac_output.next = 0.into();
         }
@@ -185,6 +186,7 @@ impl<const ADDR_BITS: usize> MultiplyAccumulateSymmetricFiniteImpulseResponseFil
             right_sample: Default::default(),
             accum: Default::default(),
             state: Default::default(),
+            multiply_output: Default::default(),
             mac_output: Default::default(),
             data_write: Default::default(),
             taps: Constant::new(taps.to_bits()),
