@@ -126,7 +126,7 @@ impl OkHandle {
     }
 
     pub fn set_wire_in(&self, addr: i32, val: u16) {
-        unsafe { okFrontPanel_SetWireInValue(self.hnd, addr, val as u64, 0xFFFF) };
+        unsafe { okFrontPanel_SetWireInValue(self.hnd, addr, val as u32, 0xFFFF) };
     }
 
     pub fn update_wire_ins(&self) {
