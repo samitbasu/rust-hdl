@@ -1,0 +1,16 @@
+[package]
+name = "rust-hdl-bsp-gowin"
+version = "0.46.0"
+edition = "2024"
+license = "MIT"
+description = "Support crate for RustHDL - provides Board Support Package for the Gowin Tangnano9k board"
+homepage = "https://github.com/samitbasu/rust-hdl"
+repository = "https://github.com/samitbasu/rust-hdl"
+keywords = ["fpga", "verilog", "hardware"]
+authors = ["Samit Basu <basu.samit@gmail.com>"]
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rust-hdl = { version = "0.46.0", path = "../rust-hdl", features = ["fpga"] }

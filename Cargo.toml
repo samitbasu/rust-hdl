@@ -10,6 +10,7 @@ members = [
     "rust-hdl-ok-core",
     "rust-hdl-fpga-support",
     "rust-hdl-bsp-alchitry-cu",
+    "rust-hdl-bsp-tangnano9k",
     "rust-hdl-bsp-ok-xem6010",
     "rust-hdl-bsp-ok-xem7010",
     "rust-hdl-x",
