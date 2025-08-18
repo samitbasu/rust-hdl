@@ -196,7 +196,7 @@ impl DisplayMetrics {
             if (x0 - label_width / 2) >= self.signal_width
                 && (x0 + label_width / 2) <= self.canvas_width
             {
-                let txt = Text::new()
+                let txt = Text::new("")
                     .add(svg::node::Text::new(value))
                     .set("x", x0)
                     .set(
@@ -218,7 +218,7 @@ impl DisplayMetrics {
     }
 
     pub(crate) fn signal_label(&self, index: usize, signal: &str) -> Text {
-        Text::new()
+        Text::new("")
             .add(svg::node::Text::new(signal))
             .set("x", self.shim)
             .set("y", self.signal_baseline(index) - self.shim)
@@ -307,7 +307,7 @@ impl DisplayMetrics {
             data_low = data_low.line_to((x1 + shim, y1));
             data_high = data_high.line_to((x1 + shim, flip(y1)));
             doc = doc.add(
-                Text::new()
+                Text::new("")
                     .add(svg::node::Text::new(value.label.to_string()))
                     .set("x", x1 + 2.0 * shim)
                     .set(
